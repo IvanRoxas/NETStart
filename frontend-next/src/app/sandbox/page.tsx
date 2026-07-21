@@ -15,7 +15,7 @@ const BlocklyMaze = dynamic(() => import('@/components/BlocklyMaze'), {
 
 export default function SandboxPage() {
   return (
-    <div className="w-full h-screen bg-main overflow-hidden relative">
+    <div className="w-full h-full bg-main overflow-hidden relative">
       <BlocklyMaze />
     </div>
   );

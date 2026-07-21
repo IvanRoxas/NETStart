@@ -43,7 +43,7 @@ function AccordionItem({ title, description }: { title: string, description: str
     <div className="bg-[#361d57]/75 backdrop-blur-[10px] rounded-3xl border border-[#ffc107]/25 overflow-hidden transition-all duration-300 shadow-[6px_6px_0_#150524] hover:-translate-y-1 hover:-translate-x-1 hover:border-[#ffc107]/60 hover:shadow-[10px_10px_0_#150524]">
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full p-8 flex justify-between items-center text-left"
+        className="w-full p-8 flex justify-between items-center text-left cursor-pointer"
       >
         <h3 className="font-display text-white text-2xl font-bold">{title}</h3>
         <svg className={`w-8 h-8 text-[#ff912d] transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"/></svg>

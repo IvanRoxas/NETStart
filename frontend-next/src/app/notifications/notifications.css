@@ -1,0 +1,264 @@
+.notifications-page-wrapper {
+    display: flex;
+    flex-direction: column;
+    padding: 2rem 3rem;
+    height: 100%;
+    box-sizing: border-box;
+    overflow-y: auto;
+    background-color: transparent;
+    scrollbar-width: none; /* Hide scrollbar for Firefox */
+    -ms-overflow-style: none; /* Hide scrollbar for IE/Edge */
+}
+
+.notifications-page-wrapper::-webkit-scrollbar {
+    display: none; /* Hide scrollbar for Chrome/Safari */
+}
+
+.neo-search-notif {
+    margin-bottom: 2rem;
+    width: 100%;
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.neo-search-notif .search-icon {
+    position: absolute;
+    left: 1.25rem;
+    color: white;
+    opacity: 0.5;
+}
+
+.neo-search-notif input {
+    width: 100%;
+    padding: 0.9rem 1.5rem 0.9rem 3.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 99px;
+    background: rgba(0, 0, 0, 0.2);
+    font-size: 1.1rem;
+    color: white;
+    transition: all 0.2s ease;
+    outline: none;
+}
+
+.neo-search-notif input:focus {
+    border-color: rgba(255, 145, 45, 0.5);
+}
+
+.notifications-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.notifications-header-row h1 {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: white;
+    margin: 0;
+}
+
+/* Neo-Brutalist Pagination -> Adapted for dark theme */
+.neo-pagination {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.pagination-text {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.pagination-controls {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.neo-btn-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
+    transition: background 0.1s;
+}
+
+.neo-btn-icon:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.neo-btn-icon:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Notification List */
+.notifications-list-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding-bottom: 3rem;
+}
+
+.notif-loading,
+.notif-empty {
+    text-align: center;
+    padding: 3rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 1.2rem;
+    border: 2px dashed rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+/* Neo-Brutalist Card -> Glassmorphism */
+.neo-notif-card {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 1.5rem 2rem;
+    gap: 1.5rem;
+    transition: transform 0.2s, background 0.2s;
+    backdrop-filter: blur(10px);
+}
+
+.neo-notif-card:hover {
+    transform: translateY(-2px);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Avatar */
+.neo-notif-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    overflow: hidden;
+    flex-shrink: 0;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.neo-notif-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.neo-avatar-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+/* Content */
+.neo-notif-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.neo-notif-title {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.neo-notif-name {
+    font-weight: 700;
+    font-size: 1.15rem;
+    color: #ff912d;
+}
+
+.neo-notif-time {
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.neo-notif-desc {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* Actions */
+.neo-notif-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-shrink: 0;
+}
+
+.neo-btn-accept,
+.neo-btn-reject,
+.neo-btn-view {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.6rem 1.5rem;
+    font-weight: 600;
+    font-size: 0.95rem;
+    border: 1px solid transparent;
+    border-radius: 99px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    letter-spacing: 0.5px;
+}
+
+.neo-btn-accept:hover:not(:disabled),
+.neo-btn-reject:hover:not(:disabled),
+.neo-btn-view:hover:not(:disabled) {
+    transform: translateY(-2px);
+}
+
+.neo-btn-accept:disabled,
+.neo-btn-reject:disabled,
+.neo-btn-view:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.neo-btn-accept {
+    background: rgba(255, 145, 45, 0.2);
+    color: #ff912d;
+    border-color: rgba(255, 145, 45, 0.5);
+}
+.neo-btn-accept:hover:not(:disabled) {
+    background: #ff912d;
+    color: white;
+}
+
+.neo-btn-reject {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border-color: rgba(255, 255, 255, 0.2);
+}
+.neo-btn-reject:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.neo-btn-view {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.neo-btn-dismiss {
+    border-radius: 50%;
+}

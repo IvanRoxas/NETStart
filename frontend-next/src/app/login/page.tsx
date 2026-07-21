@@ -1,26 +1,48 @@
 "use client";
 
-import React, { useState } from 'react';
-import { signIn } from 'next-auth/react';
+import React, { useState, useEffect } from 'react';
+import { signIn, useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const savedEmail = localStorage.getItem('netstart_remember_email');
+    const savedPassword = localStorage.getItem('netstart_remember_password');
+    if (savedEmail && savedPassword) {
+      setEmail(savedEmail);
+      setPassword(savedPassword);
+      setRememberMe(true);
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
+    if (rememberMe) {
+      localStorage.setItem('netstart_remember_email', email);
+      localStorage.setItem('netstart_remember_password', password);
+    } else {
+      localStorage.removeItem('netstart_remember_email');
+      localStorage.removeItem('netstart_remember_password');
+    }
+
     const res = await signIn('credentials', {
       redirect: false,
       email,
       password,
+      rememberMe: rememberMe.toString(),
     });
 
     if (res?.error) {
@@ -44,11 +66,15 @@ export default function LoginPage() {
 
       {/* Left Side: Illustration / Background */}
       <div className="relative hidden md:flex md:w-[60%] lg:w-[65%] bg-subs border-r border-white/5 overflow-hidden group">
-        <img 
-          src="/login-bg.jpg" 
+        <Image 
+          src="/login-bg-hq.jpg" 
           alt="Login Background" 
-          className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" 
+          fill
+          className="object-cover group-hover:scale-105 transition-transform duration-1000 brightness-125" 
+          quality={100}
+          priority
         />
+        <div className="absolute inset-0 bg-black/50 backdrop-blur-[2px]"></div>
         <div className="absolute inset-0 bg-gradient-to-t from-[#1e0a2d] via-transparent to-transparent opacity-80"></div>
         
         <div className="relative z-10 w-full h-full flex flex-col justify-end p-12 md:p-16 lg:p-24 pb-20">
@@ -67,74 +93,141 @@ export default function LoginPage() {
       {/* Right Side: Login Form */}
       <div className="w-full md:w-[40%] lg:w-[35%] min-h-screen p-8 md:p-12 lg:p-16 flex flex-col justify-center relative items-center bg-[#1e0a2d]">
         <div className="w-full max-w-[340px]">
-          <div className="mb-10 text-center w-full">
-            <h1 className="font-display text-3xl lg:text-4xl font-bold text-white mb-3">Welcome Back</h1>
-            <p className="font-sans text-white/60 text-sm md:text-base">Access your personalized learning environment.</p>
+          <div className="mb-8 text-center w-full">
+            <h1 className="font-display text-3xl lg:text-4xl font-bold text-[#ff912d] mb-3">Welcome Back!</h1>
+            <p className="font-sans text-white/60 text-sm md:text-base">Ready for another learning adventure?</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="w-full flex flex-col gap-5">
-            <div className="flex flex-col gap-1.5">
-              <label className="font-sans text-white/80 text-sm font-semibold">Email</label>
-              <input 
-                type="email" 
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-[#361d57]/50 text-white font-sans px-4 py-2.5 rounded-xl border border-white/10 outline-none focus:ring-2 focus:ring-[#ff912d] transition-all"
-                placeholder="you@example.com"
-                required
-              />
+          {status === 'loading' ? (
+            <div className="w-full flex justify-center py-12">
+              <div className="w-8 h-8 rounded-full bg-white/10 border-2 border-t-[#ff912d] animate-spin"></div>
             </div>
-
-            <div className="flex flex-col gap-1.5">
-              <label className="font-sans text-white/80 text-sm font-semibold">Password</label>
-              <input 
-                type="password" 
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-[#361d57]/50 text-white font-sans px-4 py-2.5 rounded-xl border border-white/10 outline-none focus:ring-2 focus:ring-[#ff912d] transition-all"
-                placeholder="••••••••"
-                required
-              />
-            </div>
-
-            {error && <p className="font-sans text-red-500 text-xs text-center">{error}</p>}
-
-            <button 
-              type="submit"
-              disabled={loading}
-              className="w-full bg-buttons text-white font-sans font-bold text-[15px] py-3 px-6 mt-4 rounded-full shadow-[4px_4px_0_#150524] hover:shadow-[6px_6px_0_#150524] hover:brightness-110 hover:-translate-y-1 hover:-translate-x-1 transition-all active:translate-y-1 active:translate-x-1 active:shadow-none active:scale-95 disabled:opacity-70 disabled:active:scale-100 disabled:hover:translate-x-0 disabled:hover:translate-y-0 disabled:hover:shadow-[4px_4px_0_#150524] cursor-pointer disabled:cursor-not-allowed"
-            >
-              {loading ? 'Authenticating...' : 'Sign In'}
-            </button>
-          </form>
-
-          <div className="w-full flex items-center gap-4 my-8">
-            <div className="flex-1 h-px bg-white/10"></div>
-            <span className="font-sans font-semibold text-white/40 text-xs tracking-widest uppercase">Or</span>
-            <div className="flex-1 h-px bg-white/10"></div>
-          </div>
-
-          <button 
-            onClick={() => signIn('google', { callbackUrl: '/dashboard' })}
-            className="flex items-center justify-center gap-4 w-full bg-transparent border-2 border-white/20 text-white hover:bg-white hover:text-[#150524] font-sans font-bold text-[14px] py-2.5 px-6 rounded-full transition-all active:scale-95 cursor-pointer"
-          >
-            <svg className="w-5 h-5 bg-white rounded-full p-0.5" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-            </svg>
-            Continue with Google
-          </button>
-          
-          <div className="mt-8 text-center w-full">
-            <p className="font-sans text-sm text-white/60">
-              Need an account?{' '}
-              <Link href="/register" className="text-[#ff912d] hover:text-[#ffc107] font-bold transition-colors">
-                Register here
+          ) : session?.user ? (
+            <div className="w-full flex flex-col gap-4 bg-white/5 p-6 rounded-2xl border border-white/10 text-center">
+              <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-tr from-[#361d57] to-[#ff912d] p-[2px] shadow-lg mb-2">
+                <div className="w-full h-full bg-[#1e0a2d] rounded-full overflow-hidden flex items-center justify-center">
+                  {session.user.image ? (
+                    <Image src={session.user.image} alt="User Avatar" width={64} height={64} className="object-cover" />
+                  ) : (
+                    <span className="font-bold text-[#ff912d] text-xl uppercase">{session.user.name?.charAt(0) || 'U'}</span>
+                  )}
+                </div>
+              </div>
+              <h3 className="text-white font-bold text-lg">{session.user.name}</h3>
+              <p className="text-white/60 text-sm mb-4">{session.user.email}</p>
+              
+              <Link 
+                href="/dashboard"
+                className="w-full bg-buttons text-white font-sans font-bold text-sm py-3 px-6 rounded-full shadow-[4px_4px_0_#150524] hover:shadow-[6px_6px_0_#150524] hover:-translate-y-1 hover:-translate-x-1 transition-all active:translate-y-1 active:translate-x-1 active:shadow-none"
+              >
+                Continue to Dashboard
               </Link>
-            </p>
-          </div>
+              
+              <button 
+                onClick={() => signOut({ redirect: false })}
+                className="w-full mt-2 bg-transparent border-2 border-white/20 text-white font-sans font-bold text-sm py-2.5 px-6 rounded-full hover:bg-white hover:text-[#150524] transition-all"
+              >
+                Sign in to another account
+              </button>
+            </div>
+          ) : (
+            <>
+              <form onSubmit={handleSubmit} className="w-full flex flex-col gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="font-sans text-white/80 text-sm font-semibold">Email</label>
+                  <input 
+                    type="email" 
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full bg-[#361d57]/50 text-white font-sans text-sm px-3 py-2 rounded-xl border border-white/10 outline-none focus:ring-2 focus:ring-[#ff912d] transition-all"
+                    placeholder="you@example.com"
+                    required
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="font-sans text-white/80 text-sm font-semibold">Password</label>
+                  <input 
+                    type="password" 
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full bg-[#361d57]/50 text-white font-sans text-sm px-3 py-2 rounded-xl border border-white/10 outline-none focus:ring-2 focus:ring-[#ff912d] transition-all"
+                    placeholder="••••••••"
+                    required
+                  />
+                </div>
+
+                <div className="flex items-center gap-3 mt-1">
+                  <label className="relative flex cursor-pointer items-center rounded-full p-1" htmlFor="checkbox">
+                    <input
+                      type="checkbox"
+                      className="before:content[''] peer relative h-5 w-5 cursor-pointer appearance-none rounded-md border border-white/20 bg-white/5 transition-all before:absolute before:top-2/4 before:left-2/4 before:block before:h-12 before:w-12 before:-translate-y-2/4 before:-translate-x-2/4 before:rounded-full before:bg-blue-gray-500 before:opacity-0 before:transition-opacity checked:border-[#ff912d] checked:bg-[#ff912d] checked:before:bg-[#ff912d] hover:before:opacity-10"
+                      id="checkbox"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                    />
+                    <div className="pointer-events-none absolute top-2/4 left-2/4 -translate-y-2/4 -translate-x-2/4 text-[#150524] opacity-0 transition-opacity peer-checked:opacity-100">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-3.5 w-3.5"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                        stroke="currentColor"
+                        strokeWidth="1"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clipRule="evenodd"
+                        ></path>
+                      </svg>
+                    </div>
+                  </label>
+                  <label className="mt-px cursor-pointer select-none font-sans text-sm font-semibold text-white/70 hover:text-white transition-colors" htmlFor="checkbox">
+                    Remember Me
+                  </label>
+                </div>
+
+                {error && <p className="font-sans text-red-500 text-xs text-center">{error}</p>}
+
+                <button 
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-buttons text-white font-sans font-bold text-sm py-2.5 px-6 mt-2 rounded-full shadow-[4px_4px_0_#150524] hover:shadow-[6px_6px_0_#150524] hover:brightness-110 hover:-translate-y-1 hover:-translate-x-1 transition-all active:translate-y-1 active:translate-x-1 active:shadow-none active:scale-95 disabled:opacity-70 disabled:active:scale-100 disabled:hover:translate-x-0 disabled:hover:translate-y-0 disabled:hover:shadow-[4px_4px_0_#150524] cursor-pointer disabled:cursor-not-allowed"
+                >
+                  {loading ? 'Authenticating...' : 'Sign In'}
+                </button>
+              </form>
+
+              <div className="w-full flex items-center gap-4 my-8">
+                <div className="flex-1 h-px bg-white/10"></div>
+                <span className="font-sans font-semibold text-white/40 text-xs tracking-widest uppercase">Or</span>
+                <div className="flex-1 h-px bg-white/10"></div>
+              </div>
+
+              <button 
+                onClick={() => signIn('google', { callbackUrl: '/dashboard' })}
+                className="flex items-center justify-center gap-4 w-full bg-transparent border-2 border-white/20 text-white hover:bg-white hover:text-[#150524] font-sans font-bold text-sm py-2 px-6 rounded-full transition-all active:scale-95 cursor-pointer"
+              >
+                <svg className="w-5 h-5 bg-white rounded-full p-0.5" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                </svg>
+                Continue with Google
+              </button>
+              
+              <div className="mt-8 text-center w-full">
+                <p className="font-sans text-sm text-white/60">
+                  Need an account?{' '}
+                  <Link href="/register" className="text-[#ff912d] hover:text-[#ffc107] font-bold transition-colors">
+                    Register here
+                  </Link>
+                </p>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </section>

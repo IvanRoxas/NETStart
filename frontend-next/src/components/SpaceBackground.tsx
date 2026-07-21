@@ -47,7 +47,7 @@ export default function SpaceBackground() {
   const moonRotation = `rotate(${startingAngle + (currentSlide * 90)}deg)`;
 
   return (
-    <div className="fixed inset-0 w-[100vw] h-[100vh] -z-50 pointer-events-none overflow-hidden animate-fade-in">
+    <div className="fixed inset-0 w-[100vw] h-[100vh] -z-50 pointer-events-none overflow-hidden">
       {/* Background Image Container */}
       <div 
         className="absolute inset-0 w-full h-full transition-all duration-1000 ease-[cubic-bezier(0.645,0.045,0.355,1)]"
@@ -63,7 +63,7 @@ export default function SpaceBackground() {
 
       {/* Scattered Planets Layer */}
       <div 
-        className="absolute top-0 left-0 h-full z-[1] transition-transform duration-1000 ease-[cubic-bezier(0.645,0.045,0.355,1)] animate-fade-in-more-delayed"
+        className="absolute top-0 left-0 h-full z-[1] transition-transform duration-1000 ease-[cubic-bezier(0.645,0.045,0.355,1)]"
         style={{ 
           width: '400vw',
           transform: `translateX(-${currentSlide * 100}vw)` 
@@ -85,7 +85,7 @@ export default function SpaceBackground() {
       </div>
 
       {/* Rotating Moon */}
-      <div className="absolute bottom-[-1500px] left-1/2 -translate-x-1/2 z-[1] pointer-events-none animate-fade-in-delayed">
+      <div className="absolute bottom-[-1500px] left-1/2 -translate-x-1/2 z-[1] pointer-events-none">
         <img 
           src="/cc.svg" 
           alt="Moon" 

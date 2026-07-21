@@ -31,6 +31,7 @@ export async function POST(req: Request) {
         email,
         password: hashedPassword,
         name: username, // Assign provided username
+        displayName: `Explorer${Math.floor(10000 + Math.random() * 90000)}`,
       },
     });
 

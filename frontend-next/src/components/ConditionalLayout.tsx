@@ -5,12 +5,25 @@ import Navbar from "@/components/Navbar";
 import SpaceBackground from "@/components/SpaceBackground";
 import Footer from "@/components/Footer";
 import Providers from "@/components/Providers";
+import AppLayout from "@/components/AppLayout";
 
 export default function ConditionalLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isCustomLayoutPage = pathname === "/login" || pathname === "/register" || pathname === "/sandbox" || pathname?.startsWith("/dashboard");
+  
+  const isAuthPage = pathname === "/login" || pathname === "/register";
+  const isAppPage = pathname === "/sandbox" || pathname?.startsWith("/dashboard") || pathname === "/settings" || pathname === "/modules" || pathname === "/profile" || pathname === "/notifications";
 
-  if (isCustomLayoutPage) {
+  if (isAppPage) {
+    return (
+      <Providers>
+        <AppLayout>
+          {children}
+        </AppLayout>
+      </Providers>
+    );
+  }
+
+  if (isAuthPage) {
     // Render without Navbar, Footer, and SpaceBackground
     return (
       <Providers>

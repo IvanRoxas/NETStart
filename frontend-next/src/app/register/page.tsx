@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -57,11 +58,15 @@ export default function RegisterPage() {
 
       {/* Left Side (Actually Right Side structurally due to flex-row-reverse): Illustration */}
       <div className="relative hidden md:flex md:w-[60%] lg:w-[65%] bg-subs border-l border-white/5 overflow-hidden group">
-        <img 
-          src="/login-bg.jpg" 
+        <Image 
+          src="/login-bg-hq.jpg" 
           alt="Registration Background" 
-          className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" 
+          fill
+          className="object-cover group-hover:scale-105 transition-transform duration-1000 brightness-125" 
+          quality={100}
+          priority
         />
+        <div className="absolute inset-0 bg-black/50 backdrop-blur-[2px]"></div>
         <div className="absolute inset-0 bg-gradient-to-t from-[#1e0a2d] via-transparent to-transparent opacity-80"></div>
         
         <div className="relative z-10 w-full h-full flex flex-col justify-end p-12 md:p-16 lg:p-24 pb-20">
@@ -80,19 +85,19 @@ export default function RegisterPage() {
       {/* Right Side (Actually Left Side structurally): Registration Form */}
       <div className="w-full md:w-[40%] lg:w-[35%] min-h-screen p-8 md:p-12 lg:p-16 flex flex-col justify-center relative items-center bg-[#1e0a2d]">
         <div className="w-full max-w-[340px]">
-          <div className="mb-10 text-center w-full">
-            <h1 className="font-display text-3xl lg:text-4xl font-bold text-white mb-3">Create Account</h1>
-            <p className="font-sans text-white/60 text-sm md:text-base">Join NETStart to access your modules.</p>
+          <div className="mb-8 text-center w-full">
+            <h1 className="font-display text-3xl lg:text-4xl font-bold text-[#ff912d] mb-3">Create an Account</h1>
+            <p className="font-sans text-white/60 text-sm md:text-base">Your journey begins here!</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="w-full flex flex-col gap-5">
+          <form onSubmit={handleSubmit} className="w-full flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
               <label className="font-sans text-white/80 text-sm font-semibold">Username</label>
               <input 
                 type="text" 
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full bg-[#361d57]/50 text-white font-sans px-4 py-2.5 rounded-xl border border-white/10 outline-none focus:ring-2 focus:ring-[#ff912d] transition-all"
+                className="w-full bg-[#361d57]/50 text-white font-sans text-sm px-3 py-2 rounded-xl border border-white/10 outline-none focus:ring-2 focus:ring-[#ff912d] transition-all"
                 placeholder="Choose a username"
                 required
               />
@@ -104,7 +109,7 @@ export default function RegisterPage() {
                 type="email" 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-[#361d57]/50 text-white font-sans px-4 py-2.5 rounded-xl border border-white/10 outline-none focus:ring-2 focus:ring-[#ff912d] transition-all"
+                className="w-full bg-[#361d57]/50 text-white font-sans text-sm px-3 py-2 rounded-xl border border-white/10 outline-none focus:ring-2 focus:ring-[#ff912d] transition-all"
                 placeholder="you@example.com"
                 required
               />
@@ -116,7 +121,7 @@ export default function RegisterPage() {
                 type="password" 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-[#361d57]/50 text-white font-sans px-4 py-2.5 rounded-xl border border-white/10 outline-none focus:ring-2 focus:ring-[#ff912d] transition-all"
+                className="w-full bg-[#361d57]/50 text-white font-sans text-sm px-3 py-2 rounded-xl border border-white/10 outline-none focus:ring-2 focus:ring-[#ff912d] transition-all"
                 placeholder="Create a strong password"
                 required
                 minLength={6}
@@ -128,7 +133,7 @@ export default function RegisterPage() {
             <button 
               type="submit"
               disabled={loading}
-              className="w-full bg-white text-[#150524] font-sans font-bold text-[15px] py-3 px-6 mt-4 rounded-full shadow-[4px_4px_0_#150524] hover:shadow-[6px_6px_0_#150524] hover:brightness-110 hover:-translate-y-1 hover:-translate-x-1 transition-all active:translate-y-1 active:translate-x-1 active:shadow-none active:scale-95 disabled:opacity-70 disabled:active:scale-100 disabled:hover:translate-x-0 disabled:hover:translate-y-0 disabled:hover:shadow-[4px_4px_0_#150524] cursor-pointer disabled:cursor-not-allowed"
+              className="w-full bg-[#ff912d] text-white font-sans font-bold text-sm py-2.5 px-6 mt-2 rounded-full shadow-[4px_4px_0_#150524] hover:shadow-[6px_6px_0_#150524] hover:brightness-110 hover:-translate-y-1 hover:-translate-x-1 transition-all active:translate-y-1 active:translate-x-1 active:shadow-none active:scale-95 disabled:opacity-70 disabled:active:scale-100 disabled:hover:translate-x-0 disabled:hover:translate-y-0 disabled:hover:shadow-[4px_4px_0_#150524] cursor-pointer disabled:cursor-not-allowed"
             >
               {loading ? 'Creating Account...' : 'Register'}
             </button>
@@ -142,7 +147,7 @@ export default function RegisterPage() {
 
           <button 
             onClick={() => signIn('google', { callbackUrl: '/dashboard' })}
-            className="flex items-center justify-center gap-4 w-full bg-transparent border-2 border-white/20 text-white hover:bg-white hover:text-[#150524] font-sans font-bold text-[14px] py-2.5 px-6 rounded-full transition-all active:scale-95 cursor-pointer"
+            className="flex items-center justify-center gap-4 w-full bg-transparent border-2 border-white/20 text-white hover:bg-white hover:text-[#150524] font-sans font-bold text-sm py-2 px-6 rounded-full transition-all active:scale-95 cursor-pointer"
           >
             <svg className="w-5 h-5 bg-white rounded-full p-0.5" viewBox="0 0 24 24" fill="currentColor">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -156,7 +161,7 @@ export default function RegisterPage() {
           <div className="mt-8 text-center w-full">
             <p className="font-sans text-sm text-white/60">
               Already have an account?{' '}
-              <Link href="/login" className="text-white hover:text-[#ffc107] font-bold transition-colors">
+              <Link href="/login" className="text-[#ff912d] hover:text-orange-400 font-bold transition-colors">
                 Sign in here
               </Link>
             </p>

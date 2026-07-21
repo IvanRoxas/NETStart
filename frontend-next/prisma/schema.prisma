@@ -39,17 +39,57 @@ model Session {
 model User {
   id            String    @id @default(cuid()) @map("user_id")
   name          String?   @map("username")
+  displayName   String?   @map("display_name")
   email         String?   @unique
   emailVerified DateTime? @map("email_verified")
   password      String?
   image         String?
+  banner        String?
+  status        String?
+  bio           String?   @db.Text
   role          String    @default("student")
   createdAt     DateTime  @default(now()) @map("created_at")
   
   accounts      Account[]
   sessions      Session[]
 
+  friendshipsSent     Friendship[] @relation("FriendshipsSent")
+  friendshipsReceived Friendship[] @relation("FriendshipsReceived")
+  notifications       Notification[] @relation("AppNotifications")
+  sentNotifications   Notification[] @relation("SentNotifications")
+
   @@map("users")
+}
+
+model Friendship {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  friendId  String   @map("friend_id")
+  status    String   @default("pending")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user      User     @relation("FriendshipsSent", fields: [userId], references: [id], onDelete: Cascade)
+  friend    User     @relation("FriendshipsReceived", fields: [friendId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, friendId])
+  @@map("friendships")
+}
+
+model Notification {
+  id               String    @id @default(cuid())
+  userId           String    @map("user_id")
+  senderId         String?   @map("sender_id")
+  notificationType String    @map("notification_type")
+  data             Json?
+  readAt           DateTime? @map("read_at")
+  createdAt        DateTime  @default(now()) @map("created_at")
+
+  user   User  @relation("AppNotifications", fields: [userId], references: [id], onDelete: Cascade)
+  sender User? @relation("SentNotifications", fields: [senderId], references: [id], onDelete: SetNull)
+
+  @@index([userId, readAt])
+  @@map("notifications")
 }
 
 model VerificationToken {
