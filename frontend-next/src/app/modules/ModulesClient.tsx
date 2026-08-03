@@ -220,52 +220,61 @@ export default function ModulesClient({ isVerified, liveStats, completedMissions
           </div>
         </div>
       )}
-      {/* Active Mission Sliding Popup (Horizontal Premium Layout, floats above N logo) */}
-      <div className={`fixed bottom-24 right-6 z-40 max-w-md w-[380px] bg-[#1a082c]/95 backdrop-blur-xl border border-[#ff912d]/20 p-5 rounded-2xl shadow-2xl transition-all duration-700 shadow-[#ff912d]/5 flex gap-4 ${
+      {/* Active Mission Sliding Popup (Space Banner Vertical Layout, floats above N logo) */}
+      <div className={`fixed bottom-24 right-6 z-40 max-w-sm w-[330px] bg-[#1a082c]/95 backdrop-blur-xl border border-[#ff912d]/20 rounded-2xl shadow-2xl transition-all duration-700 shadow-[#ff912d]/5 flex flex-col overflow-hidden ${
         showPopup ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-12 scale-95 pointer-events-none'
       }`}>
         {/* Absolute Close Button */}
         <button 
           onClick={() => setShowPopup(false)} 
-          className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors p-1 hover:bg-white/5 rounded-full"
+          className="absolute top-3 right-3 text-white/50 hover:text-white transition-colors p-1 bg-black/40 hover:bg-black/60 rounded-full z-50"
         >
           <X size={14} />
         </button>
 
-        {/* Left Column: Stylized Planet Thumbnail */}
-        <div className="relative w-16 h-16 rounded-full bg-black/40 border border-white/10 flex-shrink-0 flex items-center justify-center overflow-hidden shadow-inner shadow-black/50">
+        {/* Space Banner Graphic Header Area */}
+        <div className="relative w-full h-24 overflow-hidden">
           <img 
-            src="/Planet 2.svg" 
-            alt="Active Planet" 
-            className="w-[85%] h-[85%] object-contain animate-spin-slow"
+            src="/Landing Page BG.png" 
+            alt="Mission Space Banner" 
+            className="w-full h-full object-cover scale-110"
           />
-          {/* Outer glow aura ring */}
-          <div className="absolute inset-0 rounded-full border border-[#ff912d]/10 animate-pulse pointer-events-none" />
-        </div>
-
-        {/* Right Column: Mission Text & Action Buttons */}
-        <div className="flex-1 flex flex-col gap-2.5">
-          <div className="flex flex-col">
-            <span className="text-[9px] font-mono font-black text-[#ff912d] tracking-widest uppercase flex items-center gap-1.5 leading-none mb-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#ff912d] animate-ping" />
-              Active Orbit
-            </span>
-            <h4 className="text-white font-black text-sm tracking-wide">JavaScript Variables</h4>
-            <p className="text-gray-400 text-[11px] mt-1 leading-normal">
-              Deploy variables to memory banks using custom Blockly components.
-            </p>
+          <div className="absolute inset-0 bg-gradient-to-t from-[#1a082c] via-[#1a082c]/30 to-transparent" />
+          
+          {/* Stylized flying rocket */}
+          <div className="absolute top-3 left-6 animate-bounce" style={{ animationDuration: '3.5s' }}>
+            <Rocket className="text-[#ff912d] -rotate-45 drop-shadow-[0_0_8px_#ff912d]" size={24} />
           </div>
 
-          <div className="w-full h-px bg-white/5" />
+          {/* Rotating JavaScript themed planet graphic */}
+          <div className="absolute bottom-2 right-6 animate-spin-slow">
+            <img src="/Planet 2.svg" alt="Active Planet" className="w-10 h-10 object-contain" />
+          </div>
+        </div>
+
+        {/* Vertical Text Card Contents Area */}
+        <div className="p-5 flex flex-col gap-3">
+          <div className="flex items-center justify-between gap-4">
+            <h4 className="text-white font-black text-sm tracking-wide">JavaScript Variables</h4>
+            <span className="bg-[#ff912d]/10 text-[#ff912d] border border-[#ff912d]/25 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider whitespace-nowrap flex-shrink-0">
+              Active Orbit
+            </span>
+          </div>
+
+          <p className="text-gray-400 text-[11px] leading-normal text-left">
+            Deploy variables to memory banks using custom Blockly components. You have unfinished modules awaiting your command.
+          </p>
+
+          <div className="w-full h-px bg-white/5 my-0.5" />
 
           <div className="flex items-center justify-between">
-            <div className="flex flex-col text-[10px] leading-tight font-mono">
+            <div className="flex flex-col text-[10px] leading-tight font-mono text-left">
               <span className="text-[#b259ff] font-bold">+100 XP</span>
               <span className="text-gray-500 font-bold mt-0.5">+25 Gears</span>
             </div>
             <Link 
               href="/modules/javascript_3" 
-              className="px-4 py-2 bg-gradient-to-r from-[#ff912d] to-[#ff5722] hover:from-[#ff5722] hover:to-[#ff912d] text-white font-extrabold text-xs rounded-lg transition-transform hover:scale-105 shadow-md shadow-[#ff912d]/10"
+              className="px-4 py-2 bg-gradient-to-r from-[#ff912d] to-[#ff5722] hover:from-[#ff5722] hover:to-[#ff912d] text-white font-extrabold text-xs rounded-xl transition-transform hover:scale-105 shadow-md shadow-[#ff912d]/10"
             >
               Resume Orbit
             </Link>
