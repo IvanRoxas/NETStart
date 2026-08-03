@@ -28,13 +28,13 @@ export default function ModulesClient({ isVerified, liveStats, completedMissions
     !isVerified ? 'blur-md pointer-events-none opacity-50' : ''
   }`;
 
-  // Winding learning path configuration
+  // Winding learning path configuration - spread across 150vh canvas
   const pathNodes = [
-    { id: "html", name: "HTML", subtitle: "HyperText Markup", top: "75%", left: "22%", sizeClass: "w-48 h-48", src: "/Planet 7.svg", imgScale: 0.82, rotationSpeed: 30, reverse: true, totalMissions: 5 },
-    { id: "css", name: "CSS", subtitle: "Cascading Style Sheets", top: "72%", left: "76%", sizeClass: "w-40 h-40", src: "/Planet 4.svg", imgScale: 0.82, rotationSpeed: 18, reverse: false, totalMissions: 5 },
-    { id: "javascript", name: "JavaScript", subtitle: "Dynamic Scripting", top: "45%", left: "48%", sizeClass: "w-64 h-64", src: "/Planet 2.svg", imgScale: 0.82, rotationSpeed: 40, reverse: false, totalMissions: 8 },
-    { id: "react", name: "React", subtitle: "Frontend Components", top: "24%", left: "18%", sizeClass: "w-56 h-56", src: "/Planet 1.svg", imgScale: 0.72, rotationSpeed: 28, reverse: false, totalMissions: 10 },
-    { id: "node", name: "Node", subtitle: "Backend Server", top: "18%", left: "82%", sizeClass: "w-44 h-44", src: "/Planet 3.svg", imgScale: 0.85, rotationSpeed: 22, reverse: true, totalMissions: 6 }
+    { id: "html", name: "HTML", subtitle: "HyperText Markup", top: "15%", left: "22%", sizeClass: "w-48 h-48", src: "/Planet 7.svg", imgScale: 0.82, rotationSpeed: 30, reverse: true, totalMissions: 5 },
+    { id: "css", name: "CSS", subtitle: "Cascading Style Sheets", top: "35%", left: "76%", sizeClass: "w-40 h-40", src: "/Planet 4.svg", imgScale: 0.82, rotationSpeed: 18, reverse: false, totalMissions: 5 },
+    { id: "javascript", name: "JavaScript", subtitle: "Dynamic Scripting", top: "55%", left: "48%", sizeClass: "w-64 h-64", src: "/Planet 2.svg", imgScale: 0.82, rotationSpeed: 40, reverse: false, totalMissions: 8 },
+    { id: "react", name: "React", subtitle: "Frontend Components", top: "75%", left: "18%", sizeClass: "w-56 h-56", src: "/Planet 1.svg", imgScale: 0.72, rotationSpeed: 28, reverse: false, totalMissions: 10 },
+    { id: "node", name: "Node", subtitle: "Backend Server", top: "90%", left: "82%", sizeClass: "w-44 h-44", src: "/Planet 3.svg", imgScale: 0.85, rotationSpeed: 22, reverse: true, totalMissions: 6 }
   ];
 
   // Map user completed count per module (matching lowercase startsWith logic)
@@ -79,8 +79,8 @@ export default function ModulesClient({ isVerified, liveStats, completedMissions
   return (
     <div className="relative w-full h-full overflow-hidden">
       
-      {/* Sci-Fi HUD Top Bar */}
-      <div className="absolute top-0 left-0 right-0 z-30 bg-black/40 backdrop-blur-md border-b border-white/10 px-8 py-4 flex items-center justify-between">
+      {/* Sci-Fi Floating HUD Top Bar */}
+      <div className="fixed top-6 left-1/2 -translate-x-1/2 w-[95%] max-w-7xl z-50 flex items-center justify-between bg-[#1a082c]/80 backdrop-blur-md border border-gray-700 shadow-2xl shadow-[#ff912d]/10 rounded-2xl px-8 py-4">
         <div className="flex items-center gap-3">
           <Rocket className="text-[#ff912d] animate-pulse" size={22} />
           <h2 className="font-display font-black tracking-wider text-white text-base md:text-lg">
@@ -88,31 +88,34 @@ export default function ModulesClient({ isVerified, liveStats, completedMissions
           </h2>
         </div>
         
-        {/* Live Stats display */}
-        <div className="flex items-center gap-6 md:gap-8 text-white">
-          {/* Level */}
-          <div className="flex items-center gap-2">
+        {/* Live Stats display with game capsules */}
+        <div className="flex items-center gap-4 text-white">
+          {/* Level Capsule */}
+          <div className="flex items-center gap-3 bg-black/40 border border-white/10 rounded-full px-4 py-2">
             <Award className="text-[#ff912d]" size={18} />
             <span className="text-xs font-bold font-mono tracking-wide uppercase text-gray-400">Level</span>
             <span className="text-sm font-black font-display text-white">{liveStats.level}</span>
           </div>
 
-          {/* XP Bar */}
-          <div className="hidden sm:flex flex-col gap-1 w-28 md:w-36">
-            <div className="flex justify-between items-center text-[10px] font-mono text-gray-400 font-bold">
-              <span className="flex items-center gap-0.5"><Zap size={10} className="text-yellow-400" /> XP PROGRESS</span>
-              <span>{Math.round(liveStats.progress)}%</span>
-            </div>
-            <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
-              <div 
-                className="h-full bg-gradient-to-r from-yellow-400 to-[#ff912d] rounded-full shadow-[0_0_8px_rgba(255,145,45,0.4)]"
-                style={{ width: `${liveStats.progress}%` }}
-              />
+          {/* XP Progress Capsule */}
+          <div className="hidden sm:flex items-center gap-3 bg-black/40 border border-white/10 rounded-full px-4 py-2 w-48 md:w-56">
+            <Zap size={14} className="text-yellow-400" />
+            <div className="flex-1 flex flex-col gap-0.5">
+              <div className="flex justify-between items-center text-[9px] font-mono text-gray-400 font-bold">
+                <span>XP PROGRESS</span>
+                <span>{Math.round(liveStats.progress)}%</span>
+              </div>
+              <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
+                <div 
+                  className="h-full bg-[#ff912d] rounded-full shadow-[0_0_10px_#ff912d]"
+                  style={{ width: `${liveStats.progress}%` }}
+                />
+              </div>
             </div>
           </div>
 
-          {/* Gears */}
-          <div className="flex items-center gap-2">
+          {/* Gears Capsule */}
+          <div className="flex items-center gap-3 bg-black/40 border border-white/10 rounded-full px-4 py-2">
             <Settings className="text-[#a855f7] animate-spin-slow" size={18} />
             <span className="text-xs font-bold font-mono tracking-wide uppercase text-gray-400">Gears</span>
             <span className="text-sm font-black font-display text-[#a855f7]">{liveStats.gears}</span>
@@ -142,7 +145,7 @@ export default function ModulesClient({ isVerified, liveStats, completedMissions
           preserveAspectRatio="none"
         >
           <path
-            d="M 22 75 L 76 72 L 48 45 L 18 24 L 82 18"
+            d="M 22 15 L 76 35 L 48 55 L 18 75 L 82 90"
             fill="none"
             stroke="#ff912d"
             strokeWidth="0.5"

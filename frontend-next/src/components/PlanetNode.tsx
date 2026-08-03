@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { Lock, Check } from 'lucide-react';
+import { Lock, Check, Rocket } from 'lucide-react';
 
 interface PlanetNodeProps {
   id: string;
@@ -45,7 +45,7 @@ export default function PlanetNode({
   const calculatedRepeat = Math.max(2, Math.floor(289.03 / itemWidth));
   const actualRepeat = repeatCount === 15 ? calculatedRepeat : repeatCount;
 
-  // Build a repeating string for the text path with clear double spaces and a trailing separator
+  // Build a repeating string for the text path with double spaces and a trailing separator
   const repeatingLabel = Array(actualRepeat).fill(upperName).join('  •  ') + '  •';
 
   // State-specific visual class configuration
@@ -117,6 +117,9 @@ export default function PlanetNode({
         </div>
       )}
 
+      {/* Solid background mask to prevent flight path dashed lines from showing through */}
+      <div className="absolute w-[70%] h-[70%] bg-[#130927] rounded-full z-0 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+
       {/* The Status Badges */}
       {renderStatusBadge()}
       {renderCenteredStatus()}
@@ -131,7 +134,7 @@ export default function PlanetNode({
         />
       </div>
 
-      {/* Rotating SVG Text (Disabled rotation for locked nodes to indicate freezing) */}
+      {/* Rotating SVG Text (Disabled rotation for locked nodes) */}
       <svg 
         className={`absolute inset-0 z-20 w-full h-full overflow-visible ${
           isLocked ? 'opacity-25' : ''
@@ -157,26 +160,31 @@ export default function PlanetNode({
         </text>
       </svg>
 
-      {/* Floating Hover Tooltip Info */}
-      <div className="absolute -bottom-16 left-1/2 -translate-x-1/2 w-52 bg-[#150a21]/95 backdrop-blur-md border border-white/10 p-3 rounded-2xl shadow-2xl shadow-black/80 flex flex-col items-center gap-1 text-center opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none z-50 transform translate-y-2 group-hover:translate-y-0">
-        <span className="text-white text-xs font-black tracking-wide uppercase font-display">{name}</span>
-        <span className="text-gray-400 text-[10px] leading-tight font-medium font-sans">{subtitle}</span>
+      {/* Floating Hover Tooltip Info (Frosted Glass select page tooltip) */}
+      <div className="absolute z-50 w-56 p-4 bg-[#1a082c]/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl shadow-black/50 transform -translate-x-1/2 left-1/2 top-full mt-4 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none">
+        <div className="flex flex-col items-center text-center">
+          <span className="text-white font-black tracking-widest uppercase text-sm">{name}</span>
+          <span className="text-gray-400 text-xs font-medium mt-1">{subtitle}</span>
+        </div>
         
-        <div className="w-full h-[1px] bg-white/5 my-1" />
+        <div className="w-full h-px bg-white/10 my-3" />
         
-        <div className="flex items-center gap-1.5 justify-center w-full">
-          <span className="text-[10px] font-bold text-gray-400 font-mono">
-            {completedCount}/{totalCount} Completed
-          </span>
-          <span className={`text-[10px] font-black uppercase tracking-wider ${
-            isLocked 
-              ? 'text-red-500' 
-              : isCompleted 
-                ? 'text-emerald-400' 
-                : 'text-[#ff912d] animate-pulse'
-          }`}>
-            • {isLocked ? 'Locked' : isCompleted ? 'Revisit' : 'Enter Orbit'}
-          </span>
+        {/* Progress & Action Row */}
+        <div className="flex items-center justify-between w-full">
+          <div className="flex flex-col items-start leading-none">
+            <span className="text-white font-bold text-sm">{completedCount}/{totalCount}</span>
+            <span className="text-[10px] text-gray-500 uppercase tracking-wider mt-0.5">Completed</span>
+          </div>
+          
+          {isLocked ? (
+            <span className="bg-red-500/10 text-red-400 border border-red-500/20 px-3 py-1.5 rounded-full text-[10px] font-bold tracking-widest uppercase flex items-center gap-1">
+              <Lock size={10} /> Locked
+            </span>
+          ) : (
+            <span className="bg-[#ff912d]/20 text-[#ff912d] border border-[#ff912d]/30 px-3 py-1.5 rounded-full text-[10px] font-bold tracking-widest uppercase flex items-center gap-1">
+              <Rocket size={10} className="animate-pulse" /> {isCompleted ? 'Revisit' : 'Enter Orbit'}
+            </span>
+          )}
         </div>
       </div>
 

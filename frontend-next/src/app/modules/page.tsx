@@ -45,14 +45,12 @@ export default async function ModulesPage() {
   };
 
   return (
-    <div className="flex w-full h-full">
-      <main className="flex-1 flex flex-col z-10 h-full overflow-hidden relative">
-        <ModulesClient 
-          isVerified={isVerified} 
-          liveStats={liveStats} 
-          completedMissions={completedMissions} 
-        />
-      </main>
+    <div className="relative w-full min-h-[150vh] overflow-x-hidden overflow-y-auto bg-[#130927]">
+      <ModulesClient 
+        isVerified={isVerified} 
+        liveStats={liveStats} 
+        completedMissions={completedMissions} 
+      />
     </div>
   );
 }
