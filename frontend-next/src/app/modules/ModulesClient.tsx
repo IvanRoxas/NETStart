@@ -77,10 +77,10 @@ export default function ModulesClient({ isVerified, liveStats, completedMissions
   };
 
   return (
-    <div className="relative w-full h-full overflow-hidden">
+    <div className="relative w-full h-[150vh] overflow-hidden">
       
       {/* Sci-Fi Floating HUD Top Bar */}
-      <div className="fixed top-6 left-1/2 -translate-x-1/2 w-[95%] max-w-7xl z-50 flex items-center justify-between bg-[#1a082c]/80 backdrop-blur-md border border-gray-700 shadow-2xl shadow-[#ff912d]/10 rounded-2xl px-8 py-4">
+      <div className="absolute top-6 left-1/2 -translate-x-1/2 w-[95%] max-w-7xl z-50 flex items-center justify-between bg-[#1a082c]/80 backdrop-blur-md border border-gray-700 shadow-2xl shadow-[#ff912d]/10 rounded-2xl px-8 py-4">
         <div className="flex items-center gap-3">
           <Rocket className="text-[#ff912d] animate-pulse" size={22} />
           <h2 className="font-display font-black tracking-wider text-white text-base md:text-lg">
