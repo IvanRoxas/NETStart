@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { Lock, Rocket, Award, Settings, Zap } from 'lucide-react';
 import PlanetNode from '@/components/PlanetNode';
+import { getXPDetails } from '@/lib/leveling';
 
 interface LiveStats {
   level: number;
@@ -28,13 +29,13 @@ export default function ModulesClient({ isVerified, liveStats, completedMissions
     !isVerified ? 'blur-md pointer-events-none opacity-50' : ''
   }`;
 
-  // Winding learning path configuration - original coordinates layout
+  // Winding learning path configuration - shifted downwards to avoid HUD overlaps
   const pathNodes = [
-    { id: "html", name: "HTML", subtitle: "HyperText Markup", top: "75%", left: "22%", sizeClass: "w-48 h-48", src: "/Planet 7.svg", imgScale: 0.82, rotationSpeed: 30, reverse: true, totalMissions: 5 },
-    { id: "css", name: "CSS", subtitle: "Cascading Style Sheets", top: "72%", left: "76%", sizeClass: "w-40 h-40", src: "/Planet 4.svg", imgScale: 0.82, rotationSpeed: 18, reverse: false, totalMissions: 5 },
-    { id: "javascript", name: "JavaScript", subtitle: "Dynamic Scripting", top: "45%", left: "48%", sizeClass: "w-64 h-64", src: "/Planet 2.svg", imgScale: 0.82, rotationSpeed: 40, reverse: false, totalMissions: 8 },
-    { id: "react", name: "React", subtitle: "Frontend Components", top: "24%", left: "18%", sizeClass: "w-56 h-56", src: "/Planet 1.svg", imgScale: 0.72, rotationSpeed: 28, reverse: false, totalMissions: 10 },
-    { id: "node", name: "Node", subtitle: "Backend Server", top: "18%", left: "82%", sizeClass: "w-44 h-44", src: "/Planet 3.svg", imgScale: 0.85, rotationSpeed: 22, reverse: true, totalMissions: 6 }
+    { id: "html", name: "HTML", subtitle: "HyperText Markup", top: "82%", left: "22%", sizeClass: "w-48 h-48", src: "/Planet 7.svg", imgScale: 0.82, rotationSpeed: 30, reverse: true, totalMissions: 5 },
+    { id: "css", name: "CSS", subtitle: "Cascading Style Sheets", top: "79%", left: "76%", sizeClass: "w-40 h-40", src: "/Planet 4.svg", imgScale: 0.82, rotationSpeed: 18, reverse: false, totalMissions: 5 },
+    { id: "javascript", name: "JavaScript", subtitle: "Dynamic Scripting", top: "55%", left: "48%", sizeClass: "w-64 h-64", src: "/Planet 2.svg", imgScale: 0.82, rotationSpeed: 40, reverse: false, totalMissions: 8 },
+    { id: "react", name: "React", subtitle: "Frontend Components", top: "33%", left: "18%", sizeClass: "w-56 h-56", src: "/Planet 1.svg", imgScale: 0.72, rotationSpeed: 28, reverse: false, totalMissions: 10 },
+    { id: "node", name: "Node", subtitle: "Backend Server", top: "26%", left: "82%", sizeClass: "w-44 h-44", src: "/Planet 3.svg", imgScale: 0.85, rotationSpeed: 22, reverse: true, totalMissions: 6 }
   ];
 
   // Map user completed count per module (matching lowercase startsWith logic)
@@ -76,6 +77,11 @@ export default function ModulesClient({ isVerified, liveStats, completedMissions
     return 'LOCKED';
   };
 
+  // Compute live gamified progression stats
+  const { level, progress, nextThreshold } = getXPDetails(liveStats.xp);
+  const xpNeeded = level < 10 ? Math.max(0, nextThreshold - liveStats.xp) : 0;
+  const nextLevel = level < 10 ? level + 1 : 10;
+
   return (
     <div className="relative w-full h-[115vh]">
       
@@ -90,29 +96,34 @@ export default function ModulesClient({ isVerified, liveStats, completedMissions
         
         {/* Live Stats display with minimal game capsules */}
         <div className="flex items-center gap-4 text-white">
-          {/* Level and XP Consolidated Capsule */}
-          <div className="flex items-center bg-black/40 rounded-full pr-4 py-1 border border-white/10">
-            {/* Circular Level overlapping badge */}
-            <div className="flex items-center justify-center w-10 h-10 rounded-full bg-[#1a082c] border-2 border-[#ff912d] shadow-[0_0_10px_#ff912d]/50 z-10 -ml-1">
-              <span className="text-white font-black text-sm">{liveStats.level}</span>
-            </div>
-            {/* XP progress bar and percentage */}
-            <div className="w-32 ml-3 flex items-center gap-3">
-              <div className="w-full h-1.5 bg-gray-700 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-[#ff912d] rounded-full shadow-[0_0_10px_#ff912d]" 
-                  style={{ width: `${liveStats.progress}%` }}
-                />
-              </div>
-              <span className="text-xs text-gray-400 font-bold">{Math.round(liveStats.progress)}%</span>
-            </div>
-          </div>
-
-          {/* Minimal Gears Currency Capsule */}
+          
+          {/* Minimal Gears Currency Capsule (Swapped to Left) */}
           <div className="flex items-center gap-2 bg-black/40 rounded-full px-4 py-2 border border-white/10">
             <Settings className="text-[#b259ff] w-5 h-5 animate-spin-slow" />
             <span className="text-white font-black text-base tracking-wide">{liveStats.gears}</span>
           </div>
+
+          {/* Level and XP Consolidated Capsule (Swapped to Right) */}
+          <div className="flex items-center bg-black/40 rounded-full pr-4 py-1 border border-white/10">
+            {/* Circular Level overlapping badge */}
+            <div className="flex items-center justify-center w-10 h-10 rounded-full bg-[#1a082c] border-2 border-[#ff912d] shadow-[0_0_10px_#ff912d]/50 z-10 -ml-1">
+              <span className="text-white font-black text-sm">{level}</span>
+            </div>
+            {/* XP progress details */}
+            <div className="w-40 ml-3 flex flex-col gap-0.5 justify-center">
+              <div className="h-1.5 w-full bg-gray-700 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-[#ff912d] rounded-full shadow-[0_0_10px_#ff912d]" 
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+              <div className="flex justify-between items-center text-[8px] font-mono text-gray-400 font-bold leading-none mt-1 gap-4 whitespace-nowrap">
+                <span>{Math.round(progress)}%</span>
+                <span>{xpNeeded} XP UNTIL LVL {nextLevel}</span>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
 
@@ -138,7 +149,7 @@ export default function ModulesClient({ isVerified, liveStats, completedMissions
           preserveAspectRatio="none"
         >
           <path
-            d="M 22 75 L 76 72 L 48 45 L 18 24 L 82 18"
+            d="M 22 82 L 76 79 L 48 55 L 18 33 L 82 26"
             fill="none"
             stroke="#ff912d"
             strokeWidth="0.5"
