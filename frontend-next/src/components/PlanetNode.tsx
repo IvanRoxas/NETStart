@@ -161,7 +161,7 @@ export default function PlanetNode({
       </svg>
 
       {/* Floating Hover Tooltip Info (Frosted Glass select page tooltip) */}
-      <div className="absolute z-50 w-64 p-4 bg-[#1a082c]/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl shadow-black/50 transform -translate-x-1/2 left-1/2 top-full mt-4 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none">
+      <div className="absolute z-50 w-64 p-4 bg-[#1a082c]/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl shadow-black/50 transform -translate-x-1/2 left-1/2 bottom-full mb-4 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none">
         <div className="flex flex-col items-center text-center">
           <span className="text-white font-black tracking-widest uppercase text-sm">{name}</span>
           <span className="text-gray-400 text-xs font-medium mt-1">{subtitle}</span>
