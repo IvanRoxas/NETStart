@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Lock, Rocket, Award, Settings, Zap } from 'lucide-react';
+import { Lock, Rocket, Award, Settings, Zap, X } from 'lucide-react';
 import PlanetNode from '@/components/PlanetNode';
 import { getXPDetails } from '@/lib/leveling';
 
@@ -220,43 +220,56 @@ export default function ModulesClient({ isVerified, liveStats, completedMissions
           </div>
         </div>
       )}
-      {/* Active Mission Sliding Popup in the lower right corner */}
-      <div className={`fixed bottom-6 right-6 z-40 max-w-sm w-80 bg-[#1a082c]/95 backdrop-blur-xl border border-white/10 p-5 rounded-2xl shadow-2xl transition-all duration-700 shadow-[#ff912d]/5 flex flex-col gap-3 ${
+      {/* Active Mission Sliding Popup (Horizontal Premium Layout, floats above N logo) */}
+      <div className={`fixed bottom-24 right-6 z-40 max-w-md w-[380px] bg-[#1a082c]/95 backdrop-blur-xl border border-[#ff912d]/20 p-5 rounded-2xl shadow-2xl transition-all duration-700 shadow-[#ff912d]/5 flex gap-4 ${
         showPopup ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-12 scale-95 pointer-events-none'
       }`}>
-        <div className="flex items-center justify-between">
-          <span className="text-[10px] font-mono font-black text-[#ff912d] tracking-widest uppercase flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-[#ff912d] animate-ping" />
-            Active Orbit
-          </span>
-          <button 
-            onClick={() => setShowPopup(false)} 
-            className="text-gray-500 hover:text-white transition-colors text-xs font-bold font-mono px-1.5 py-0.5 hover:bg-white/5 rounded"
-          >
-            Dismiss
-          </button>
-        </div>
-        
-        <div>
-          <h4 className="text-white font-black text-sm tracking-wide">JavaScript Variables</h4>
-          <p className="text-gray-400 text-xs mt-1 leading-normal">
-            Deploy variables to memory banks using custom Blockly components.
-          </p>
+        {/* Absolute Close Button */}
+        <button 
+          onClick={() => setShowPopup(false)} 
+          className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors p-1 hover:bg-white/5 rounded-full"
+        >
+          <X size={14} />
+        </button>
+
+        {/* Left Column: Stylized Planet Thumbnail */}
+        <div className="relative w-16 h-16 rounded-full bg-black/40 border border-white/10 flex-shrink-0 flex items-center justify-center overflow-hidden shadow-inner shadow-black/50">
+          <img 
+            src="/Planet 2.svg" 
+            alt="Active Planet" 
+            className="w-[85%] h-[85%] object-contain animate-spin-slow"
+          />
+          {/* Outer glow aura ring */}
+          <div className="absolute inset-0 rounded-full border border-[#ff912d]/10 animate-pulse pointer-events-none" />
         </div>
 
-        <div className="w-full h-px bg-white/5 my-1" />
-
-        <div className="flex items-center justify-between">
-          <div className="flex flex-col text-[10px] leading-tight">
-            <span className="text-[#b259ff] font-bold">+100 XP</span>
-            <span className="text-gray-500 font-mono">+25 Gears</span>
+        {/* Right Column: Mission Text & Action Buttons */}
+        <div className="flex-1 flex flex-col gap-2.5">
+          <div className="flex flex-col">
+            <span className="text-[9px] font-mono font-black text-[#ff912d] tracking-widest uppercase flex items-center gap-1.5 leading-none mb-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#ff912d] animate-ping" />
+              Active Orbit
+            </span>
+            <h4 className="text-white font-black text-sm tracking-wide">JavaScript Variables</h4>
+            <p className="text-gray-400 text-[11px] mt-1 leading-normal">
+              Deploy variables to memory banks using custom Blockly components.
+            </p>
           </div>
-          <Link 
-            href="/modules/javascript_3" 
-            className="px-4 py-2 bg-gradient-to-r from-[#ff912d] to-[#ff5722] hover:from-[#ff5722] hover:to-[#ff912d] text-white font-extrabold text-xs rounded-lg transition-transform hover:scale-105"
-          >
-            Resume Orbit
-          </Link>
+
+          <div className="w-full h-px bg-white/5" />
+
+          <div className="flex items-center justify-between">
+            <div className="flex flex-col text-[10px] leading-tight font-mono">
+              <span className="text-[#b259ff] font-bold">+100 XP</span>
+              <span className="text-gray-500 font-bold mt-0.5">+25 Gears</span>
+            </div>
+            <Link 
+              href="/modules/javascript_3" 
+              className="px-4 py-2 bg-gradient-to-r from-[#ff912d] to-[#ff5722] hover:from-[#ff5722] hover:to-[#ff912d] text-white font-extrabold text-xs rounded-lg transition-transform hover:scale-105 shadow-md shadow-[#ff912d]/10"
+            >
+              Resume Orbit
+            </Link>
+          </div>
         </div>
       </div>
 
