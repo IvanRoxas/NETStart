@@ -13,7 +13,7 @@ import AchievementPopupProvider from "@/components/AchievementPopupProvider";
 export default function ConditionalLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   
-  const isAuthPage = pathname === "/login" || pathname === "/register";
+  const isAuthPage = pathname === "/login" || pathname === "/register" || pathname?.startsWith("/auth");
   const isAppPage = pathname === "/sandbox" || pathname?.startsWith("/dashboard") || pathname === "/settings" || pathname === "/modules" || pathname === "/missions" || pathname === "/profile" || pathname === "/notifications" || pathname === "/achievements" || pathname === "/shop";
   const isAdminPage = pathname?.startsWith("/admin") || pathname === "/admin-login";
 
