@@ -139,7 +139,7 @@ export default function LoginPage() {
         <div className="absolute inset-0 bg-gradient-to-t from-[#1e0a2d] via-transparent to-transparent opacity-80"></div>
         
         <div className="relative z-10 w-full h-full flex flex-col justify-end p-12 md:p-16 lg:p-24 pb-20">
-          <span className="bg-[#ff912d]/20 text-[#ff912d] font-sans font-bold text-xs uppercase tracking-widest py-1.5 px-4 rounded-full mb-6 border border-[#ff912d]/30 w-max shadow-lg">
+          <span className="bg-[#ff912d]/20 text-[#ff912d] font-sans font-bold text-sm uppercase tracking-widest py-2 px-5 rounded-full mb-6 border border-[#ff912d]/30 w-max shadow-lg">
             Log In
           </span>
           <h2 className="font-display text-5xl lg:text-7xl font-bold text-white leading-tight mb-6 drop-shadow-lg">
