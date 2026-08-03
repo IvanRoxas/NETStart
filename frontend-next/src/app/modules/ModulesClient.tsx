@@ -2,16 +2,123 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Lock, Rocket } from 'lucide-react';
+import { Lock, Rocket, Award, Settings, Zap } from 'lucide-react';
 import PlanetNode from '@/components/PlanetNode';
 
-export default function ModulesClient({ isVerified }: { isVerified: boolean }) {
+interface LiveStats {
+  level: number;
+  progress: number;
+  xp: number;
+  gears: number;
+}
+
+interface CompletedMission {
+  missionId: string;
+}
+
+interface ModulesClientProps {
+  isVerified: boolean;
+  liveStats: LiveStats;
+  completedMissions: CompletedMission[];
+}
+
+export default function ModulesClient({ isVerified, liveStats, completedMissions }: ModulesClientProps) {
   // Container logic for blurring unverified users
-  const containerClass = `absolute inset-0 w-full h-full transition-all duration-500 overflow-hidden ${!isVerified ? 'blur-md pointer-events-none opacity-50' : ''
-    }`;
+  const containerClass = `absolute inset-0 w-full h-full transition-all duration-500 overflow-hidden ${
+    !isVerified ? 'blur-md pointer-events-none opacity-50' : ''
+  }`;
+
+  // Winding learning path configuration
+  const pathNodes = [
+    { id: "html", name: "HTML", subtitle: "HyperText Markup", top: "75%", left: "22%", sizeClass: "w-48 h-48", src: "/Planet 7.svg", imgScale: 0.82, rotationSpeed: 30, reverse: true, totalMissions: 5 },
+    { id: "css", name: "CSS", subtitle: "Cascading Style Sheets", top: "72%", left: "76%", sizeClass: "w-40 h-40", src: "/Planet 4.svg", imgScale: 0.82, rotationSpeed: 18, reverse: false, totalMissions: 5 },
+    { id: "javascript", name: "JavaScript", subtitle: "Dynamic Scripting", top: "45%", left: "48%", sizeClass: "w-64 h-64", src: "/Planet 2.svg", imgScale: 0.82, rotationSpeed: 40, reverse: false, totalMissions: 8 },
+    { id: "react", name: "React", subtitle: "Frontend Components", top: "24%", left: "18%", sizeClass: "w-56 h-56", src: "/Planet 1.svg", imgScale: 0.72, rotationSpeed: 28, reverse: false, totalMissions: 10 },
+    { id: "node", name: "Node", subtitle: "Backend Server", top: "18%", left: "82%", sizeClass: "w-44 h-44", src: "/Planet 3.svg", imgScale: 0.85, rotationSpeed: 22, reverse: true, totalMissions: 6 }
+  ];
+
+  // Map user completed count per module (matching lowercase startsWith logic)
+  const getCompletedMissionsCount = (moduleId: string) => {
+    return completedMissions.filter(m => 
+      m.missionId.toLowerCase().startsWith(moduleId.toLowerCase())
+    ).length;
+  };
+
+  // Determine path completion indicators
+  const htmlCompleted = getCompletedMissionsCount("html") >= 5;
+  const cssCompleted = getCompletedMissionsCount("css") >= 5;
+  const jsCompleted = getCompletedMissionsCount("javascript") >= 8 || getCompletedMissionsCount("js") >= 8;
+  const reactCompleted = getCompletedMissionsCount("react") >= 10;
+
+  const getStatusForModule = (id: string) => {
+    const completed = getCompletedMissionsCount(id);
+    const total = pathNodes.find(n => n.id === id)?.totalMissions || 5;
+
+    if (completed >= total) {
+      return 'COMPLETED';
+    }
+
+    if (id === 'html') {
+      return 'CURRENT';
+    }
+    if (id === 'css') {
+      return htmlCompleted ? 'CURRENT' : 'LOCKED';
+    }
+    if (id === 'javascript') {
+      return (htmlCompleted && cssCompleted) ? 'CURRENT' : 'LOCKED';
+    }
+    if (id === 'react') {
+      return (htmlCompleted && cssCompleted && jsCompleted) ? 'CURRENT' : 'LOCKED';
+    }
+    if (id === 'node') {
+      return (htmlCompleted && cssCompleted && jsCompleted && reactCompleted) ? 'CURRENT' : 'LOCKED';
+    }
+    return 'LOCKED';
+  };
 
   return (
     <div className="relative w-full h-full overflow-hidden">
+      
+      {/* Sci-Fi HUD Top Bar */}
+      <div className="absolute top-0 left-0 right-0 z-30 bg-black/40 backdrop-blur-md border-b border-white/10 px-8 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Rocket className="text-[#ff912d] animate-pulse" size={22} />
+          <h2 className="font-display font-black tracking-wider text-white text-base md:text-lg">
+            MISSION MAP: <span className="text-[#ff912d]">SECTOR 1</span>
+          </h2>
+        </div>
+        
+        {/* Live Stats display */}
+        <div className="flex items-center gap-6 md:gap-8 text-white">
+          {/* Level */}
+          <div className="flex items-center gap-2">
+            <Award className="text-[#ff912d]" size={18} />
+            <span className="text-xs font-bold font-mono tracking-wide uppercase text-gray-400">Level</span>
+            <span className="text-sm font-black font-display text-white">{liveStats.level}</span>
+          </div>
+
+          {/* XP Bar */}
+          <div className="hidden sm:flex flex-col gap-1 w-28 md:w-36">
+            <div className="flex justify-between items-center text-[10px] font-mono text-gray-400 font-bold">
+              <span className="flex items-center gap-0.5"><Zap size={10} className="text-yellow-400" /> XP PROGRESS</span>
+              <span>{Math.round(liveStats.progress)}%</span>
+            </div>
+            <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
+              <div 
+                className="h-full bg-gradient-to-r from-yellow-400 to-[#ff912d] rounded-full shadow-[0_0_8px_rgba(255,145,45,0.4)]"
+                style={{ width: `${liveStats.progress}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Gears */}
+          <div className="flex items-center gap-2">
+            <Settings className="text-[#a855f7] animate-spin-slow" size={18} />
+            <span className="text-xs font-bold font-mono tracking-wide uppercase text-gray-400">Gears</span>
+            <span className="text-sm font-black font-display text-[#a855f7]">{liveStats.gears}</span>
+          </div>
+        </div>
+      </div>
 
       {/* Dynamic Starry Background */}
       <div
@@ -28,12 +135,45 @@ export default function ModulesClient({ isVerified }: { isVerified: boolean }) {
       {/* The Galaxy Map Container */}
       <div className={containerClass}>
 
-        {/* Spontaneously sized scattered planets with distinct positions and organic rotation configurations */}
-        <PlanetNode id="react" name="React" top="24%" left="18%" sizeClass="w-56 h-56" src="/Planet 1.svg" imgScale={0.72} rotationSpeed={28} reverse={false} />
-        <PlanetNode id="html" name="HTML" top="75%" left="22%" sizeClass="w-48 h-48" src="/Planet 7.svg" imgScale={0.82} rotationSpeed={30} reverse={true} />
-        <PlanetNode id="javascript" name="JavaScript" top="45%" left="48%" sizeClass="w-64 h-64" src="/Planet 2.svg" imgScale={0.82} rotationSpeed={40} reverse={false} />
-        <PlanetNode id="node" name="Node" top="18%" left="82%" sizeClass="w-44 h-44" src="/Planet 3.svg" imgScale={0.85} rotationSpeed={22} reverse={true} />
-        <PlanetNode id="css" name="CSS" top="72%" left="76%" sizeClass="w-40 h-40" src="/Planet 4.svg" imgScale={0.82} rotationSpeed={18} reverse={false} />
+        {/* Winding Flight Path Connections between nodes */}
+        <svg 
+          className="absolute inset-0 w-full h-full z-0 pointer-events-none opacity-40" 
+          viewBox="0 0 100 100" 
+          preserveAspectRatio="none"
+        >
+          <path
+            d="M 22 75 L 76 72 L 48 45 L 18 24 L 82 18"
+            fill="none"
+            stroke="#ff912d"
+            strokeWidth="0.5"
+            strokeDasharray="1.5 1.5"
+          />
+        </svg>
+
+        {/* Render Planet Nodes dynamically */}
+        {pathNodes.map((node) => {
+          const completedCount = getCompletedMissionsCount(node.id);
+          const status = getStatusForModule(node.id);
+          
+          return (
+            <PlanetNode 
+              key={node.id}
+              id={node.id} 
+              name={node.name} 
+              subtitle={node.subtitle}
+              top={node.top} 
+              left={node.left} 
+              sizeClass={node.sizeClass} 
+              src={node.src} 
+              imgScale={node.imgScale} 
+              rotationSpeed={node.rotationSpeed} 
+              reverse={node.reverse} 
+              status={status}
+              completedCount={completedCount}
+              totalCount={node.totalMissions}
+            />
+          );
+        })}
 
       </div>
 
