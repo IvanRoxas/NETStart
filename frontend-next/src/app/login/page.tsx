@@ -5,6 +5,7 @@ import { signIn, useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import { resetPasswordRequest } from '../actions/reset-password';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -15,6 +16,11 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(true);
   const [toastMessage, setToastMessage] = useState<{type: 'success' | 'error' | 'deleted', text: string} | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // Forgot Password Modal State
+  const [forgotPasswordModalOpen, setForgotPasswordModalOpen] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotLoading, setForgotLoading] = useState(false);
 
   const showToast = (text: string, type: 'success' | 'error' | 'deleted' = 'error') => {
     setToastMessage({ text, type });
@@ -72,6 +78,26 @@ export default function LoginPage() {
     } else {
       showToast("Login successful! Redirecting...", 'success');
       setTimeout(() => window.location.href = '/dashboard', 1000);
+    }
+  };
+
+  const handleForgotSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotLoading(true);
+    try {
+      const res = await resetPasswordRequest(forgotEmail);
+      if (res.success) {
+        showToast(res.success as string, 'success');
+        setForgotEmail('');
+        setForgotPasswordModalOpen(false);
+      } else {
+        showToast((res.error as string) || "Something went wrong.", 'error');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast("An error occurred. Please try again.", 'error');
+    } finally {
+      setForgotLoading(false);
     }
   };
 
@@ -179,7 +205,16 @@ export default function LoginPage() {
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <label className="font-sans text-white/80 text-sm font-semibold">Password</label>
+                  <div className="flex justify-between items-center">
+                    <label className="font-sans text-white/80 text-sm font-semibold">Password</label>
+                    <button 
+                      type="button" 
+                      onClick={() => setForgotPasswordModalOpen(true)} 
+                      className="text-xs text-[#ff912d] hover:text-[#ffc107] font-bold transition-colors cursor-pointer"
+                    >
+                      Forgot Password?
+                    </button>
+                  </div>
                   <div className="relative">
                     <input 
                       type={showPassword ? "text" : "password"}
@@ -280,6 +315,51 @@ export default function LoginPage() {
           )}
         </div>
       </div>
+
+      {/* Forgot Password Modal */}
+      {forgotPasswordModalOpen && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-[#1e0a2d]/95 backdrop-blur-md border border-white/10 rounded-3xl p-8 max-w-sm w-full relative shadow-[0_0_50px_rgba(0,0,0,0.5)] flex flex-col gap-6 animate-in zoom-in-95 duration-200">
+            {/* Close Button */}
+            <button 
+              type="button"
+              onClick={() => setForgotPasswordModalOpen(false)}
+              className="absolute top-4 right-4 text-white/40 hover:text-white transition-colors cursor-pointer p-1 rounded-lg hover:bg-white/5"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+
+            <div className="text-center w-full">
+              <h3 className="text-xl font-bold text-white mb-2">Forgot Password</h3>
+              <p className="text-sm text-gray-400 leading-relaxed">
+                Enter your email address and we'll send you a secure link to reset your password.
+              </p>
+            </div>
+
+            <form onSubmit={handleForgotSubmit} className="w-full flex flex-col gap-4">
+              <div className="flex flex-col gap-1.5">
+                <label className="font-sans text-white/80 text-sm font-semibold">Email Address</label>
+                <input 
+                  type="email" 
+                  value={forgotEmail}
+                  onChange={(e) => setForgotEmail(e.target.value)}
+                  className="w-full bg-[#361d57]/50 text-white font-sans text-sm px-4 py-3 rounded-xl border border-white/10 outline-none focus:ring-2 focus:ring-[#ff912d] transition-all"
+                  placeholder="you@example.com"
+                  required
+                />
+              </div>
+
+              <button 
+                type="submit"
+                disabled={forgotLoading}
+                className="w-full bg-buttons text-white font-sans font-bold text-sm py-3 px-6 mt-2 rounded-full shadow-[4px_4px_0_#150524] hover:shadow-[6px_6px_0_#150524] hover:brightness-110 hover:-translate-y-1 hover:-translate-x-1 transition-all active:translate-y-1 active:translate-x-1 active:shadow-none active:scale-95 disabled:opacity-70 disabled:active:scale-100 disabled:hover:translate-x-0 disabled:hover:translate-y-0 disabled:hover:shadow-[4px_4px_0_#150524] cursor-pointer"
+              >
+                {forgotLoading ? 'Sending link...' : 'Send Reset Link'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
