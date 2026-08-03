@@ -110,17 +110,17 @@ export default function ModulesClient({ isVerified, liveStats, completedMissions
               <span className="text-white font-black text-sm">{level}</span>
             </div>
             {/* XP progress details */}
-            <div className="w-40 ml-3 flex flex-col gap-0.5 justify-center">
-              <div className="h-1.5 w-full bg-gray-700 rounded-full overflow-hidden">
+            <div 
+              className="w-36 ml-3 flex items-center gap-3"
+              title={`${xpNeeded} XP until next level`}
+            >
+              <div className="w-full h-1.5 bg-gray-700 rounded-full overflow-hidden">
                 <div 
                   className="h-full bg-[#ff912d] rounded-full shadow-[0_0_10px_#ff912d]" 
                   style={{ width: `${progress}%` }}
                 />
               </div>
-              <div className="flex justify-between items-center text-[8px] font-mono text-gray-400 font-bold leading-none mt-1 gap-4 whitespace-nowrap">
-                <span>{Math.round(progress)}%</span>
-                <span>{xpNeeded} XP UNTIL LVL {nextLevel}</span>
-              </div>
+              <span className="text-xs text-white font-black whitespace-nowrap">{Math.round(progress)}%</span>
             </div>
           </div>
 
