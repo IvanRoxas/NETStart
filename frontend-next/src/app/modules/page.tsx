@@ -45,7 +45,7 @@ export default async function ModulesPage() {
   };
 
   return (
-    <div className="relative w-full min-h-[150vh] overflow-x-hidden overflow-y-auto bg-[#130927]">
+    <div className="relative w-full min-h-[115vh] overflow-x-hidden overflow-y-auto bg-[#130927]">
       <ModulesClient 
         isVerified={isVerified} 
         liveStats={liveStats} 
