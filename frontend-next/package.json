@@ -6,7 +6,8 @@
     "dev": "concurrently \"npx prisma dev\" \"next dev\"",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "clean": "powershell -Command \"Remove-Item -Recurse -Force .next\""
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.4.1",
