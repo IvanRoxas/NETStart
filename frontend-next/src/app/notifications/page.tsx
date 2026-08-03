@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, ChevronLeft, ChevronRight, X, UserIcon, Check } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, X, UserIcon, Check, Settings } from 'lucide-react';
 import TopHeader from '@/components/TopHeader';
 import './notifications.css';
 
@@ -72,6 +72,9 @@ export default function NotificationsPage() {
 
     useEffect(() => {
         fetchNotifications();
+        const handleUpdate = () => fetchNotifications();
+        window.addEventListener('notifications_updated', handleUpdate);
+        return () => window.removeEventListener('notifications_updated', handleUpdate);
     }, []);
 
     const timeAgo = (dateStr: string) => {
@@ -95,8 +98,7 @@ export default function NotificationsPage() {
             await fetch(`/api/friends/accept/${notif.sender_id}`, { method: 'POST' });
             await fetch(`/api/notifications/${notif.id}/read`, { method: 'POST' });
             showToast('Friend request accepted!');
-            
-            setNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, read_at: new Date().toISOString() } : n));
+            window.dispatchEvent(new Event('notifications_updated'));
         } catch (err) {
             showToast('Failed to accept request.', 'error');
         } finally {
@@ -112,8 +114,7 @@ export default function NotificationsPage() {
             await fetch(`/api/friends/reject/${notif.sender_id}`, { method: 'POST' });
             await fetch(`/api/notifications/${notif.id}/read`, { method: 'POST' });
             showToast('Friend request rejected.');
-            
-            setNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, read_at: new Date().toISOString() } : n));
+            window.dispatchEvent(new Event('notifications_updated'));
         } catch (err) {
             showToast('Failed to reject request.', 'error');
         } finally {
@@ -130,6 +131,7 @@ export default function NotificationsPage() {
         try {
             const res = await fetch(`/api/notifications/${notif.id}`, { method: 'DELETE' });
             if (!res.ok) throw new Error();
+            window.dispatchEvent(new Event('notifications_updated'));
         } catch (err) {
             showToast('Failed to dismiss notification.', 'error');
             fetchNotifications(); // revert
@@ -139,7 +141,9 @@ export default function NotificationsPage() {
     };
 
     const handleView = async (notif: any) => {
-        if (notif.sender_id) {
+        if (notif.type === 'achievement_unlocked' || notif.notification_type === 'achievement_unlocked') {
+            router.push('/achievements');
+        } else if (notif.sender_id) {
             router.push(`/profile/${notif.sender_id}`);
         }
     };
@@ -213,7 +217,23 @@ export default function NotificationsPage() {
                         return (
                             <div key={notif.id} className="neo-notif-card flex-row">
                                 <div className="neo-notif-avatar">
-                                    {notif.sender?.avatar_url
+                                    {(notif.type === 'system_verify_reward' || notif.notification_type === 'system_verify_reward') ? (
+                                        <div className="w-full h-full flex items-center justify-center bg-[#ff912d]/20 rounded-full shadow-inner text-[#ff912d]">
+                                            <Settings size={28} />
+                                        </div>
+                                    ) : (notif.type === 'achievement_unlocked' || notif.notification_type === 'achievement_unlocked' || notif.type === 'level_up' || notif.notification_type === 'level_up') ? (
+                                        notif.data?.badgeImage ? (
+                                            <img src={notif.data.badgeImage} alt={notif.data.badgeName} />
+                                        ) : (notif.type === 'level_up' || notif.notification_type === 'level_up') ? (
+                                            <div className="w-full h-full flex items-center justify-center bg-[#ffb703] rounded-full shadow-inner">
+                                                <span className="text-black font-black text-3xl">{notif.data?.level || notif.data?.badgeName?.replace(/\D/g, '') || ''}</span>
+                                            </div>
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-500/20 to-purple-600/20 rounded-full">
+                                                <span className="text-[#ff912d] font-bold text-xl">{notif.data?.badgeIcon || '🏆'}</span>
+                                            </div>
+                                        )
+                                    ) : notif.sender?.avatar_url
                                         ? <img src={notif.sender.avatar_url} alt="" />
                                         : <div className="neo-avatar-placeholder"><UserIcon size={24} /></div>
                                     }
@@ -221,18 +241,26 @@ export default function NotificationsPage() {
 
                                 <div className="neo-notif-content">
                                     <div className="neo-notif-title">
-                                        <span className="neo-notif-name">{notif.sender?.username || 'System'}</span>
-                                        <span className="neo-notif-time">{timeAgo(notif.created_at)}</span>
+                                        <span className="neo-notif-name">
+                                            {(notif.type === 'system_verify_reward' || notif.notification_type === 'system_verify_reward') ? 'Verification Reward!' : (notif.type === 'achievement_unlocked' || notif.notification_type === 'achievement_unlocked') ? 'Achievement Unlocked!' : (notif.type === 'level_up' || notif.notification_type === 'level_up') ? 'Level Up!' : (notif.sender?.username || notif.sender?.name || 'System')}
+                                        </span>
+                                        <span className="neo-notif-time">{timeAgo(notif.created_at || notif.createdAt)}</span>
                                     </div>
                                     <p className="neo-notif-desc">
-                                        {notif.notification_type === 'friend_request' && notif.read_at
+                                        {(notif.type === 'system_verify_reward' || notif.notification_type === 'system_verify_reward')
+                                            ? `You received ${notif.data?.amount} Gears for verifying your account.`
+                                            : (notif.type === 'friend_request' || notif.notification_type === 'friend_request') && notif.read_at
                                             ? 'Friend request accepted.'
+                                            : (notif.type === 'achievement_unlocked' || notif.notification_type === 'achievement_unlocked')
+                                            ? `You unlocked the "${notif.data?.badgeName}" achievement!`
+                                            : (notif.type === 'level_up' || notif.notification_type === 'level_up')
+                                            ? notif.data?.badgeName || 'You leveled up!'
                                             : notif.data?.message || notif.message || 'New notification received.'}
                                     </p>
                                 </div>
 
                                 <div className="neo-notif-actions">
-                                    {notif.notification_type === 'friend_request' && !notif.read_at ? (
+                                    {(notif.type === 'friend_request' || notif.notification_type === 'friend_request') && !notif.read_at ? (
                                         <>
                                             <button
                                                 className="neo-btn-accept"

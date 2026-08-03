@@ -8,6 +8,9 @@ import Image from 'next/image';
 import { VT323 } from 'next/font/google';
 import TopHeader from '@/components/TopHeader';
 import ImageCropModal from '@/components/ImageCropModal';
+import { allBadges } from '@/lib/badgesData';
+import { getXPDetails } from '@/lib/leveling';
+import { getUnlockedAchievements } from '@/app/actions/achievements';
 
 const vt323 = VT323({ weight: '400', subsets: ['latin'] });
 
@@ -18,6 +21,7 @@ export default function ProfilePage() {
   // State
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [dbAchievements, setDbAchievements] = useState<any[]>([]);
   
   // Edit Profile State
   const [isEditing, setIsEditing] = useState(false);
@@ -25,22 +29,18 @@ export default function ProfilePage() {
   const [activeTitle, setActiveTitle] = useState('Novice Explorer');
   const [saving, setSaving] = useState(false);
 
+  // Badges & Modal State
+  const [selectedBadge, setSelectedBadge] = useState<any>(null);
+  const [toastMessage, setToastMessage] = useState<string>('');
+  const [unlockedDates, setUnlockedDates] = useState<Record<string, string>>({});
+
   // Avatar Cropping State
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [cropModalOpen, setCropModalOpen] = useState(false);
   const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
 
-  // Friends State
-  const [friends, setFriends] = useState<any[]>([]);
-  const [pendingReceived, setPendingReceived] = useState<any[]>([]);
-  const [searchEmail, setSearchEmail] = useState('');
-  const [addMessage, setAddMessage] = useState('');
-  const [isPublic, setIsPublic] = useState(true);
   const [statsTab, setStatsTab] = useState<'overview' | 'progress'>('overview');
-
-  useEffect(() => {
-    setIsPublic(localStorage.getItem('setting_profileVisibility') !== 'false');
-  }, []);
+  const [xp, setXp] = useState(0);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -48,7 +48,6 @@ export default function ProfilePage() {
     }
     if (session?.user) {
       fetchProfile();
-      fetchFriends();
     }
   }, [status, session, router]);
 
@@ -56,13 +55,27 @@ export default function ProfilePage() {
     try {
       const res = await fetch(`/api/profile?t=${Date.now()}`);
       const data = await res.json();
+      
+      const achievementsRes = await getUnlockedAchievements();
+      
       if (res.ok) {
         setProfile(data.user);
+        setXp(data.user.xp || 0);
         setFormData({
           displayName: data.user.displayName || `Explorer${Math.floor(10000 + Math.random() * 90000)}`,
           status: data.user.status || '',
           bio: data.user.bio || ''
         });
+        setActiveTitle(data.user.title || 'Novice Explorer');
+      }
+      if (achievementsRes.success) {
+        setDbAchievements(achievementsRes.allDbAchievements || []);
+        const datesMap: Record<string, string> = {};
+        achievementsRes.userAchievementsDetails?.forEach((ua: any) => {
+          if (ua.triggerCode) datesMap[ua.triggerCode.toUpperCase()] = ua.unlockedAt;
+          if (ua.achievementId) datesMap[ua.achievementId] = ua.unlockedAt;
+        });
+        setUnlockedDates(datesMap);
       }
     } catch (e) {
       console.error(e);
@@ -71,18 +84,39 @@ export default function ProfilePage() {
     }
   };
 
-  const fetchFriends = async () => {
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(''), 3000);
+  };
+
+  const handleToggleBadge = async (badgeId: string) => {
+    if (!profile) return;
+    const showcased = profile.showcasedBadges || [];
+    const isAdding = !showcased.includes(badgeId);
+    if (isAdding && showcased.length >= 6) {
+      showToast('Showcase Full! Remove a badge first.');
+      return;
+    }
+    
+    const newBadges = isAdding 
+      ? [...showcased, badgeId] 
+      : showcased.filter((id: string) => id !== badgeId);
+      
+    setProfile((prev: any) => ({ ...prev, showcasedBadges: newBadges }));
+    showToast(isAdding ? 'Added to Showcase!' : 'Removed from Showcase!');
+    
     try {
-      const res = await fetch('/api/friends');
-      const data = await res.json();
-      if (res.ok) {
-        setFriends(data.friends || []);
-        setPendingReceived(data.pendingReceived || []);
-      }
+      await fetch('/api/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ showcasedBadges: newBadges })
+      });
     } catch (e) {
       console.error(e);
     }
   };
+
+
 
   const handleUpdateProfile = async () => {
     setSaving(true);
@@ -90,7 +124,7 @@ export default function ProfilePage() {
       const res = await fetch('/api/profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({ ...formData, title: activeTitle })
       });
       if (res.ok) {
         const data = await res.json();
@@ -138,40 +172,6 @@ export default function ProfilePage() {
     }
   };
 
-  const sendFriendRequest = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setAddMessage('');
-    // Mock sending request
-    setAddMessage('Friend request sent!');
-    setTimeout(() => setAddMessage(''), 3000);
-  };
-
-  const acceptRequest = async (friendshipId: string) => {
-    try {
-      const res = await fetch('/api/friends', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ friendshipId })
-      });
-      if (res.ok) {
-        fetchFriends();
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  const removeFriend = async (userId: string) => {
-    if (!confirm('Are you sure you want to remove this friend?')) return;
-    try {
-      const res = await fetch(`/api/friends?userId=${userId}`, { method: 'DELETE' });
-      if (res.ok) {
-        fetchFriends();
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  };
 
   if (loading || status === 'loading') {
     return <div className="h-screen bg-[#270d3c] flex items-center justify-center text-white">Loading Data...</div>;
@@ -222,23 +222,23 @@ export default function ProfilePage() {
                   {!isEditing ? (
                     <button 
                       onClick={() => setIsEditing(true)} 
-                      className="bg-white/10 hover:bg-white/20 text-white font-bold py-2 px-6 rounded-full cursor-pointer transition-colors border border-white/10 flex items-center gap-2 active:scale-95"
+                      className="bg-white/10 hover:bg-white/20 text-white font-bold py-1.5 px-5 text-sm rounded-full cursor-pointer transition-colors border border-white/10 flex items-center gap-2 active:scale-95 whitespace-nowrap"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                       Edit Profile
                     </button>
                   ) : (
-                    <div className="flex gap-3">
+                    <div className="flex gap-2">
                       <button 
-                        onClick={() => { setIsEditing(false); setFormData({ displayName: profile.displayName || profile.name, status: profile.status, bio: profile.bio }); }} 
-                        className="bg-red-500/20 hover:bg-red-500/30 text-red-400 font-bold py-2 px-6 rounded-full cursor-pointer transition-colors border border-red-500/30 active:scale-95"
+                        onClick={() => { setIsEditing(false); setFormData({ displayName: profile.displayName || profile.name, status: profile.status, bio: profile.bio }); setActiveTitle(profile.title || 'Novice Explorer'); }} 
+                        className="bg-red-500/20 hover:bg-red-500/30 text-red-400 font-bold py-1.5 px-5 text-sm rounded-full cursor-pointer transition-colors border border-red-500/30 active:scale-95 whitespace-nowrap"
                       >
                         Cancel
                       </button>
                       <button 
                         onClick={handleUpdateProfile}
                         disabled={saving}
-                        className="bg-[#ff912d] hover:bg-[#ff912d]/80 text-white font-bold py-2 px-6 rounded-full cursor-pointer transition-colors disabled:opacity-50 active:scale-95 flex items-center gap-2"
+                        className="bg-[#ff912d] hover:bg-[#ff912d]/80 text-white font-bold py-1.5 px-5 text-sm rounded-full cursor-pointer transition-colors disabled:opacity-50 active:scale-95 flex items-center justify-center gap-2 whitespace-nowrap"
                       >
                         {saving ? 'Saving...' : 'Save Changes'}
                       </button>
@@ -253,9 +253,9 @@ export default function ProfilePage() {
                        {/* Placeholder for avatar - when hover show camera icon */}
                        <div className="absolute inset-0 bg-[#1e0a2d] flex items-center justify-center">
                           {profile?.image ? (
-                            <Image src={profile.image} alt="Avatar" fill className="object-cover" />
+                            <Image src={profile.image === '/Planet 1.svg' ? '/Profile.svg' : profile.image} alt="Avatar" fill className="object-cover" />
                           ) : (
-                            <span className="text-7xl font-bold text-[#ff912d] opacity-50">{profile?.name?.charAt(0) || 'U'}</span>
+                            <Image src="/Profile.svg" alt="Avatar" fill className="object-cover" />
                           )}
                        </div>
                        
@@ -276,7 +276,7 @@ export default function ProfilePage() {
                   {/* Right side: Form Fields */}
                   <div className="flex-1 flex flex-col gap-5 mt-4">
                     <div className="flex flex-col gap-1.5">
-                      <label className={`${vt323.className} text-white/70 text-lg tracking-[0.1em] uppercase`}>Display Name</label>
+                      <label className={`${vt323.className} font-bold text-white/70 text-lg tracking-[0.1em] uppercase`}>Display Name</label>
                       {isEditing ? (
                         <input type="text" value={formData.displayName} onChange={e => setFormData({...formData, displayName: e.target.value})} className="bg-[#1e0a2d]/80 text-white px-4 py-3 rounded-lg border border-[#ff912d]/50 focus:border-[#ff912d] outline-none font-sans font-bold shadow-inner" />
                       ) : (
@@ -290,7 +290,7 @@ export default function ProfilePage() {
                       {/* Top Row: Title and Joined Date */}
                       <div className="grid grid-cols-1 @md:grid-cols-2 gap-5 w-full">
                         <div className="flex flex-col gap-1.5 h-full min-w-0">
-                          <label className={`${vt323.className} text-white/70 text-lg tracking-[0.1em] uppercase truncate`}>Title</label>
+                          <label className={`${vt323.className} font-bold text-white/70 text-lg tracking-[0.1em] uppercase truncate`}>Title</label>
                           {isEditing ? (
                             <select 
                               value={activeTitle}
@@ -303,12 +303,12 @@ export default function ProfilePage() {
                             </select>
                           ) : (
                             <div className="bg-black/20 text-white px-4 py-3 rounded-lg border border-white/5 font-sans font-bold text-[#ffb703] truncate w-full">
-                               {activeTitle === 'None' ? 'No Title' : activeTitle}
+                               {profile?.title || 'Novice Explorer'}
                             </div>
                           )}
                         </div>
                         <div className="flex flex-col gap-1.5 h-full min-w-0">
-                          <label className={`${vt323.className} text-white/70 text-lg tracking-[0.1em] uppercase truncate`}>Joined Date</label>
+                          <label className={`${vt323.className} font-bold text-white/70 text-lg tracking-[0.1em] uppercase truncate`}>Joined Date</label>
                           <div className="bg-black/20 text-white/50 px-4 py-3 rounded-lg border border-white/5 font-sans font-bold cursor-not-allowed truncate w-full">
                              {joinedDate}
                           </div>
@@ -317,7 +317,7 @@ export default function ProfilePage() {
                     </div>
                     
                     <div className="flex flex-col gap-1.5">
-                      <label className={`${vt323.className} text-white/70 text-lg tracking-[0.1em] uppercase`}>Description / Bio</label>
+                      <label className={`${vt323.className} font-bold text-white/70 text-lg tracking-[0.1em] uppercase`}>Description / Bio</label>
                       {isEditing ? (
                         <textarea rows={3} value={formData.bio} onChange={e => setFormData({...formData, bio: e.target.value})} className="bg-[#1e0a2d]/80 text-white px-4 py-3 rounded-lg border border-[#ff912d]/50 focus:border-[#ff912d] outline-none font-sans font-bold shadow-inner resize-none" placeholder="Tell us about yourself..." />
                       ) : (
@@ -397,20 +397,33 @@ export default function ProfilePage() {
           {/* RIGHT COLUMN */}
           <div className="flex flex-col gap-10 min-w-0">
              <div className="flex items-center gap-4">
-               {/* Steam-style Level Badge */}
-               <div className="relative flex-shrink-0 flex items-center justify-center w-16 h-16 bg-gradient-to-tr from-orange-600 to-yellow-500 rounded-full border-4 border-[#361d57]">
-                 <span className={`${vt323.className} text-white text-3xl font-bold mt-1`}>1</span>
+               {/* Dynamic SVG Level Badge */}
+               <div className="relative w-16 h-16 shrink-0 z-10 flex items-center justify-center rounded-full bg-[#1e0a2d]">
+                 <svg className="absolute inset-0 w-full h-full -rotate-90 drop-shadow-md" viewBox="0 0 100 100">
+                   <circle cx="50" cy="50" r="46" fill="none" stroke="#361d57" strokeWidth="8" />
+                   <circle 
+                     cx="50" cy="50" r="46" fill="none" stroke="#ff912d" strokeWidth="8" 
+                     strokeDasharray="289" strokeDashoffset={289 - (289 * Math.max(2, getXPDetails(xp).progress)) / 100}
+                     strokeLinecap="round" className="transition-all duration-1000 ease-out" 
+                   />
+                 </svg>
+                 <div className="w-12 h-12 bg-[#1e0a2d] rounded-full flex items-center justify-center overflow-hidden border-2 border-[#1e0a2d] z-10 relative shadow-inner">
+                   <span className={`${vt323.className} text-[#ff912d] text-3xl font-bold mt-1`}>{getXPDetails(xp).level}</span>
+                 </div>
                </div>
                
                {/* Level Text & XP Bar */}
                <div className="flex flex-col flex-1 gap-2">
                  <div className="flex justify-between items-end">
-                   <h3 className="text-white text-lg font-bold uppercase tracking-wider">Novice Explorer</h3>
-                   <span className="text-[#ff912d] text-xs font-bold uppercase">150 XP to Level 2</span>
+                   <h3 className="text-white text-lg font-bold uppercase tracking-wider">{profile?.title || 'Novice Explorer'}</h3>
+                   <span className="text-[#ff912d] text-xs font-bold uppercase">{xp} / {getXPDetails(xp).nextThreshold} XP (Level {getXPDetails(xp).level < 10 ? getXPDetails(xp).level + 1 : 10})</span>
                  </div>
                  
                  <div className="w-full h-2.5 bg-black/50 rounded-full overflow-hidden border border-white/5 relative shadow-inner">
-                   <div className="h-full bg-gradient-to-r from-orange-600 to-[#ff912d] w-1/3 rounded-full relative">
+                   <div 
+                     className="h-full bg-gradient-to-r from-orange-600 to-[#ff912d] rounded-full relative transition-all duration-1000 ease-out"
+                     style={{ width: `${Math.max(2, getXPDetails(xp).progress)}%` }}
+                   >
                       <div className="absolute top-0 right-0 bottom-0 left-0 bg-[linear-gradient(45deg,rgba(255,255,255,0.2)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.2)_50%,rgba(255,255,255,0.2)_75%,transparent_75%,transparent)] bg-[length:1rem_1rem] animate-[progressStripes_2s_linear_infinite]"></div>
                    </div>
                  </div>
@@ -419,36 +432,63 @@ export default function ProfilePage() {
 
              {/* ACHIEVEMENTS */}
              <div className="flex flex-col gap-4">
-               <div className="border border-[#ff912d]/50 p-3 bg-[#361d57]/60 text-center rounded-xl">
-                 <h2 className={`${vt323.className} font-bold text-[#ff912d] text-2xl tracking-[0.2em] uppercase`}>Achievements</h2>
-               </div>
+                <div className="flex justify-between items-center border border-[#ff912d]/50 p-3 bg-[#361d57]/60 rounded-xl">
+                  <div className="w-24 shrink-0"></div> {/* Spacer for centering */}
+                  <h2 className={`${vt323.className} font-bold text-[#ff912d] text-2xl tracking-[0.2em] uppercase text-center flex-1`}>Achievements</h2>
+                  <div className="w-24 shrink-0 flex justify-end">
+                  </div>
+                </div>
 
                <div className="border border-[#ff912d]/50 bg-black/20 rounded-xl p-6 relative flex flex-col gap-4 shadow-sm min-h-[160px]">
-                 <div className="flex flex-wrap justify-center gap-6">
-                   {/* Ready for Blast Off Badge */}
-                   <div className="group relative w-20 h-20 bg-gradient-to-br from-yellow-400 to-orange-600 rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(255,165,0,0.4)] cursor-pointer hover:scale-110 transition-transform">
-                      <Image src="/Planet 1.svg" alt="Badge" width={50} height={50} />
-                      <div className="absolute bottom-[110%] hidden group-hover:block w-max max-w-[220px] bg-black/90 text-white text-xs p-3 rounded-lg border border-[#ff912d]/50 z-50 text-center shadow-2xl pointer-events-none">
-                        <strong className="block text-[#ff912d] text-sm mb-1 uppercase tracking-wider">Ready for Blast Off!</strong>
-                        Achievement: Create An Account
-                      </div>
-                   </div>
-                   
-                   <div className="group relative w-20 h-20 bg-gradient-to-br from-purple-400 to-indigo-600 rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(138,43,226,0.4)] cursor-pointer hover:scale-110 transition-transform">
-                      <Image src="/Planet 3.svg" alt="Badge" width={50} height={50} />
-                      <div className="absolute bottom-[110%] hidden group-hover:block w-max max-w-[220px] bg-black/90 text-white text-xs p-3 rounded-lg border border-[#ff912d]/50 z-50 text-center shadow-2xl pointer-events-none">
-                        <strong className="block text-purple-400 text-sm mb-1 uppercase tracking-wider">First Orbit!</strong>
-                        Achievement: Complete your first module
-                      </div>
-                   </div>
-                   
-                   <div className="w-20 h-20 border-2 border-white/10 border-dashed rounded-full flex items-center justify-center bg-white/5 opacity-50 cursor-not-allowed">
-                      <svg className="w-8 h-8 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                   </div>
+                 <div className="grid grid-cols-3 place-items-center gap-x-8 gap-y-6 mx-auto">
+                    {Array.from({ length: 6 }).map((_, i) => {
+                      const badgeId = profile?.showcasedBadges?.[i];
+                      const baseBadge = badgeId ? allBadges.find(b => b.id === badgeId) : null;
+                      
+                      if (baseBadge) {
+                        const triggerCode = baseBadge.id.toUpperCase();
+                        const dbData = dbAchievements.find(a => a.triggerCode === triggerCode || a.triggerCode === badgeId.toUpperCase() || a.id === badgeId);
+                        const badge = {
+                          ...baseBadge,
+                          name: dbData?.name || baseBadge.name,
+                          description: dbData?.description || baseBadge.description,
+                          xpReward: dbData?.xpReward || baseBadge.xpReward || 100,
+                          gearsReward: dbData?.gearsReward || 0,
+                          icon: dbData?.iconUrl || baseBadge.icon,
+                          image: dbData?.iconUrl || baseBadge.image,
+                        };
+
+                        return (
+                          <div 
+                            key={i} 
+                            onClick={() => setSelectedBadge({ ...badge, isUnlocked: true, unlockedAt: unlockedDates[triggerCode] || unlockedDates[badgeId] })}
+                            className="group relative w-16 h-16 bg-gradient-to-br from-indigo-500/20 to-purple-600/20 border-2 border-[#ff912d]/60 shadow-[0_0_12px_rgba(255,145,45,0.25)] rounded-full flex items-center justify-center cursor-pointer hover:border-[#ff912d] hover:bg-[#ff912d]/20 transition-all hover:shadow-[0_0_20px_rgba(255,145,45,0.5)] overflow-visible"
+                          >
+                            <div className="w-full h-full rounded-full overflow-hidden flex items-center justify-center">
+                              {badge.image ? (
+                                <img src={badge.image} alt={badge.name} className="w-full h-full object-cover rounded-full" />
+                              ) : (
+                                <span className="text-[#ff912d] font-bold text-2xl">{badge.icon}</span>
+                              )}
+                            </div>
+                            <div className="absolute bottom-[110%] left-1/2 -translate-x-1/2 hidden group-hover:block w-max max-w-[220px] bg-black/90 text-white text-xs p-3 rounded-lg border border-[#ff912d]/50 z-[9999] text-center shadow-2xl pointer-events-none">
+                              <strong className="block text-[#ff912d] text-sm mb-1 uppercase tracking-wider">"{badge.name}"</strong>
+                              <span className="text-white/70 block mt-1">{badge.description || "Achievement unlocked! You've mastered this skill in the NETStart galaxy."}</span>
+                            </div>
+                          </div>
+                        );
+                      }
+                      
+                      return (
+                        <div key={i} className="w-16 h-16 border-2 border-white/10 border-dashed rounded-full flex items-center justify-center bg-white/5 opacity-50 cursor-not-allowed">
+                          <svg className="w-6 h-6 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v12M6 12h12"></path></svg>
+                        </div>
+                      );
+                    })}
                  </div>
                  
-                 <div className="mt-4 pt-4 border-t border-white/10 flex justify-center">
-                   <Link href="#" className="text-white/50 hover:text-[#ff912d] text-xs uppercase tracking-widest transition-colors font-bold flex items-center gap-2">
+                  <div className="mt-4 pt-4 border-t border-white/10 flex justify-center">
+                   <Link href="/achievements" className="text-white/50 hover:text-[#ff912d] text-xs uppercase tracking-widest transition-colors font-bold flex items-center gap-2">
                      View All Badges
                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
                    </Link>
@@ -456,123 +496,131 @@ export default function ProfilePage() {
                </div>
              </div>
              {/* ONGOING MISSIONS */}
-             <div className="flex flex-col gap-4">
-               <div className="border border-[#ff912d]/50 p-3 bg-[#361d57]/60 text-center rounded-xl">
+             <div className="flex flex-col mt-2 flex-1 gap-4">
+               <div className="border border-[#ff912d]/50 p-3 bg-[#361d57]/60 text-center rounded-xl shrink-0">
                  <h2 className={`${vt323.className} font-bold text-[#ff912d] text-2xl tracking-[0.2em] uppercase`}>Ongoing Missions</h2>
                </div>
                
-               <div className="grid grid-cols-1 @md:grid-cols-2 gap-4">
+               <div className="flex flex-col flex-1 gap-4">
                   {/* Mission 1 */}
-                  <div className="border-2 border-[#ff912d]/50 rounded-xl overflow-hidden shadow-sm hover:shadow-[0_0_15px_rgba(255,145,45,0.2)] transition-shadow cursor-pointer flex flex-col group relative bg-black/40 h-[168px]">
-                    <div className="h-14 bg-black relative border-b border-[#ff912d]/30 overflow-hidden flex items-center justify-center shrink-0">
+                  <div className="border-2 border-[#ff912d]/50 rounded-xl overflow-hidden shadow-sm hover:shadow-[0_0_15px_rgba(255,145,45,0.2)] transition-shadow cursor-pointer flex flex-col group relative bg-black/40 flex-1 min-h-[168px]">
+                    <div className="flex-1 min-h-[5rem] bg-black relative border-b border-[#ff912d]/30 overflow-hidden flex items-center justify-center w-full">
                        <Image src="/login-bg-hq.jpg" alt="Mission Background" fill className="object-cover opacity-50 group-hover:opacity-70 transition-opacity duration-700 group-hover:scale-105" />
                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent"></div>
-                       <Image src="/Planet 1.svg" alt="Planet" width={24} height={24} className="absolute z-10 animate-pulse" />
                     </div>
                     
-                    <div className="p-3 flex flex-col gap-1 flex-1 min-h-0">
+                    <div className="p-4 flex flex-col gap-2 shrink-0 bg-black/40">
                        <div className="flex justify-between items-center w-full">
                           <h3 className="text-white font-bold text-sm leading-tight truncate mr-2">Current Mission</h3>
-                          <span className="text-[#ff912d] text-[8px] uppercase font-bold tracking-widest bg-[#ff912d]/10 px-1.5 py-0.5 rounded border border-[#ff912d]/20 shrink-0">1 day ago</span>
+                          <span className="text-[#ff912d] text-[10px] uppercase font-bold tracking-widest bg-[#ff912d]/10 px-2 py-1 rounded border border-[#ff912d]/20 shrink-0">1 day ago</span>
                        </div>
                        
-                       <p className="text-white/60 text-[10px] leading-relaxed line-clamp-1">
+                       <p className="text-white/70 text-xs leading-relaxed line-clamp-2 mb-2">
                          Continue your exploration in the Sandbox environment. You have unfinished modules awaiting your command.
                        </p>
                        
-                       <div className="flex justify-between items-center mt-auto pt-2 border-t border-white/5">
+                       <div className="flex justify-between items-center pt-3 border-t border-white/10">
                          <div className="flex -space-x-2">
-                            <div className="w-5 h-5 rounded-full bg-[#1e0a2d] border border-white/20 flex items-center justify-center z-20">
-                               <Image src="/Planet 1.svg" alt="Icon" width={12} height={12} />
+                            <div className="w-6 h-6 rounded-full bg-[#1e0a2d] border border-white/20 flex items-center justify-center z-20">
+                               <Image src="/Planet 1.svg" alt="Icon" width={14} height={14} />
                             </div>
-                            <div className="w-5 h-5 rounded-full bg-[#361d57] border border-white/20 flex items-center justify-center z-10">
-                               <Image src="/Planet 4.svg" alt="Icon" width={12} height={12} />
+                            <div className="w-6 h-6 rounded-full bg-[#361d57] border border-white/20 flex items-center justify-center z-10">
+                               <Image src="/Planet 4.svg" alt="Icon" width={14} height={14} />
                             </div>
                          </div>
-                         <button className="bg-[#ff912d] text-black font-bold px-3 py-1 rounded-lg text-[10px] hover:bg-[#ff912d]/80 transition-all cursor-pointer shadow-sm">
+                         <button className="bg-[#ff912d] text-black font-bold px-4 py-1.5 rounded-lg text-xs hover:bg-[#ff912d]/80 transition-all cursor-pointer shadow-sm active:scale-95">
                            Resume
                          </button>
                        </div>
-                    </div>
-                  </div>
-                  
-                  {/* Empty slot example */}
-                  <div className="border-2 border-white/5 border-dashed rounded-xl flex flex-col items-center justify-center bg-black/10 h-[168px] p-4 text-center text-white/30 hover:border-white/20 hover:text-white/50 transition-colors cursor-not-allowed">
-                     <svg className="w-6 h-6 mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-                     <span className="text-sm uppercase tracking-wider font-bold">New Mission Slot</span>
-                  </div>
-               </div>
              </div>
 
-             {/* FRIENDS LIST */}
-             <div className="flex flex-col mt-4 gap-4">
-               <div className="border border-[#ff912d]/50 p-3 bg-[#361d57]/60 rounded-xl flex justify-between items-center px-6 shrink-0">
-                 <h2 className={`${vt323.className} font-bold text-[#ff912d] text-2xl tracking-[0.2em] uppercase`}>Friends List</h2>
-                 <span className={`${vt323.className} font-bold text-white/50 text-xl`}>{friends.length} Friends</span>
-               </div>
-               
-               {!isPublic ? (
-                 <div className="border border-[#ff912d]/50 bg-black/20 rounded-xl p-8 flex flex-col items-center justify-center text-center gap-3 shadow-inner">
-                   <svg className="w-10 h-10 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                   <span className="text-white/40 italic font-sans text-sm">Your profile is currently private.<br/>Friends list is hidden from public view.</span>
-                 </div>
-               ) : (
-                 <div className="border border-[#ff912d]/50 bg-black/20 rounded-xl p-6 flex flex-col gap-6 shadow-inner min-h-[150px]">
-                   {/* Pending Requests */}
-                   {pendingReceived.length > 0 && (
-                     <div className="mb-2">
-                       <h3 className={`${vt323.className} text-green-400 text-xl tracking-wider mb-4 border-b border-white/10 pb-2`}>Awaiting Clearance</h3>
-                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                         {pendingReceived.map((req: any) => (
-                           <div key={req.friendshipId} className="flex items-center justify-between bg-[#361d57]/40 p-4 rounded-xl border border-green-500/30">
-                             <div className="flex items-center gap-3">
-                               <div className="w-10 h-10 rounded-full bg-[#1e0a2d] flex items-center justify-center font-bold text-[#ff912d]">
-                                 {req.user.name?.charAt(0) || 'U'}
-                               </div>
-                               <span className="font-bold text-sm">{req.user.name}</span>
-                             </div>
-                             <button onClick={() => acceptRequest(req.friendshipId)} className="bg-green-500 hover:bg-green-400 text-green-950 font-bold px-4 py-1.5 rounded-full text-xs transition-colors cursor-pointer active:scale-95">Approve</button>
-                           </div>
-                         ))}
-                       </div>
-                     </div>
-                   )}
-
-                   {/* Current Friends */}
-                   <div>
-                     {friends.length === 0 ? (
-                       <p className="text-white/40 italic font-sans text-center py-4">No friends yet.</p>
-                     ) : (
-                       <div className="grid grid-cols-1 @md:grid-cols-2 gap-4">
-                         {friends.map((friend: any) => (
-                           <div key={friend.id} className="group flex items-center gap-4 bg-[#361d57]/30 p-3 rounded-xl border border-white/5 hover:border-[#ff912d]/50 transition-all cursor-pointer">
-                             <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#361d57] to-[#ff912d] p-0.5">
-                               <div className="w-full h-full bg-[#1e0a2d] rounded-full flex items-center justify-center font-bold text-[#ff912d] text-sm">
-                                 {friend.name?.charAt(0) || 'U'}
-                               </div>
-                             </div>
-                             <div className="flex flex-col flex-1 min-w-0">
-                               <span className="font-bold text-sm truncate">{friend.name}</span>
-                               <span className="text-xs text-white/50 truncate">{friend.status || 'Offline'}</span>
-                             </div>
-                             <button 
-                               onClick={(e) => { e.stopPropagation(); removeFriend(friend.id); }} 
-                               className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-300 p-2 transition-all cursor-pointer flex-shrink-0"
-                               title="Revoke clearance"
-                             >
-                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                             </button>
-                           </div>
-                         ))}
-                       </div>
-                     )}
-                   </div>
-                 </div>
-               )}
-             </div>
            </div>
          </div>
        </div>
+     </div>
+   </div>
+ </div>
+
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[1000] bg-[#ff912d] text-black font-bold px-6 py-2 rounded-full shadow-2xl animate-bounce">
+          {toastMessage}
+        </div>
+      )}
+
+      {/* Badge Details Modal */}
+      {selectedBadge && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="bg-[#1e0a2d] border border-[#ff912d]/50 rounded-2xl p-8 max-w-2xl w-full relative flex flex-col md:flex-row gap-8 items-center text-center md:text-left shadow-[0_0_40px_rgba(255,145,45,0.2)]">
+            {/* Close Button */}
+            <button 
+              onClick={() => setSelectedBadge(null)}
+              className="absolute top-4 right-4 text-white/50 hover:text-white transition-colors cursor-pointer"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+            
+            {/* Badge Icon */}
+            <div className="w-32 h-32 shrink-0 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-purple-600/20 border-2 border-[#ff912d]/50 flex items-center justify-center shadow-lg overflow-hidden p-2">
+              {selectedBadge.image ? (
+                <img src={selectedBadge.image} alt={selectedBadge.name} className="w-28 h-28 object-contain" />
+              ) : (
+                <span className="text-[#ff912d] font-bold text-5xl">{selectedBadge.icon}</span>
+              )}
+            </div>
+            
+            {/* Content */}
+            <div className="flex flex-col flex-1 items-center md:items-start w-full">
+              {/* Badge Name */}
+              <h3 className={`${vt323.className} text-[#ff912d] text-4xl mb-2 tracking-wider`}>"{selectedBadge.name}"</h3>
+              
+              <div className="flex items-center gap-3 mb-3 flex-wrap justify-center md:justify-start">
+                <div className="bg-[#270d3c] border border-[#ff912d]/50 text-[#ff912d] text-xs font-bold px-3 py-1 rounded-full shadow-sm">
+                  +{selectedBadge.xpReward || 100} EXP
+                </div>
+                {selectedBadge.gearsReward > 0 && (
+                  <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-purple-900 text-purple-200 text-xs font-bold border border-purple-700">
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    +{selectedBadge.gearsReward} GEARS
+                  </div>
+                )}
+                {selectedBadge.unlockedAt && (
+                  <div className="bg-black/40 border border-white/10 text-white/60 text-xs px-3 py-1 rounded-full">
+                    Unlocked: {new Date(selectedBadge.unlockedAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
+                  </div>
+                )}
+              </div>
+              
+              {/* Description */}
+              <p className="text-white/60 text-sm mb-6 max-w-md">
+                {selectedBadge.description || "Achievement unlocked! You've mastered this skill in the NETStart galaxy."}
+              </p>
+              
+              {/* Action Button */}
+              <button 
+                onClick={() => {
+                  handleToggleBadge(selectedBadge.id);
+                  setSelectedBadge(null);
+                }}
+                disabled={!profile?.showcasedBadges?.includes(selectedBadge.id) && (profile?.showcasedBadges?.length || 0) >= 6}
+                className={`font-bold py-3 px-8 rounded-full w-full md:w-auto transition-colors cursor-pointer active:scale-95 ${
+                  profile?.showcasedBadges?.includes(selectedBadge.id)
+                    ? 'bg-[#ff912d] hover:bg-[#ff912d]/80 text-black'
+                    : (profile?.showcasedBadges?.length || 0) >= 6
+                      ? 'bg-white/10 text-white/40 cursor-not-allowed'
+                      : 'bg-[#ff912d] hover:bg-[#ff912d]/80 text-black'
+                }`}
+              >
+                {profile?.showcasedBadges?.includes(selectedBadge.id) 
+                  ? 'Remove from Showcase' 
+                  : (profile?.showcasedBadges?.length || 0) >= 6
+                    ? 'Showcase Full'
+                    : 'Add to Showcase'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

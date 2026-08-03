@@ -1,6 +1,5 @@
 import React from 'react';
 import Sidebar from '@/components/Sidebar';
-import RightSidebar from '@/components/RightSidebar';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -17,9 +16,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <div className="flex-1 h-full overflow-hidden relative z-10 [&>*]:h-full">
         {children}
       </div>
-
-      {/* Right Sidebar Component */}
-      <RightSidebar />
     </div>
   );
 }

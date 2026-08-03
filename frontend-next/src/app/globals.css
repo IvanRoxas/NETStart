@@ -79,3 +79,16 @@ body {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* Ensure all buttons and links have pointer cursor on hover */
+button, 
+a, 
+[role="button"] {
+  cursor: pointer;
+}
+
+button:disabled,
+a.disabled,
+[disabled] {
+  cursor: not-allowed;
+}

@@ -16,7 +16,10 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "NetStart Next.js App",
+  title: {
+    template: 'NETStart: %s',
+    default: 'NETStart',
+  },
   description: "Structural UI Foundation",
 };
 

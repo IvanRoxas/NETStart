@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions, prisma } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
+import { validatePassword } from '@/lib/password';
+import { logSystemAction } from '@/lib/logger';
 
 export async function PUT(req: Request) {
   try {
@@ -38,6 +40,12 @@ export async function PUT(req: Request) {
       if (!isPasswordValid) {
         return NextResponse.json({ error: 'Incorrect current password' }, { status: 400 });
       }
+
+      const passwordError = validatePassword(newPassword);
+      if (passwordError) {
+        return NextResponse.json({ error: passwordError }, { status: 400 });
+      }
+
       updates.password = await bcrypt.hash(newPassword, 10);
     }
 
@@ -46,6 +54,15 @@ export async function PUT(req: Request) {
         where: { id: userId },
         data: updates
       });
+
+      if (updates.password) {
+        await logSystemAction({
+          actorId: userId,
+          actorRole: "STUDENT",
+          action: "CHANGED_PASSWORD",
+          details: { updatedFields: ["password"] }
+        });
+      }
     }
 
     return NextResponse.json({ message: 'Security settings updated successfully' });
@@ -63,8 +80,15 @@ export async function DELETE(req: Request) {
     }
     const userId = (session.user as any).id;
 
-    await prisma.user.delete({
+    const user = await prisma.user.delete({
       where: { id: userId }
+    });
+
+    await logSystemAction({
+      actorId: userId,
+      actorRole: "STUDENT",
+      action: "DELETED_ACCOUNT",
+      details: { email: user.email }
     });
 
     return NextResponse.json({ message: 'Account deleted successfully' });

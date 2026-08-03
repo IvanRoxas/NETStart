@@ -16,8 +16,8 @@ export default function LogoutButton({ isMinimized = false }: LogoutButtonProps)
     <button 
       onClick={handleLogout}
       title={isMinimized ? "Sign Out" : undefined}
-      className={`flex items-center gap-2 py-3 text-white/80 hover:text-red-400 hover:bg-red-400/10 rounded-xl font-medium transition-colors w-full cursor-pointer border border-transparent hover:border-red-400/20 group relative ${
-        isMinimized ? 'justify-center px-0 w-12 h-12 mx-auto' : 'justify-center px-4'
+      className={`flex items-center gap-4 py-3 text-white/80 hover:text-red-400 hover:bg-red-400/10 rounded-xl font-medium transition-colors w-full cursor-pointer border border-transparent hover:border-red-400/20 group relative ${
+        isMinimized ? 'justify-center px-0 w-12 h-12 mx-auto' : 'justify-start px-4'
       }`}
       aria-label="Sign Out"
     >

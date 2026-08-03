@@ -30,7 +30,9 @@ export const authOptions: NextAuthOptions = {
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
       authorization: {
         params: {
-          prompt: "select_account"
+          prompt: "consent",
+          access_type: "offline",
+          response_type: "code"
         }
       }
     }),
@@ -60,8 +62,13 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Invalid password");
         }
         
+        if (user.isBanned) {
+          throw new Error("Account suspended by administrator.");
+        }
+        
         return {
           ...user,
+          type: "student",
           rememberMe: credentials.rememberMe === "true"
         };
       }
@@ -75,8 +82,13 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id;
-        token.role = (user as any).role || 'student';
+        token.type = (user as any).type || 'student';
+        token.isBanned = (user as any).isBanned || false;
         token.displayName = (user as any).displayName;
+        token.isVerified = (user as any).isVerified || false;
+        token.studentId = (user as any).studentId || null;
+        token.xp = (user as any).xp || 0;
+        token.activeTitle = (user as any).activeTitle || null;
         if (user.image && user.image.startsWith('data:')) {
           token.picture = `/api/profile/avatar?id=${user.id}&t=${Date.now()}`;
         }
@@ -84,24 +96,55 @@ export const authOptions: NextAuthOptions = {
         token.picture = `/api/profile/avatar?id=${token.id}&t=${Date.now()}`;
       }
       
+      // Allow frontend to refresh claims via update()
       if (trigger === "update" && session) {
         if (session.name !== undefined) token.name = session.name;
         if (session.displayName !== undefined) token.displayName = session.displayName;
         if (session.image) token.picture = session.image;
+        if (session.isVerified !== undefined) token.isVerified = session.isVerified;
+        if (session.studentId !== undefined) token.studentId = session.studentId;
+        if (session.xp !== undefined) token.xp = session.xp;
+        if (session.activeTitle !== undefined) token.activeTitle = session.activeTitle;
       }
       
       return token;
     },
     async session({ session, token }) {
-      if (session.user) {
-        (session.user as any).id = token.id as string;
-        (session.user as any).role = token.role as string;
+      if (token && session.user) {
+        session.user.id = token.id as string;
+        session.user.type = token.type as "student" | "admin";
+        session.user.isBanned = token.isBanned as boolean;
+        session.user.isVerified = token.isVerified as boolean;
+        session.user.studentId = token.studentId as string | null;
+        session.user.xp = token.xp as number;
+        session.user.activeTitle = token.activeTitle as string | null;
         if (token.name) session.user.name = token.name as string;
-        if (token.displayName) (session.user as any).displayName = token.displayName as string;
+        if (token.displayName) session.user.displayName = token.displayName as string;
         if (token.picture) session.user.image = token.picture as string;
       }
       return session;
     },
+  },
+  events: {
+    async createUser({ user }) {
+      // Assign a random display name for OAuth signups
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          displayName: `Explorer${Math.floor(10000 + Math.random() * 90000)}`,
+          activeTitle: 'Novice Explorer'
+        }
+      });
+    },
+    async linkAccount({ user, account, profile }) {
+      if (account.provider === 'google') {
+        // Set user as verified when they link their Google account
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { isVerified: true }
+        });
+      }
+    }
   },
   pages: {
     signIn: '/login',

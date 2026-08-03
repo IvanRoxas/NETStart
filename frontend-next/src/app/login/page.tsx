@@ -11,11 +11,28 @@ export default function LoginPage() {
   const { data: session, status } = useSession();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(false);
-  const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
+  const [toastMessage, setToastMessage] = useState<{type: 'success' | 'error' | 'deleted', text: string} | null>(null);
   const [loading, setLoading] = useState(false);
 
+  const showToast = (text: string, type: 'success' | 'error' | 'deleted' = 'error') => {
+    setToastMessage({ text, type });
+    setTimeout(() => setToastMessage(null), 3000);
+  };
+
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('deleted') === 'true') {
+        showToast("Account deleted successfully.", "deleted");
+        window.history.replaceState({}, '', '/login');
+      } else if (params.get('registered') === 'true') {
+        showToast("Account created successfully! Please log in.", "success");
+        window.history.replaceState({}, '', '/login');
+      }
+    }
+
     const savedEmail = localStorage.getItem('netstart_remember_email');
     const savedPassword = localStorage.getItem('netstart_remember_password');
     if (savedEmail && savedPassword) {
@@ -28,7 +45,7 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
+    setToastMessage(null);
 
     if (rememberMe) {
       localStorage.setItem('netstart_remember_email', email);
@@ -46,15 +63,31 @@ export default function LoginPage() {
     });
 
     if (res?.error) {
-      setError("Invalid email or password");
+      showToast("Invalid email or password");
       setLoading(false);
+      // Clear stale saved credentials if login fails
+      localStorage.removeItem('netstart_remember_email');
+      localStorage.removeItem('netstart_remember_password');
+      setRememberMe(false);
     } else {
-      window.location.href = '/dashboard';
+      showToast("Login successful! Redirecting...", 'success');
+      setTimeout(() => window.location.href = '/dashboard', 1000);
     }
   };
 
   return (
     <section className="min-h-screen w-full flex flex-col md:flex-row bg-[#1e0a2d] relative overflow-hidden">
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className={`fixed top-8 left-1/2 -translate-x-1/2 z-[100] px-6 py-3 rounded-full shadow-2xl font-sans font-bold flex items-center gap-2 animate-in slide-in-from-top-4 duration-300
+          ${toastMessage.type === 'error' ? 'bg-red-500/90 text-white backdrop-blur-sm border border-red-400' : ''}
+          ${toastMessage.type === 'success' ? 'bg-green-500/90 text-white backdrop-blur-sm border border-green-400' : ''}
+          ${toastMessage.type === 'deleted' ? 'bg-[#ffc107]/90 text-black backdrop-blur-sm border border-[#ffb703]' : ''}
+        `}>
+          {toastMessage.text}
+        </div>
+      )}
+
       {/* Back Button */}
       <Link 
         href="/" 
@@ -79,7 +112,7 @@ export default function LoginPage() {
         
         <div className="relative z-10 w-full h-full flex flex-col justify-end p-12 md:p-16 lg:p-24 pb-20">
           <span className="bg-[#ff912d]/20 text-[#ff912d] font-sans font-bold text-xs uppercase tracking-widest py-1.5 px-4 rounded-full mb-6 border border-[#ff912d]/30 w-max shadow-lg">
-            System Access
+            Log In
           </span>
           <h2 className="font-display text-5xl lg:text-7xl font-bold text-white leading-tight mb-6 drop-shadow-lg">
             Resume Your <br/> <span className="text-borders">Journey</span>
@@ -107,7 +140,7 @@ export default function LoginPage() {
               <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-tr from-[#361d57] to-[#ff912d] p-[2px] shadow-lg mb-2">
                 <div className="w-full h-full bg-[#1e0a2d] rounded-full overflow-hidden flex items-center justify-center">
                   {session.user.image ? (
-                    <Image src={session.user.image} alt="User Avatar" width={64} height={64} className="object-cover" />
+                    <Image src={session.user.image === '/Planet 1.svg' ? '/Profile.svg' : session.user.image} alt="User Avatar" width={64} height={64} className="object-cover" />
                   ) : (
                     <span className="font-bold text-[#ff912d] text-xl uppercase">{session.user.name?.charAt(0) || 'U'}</span>
                   )}
@@ -147,14 +180,32 @@ export default function LoginPage() {
 
                 <div className="flex flex-col gap-1.5">
                   <label className="font-sans text-white/80 text-sm font-semibold">Password</label>
-                  <input 
-                    type="password" 
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-[#361d57]/50 text-white font-sans text-sm px-3 py-2 rounded-xl border border-white/10 outline-none focus:ring-2 focus:ring-[#ff912d] transition-all"
-                    placeholder="••••••••"
-                    required
-                  />
+                  <div className="relative">
+                    <input 
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full bg-[#361d57]/50 text-white font-sans text-sm px-3 py-2 pr-10 rounded-xl border border-white/10 outline-none focus:ring-2 focus:ring-[#ff912d] transition-all"
+                      placeholder="••••••••"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white transition-colors"
+                    >
+                      {showPassword ? (
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                        </svg>
+                      ) : (
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
                 </div>
 
                 <div className="flex items-center gap-3 mt-1">
@@ -188,7 +239,6 @@ export default function LoginPage() {
                   </label>
                 </div>
 
-                {error && <p className="font-sans text-red-500 text-xs text-center">{error}</p>}
 
                 <button 
                   type="submit"

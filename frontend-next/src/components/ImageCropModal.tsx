@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
-import ReactCrop, { centerCrop, makeAspectCrop, Crop, PixelCrop } from 'react-image-crop';
+import ReactCrop, { centerCrop, makeAspectCrop, Crop, PixelCrop, convertToPixelCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import { X, Check } from 'lucide-react';
 
@@ -60,11 +60,14 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({ isOpen, onClose, imageS
 
     const onImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
         const { width, height } = e.currentTarget;
+        let initialCrop: Crop;
         if (aspect) {
-            setCrop(centerAspectCrop(width, height, aspect));
+            initialCrop = centerAspectCrop(width, height, aspect);
         } else {
-            setCrop(centerCropNoAspect(width, height));
+            initialCrop = centerCropNoAspect(width, height);
         }
+        setCrop(initialCrop);
+        setCompletedCrop(convertToPixelCrop(initialCrop, width, height));
     };
 
     const handleSave = async () => {

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -35,11 +35,7 @@ export default function SettingsPage() {
 
   // General settings state
   const [pushNotifs, setPushNotifs] = useState(true);
-  const [friendRequests, setFriendRequests] = useState(true);
   const [sounds, setSounds] = useState(true);
-
-  // Privacy settings state
-  const [profileVisibility, setProfileVisibility] = useState(true);
 
   // Notifications settings state
   const [systemAnnouncements, setSystemAnnouncements] = useState(true);
@@ -49,17 +45,9 @@ export default function SettingsPage() {
   const [isReportSubmitted, setIsReportSubmitted] = useState(false);
   const [reportIssueType, setReportIssueType] = useState('bug');
   const [reportDescription, setReportDescription] = useState('');
-  const [reportImageSrc, setReportImageSrc] = useState<string | null>(null);
-  
-  // Cropping state for report
-  const [reportCropModalOpen, setReportCropModalOpen] = useState(false);
-  const [reportPreCropImageSrc, setReportPreCropImageSrc] = useState<string | null>(null);
+  const [reportAttachments, setReportAttachments] = useState<string[]>([]);
   const reportImageInputRef = useRef<HTMLInputElement>(null);
 
-  const [isBehaviorModalOpen, setIsBehaviorModalOpen] = useState(false);
-  const [isBehaviorSubmitted, setIsBehaviorSubmitted] = useState(false);
-  const [behaviorUser, setBehaviorUser] = useState('');
-  const [behaviorDescription, setBehaviorDescription] = useState('');
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
@@ -67,9 +55,7 @@ export default function SettingsPage() {
     // Load persisted settings
     if (typeof window !== 'undefined') {
       setPushNotifs(localStorage.getItem('setting_pushNotifs') !== 'false');
-      setFriendRequests(localStorage.getItem('setting_friendRequests') !== 'false');
       setSounds(localStorage.getItem('setting_sounds') !== 'false');
-      setProfileVisibility(localStorage.getItem('setting_profileVisibility') !== 'false');
       setSystemAnnouncements(localStorage.getItem('setting_systemAnnouncements') !== 'false');
       setAcademicAlerts(localStorage.getItem('setting_academicAlerts') !== 'false');
     }
@@ -93,16 +79,13 @@ export default function SettingsPage() {
         .then(data => {
           if (data.user) {
             setUsername(data.user.name || session.user?.name || '');
-            if (data.user.image) {
-              setAvatarUrl(`/api/profile/avatar?id=${(session.user as any).id}&t=${Date.now()}`);
-            } else if (session.user?.image) {
-              setAvatarUrl(session.user.image);
-            }
+            // Always use the API route because it handles SVG initial generation if image is null
+            setAvatarUrl(`/api/profile/avatar?id=${(session.user as any).id}&t=${Date.now()}`);
           }
         })
         .catch(err => {
           setUsername(session?.user?.name || '');
-          if (session?.user?.image) setAvatarUrl(session.user.image);
+          setAvatarUrl(`/api/profile/avatar?id=${(session.user as any).id}&t=${Date.now()}`);
         });
     }
   }, [status, session, router]);
@@ -232,11 +215,14 @@ export default function SettingsPage() {
     try {
       const res = await fetch('/api/settings/security', { method: 'DELETE' });
       if (res.ok) {
-        // We'll show a message instead of alert, then redirect
         setMessage({ text: 'Your account has been deleted.', type: 'success' });
-        setTimeout(() => {
-          router.push('/login');
-        }, 1500);
+        
+        // Clear saved auto-login credentials
+        localStorage.removeItem('netstart_remember_email');
+        localStorage.removeItem('netstart_remember_password');
+        
+        // Immediately sign out and redirect to prevent stale session
+        await signOut({ redirect: true, callbackUrl: '/login?deleted=true' });
       } else {
         const data = await res.json();
         setMessage({ text: data.error || "Failed to delete account", type: 'error' });
@@ -249,23 +235,33 @@ export default function SettingsPage() {
   };
 
   const handleReportImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        if (event.target?.result) {
-          setReportPreCropImageSrc(event.target.result as string);
-          setReportCropModalOpen(true);
-        }
-      };
-      reader.readAsDataURL(file);
+    if (e.target.files && e.target.files.length > 0) {
+      const newFiles = Array.from(e.target.files);
+      const remainingSlots = 5 - reportAttachments.length;
+      
+      if (remainingSlots <= 0) {
+        e.target.value = '';
+        return; // Max 5 attachments
+      }
+      
+      const filesToProcess = newFiles.slice(0, remainingSlots);
+      
+      filesToProcess.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          if (event.target?.result) {
+            setReportAttachments(prev => [...prev, event.target!.result as string]);
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+      
       e.target.value = '';
     }
   };
 
-  const handleReportCropSave = (base64String: string) => {
-    setReportImageSrc(base64String);
-    setReportCropModalOpen(false);
+  const removeReportAttachment = (indexToRemove: number) => {
+    setReportAttachments(prev => prev.filter((_, index) => index !== indexToRemove));
   };
 
   const handleReportSubmit = async (e: React.FormEvent) => {
@@ -279,7 +275,7 @@ export default function SettingsPage() {
         body: JSON.stringify({ 
           type: reportIssueType, 
           description: reportDescription,
-          image: reportImageSrc
+          attachments: reportAttachments
         })
       });
       
@@ -289,48 +285,27 @@ export default function SettingsPage() {
         setIsReportSubmitted(false);
         setReportDescription('');
         setReportIssueType('bug');
-        setReportImageSrc(null);
+        setReportAttachments([]);
       }, 2500);
     } catch (err) {
       console.error('Failed to submit report', err);
     }
   };
 
-  const handleBehaviorSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!behaviorDescription.trim() || !behaviorUser.trim()) return;
-    
-    try {
-      await fetch('/api/reports', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'behavior', targetUser: behaviorUser, description: behaviorDescription })
-      });
-      
-      setIsBehaviorSubmitted(true);
-      setTimeout(() => {
-        setIsBehaviorModalOpen(false);
-        setIsBehaviorSubmitted(false);
-        setBehaviorDescription('');
-        setBehaviorUser('');
-      }, 2500);
-    } catch (err) {
-      console.error('Failed to submit behavior report', err);
-    }
-  };
+
 
   if (status === 'loading') {
     return <div className="h-screen bg-[#1e0a2d] flex items-center justify-center text-white">Loading...</div>;
   }
 
-  const tabs = ['General', 'Account', 'Privacy', 'Help & Support'];
+  const tabs = ['General', 'Account', 'Help & Support'];
 
   const Toggle = ({ checked, onChange }: { checked: boolean, onChange: (val: boolean) => void }) => (
     <div 
       onClick={() => onChange(!checked)}
-      className={`w-10 h-6 shrink-0 rounded-full flex items-center p-1 cursor-pointer transition-colors ${checked ? 'bg-[#ff912d]' : 'bg-white/10'}`}
+      className={`w-10 h-6 shrink-0 rounded-full flex items-center p-1 cursor-pointer transition-colors duration-300 ease-in-out ${checked ? 'bg-[#ff912d]' : 'bg-white/10'}`}
     >
-      <div className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${checked ? 'translate-x-4' : 'translate-x-0'}`}></div>
+      <div className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${checked ? 'translate-x-4' : 'translate-x-0'}`}></div>
     </div>
   );
 
@@ -401,22 +376,6 @@ export default function SettingsPage() {
               </div>
             )}
 
-            {activeTab === 'Privacy' && (
-              <div className="flex flex-col">
-                <h2 className="font-display text-2xl font-bold text-[#ff912d] mb-4 mt-2">Data & Visibility</h2>
-                <SettingItem 
-                  title="Profile Visibility"
-                  description="Allow other students to view my public profile and completed modules."
-                  control={<Toggle checked={profileVisibility} onChange={(v) => handleToggle('profileVisibility', v, setProfileVisibility)} />}
-                />
-                <SettingItem 
-                  title="Friend Requests"
-                  description="Allow other explorers to send you friend requests."
-                  control={<Toggle checked={friendRequests} onChange={(v) => handleToggle('friendRequests', v, setFriendRequests)} />}
-                />
-              </div>
-            )}
-
             {activeTab === 'Help & Support' && (
               <div className="flex flex-col">
                 <h2 className="font-display text-2xl font-bold text-[#ff912d] mb-4 mt-2">Help & Support</h2>
@@ -435,20 +394,6 @@ export default function SettingsPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between py-5 border-b border-white/5">
-                  <div>
-                    <h3 className="text-white font-medium text-[15px]">Report Inappropriate Behavior</h3>
-                    <p className="text-white/50 text-[13px] mt-1">Help us keep the community safe and respectful.</p>
-                  </div>
-                  <div className="pl-4">
-                    <button 
-                      onClick={() => setIsBehaviorModalOpen(true)}
-                      className="bg-white/10 hover:bg-white/20 text-white font-medium text-sm py-2 px-6 rounded-full transition-colors cursor-pointer"
-                    >
-                      Report User
-                    </button>
-                  </div>
-                </div>
               </div>
             )}
 
@@ -475,9 +420,7 @@ export default function SettingsPage() {
                           {avatarUrl ? (
                             <Image src={avatarUrl} alt="Profile Picture" width={96} height={96} className="object-cover w-full h-full" />
                           ) : (
-                            <svg className="w-12 h-12 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                            </svg>
+                            <Image src="/Profile.svg" alt="Default Profile" width={96} height={96} className="object-cover w-full h-full" />
                           )}
                         </div>
                         <input 
@@ -669,16 +612,8 @@ export default function SettingsPage() {
       {/* Report Issue Modal */}
       {isReportModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
-          <div className="bg-[#1e0a2d] border border-white/10 rounded-2xl p-6 md:p-8 w-full max-w-lg shadow-2xl relative transition-all duration-300">
-            {/* Report Screenshot Crop Modal */}
-            <ImageCropModal
-              isOpen={reportCropModalOpen}
-              onClose={() => setReportCropModalOpen(false)}
-              imageSrc={reportPreCropImageSrc}
-              aspect={0} // Free aspect ratio for screenshots
-              title="Crop Screenshot"
-              onSave={handleReportCropSave}
-            />
+          <div className="bg-[#1e0a2d] border border-white/10 rounded-2xl p-6 md:p-8 w-full max-w-4xl shadow-2xl relative transition-all duration-300">
+
             {isReportSubmitted ? (
               <div className="flex flex-col items-center justify-center py-8">
                 <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mb-6">
@@ -694,8 +629,8 @@ export default function SettingsPage() {
                 <h2 className="font-display text-2xl font-bold text-white mb-2">Report an Issue</h2>
                 <p className="text-white/50 text-sm mb-6">Please provide details about the problem you are experiencing.</p>
                 
-                <form onSubmit={handleReportSubmit} className="flex flex-col gap-5">
-                  <div className="flex flex-col gap-2">
+                <form onSubmit={handleReportSubmit} className="flex flex-col space-y-6">
+                  <div className="w-full flex flex-col space-y-2">
                     <label className="text-white/80 text-[13px] font-medium">Issue Type</label>
                     <select 
                       value={reportIssueType}
@@ -710,46 +645,58 @@ export default function SettingsPage() {
                     </select>
                   </div>
 
-                  <div className="flex gap-5 items-stretch">
-                    <div className="flex flex-col gap-2 flex-1">
+                  <div className="flex flex-col md:flex-row gap-6 items-stretch w-full">
+                    {/* Description Section (Left) */}
+                    <div className="w-full flex-1 flex flex-col space-y-2">
                       <label className="text-white/80 text-[13px] font-medium">Description</label>
                       <textarea 
                         value={reportDescription}
                         onChange={(e) => setReportDescription(e.target.value)}
-                        placeholder="Describe the bug, broken Blockly component, or page error here..."
-                        rows={5}
+                        placeholder="Describe the issue here..."
                         required
-                        className="w-full h-full bg-white/5 text-white px-4 py-3 rounded-lg border border-white/10 outline-none focus:border-[#ff912d]/50 transition-colors text-sm resize-none"
+                        className="w-full h-full min-h-[140px] resize-none rounded-md bg-[#1a082c] border border-gray-700 p-3 text-white placeholder-gray-500 focus:border-[#ff912d] focus:ring-1 focus:ring-[#ff912d]"
                       ></textarea>
                     </div>
 
-                    <div className="flex flex-col gap-2">
-                      <label className="text-white/80 text-[13px] font-medium">Screenshot</label>
-                      <div className="flex flex-col items-center justify-center h-full">
-                        {reportImageSrc ? (
-                          <div className="relative w-[116px] h-full min-h-[116px] rounded-lg overflow-hidden border border-white/10 bg-black/40 group">
-                            <Image src={reportImageSrc} alt="Attached screenshot" width={116} height={116} className="object-cover w-full h-full" />
-                            <button 
+                    {/* Attachments Section (Right) */}
+                    <div className="w-full md:w-[320px] flex flex-col space-y-2">
+                      <div className="flex justify-between items-center w-full">
+                        <span className="text-white/80 text-[13px] font-medium">Attachments</span>
+                        <span className="text-gray-500 text-sm">{reportAttachments.length}/5 attachments</span>
+                      </div>
+                      
+                      <div className="flex flex-wrap gap-3 items-start h-full">
+                        {reportAttachments.map((src, idx) => (
+                          <div key={idx} className="relative w-24 h-24 rounded-lg overflow-hidden border border-gray-600 bg-black/40 group">
+                            <Image src={src} alt={`Attachment ${idx + 1}`} width={96} height={96} className="object-cover w-full h-full opacity-80 group-hover:opacity-100 transition-opacity" />
+                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+                              <button 
+                                type="button"
+                                onClick={(e) => { e.stopPropagation(); removeReportAttachment(idx); }}
+                                className="bg-red-500 text-white rounded-full p-2 hover:bg-red-600 transition-colors"
+                                title="Remove attachment"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                        
+                        {reportAttachments.length < 5 && (
+                          <div className="flex flex-col items-center gap-2">
+                            <button
                               type="button"
-                              onClick={() => setReportImageSrc(null)}
-                              className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                              title="Remove attachment"
+                              onClick={() => reportImageInputRef.current?.click()}
+                              className="w-24 h-24 flex flex-col items-center justify-center border-2 border-dashed border-gray-600 rounded-lg hover:border-[#ff912d] cursor-pointer text-gray-500 hover:text-[#ff912d] transition-colors"
                             >
-                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
+                              <span className="text-[10px] font-bold mt-1 tracking-wider uppercase">Add Image</span>
                             </button>
                           </div>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => reportImageInputRef.current?.click()}
-                            className="w-[116px] h-full min-h-[116px] rounded-lg border border-dashed border-white/20 bg-white/5 hover:bg-white/10 flex flex-col items-center justify-center gap-2 transition-colors text-white/50 hover:text-white/80 cursor-pointer"
-                          >
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
-                            <span className="text-[10px] font-medium uppercase tracking-wider">Upload</span>
-                          </button>
                         )}
                         <input 
                           type="file"
+                          multiple
                           ref={reportImageInputRef}
                           onChange={handleReportImageChange}
                           accept="image/*"
@@ -781,71 +728,6 @@ export default function SettingsPage() {
         </div>
       )}
 
-      {/* Report Behavior Modal */}
-      {isBehaviorModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
-          <div className="bg-[#1e0a2d] border border-white/10 rounded-2xl p-6 md:p-8 w-full max-w-lg shadow-2xl relative transition-all duration-300">
-            {isBehaviorSubmitted ? (
-              <div className="flex flex-col items-center justify-center py-8">
-                <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mb-6">
-                  <svg className="w-8 h-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <h2 className="font-display text-2xl font-bold text-white mb-3">Report submitted!</h2>
-                <p className="text-white/60 text-sm text-center">Your report has been sent to the moderation team. Thank you for keeping the community safe!</p>
-              </div>
-            ) : (
-              <>
-                <h2 className="font-display text-2xl font-bold text-white mb-2">Report Inappropriate Behavior</h2>
-                <p className="text-white/50 text-sm mb-6">Please provide details about the inappropriate behavior.</p>
-                
-                <form onSubmit={handleBehaviorSubmit} className="flex flex-col gap-5">
-                  <div className="flex flex-col gap-2">
-                    <label className="text-white/80 text-[13px] font-medium">Username of Offender</label>
-                    <input 
-                      type="text"
-                      value={behaviorUser}
-                      onChange={(e) => setBehaviorUser(e.target.value)}
-                      placeholder="e.g. SpaceExplorer99"
-                      required
-                      className="w-full bg-white/5 text-white px-4 py-3 rounded-lg border border-white/10 outline-none focus:border-[#ff912d]/50 transition-colors text-sm"
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-2">
-                    <label className="text-white/80 text-[13px] font-medium">Description</label>
-                    <textarea 
-                      value={behaviorDescription}
-                      onChange={(e) => setBehaviorDescription(e.target.value)}
-                      placeholder="Describe what happened..."
-                      rows={5}
-                      required
-                      className="w-full bg-white/5 text-white px-4 py-3 rounded-lg border border-white/10 outline-none focus:border-[#ff912d]/50 transition-colors text-sm resize-none"
-                    ></textarea>
-                  </div>
-
-                  <div className="flex items-center gap-3 mt-4 pt-4 border-t border-white/5">
-                    <button 
-                      type="button"
-                      onClick={() => setIsBehaviorModalOpen(false)}
-                      className="flex-1 bg-white/5 hover:bg-white/10 text-white font-medium text-sm py-2.5 rounded-full transition-colors cursor-pointer"
-                    >
-                      Cancel
-                    </button>
-                    <button 
-                      type="submit"
-                      className="flex-1 bg-red-500 hover:bg-red-600 text-white font-bold text-sm py-2.5 rounded-full transition-colors shadow-lg shadow-red-500/20 cursor-pointer"
-                    >
-                      Submit Report
-                    </button>
-                  </div>
-                </form>
-              </>
-            )}
-          </div>
-        </div>
-      )}
       
       {/* Delete Account Modal */}
       {isDeleteModalOpen && (

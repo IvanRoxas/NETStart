@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
@@ -39,7 +40,7 @@ model Session {
 model User {
   id            String    @id @default(cuid()) @map("user_id")
   name          String?   @map("username")
-  displayName   String?   @map("display_name")
+  displayName   String?   @unique @map("display_name")
   email         String?   @unique
   emailVerified DateTime? @map("email_verified")
   password      String?
@@ -47,18 +48,75 @@ model User {
   banner        String?
   status        String?
   bio           String?   @db.Text
-  role          String    @default("student")
+  isBanned      Boolean   @default(false) @map("is_banned")
   createdAt     DateTime  @default(now()) @map("created_at")
+  showcasedBadges String[] @default([])
+  
+  // Verification & Gamification Fields
+  studentId     String?   @unique @map("student_id")
+  isVerified    Boolean   @default(false) @map("is_verified")
+  xp            Int       @default(0)
+  gears         Int       @default(0)
+  verifiedRewardClaimed Boolean @default(false) @map("verified_reward_claimed")
+  activeTitle   String?   @default("Novice Explorer") @map("active_title")
   
   accounts      Account[]
   sessions      Session[]
+  reports       Report[]
 
   friendshipsSent     Friendship[] @relation("FriendshipsSent")
   friendshipsReceived Friendship[] @relation("FriendshipsReceived")
   notifications       Notification[] @relation("AppNotifications")
   sentNotifications   Notification[] @relation("SentNotifications")
 
+  // Gamification Relations
+  userAchievements    UserAchievement[]
+  missionProgresses   MissionProgress[]
+
+  // Shop Relations
+  inventory           UserInventory[]
+
   @@map("users")
+}
+
+model Achievement {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  iconUrl     String   @map("icon_url")
+  xpReward    Int      @default(100) @map("xp_reward")
+  gearsReward Int      @default(0) @map("gears_reward")
+  triggerCode String   @unique @map("trigger_code")
+
+  users       UserAchievement[]
+
+  @@map("achievements")
+}
+
+model UserAchievement {
+  userId        String @map("user_id")
+  achievementId String @map("achievement_id")
+  unlockedAt    DateTime @default(now()) @map("unlocked_at")
+
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievement   Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+  @@id([userId, achievementId])
+  @@map("user_achievements")
+}
+
+model MissionProgress {
+  id            String   @id @default(cuid())
+  userId        String   @map("user_id")
+  missionId     String   @map("mission_id")
+  status        String   @default("IN_PROGRESS")
+  submittedCode String?  @db.Text @map("submitted_code")
+  completedAt   DateTime? @map("completed_at")
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, missionId])
+  @@map("mission_progresses")
 }
 
 model Friendship {
@@ -99,4 +157,76 @@ model VerificationToken {
 
   @@unique([identifier, token])
   @@map("verification_tokens")
+}
+
+model VerificationCode {
+  id        String   @id @default(cuid())
+  email     String
+  code      String
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([email, code])
+  @@map("verification_codes")
+}
+
+model ShopItem {
+  id          String   @id @default(cuid())
+  title       String
+  type        String
+  category    String
+  subCategory String   @map("sub_category")
+  price       Int
+  imageUrl    String   @map("image_url")
+
+  inventories UserInventory[]
+
+  @@map("shop_items")
+}
+
+model UserInventory {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  shopItemId  String   @map("shop_item_id")
+  isEquipped  Boolean  @default(false) @map("is_equipped")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  shopItem    ShopItem @relation(fields: [shopItemId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, shopItemId])
+  @@map("user_inventories")
+}
+
+model SystemAdmin {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  password  String
+  createdAt DateTime @default(now()) @map("created_at")
+}
+
+model SystemLog {
+  id           String   @id @default(cuid())
+  actorId      String   @map("actor_id")
+  actorRole    String   @map("actor_role")
+  action       String
+  targetUserId String?  @map("target_user_id")
+  details      String   @db.Text
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@map("system_logs")
+}
+
+model Report {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  type        String
+  description String   @db.Text
+  attachments String[] @default([]) // Array of base64 strings
+  status      String   @default("PENDING")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("reports")
 }

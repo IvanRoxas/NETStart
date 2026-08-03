@@ -12,11 +12,11 @@ export async function GET(req: Request) {
 
     const user = await prisma.user.findUnique({
       where: { id },
-      select: { image: true }
+      select: { image: true, name: true }
     });
 
-    if (!user || !user.image) {
-      return NextResponse.redirect(new URL('/Planet 1.svg', req.url));
+    if (!user || !user.image || user.image === '/Planet 1.svg') {
+      return NextResponse.redirect(new URL('/Profile.svg', req.url));
     }
 
     // if image is a base64 string, return it directly as binary
@@ -32,7 +32,12 @@ export async function GET(req: Request) {
       });
     }
 
-    // fallback for regular URLs
+    // fallback for regular URLs (like Google OAuth URLs or relative paths)
+    if (user.image.startsWith('/')) {
+      // Encode spaces and special characters for relative paths
+      const encodedPath = encodeURI(user.image);
+      return NextResponse.redirect(new URL(encodedPath, req.url));
+    }
     return NextResponse.redirect(user.image);
     
   } catch (error) {

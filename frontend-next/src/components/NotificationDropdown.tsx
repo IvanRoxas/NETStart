@@ -3,24 +3,24 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
+import Link from 'next/link';
+import { Settings } from 'lucide-react';
 
 interface NotificationDropdownProps {
   notifications: any[];
-  loadingNotifs: boolean;
-  onAccept: (notif: any) => void;
-  onReject: (notif: any) => void;
+  loadingNotifs?: boolean;
+  onDismiss?: (notif: any) => void;
   onClose: () => void;
-  processingIds: string[];
+  processingIds?: string[];
   anchorRef: React.RefObject<HTMLButtonElement | null>;
 }
 
 export default function NotificationDropdown({
   notifications,
   loadingNotifs,
-  onAccept,
-  onReject,
+  onDismiss,
   onClose,
-  processingIds,
+  processingIds = [],
   anchorRef
 }: NotificationDropdownProps) {
   const [mounted, setMounted] = useState(false);
@@ -78,7 +78,7 @@ export default function NotificationDropdown({
   const portalContent = (
     <div 
       id="notif-portal-content"
-      className="fixed z-[99999] w-80 bg-[#1e0a2d] border border-white/10 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.5)] overflow-hidden"
+      className="fixed z-[99999] w-[420px] bg-[#1e0a2d] border border-white/10 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.5)] overflow-hidden"
       style={{ top: pos.top, right: pos.right }}
     >
       <div className="bg-[#361d57] px-4 py-3 border-b border-white/5">
@@ -104,53 +104,74 @@ export default function NotificationDropdown({
               return (
                 <div key={notif.id} className={`p-4 border-b border-white/5 flex gap-3 hover:bg-white/5 transition-colors ${isUnread ? 'bg-[#ff912d]/5' : ''}`}>
                   <div className="w-10 h-10 rounded-full bg-[#361d57] flex-shrink-0 flex items-center justify-center overflow-hidden border border-[#ff912d]/30">
-                    {notif.sender?.avatar_url ? (
-                      <Image src={notif.sender.avatar_url} alt="" width={40} height={40} className="object-cover" />
+                    {(notif.type === 'system_verify_reward' || notif.notification_type === 'system_verify_reward') ? (
+                      <div className="w-full h-full flex items-center justify-center bg-[#ff912d]/20 rounded-full shadow-inner text-[#ff912d]">
+                        <Settings size={20} />
+                      </div>
+                    ) : (notif.type === 'achievement_unlocked' || notif.notification_type === 'achievement_unlocked' || notif.type === 'level_up' || notif.notification_type === 'level_up') ? (
+                       notif.data?.badgeImage ? (
+                         <img src={notif.data.badgeImage} alt="" className="w-full h-full object-cover" />
+                       ) : (notif.type === 'level_up' || notif.notification_type === 'level_up') ? (
+                         <div className="w-full h-full flex items-center justify-center bg-[#ffb703] rounded-full shadow-inner">
+                           <span className="text-black font-black text-lg">{notif.data?.level || notif.data?.badgeName?.replace(/\D/g, '') || ''}</span>
+                         </div>
+                       ) : (
+                         <span className="text-[#ff912d] font-bold text-lg">{notif.data?.badgeIcon || '🏆'}</span>
+                       )
+                    ) : notif.sender?.avatar_url ? (
+                      <Image src={notif.sender.avatar_url} alt="" width={40} height={40} className="w-full h-full object-cover" />
                     ) : (
                       <span className="text-[#ff912d] font-bold text-lg">{(notif.sender?.displayName || notif.sender?.name)?.charAt(0) || '?'}</span>
                     )}
                   </div>
                   
-                  <div className="flex-1 flex flex-col gap-1">
+                  <div className="flex-1 flex flex-col gap-1 pr-24 relative">
                     <p className="text-sm text-white/90 leading-tight">
-                      <strong className="text-white font-bold">{notif.sender?.displayName || notif.sender?.name}</strong>
-                      {notif.type === 'friend_request' && ' sent you a friend request.'}
-                      {notif.type === 'friend_accepted' && ' accepted your friend request.'}
+                      {(notif.type === 'system_verify_reward' || notif.notification_type === 'system_verify_reward') ? (
+                        <>
+                          <strong className="text-[#ff912d] font-bold block mb-0.5">Verification Reward!</strong>
+                          You received {notif.data?.amount} Gears for verifying your account.
+                        </>
+                      ) : (notif.type === 'achievement_unlocked' || notif.notification_type === 'achievement_unlocked') ? (
+                        <>
+                          <strong className="text-[#ff912d] font-bold block mb-0.5">Achievement Unlocked!</strong>
+                          You earned "{notif.data?.badgeName}".
+                        </>
+                      ) : (notif.type === 'level_up' || notif.notification_type === 'level_up') ? (
+                        <>
+                          <strong className="text-[#ff912d] font-bold block mb-0.5">Level Up!</strong>
+                          {notif.data?.badgeName}
+                        </>
+                      ) : (
+                        <>
+                          <strong className="text-white font-bold">{notif.sender?.displayName || notif.sender?.name || 'System'}</strong>
+                          {notif.data?.message && <span className="block mt-1">{notif.data.message}</span>}
+                        </>
+                      )}
                     </p>
                     <span className="text-xs text-white/40">{timeAgo(notif.created_at)}</span>
                     
-                    {notif.type === 'friend_request' && (
-                      <div className="flex gap-2 mt-2">
-                        <button 
-                          onClick={() => onAccept(notif)}
-                          disabled={isProcessing}
-                          className="bg-green-500 hover:bg-green-400 text-green-950 font-bold px-3 py-1.5 rounded-lg text-xs transition-colors cursor-pointer active:scale-95 disabled:opacity-50 flex-1"
-                        >
-                          Accept
-                        </button>
-                        <button 
-                          onClick={() => onReject(notif)}
-                          disabled={isProcessing}
-                          className="bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 font-bold px-3 py-1.5 rounded-lg text-xs transition-colors cursor-pointer active:scale-95 disabled:opacity-50 flex-1"
-                        >
-                          Reject
-                        </button>
-                      </div>
-                    )}
-                  </div>
+                  {isUnread && <div className="absolute top-4 right-4 w-2 h-2 rounded-full bg-[#ff912d]"></div>}
                   
-                  {isUnread && <div className="w-2 h-2 rounded-full bg-[#ff912d] mt-1 flex-shrink-0"></div>}
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                       <button 
+                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDismiss?.(notif); }}
+                         disabled={isProcessing}
+                         className="w-7 h-7 rounded-full border border-white/10 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-50 cursor-pointer"
+                       >
+                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                       </button>
+                    </div>
+                </div>
                 </div>
               );
             })}
           </div>
         )}
         
-        {hasMore && (
-          <button className="w-full py-3 text-center text-xs text-[#ff912d] font-bold hover:bg-white/5 transition-colors">
-            View All Notifications
-          </button>
-        )}
+        <Link href="/notifications" onClick={onClose} className="block w-full py-3 border-t border-white/5 text-center text-xs text-[#ff912d] font-bold hover:bg-[#ff912d]/10 transition-colors">
+          View All Notifications
+        </Link>
       </div>
     </div>
   );
