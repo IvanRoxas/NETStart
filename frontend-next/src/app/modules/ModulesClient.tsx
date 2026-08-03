@@ -29,6 +29,12 @@ export default function ModulesClient({ isVerified, liveStats, completedMissions
     !isVerified ? 'blur-md pointer-events-none opacity-50' : ''
   }`;
 
+  const [showPopup, setShowPopup] = React.useState(false);
+  React.useEffect(() => {
+    const timer = setTimeout(() => setShowPopup(true), 1000);
+    return () => clearTimeout(timer);
+  }, []);
+
   // Winding learning path configuration - shifted downwards to avoid HUD overlaps
   const pathNodes = [
     { id: "html", name: "HTML", subtitle: "HyperText Markup", top: "82%", left: "22%", sizeClass: "w-48 h-48", src: "/Planet 7.svg", imgScale: 0.82, rotationSpeed: 30, reverse: true, totalMissions: 5 },
@@ -111,16 +117,21 @@ export default function ModulesClient({ isVerified, liveStats, completedMissions
             </div>
             {/* XP progress details */}
             <div 
-              className="w-36 ml-3 flex items-center gap-3"
+              className="w-44 ml-3 flex flex-col gap-1 justify-center"
               title={`${xpNeeded} XP until next level`}
             >
-              <div className="w-full h-1.5 bg-gray-700 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-[#ff912d] rounded-full shadow-[0_0_10px_#ff912d]" 
-                  style={{ width: `${progress}%` }}
-                />
+              <div className="flex items-center gap-3">
+                <div className="w-full h-1.5 bg-gray-700 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-[#ff912d] rounded-full shadow-[0_0_10px_#ff912d]" 
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+                <span className="text-xs text-white font-black whitespace-nowrap">{Math.round(progress)}%</span>
               </div>
-              <span className="text-xs text-white font-black whitespace-nowrap">{Math.round(progress)}%</span>
+              <div className="text-[9px] font-mono text-gray-300 font-extrabold leading-none tracking-wider text-right uppercase">
+                {xpNeeded} XP UNTIL LVL {nextLevel}
+              </div>
             </div>
           </div>
 
@@ -209,6 +220,45 @@ export default function ModulesClient({ isVerified, liveStats, completedMissions
           </div>
         </div>
       )}
+      {/* Active Mission Sliding Popup in the lower right corner */}
+      <div className={`fixed bottom-6 right-6 z-40 max-w-sm w-80 bg-[#1a082c]/95 backdrop-blur-xl border border-white/10 p-5 rounded-2xl shadow-2xl transition-all duration-700 shadow-[#ff912d]/5 flex flex-col gap-3 ${
+        showPopup ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-12 scale-95 pointer-events-none'
+      }`}>
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] font-mono font-black text-[#ff912d] tracking-widest uppercase flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-[#ff912d] animate-ping" />
+            Active Orbit
+          </span>
+          <button 
+            onClick={() => setShowPopup(false)} 
+            className="text-gray-500 hover:text-white transition-colors text-xs font-bold font-mono px-1.5 py-0.5 hover:bg-white/5 rounded"
+          >
+            Dismiss
+          </button>
+        </div>
+        
+        <div>
+          <h4 className="text-white font-black text-sm tracking-wide">JavaScript Variables</h4>
+          <p className="text-gray-400 text-xs mt-1 leading-normal">
+            Deploy variables to memory banks using custom Blockly components.
+          </p>
+        </div>
+
+        <div className="w-full h-px bg-white/5 my-1" />
+
+        <div className="flex items-center justify-between">
+          <div className="flex flex-col text-[10px] leading-tight">
+            <span className="text-[#b259ff] font-bold">+100 XP</span>
+            <span className="text-gray-500 font-mono">+25 Gears</span>
+          </div>
+          <Link 
+            href="/modules/javascript_3" 
+            className="px-4 py-2 bg-gradient-to-r from-[#ff912d] to-[#ff5722] hover:from-[#ff5722] hover:to-[#ff912d] text-white font-extrabold text-xs rounded-lg transition-transform hover:scale-105"
+          >
+            Resume Orbit
+          </Link>
+        </div>
+      </div>
 
     </div>
   );
