@@ -6,8 +6,9 @@ import 'blockly/blocks';
 import * as En from 'blockly/msg/en';
 import { javascriptGenerator } from 'blockly/javascript';
 import '@/lib/customblocks';
-import { Play, RotateCcw, ChevronRight, Rocket, ArrowLeft } from 'lucide-react';
+import { Play, RotateCcw, ChevronRight, Rocket, ArrowLeft, Zap, Settings } from 'lucide-react';
 import Link from 'next/link';
+import { useSearchParams, useRouter } from 'next/navigation';
 
 Blockly.setLocale(En as any);
 
@@ -68,6 +69,10 @@ const toolbox = {
 };
 
 export default function BlocklyMaze() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const missionId = searchParams.get('missionId');
+
   const blocklyDiv = useRef<HTMLDivElement>(null);
   const workspace = useRef<Blockly.WorkspaceSvg | null>(null);
   
@@ -78,10 +83,34 @@ export default function BlocklyMaze() {
   const [showPopup, setShowPopup] = useState(false);
   const [generatedCode, setGeneratedCode] = useState('');
 
+  const [rewards, setRewards] = useState<{ xpEarned: number; gearsEarned: number } | null>(null);
+  const [apiSaving, setApiSaving] = useState(false);
+
   // Refs for tracking synchronous execution state during async evaluation
   const execState = useRef({ ...INITIAL_STATES[0] });
   const hitWall = useRef(false);
   const isGoal = useRef(false);
+
+  const triggerMissionCompletion = async (codeStr: string) => {
+    if (!missionId) return;
+    setApiSaving(true);
+    setRewards(null);
+    try {
+      const response = await fetch('/api/missions/complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ missionId, submittedCode: codeStr })
+      });
+      const data = await response.json();
+      if (data.success) {
+        setRewards({ xpEarned: data.xpEarned, gearsEarned: data.gearsEarned });
+      }
+    } catch (error) {
+      console.error("Failed to save progress:", error);
+    } finally {
+      setApiSaving(false);
+    }
+  };
 
   useEffect(() => {
     if (blocklyDiv.current && !workspace.current) {
@@ -224,6 +253,7 @@ export default function BlocklyMaze() {
         setMessage('Goal Reached! You Win!');
         setGeneratedCode(code);
         setShowPopup(true);
+        triggerMissionCompletion(code);
       } else {
         setMessage('Finished execution. Goal not reached.');
       }
@@ -241,11 +271,19 @@ export default function BlocklyMaze() {
       {/* Top Navbar for the Game */}
       <div className="flex items-center justify-between px-6 py-4 bg-[#1e0a2d] border-b border-white/10 shadow-lg shrink-0">
         <div className="flex items-center gap-4">
-          <Link href="/" className="flex items-center gap-2 font-mono text-white/80 hover:text-[#ff912d] transition-colors">
+          <Link 
+            href={missionId ? `/modules/${missionId.split('-')[0]}` : "/modules"} 
+            className="flex items-center gap-2 font-mono text-white/80 hover:text-[#ff912d] transition-colors"
+          >
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div className="w-px h-6 bg-white/20"></div>
-          <h1 className="text-white font-display text-2xl font-bold">Maze Explorer</h1>
+          <h1 className="text-white font-display text-xl md:text-2xl font-bold">
+            {missionId 
+              ? `Lab: ${missionId.toUpperCase().replace('-', ' Level ')}` 
+              : 'Maze Explorer'
+            }
+          </h1>
         </div>
         <div className="flex items-center gap-6">
           <span className="text-[#ff912d] font-sans font-bold uppercase tracking-widest text-sm">
@@ -336,33 +374,80 @@ export default function BlocklyMaze() {
 
       {/* Code Popup Modal */}
       {showPopup && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-[#1e0a2d] border border-white/20 rounded-2xl w-full max-w-lg p-8 shadow-[12px_12px_0_#150524]">
-            <h2 className="text-3xl font-display font-bold text-white mb-2">Level {currentLevel + 1} Complete!</h2>
+        <div className="fixed inset-0 bg-black/85 backdrop-blur-sm z-[150] flex items-center justify-center p-4">
+          <div className="bg-[#1e0a2d] border border-white/20 rounded-2xl w-full max-w-lg p-8 shadow-[0_0_50px_rgba(255,145,45,0.15)] animate-in zoom-in-95 duration-200">
+            <h2 className="text-3xl font-display font-bold text-white mb-2">
+              {missionId ? 'Mission Successful!' : `Level ${currentLevel + 1} Complete!`}
+            </h2>
             <p className="text-white/70 font-sans mb-6">Excellent job! Here is the asynchronous JavaScript code you generated:</p>
             
-            <div className="bg-black/50 p-4 rounded-xl border border-white/10 mb-8 overflow-auto max-h-[250px]">
+            <div className="bg-black/50 p-4 rounded-xl border border-white/10 mb-6 overflow-auto max-h-[180px]">
               <pre className="text-[#ff912d] font-mono text-sm leading-relaxed">
                 <code>{generatedCode}</code>
               </pre>
             </div>
+
+            {/* Rewards Summary Overlay */}
+            {missionId && (
+              <div className="bg-[#ff912d]/5 border border-[#ff912d]/20 rounded-2xl p-4 mb-6 flex flex-col gap-2">
+                <span className="text-xs font-black uppercase text-[#ff912d] font-display">Mission Rewards</span>
+                <div className="flex gap-6 items-center">
+                  {apiSaving ? (
+                    <span className="text-xs text-gray-400 font-mono animate-pulse">Syncing rewards to database...</span>
+                  ) : rewards ? (
+                    <>
+                      <span className="flex items-center gap-1 text-sm font-bold font-mono text-white">
+                        <Zap size={14} className="text-yellow-400" /> +{rewards.xpEarned} XP
+                      </span>
+                      <span className="flex items-center gap-1 text-sm font-bold font-mono text-white">
+                        <Settings size={14} className="text-[#a855f7]" /> +{rewards.gearsEarned} Gears
+                      </span>
+                      {rewards.xpEarned === 0 && (
+                        <span className="text-[10px] text-gray-400 font-sans italic ml-auto">
+                          (Already completed)
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    <span className="text-xs text-red-400 font-mono">Failed to award rewards</span>
+                  )}
+                </div>
+              </div>
+            )}
             
             <div className="flex justify-end gap-4">
               <button 
-                onClick={() => setShowPopup(false)}
-                className="px-6 py-3 rounded-full font-sans font-bold text-white hover:bg-white/10 transition-colors cursor-pointer"
+                onClick={() => {
+                  setShowPopup(false);
+                  if (missionId) {
+                    const baseMod = missionId.split('-')[0];
+                    router.push(`/modules/${baseMod}`);
+                  }
+                }}
+                className="px-6 py-3 rounded-full font-sans font-bold text-white hover:bg-white/10 transition-colors cursor-pointer text-sm"
               >
-                Close
+                {missionId ? 'Return to List' : 'Close'}
               </button>
 
-              {currentLevel < MAZES.length - 1 && (
+              {missionId ? (
+                <button 
+                  onClick={() => {
+                    setShowPopup(false);
+                    router.push('/modules');
+                  }}
+                  className="flex items-center gap-2 bg-[#ff912d] hover:bg-orange-400 text-black font-sans font-extrabold py-3 px-6 rounded-full shadow-lg shadow-[#ff912d]/10 active:scale-95 transition-all cursor-pointer text-sm"
+                >
+                  <Rocket size={16} />
+                  Return to Sector Map
+                </button>
+              ) : currentLevel < MAZES.length - 1 ? (
                 <button 
                   onClick={() => loadLevel(currentLevel + 1)}
                   className="flex items-center gap-2 bg-buttons text-white font-sans font-bold py-3 px-6 rounded-full shadow-[4px_4px_0_#150524] hover:shadow-[6px_6px_0_#150524] hover:-translate-y-1 hover:-translate-x-1 transition-all active:translate-y-1 active:translate-x-1 active:shadow-none cursor-pointer"
                 >
                   Next Level <ChevronRight className="w-4 h-4" />
                 </button>
-              )}
+              ) : null}
             </div>
           </div>
         </div>
