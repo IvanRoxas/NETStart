@@ -79,8 +79,8 @@ export default function ModulesClient({ isVerified, liveStats, completedMissions
   return (
     <div className="relative w-full h-[115vh]">
       
-      {/* Sci-Fi Floating HUD Top Bar */}
-      <div className="absolute top-6 left-1/2 -translate-x-1/2 w-[95%] max-w-7xl z-50 flex items-center justify-between bg-[#1a082c]/80 backdrop-blur-md border border-gray-700 shadow-2xl shadow-[#ff912d]/10 rounded-2xl px-8 py-4">
+      {/* Sci-Fi Floating HUD Top Bar (Sticky Scroll-Following) */}
+      <div className="sticky top-6 mx-auto w-[95%] max-w-7xl z-50 flex items-center justify-between bg-[#1a082c]/80 backdrop-blur-md border border-gray-700 shadow-2xl shadow-[#ff912d]/10 rounded-2xl px-8 py-4">
         <div className="flex items-center gap-3">
           <Rocket className="text-[#ff912d] animate-pulse" size={22} />
           <h2 className="font-display font-black tracking-wider text-white text-base md:text-lg">
@@ -88,37 +88,30 @@ export default function ModulesClient({ isVerified, liveStats, completedMissions
           </h2>
         </div>
         
-        {/* Live Stats display with game capsules */}
+        {/* Live Stats display with minimal game capsules */}
         <div className="flex items-center gap-4 text-white">
-          {/* Level Capsule */}
-          <div className="flex items-center gap-3 bg-black/40 border border-white/10 rounded-full px-4 py-2">
-            <Award className="text-[#ff912d]" size={18} />
-            <span className="text-xs font-bold font-mono tracking-wide uppercase text-gray-400">Level</span>
-            <span className="text-sm font-black font-display text-white">{liveStats.level}</span>
-          </div>
-
-          {/* XP Progress Capsule */}
-          <div className="hidden sm:flex items-center gap-3 bg-black/40 border border-white/10 rounded-full px-4 py-2 w-48 md:w-56">
-            <Zap size={14} className="text-yellow-400" />
-            <div className="flex-1 flex flex-col gap-0.5">
-              <div className="flex justify-between items-center text-[9px] font-mono text-gray-400 font-bold">
-                <span>XP PROGRESS</span>
-                <span>{Math.round(liveStats.progress)}%</span>
-              </div>
-              <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
+          {/* Level and XP Consolidated Capsule */}
+          <div className="flex items-center bg-black/40 rounded-full pr-4 py-1 border border-white/10">
+            {/* Circular Level overlapping badge */}
+            <div className="flex items-center justify-center w-10 h-10 rounded-full bg-[#1a082c] border-2 border-[#ff912d] shadow-[0_0_10px_#ff912d]/50 z-10 -ml-1">
+              <span className="text-white font-black text-sm">{liveStats.level}</span>
+            </div>
+            {/* XP progress bar and percentage */}
+            <div className="w-32 ml-3 flex items-center gap-3">
+              <div className="w-full h-1.5 bg-gray-700 rounded-full overflow-hidden">
                 <div 
-                  className="h-full bg-[#ff912d] rounded-full shadow-[0_0_10px_#ff912d]"
+                  className="h-full bg-[#ff912d] rounded-full shadow-[0_0_10px_#ff912d]" 
                   style={{ width: `${liveStats.progress}%` }}
                 />
               </div>
+              <span className="text-xs text-gray-400 font-bold">{Math.round(liveStats.progress)}%</span>
             </div>
           </div>
 
-          {/* Gears Capsule */}
-          <div className="flex items-center gap-3 bg-black/40 border border-white/10 rounded-full px-4 py-2">
-            <Settings className="text-[#a855f7] animate-spin-slow" size={18} />
-            <span className="text-xs font-bold font-mono tracking-wide uppercase text-gray-400">Gears</span>
-            <span className="text-sm font-black font-display text-[#a855f7]">{liveStats.gears}</span>
+          {/* Minimal Gears Currency Capsule */}
+          <div className="flex items-center gap-2 bg-black/40 rounded-full px-4 py-2 border border-white/10">
+            <Settings className="text-[#b259ff] w-5 h-5 animate-spin-slow" />
+            <span className="text-white font-black text-base tracking-wide">{liveStats.gears}</span>
           </div>
         </div>
       </div>
