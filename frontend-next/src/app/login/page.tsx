@@ -21,6 +21,7 @@ export default function LoginPage() {
   const [forgotPasswordModalOpen, setForgotPasswordModalOpen] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotLoading, setForgotLoading] = useState(false);
+  const [showSendConfirm, setShowSendConfirm] = useState(false);
 
   const showToast = (text: string, type: 'success' | 'error' | 'deleted' = 'error') => {
     setToastMessage({ text, type });
@@ -98,6 +99,7 @@ export default function LoginPage() {
       showToast("An error occurred. Please try again.", 'error');
     } finally {
       setForgotLoading(false);
+      setShowSendConfirm(false);
     }
   };
 
@@ -336,7 +338,13 @@ export default function LoginPage() {
               </p>
             </div>
 
-            <form onSubmit={handleForgotSubmit} className="w-full flex flex-col gap-4">
+            <form 
+              onSubmit={(e) => {
+                e.preventDefault();
+                setShowSendConfirm(true);
+              }} 
+              className="w-full flex flex-col gap-4"
+            >
               <div className="flex flex-col gap-1.5">
                 <label className="font-sans text-white/80 text-sm font-semibold">Email Address</label>
                 <input 
@@ -354,9 +362,47 @@ export default function LoginPage() {
                 disabled={forgotLoading}
                 className="w-full bg-buttons text-white font-sans font-bold text-sm py-3 px-6 mt-2 rounded-full shadow-[4px_4px_0_#150524] hover:shadow-[6px_6px_0_#150524] hover:brightness-110 hover:-translate-y-1 hover:-translate-x-1 transition-all active:translate-y-1 active:translate-x-1 active:shadow-none active:scale-95 disabled:opacity-70 disabled:active:scale-100 disabled:hover:translate-x-0 disabled:hover:translate-y-0 disabled:hover:shadow-[4px_4px_0_#150524] cursor-pointer"
               >
-                {forgotLoading ? 'Sending link...' : 'Send Reset Link'}
+                Send Reset Link
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Send Reset Email Confirmation Modal */}
+      {showSendConfirm && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-[#1e0a2d]/95 backdrop-blur-md border border-white/10 rounded-3xl p-8 max-w-sm w-full relative shadow-[0_0_50px_rgba(255,145,45,0.15)] text-center flex flex-col items-center gap-4 animate-in zoom-in-95 duration-200">
+            <div className="w-16 h-16 bg-[#ff912d]/10 rounded-full flex items-center justify-center border border-[#ff912d]/20 text-[#ff912d]">
+              <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            </div>
+            
+            <div>
+              <h3 className="text-xl font-bold text-white mb-2">Send Reset Email?</h3>
+              <p className="text-sm text-gray-400 leading-relaxed">
+                Are you sure you want to send a password reset link to <strong className="text-white break-all">{forgotEmail}</strong>?
+              </p>
+            </div>
+
+            <div className="flex gap-3 w-full mt-4">
+              <button 
+                type="button" 
+                onClick={() => setShowSendConfirm(false)} 
+                className="flex-1 py-3 px-4 rounded-xl border border-white/10 text-white/70 font-bold hover:text-white hover:bg-white/5 transition-colors text-sm cursor-pointer active:scale-95"
+              >
+                Cancel
+              </button>
+              <button 
+                type="button"
+                onClick={handleForgotSubmit}
+                disabled={forgotLoading}
+                className="flex-1 py-3 px-4 rounded-xl bg-[#ff912d] hover:bg-orange-400 text-black font-extrabold transition-all flex items-center justify-center gap-2 text-sm cursor-pointer active:scale-95 shadow-lg shadow-[#ff912d]/10"
+              >
+                {forgotLoading ? 'Sending...' : 'Confirm Send'}
+              </button>
+            </div>
           </div>
         </div>
       )}
