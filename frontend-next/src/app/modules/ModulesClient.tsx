@@ -28,13 +28,13 @@ export default function ModulesClient({ isVerified, liveStats, completedMissions
     !isVerified ? 'blur-md pointer-events-none opacity-50' : ''
   }`;
 
-  // Winding learning path configuration - spread across 150vh canvas
+  // Winding learning path configuration - original coordinates layout
   const pathNodes = [
-    { id: "html", name: "HTML", subtitle: "HyperText Markup", top: "15%", left: "22%", sizeClass: "w-48 h-48", src: "/Planet 7.svg", imgScale: 0.82, rotationSpeed: 30, reverse: true, totalMissions: 5 },
-    { id: "css", name: "CSS", subtitle: "Cascading Style Sheets", top: "35%", left: "76%", sizeClass: "w-40 h-40", src: "/Planet 4.svg", imgScale: 0.82, rotationSpeed: 18, reverse: false, totalMissions: 5 },
-    { id: "javascript", name: "JavaScript", subtitle: "Dynamic Scripting", top: "55%", left: "48%", sizeClass: "w-64 h-64", src: "/Planet 2.svg", imgScale: 0.82, rotationSpeed: 40, reverse: false, totalMissions: 8 },
-    { id: "react", name: "React", subtitle: "Frontend Components", top: "75%", left: "18%", sizeClass: "w-56 h-56", src: "/Planet 1.svg", imgScale: 0.72, rotationSpeed: 28, reverse: false, totalMissions: 10 },
-    { id: "node", name: "Node", subtitle: "Backend Server", top: "90%", left: "82%", sizeClass: "w-44 h-44", src: "/Planet 3.svg", imgScale: 0.85, rotationSpeed: 22, reverse: true, totalMissions: 6 }
+    { id: "html", name: "HTML", subtitle: "HyperText Markup", top: "75%", left: "22%", sizeClass: "w-48 h-48", src: "/Planet 7.svg", imgScale: 0.82, rotationSpeed: 30, reverse: true, totalMissions: 5 },
+    { id: "css", name: "CSS", subtitle: "Cascading Style Sheets", top: "72%", left: "76%", sizeClass: "w-40 h-40", src: "/Planet 4.svg", imgScale: 0.82, rotationSpeed: 18, reverse: false, totalMissions: 5 },
+    { id: "javascript", name: "JavaScript", subtitle: "Dynamic Scripting", top: "45%", left: "48%", sizeClass: "w-64 h-64", src: "/Planet 2.svg", imgScale: 0.82, rotationSpeed: 40, reverse: false, totalMissions: 8 },
+    { id: "react", name: "React", subtitle: "Frontend Components", top: "24%", left: "18%", sizeClass: "w-56 h-56", src: "/Planet 1.svg", imgScale: 0.72, rotationSpeed: 28, reverse: false, totalMissions: 10 },
+    { id: "node", name: "Node", subtitle: "Backend Server", top: "18%", left: "82%", sizeClass: "w-44 h-44", src: "/Planet 3.svg", imgScale: 0.85, rotationSpeed: 22, reverse: true, totalMissions: 6 }
   ];
 
   // Map user completed count per module (matching lowercase startsWith logic)
@@ -145,7 +145,7 @@ export default function ModulesClient({ isVerified, liveStats, completedMissions
           preserveAspectRatio="none"
         >
           <path
-            d="M 22 15 L 76 35 L 48 55 L 18 75 L 82 90"
+            d="M 22 75 L 76 72 L 48 45 L 18 24 L 82 18"
             fill="none"
             stroke="#ff912d"
             strokeWidth="0.5"
