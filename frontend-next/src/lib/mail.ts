@@ -97,7 +97,7 @@ export const sendPasswordResetEmail = async (email: string, token: string) => {
         <div style="background-color: #1e0a2d; padding: 30px; border-radius: 12px; border: 1px solid rgba(255, 145, 45, 0.2); text-align: center;">
           <h3 style="color: #ff912d; font-size: 20px; margin-top: 0; margin-bottom: 15px;">NETStart Security - Password Reset</h3>
           <p style="font-size: 15px; color: rgba(255, 255, 255, 0.8); line-height: 1.6; margin-bottom: 25px;">
-            A password reset was requested for your Guagua National Colleges NETStart account. Click the button below to set a new password:
+            A password reset was requested for your NETStart account. Click the button below to set a new password:
           </p>
           
           <a href="${resetLink}" style="background-color: #ff912d; border-radius: 6px; padding: 12px 24px; color: white; text-decoration: none; display: inline-block; font-weight: bold; font-size: 15px; box-shadow: 0 4px 12px rgba(255, 145, 45, 0.2); transition: all 0.2s;">
@@ -111,8 +111,7 @@ export const sendPasswordResetEmail = async (email: string, token: string) => {
 
         <div style="text-align: center; margin-top: 40px;">
           <hr style="border: none; border-top: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px;" />
-          <p style="color: rgba(255, 255, 255, 0.4); font-size: 12px; font-weight: bold;">NETStart Security Team</p>
-          <p style="color: rgba(255, 255, 255, 0.2); font-size: 11px; margin-top: 8px; line-height: 1.4;">
+          <p style="color: rgba(255, 255, 255, 0.65); font-size: 11.5px; margin-top: 8px; line-height: 1.4;">
             If you did not request this, please ignore this email or contact your System Administrator.
           </p>
         </div>
