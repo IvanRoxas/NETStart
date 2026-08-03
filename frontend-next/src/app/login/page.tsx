@@ -400,7 +400,7 @@ export default function LoginPage() {
                 disabled={forgotLoading}
                 className="flex-1 py-3 px-4 rounded-xl bg-[#ff912d] hover:bg-orange-400 text-black font-extrabold transition-all flex items-center justify-center gap-2 text-sm cursor-pointer active:scale-95 shadow-lg shadow-[#ff912d]/10"
               >
-                {forgotLoading ? 'Sending...' : 'Confirm Send'}
+                {forgotLoading ? 'Sending...' : 'Confirm'}
               </button>
             </div>
           </div>
