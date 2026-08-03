@@ -36,12 +36,22 @@ export async function POST(req: Request) {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Ensure displayName defaults to username and is unique
+    let defaultDisplayName = username;
+    const isDisplayNameTaken = await prisma.user.findUnique({
+      where: { displayName: username }
+    });
+    
+    if (isDisplayNameTaken) {
+      defaultDisplayName = `${username}${Math.floor(1000 + Math.random() * 9000)}`;
+    }
+
     const newUser = await prisma.user.create({
       data: {
         email,
         password: hashedPassword,
         name: username, // Assign provided username
-        displayName: `Explorer${Math.floor(10000 + Math.random() * 90000)}`,
+        displayName: defaultDisplayName,
         showcasedBadges: ['b_create_account'],
         image: '/Profile.svg',
         activeTitle: 'Novice Explorer',

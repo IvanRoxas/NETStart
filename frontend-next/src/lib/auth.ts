@@ -127,11 +127,21 @@ export const authOptions: NextAuthOptions = {
   },
   events: {
     async createUser({ user }) {
-      // Assign a random display name for OAuth signups
+      // Assign custom display name defaulting to OAuth username
+      let desiredDisplayName = user.name || `Explorer${Math.floor(10000 + Math.random() * 90000)}`;
+      
+      const isTaken = await prisma.user.findUnique({
+        where: { displayName: desiredDisplayName }
+      });
+      
+      if (isTaken) {
+        desiredDisplayName = `${desiredDisplayName}${Math.floor(1000 + Math.random() * 9000)}`;
+      }
+
       await prisma.user.update({
         where: { id: user.id },
         data: {
-          displayName: `Explorer${Math.floor(10000 + Math.random() * 90000)}`,
+          displayName: desiredDisplayName,
           activeTitle: 'Novice Explorer'
         }
       });
