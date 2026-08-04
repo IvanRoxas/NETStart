@@ -70,13 +70,14 @@ interface Params {
   id: string;
 }
 
-export default async function ModuleMissionsPage({ params }: { params: Params }) {
+export default async function ModuleMissionsPage({ params }: { params: Promise<Params> }) {
   const session = await getServerSession(authOptions);
   if (!session) {
     redirect("/login");
   }
 
-  const moduleId = params.id.toLowerCase();
+  const resolvedParams = await params;
+  const moduleId = resolvedParams.id.toLowerCase();
   const missions = MODULE_MISSIONS[moduleId];
   const meta = MODULE_META[moduleId];
 
