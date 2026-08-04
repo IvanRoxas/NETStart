@@ -218,8 +218,8 @@ export default function ModulesClient({ isVerified, liveStats, completedMissions
           </div>
         </div>
       )}
-      {/* Active Mission Sliding Popup (Space Banner Vertical Layout, anchors at edge) */}
-      <div className={`fixed bottom-6 right-6 z-40 max-w-sm w-[330px] bg-[#1a082c]/95 backdrop-blur-xl border border-[#ff912d]/20 rounded-2xl shadow-2xl transition-all duration-700 shadow-[#ff912d]/5 flex flex-col overflow-hidden ${
+      {/* Active Mission Sliding Popup (Space Banner Vertical Layout, anchors at right-8) */}
+      <div className={`fixed bottom-6 right-8 z-40 max-w-sm w-[330px] bg-[#1a082c]/95 backdrop-blur-xl border border-[#ff912d]/20 rounded-2xl shadow-2xl transition-all duration-700 shadow-[#ff912d]/5 flex flex-col overflow-hidden ${
         showPopup ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-12 scale-95 pointer-events-none'
       }`}>
         {/* Absolute Close Button */}
