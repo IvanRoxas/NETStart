@@ -40,6 +40,7 @@ interface ModuleMissionsClientProps {
   };
   completedMissions: CompletedMission[];
   isLocked: boolean;
+  onClose?: () => void;
 }
 
 export default function ModuleMissionsClient({
@@ -47,9 +48,17 @@ export default function ModuleMissionsClient({
   missions,
   meta,
   completedMissions,
-  isLocked
+  isLocked,
+  onClose
 }: ModuleMissionsClientProps) {
   const displayLangName = MODULE_DISPLAY_NAMES[moduleId] || moduleId.toUpperCase();
+
+  const handleClose = (e: React.MouseEvent) => {
+    if (onClose) {
+      e.preventDefault();
+      onClose();
+    }
+  };
 
   // Immersive locked overlay view
   if (isLocked) {
@@ -63,6 +72,7 @@ export default function ModuleMissionsClient({
         <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/70 backdrop-blur-md p-6">
           <Link 
             href="/modules"
+            onClick={handleClose}
             className="absolute top-6 right-6 text-white/60 hover:text-white transition-colors p-2 bg-black/40 hover:bg-black/60 rounded-full border border-white/10 z-[110] shadow-lg"
             title="Close"
           >
@@ -83,6 +93,7 @@ export default function ModuleMissionsClient({
 
             <Link
               href="/modules"
+              onClick={handleClose}
               className="mt-2 px-8 py-4 bg-gradient-to-r from-[#ff912d] to-[#ff5722] hover:from-[#ff5722] hover:to-[#ff912d] text-white font-extrabold text-sm rounded-xl shadow-lg transition-all hover:scale-105 flex items-center gap-2"
             >
               Return to Map
@@ -105,6 +116,7 @@ export default function ModuleMissionsClient({
         {/* Sleek top-right close button (X) */}
         <Link 
           href="/modules"
+          onClick={handleClose}
           className="absolute top-6 right-6 text-white/60 hover:text-white transition-colors p-2.5 bg-black/40 hover:bg-black/60 rounded-full border border-white/10 z-[110] shadow-lg transition-transform active:scale-95"
           title="Return to Map"
         >

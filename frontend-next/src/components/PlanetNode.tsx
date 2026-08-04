@@ -17,6 +17,7 @@ interface PlanetNodeProps {
   status?: 'COMPLETED' | 'CURRENT' | 'LOCKED';
   completedCount?: number;
   totalCount?: number;
+  onSelect?: (id: string) => void;
 }
 
 export default function PlanetNode({ 
@@ -33,7 +34,8 @@ export default function PlanetNode({
   reverse = false,
   status = 'LOCKED',
   completedCount = 0,
-  totalCount = 5
+  totalCount = 5,
+  onSelect
 }: PlanetNodeProps) {
   // Uppercase the name in JS so the browser calculates widths based on capital letters
   const upperName = name.toUpperCase();
@@ -89,10 +91,15 @@ export default function PlanetNode({
     return null;
   };
 
-  // Prevent click navigation if node is locked
+  // Prevent click navigation if node is locked, or intercept if onSelect is provided
   const handleLinkClick = (e: React.MouseEvent) => {
     if (isLocked) {
       e.preventDefault();
+      return;
+    }
+    if (onSelect) {
+      e.preventDefault();
+      onSelect(id);
     }
   };
 
