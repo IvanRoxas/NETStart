@@ -20,6 +20,19 @@ const MODULE_DISPLAY_NAMES: Record<string, string> = {
   node: "Node.js",
 };
 
+const LEVEL_ILLUSTRATIONS = [
+  "/Spaceship.svg",
+  "/UFO.svg",
+  "/Planet 1.svg",
+  "/Meteor.svg",
+  "/Planet 5.svg",
+  "/Planet 6.svg",
+  "/Planet 8.svg",
+  "/Debris.svg",
+  "/Planet 3.svg",
+  "/Planet 2.svg",
+];
+
 interface Mission {
   id: string;
   title: string;
@@ -68,16 +81,15 @@ export default function ModuleMissionsClient({
         <div className="absolute inset-0 z-0 pointer-events-none opacity-20 blur-[1px]" style={{ backgroundImage: "url('/Landing Page BG.png')", backgroundSize: 'cover', backgroundPosition: 'center' }} />
         <div className="absolute inset-0 bg-black/60 z-0" />
 
-        {/* Full-screen Overlay architecture */}
-        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/70 backdrop-blur-md p-6">
-          <Link 
-            href="/modules"
-            onClick={handleClose}
-            className="absolute top-6 right-6 text-white/60 hover:text-white transition-colors p-2 bg-black/40 hover:bg-black/60 rounded-full border border-white/10 z-[110] shadow-lg"
-            title="Close"
-          >
-            <X size={20} />
-          </Link>
+      {/* Full-screen Overlay architecture */}
+      <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/70 backdrop-blur-md p-6">
+        <button 
+          onClick={handleClose}
+          className="absolute top-6 right-6 text-white/50 hover:text-white hover:border-[#ff912d]/50 hover:shadow-[0_0_15px_rgba(255,145,45,0.2)] transition-all p-2.5 bg-black/40 hover:bg-black/60 rounded-full border border-white/10 z-[110] shadow-lg active:scale-95 flex items-center justify-center"
+          title="Close"
+        >
+          <X size={20} />
+        </button>
 
           <div className="bg-[#1a082c]/95 border border-[#ff912d]/30 p-10 rounded-3xl max-w-md w-full text-center shadow-2xl relative z-10 flex flex-col items-center gap-6">
             <div className="w-20 h-20 bg-[#ff912d]/10 rounded-full flex items-center justify-center border border-[#ff912d]/20 text-[#ff912d]">
@@ -114,14 +126,13 @@ export default function ModuleMissionsClient({
       <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/70 backdrop-blur-md p-6 overflow-hidden">
         
         {/* Sleek top-right close button (X) */}
-        <Link 
-          href="/modules"
+        <button 
           onClick={handleClose}
-          className="absolute top-6 right-6 text-white/60 hover:text-white transition-colors p-2.5 bg-black/40 hover:bg-black/60 rounded-full border border-white/10 z-[110] shadow-lg transition-transform active:scale-95"
+          className="absolute top-6 right-6 text-white/50 hover:text-white hover:border-[#ff912d]/50 hover:shadow-[0_0_15px_rgba(255,145,45,0.2)] transition-all p-2.5 bg-black/40 hover:bg-black/60 rounded-full border border-white/10 z-[110] shadow-lg active:scale-95 flex items-center justify-center"
           title="Return to Map"
         >
           <X size={20} />
-        </Link>
+        </button>
 
         {/* Outer overlay container */}
         <div className="relative z-10 max-w-5xl w-full flex flex-col items-center gap-4 max-h-[90vh]">
@@ -153,8 +164,8 @@ export default function ModuleMissionsClient({
                     !isUnlocked ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:-translate-y-1'
                   }`}
                 >
-                  {/* Top Visual Area (Starry backdrop with themed planet image) */}
-                  <div className="relative w-full h-32 bg-black/40 overflow-hidden flex items-center justify-center border-b border-white/5 flex-shrink-0">
+                  {/* Top Visual Area (Starry backdrop with themed space illustrations) */}
+                  <div className="relative w-full h-36 bg-black/40 overflow-hidden flex items-center justify-center border-b border-white/5 flex-shrink-0">
                     {/* Stars overlay */}
                     <img 
                       src="/Landing Page BG.png" 
@@ -162,12 +173,12 @@ export default function ModuleMissionsClient({
                       className="absolute inset-0 w-full h-full object-cover opacity-25 group-hover:scale-110 transition-transform duration-500" 
                     />
                     
-                    {/* Planet Graphic */}
+                    {/* Space Illustration Graphic */}
                     <img 
-                      src={PLANET_IMAGES[moduleId] || "/Planet 2.svg"} 
-                      alt="Planet" 
-                      className={`w-14 h-14 object-contain ${
-                        !isUnlocked ? 'grayscale opacity-25' : 'animate-spin-slow group-hover:scale-105 transition-all duration-300'
+                      src={LEVEL_ILLUSTRATIONS[index % LEVEL_ILLUSTRATIONS.length]} 
+                      alt="Illustration" 
+                      className={`w-20 h-20 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.2)] ${
+                        !isUnlocked ? 'grayscale opacity-20' : 'animate-pulse group-hover:scale-110 transition-all duration-500'
                       }`}
                     />
 
@@ -192,9 +203,9 @@ export default function ModuleMissionsClient({
                   </div>
 
                   {/* Bottom Text Area (bg-[#130927] p-5) */}
-                  <div className="bg-[#130927] p-5 flex flex-col flex-1 text-left justify-between min-h-[170px]">
+                  <div className="bg-[#130927] p-5 flex flex-col flex-1 text-left justify-between min-h-[180px]">
                     <div className="space-y-1">
-                      <h3 className="text-white font-bold text-base leading-tight flex items-center justify-between gap-3">
+                      <h3 className="text-white font-bold text-lg leading-tight flex items-center justify-between gap-3">
                         <span>{mission.title.replace(/^[a-zA-Z]+\s+Level\s+\d+:\s*/, '')}</span>
                         {isCompleted && (
                           <span className="bg-emerald-500/10 text-emerald-400 text-[9px] font-black uppercase tracking-wider py-0.5 px-2 rounded-md border border-emerald-500/20 whitespace-nowrap">
@@ -202,7 +213,7 @@ export default function ModuleMissionsClient({
                           </span>
                         )}
                       </h3>
-                      <p className="text-gray-400 text-xs leading-relaxed mt-1">
+                      <p className="text-gray-400 text-sm leading-relaxed mt-2">
                         {mission.desc}
                       </p>
                     </div>
