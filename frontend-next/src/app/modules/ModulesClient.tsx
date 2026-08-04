@@ -220,8 +220,8 @@ export default function ModulesClient({ isVerified, liveStats, completedMissions
           </div>
         </div>
       )}
-      {/* Active Mission Sliding Popup (Space Banner Vertical Layout, floats above N logo) */}
-      <div className={`fixed bottom-24 right-6 z-40 max-w-sm w-[330px] bg-[#1a082c]/95 backdrop-blur-xl border border-[#ff912d]/20 rounded-2xl shadow-2xl transition-all duration-700 shadow-[#ff912d]/5 flex flex-col overflow-hidden ${
+      {/* Active Mission Sliding Popup (Space Banner Vertical Layout, anchors side-by-side with N logo) */}
+      <div className={`fixed bottom-6 right-24 z-40 max-w-sm w-[330px] bg-[#1a082c]/95 backdrop-blur-xl border border-[#ff912d]/20 rounded-2xl shadow-2xl transition-all duration-700 shadow-[#ff912d]/5 flex flex-col overflow-hidden ${
         showPopup ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-12 scale-95 pointer-events-none'
       }`}>
         {/* Absolute Close Button */}
@@ -241,14 +241,9 @@ export default function ModulesClient({ isVerified, liveStats, completedMissions
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#1a082c] via-[#1a082c]/30 to-transparent" />
           
-          {/* Stylized flying rocket */}
-          <div className="absolute top-3 left-6 animate-bounce" style={{ animationDuration: '3.5s' }}>
-            <Rocket className="text-[#ff912d] -rotate-45 drop-shadow-[0_0_8px_#ff912d]" size={24} />
-          </div>
-
-          {/* Rotating JavaScript themed planet graphic */}
-          <div className="absolute bottom-2 right-6 animate-spin-slow">
-            <img src="/Planet 2.svg" alt="Active Planet" className="w-10 h-10 object-contain" />
+          {/* Centered bouncing rocket within banner bounds */}
+          <div className="absolute top-1/2 left-8 -translate-y-1/2 animate-bounce" style={{ animationDuration: '3.5s' }}>
+            <Rocket className="text-[#ff912d] -rotate-45 drop-shadow-[0_0_8px_#ff912d]" size={26} />
           </div>
         </div>
 
