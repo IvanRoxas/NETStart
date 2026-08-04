@@ -219,7 +219,7 @@ export default function ModulesClient({ isVerified, liveStats, completedMissions
         </div>
       )}
       {/* Active Mission Sliding Popup (Space Banner Vertical Layout, anchors side-by-side with N logo) */}
-      <div className={`fixed bottom-6 right-24 z-40 max-w-sm w-[330px] bg-[#1a082c]/95 backdrop-blur-xl border border-[#ff912d]/20 rounded-2xl shadow-2xl transition-all duration-700 shadow-[#ff912d]/5 flex flex-col overflow-hidden ${
+      <div className={`fixed bottom-6 right-20 z-40 max-w-sm w-[330px] bg-[#1a082c]/95 backdrop-blur-xl border border-[#ff912d]/20 rounded-2xl shadow-2xl transition-all duration-700 shadow-[#ff912d]/5 flex flex-col overflow-hidden ${
         showPopup ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-12 scale-95 pointer-events-none'
       }`}>
         {/* Absolute Close Button */}
@@ -255,19 +255,28 @@ export default function ModulesClient({ isVerified, liveStats, completedMissions
           </div>
 
           <p className="text-gray-400 text-[11px] leading-normal text-left">
-            Deploy variables to memory banks using custom Blockly components. You have unfinished modules awaiting your command.
+            Deploy variables to memory banks using custom Blockly components.
           </p>
 
           <div className="w-full h-px bg-white/5 my-0.5" />
 
-          <div className="flex items-center justify-between">
-            <div className="flex flex-col text-[10px] leading-tight font-mono text-left">
-              <span className="text-[#b259ff] font-bold">+100 XP</span>
-              <span className="text-gray-500 font-bold mt-0.5">+25 Gears</span>
+          {/* Action Row containing Rewards and Resume Button */}
+          <div className="flex items-center justify-between w-full mt-4">
+            <div className="flex flex-col gap-1 text-sm font-bold text-left">
+              {/* XP Reward Display with Zap Icon */}
+              <div className="flex items-center gap-1.5 text-[#b259ff]">
+                <Zap className="w-4 h-4" /> 
+                <span>+100</span>
+              </div>
+              {/* Gears Reward Display with Settings Icon */}
+              <div className="flex items-center gap-1.5 text-gray-300">
+                <Settings className="w-4 h-4" /> 
+                <span>+25</span>
+              </div>
             </div>
             <Link 
               href="/modules/javascript_3" 
-              className="px-4 py-2 bg-gradient-to-r from-[#ff912d] to-[#ff5722] hover:from-[#ff5722] hover:to-[#ff912d] text-white font-extrabold text-xs rounded-xl transition-transform hover:scale-105 shadow-md shadow-[#ff912d]/10"
+              className="px-4 py-2.5 bg-gradient-to-r from-[#ff912d] to-[#ff5722] hover:from-[#ff5722] hover:to-[#ff912d] text-white font-extrabold text-xs rounded-xl transition-transform hover:scale-105 shadow-md shadow-[#ff912d]/10"
             >
               Resume Orbit
             </Link>
