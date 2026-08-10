@@ -10,10 +10,10 @@ export default function Footer() {
           <div className="flex flex-col">
             <h3 className="font-display font-bold text-white text-2xl mb-4">About the Project</h3>
             <p className="font-sans text-white/80 text-sm leading-relaxed mb-6">
-              An AI-Enhanced IT Career Orientation and Adaptive Practical Laboratory System.
+              NETStart serves as an optional diagnostic bridge to make Information Technology fundamentals accessible. By eliminating setup demands, we help senior high school students transition to tertiary IT fields with confidence.
             </p>
             <span className="font-sans text-[#ff912d] text-xs font-bold uppercase tracking-widest leading-loose">
-              placeholder ewannn hahahaha
+              A GNC Student Survey of 375 respondents revealed that 88.3% would actively try programming if provided a risk-free environment where mistakes didn't impact academic grades.
             </span>
           </div>
 
@@ -43,7 +43,7 @@ export default function Footer() {
         {/* Bottom Copyright Bar */}
         <div className="w-full mt-10 pt-6 border-t border-white/10 flex justify-center">
           <p className="font-sans text-white/50 text-sm text-center">
-            © 2026 NetStart. All Rights Reserved. Developed as a Capstone 2 requirement.
+            © 2026 NetStart. All Rights Reserved. Developed in partnership with Guagua National Colleges (SHS Department) & Technological Institute of the Philippines (College of Computer Studies).
           </p>
         </div>
       </div>

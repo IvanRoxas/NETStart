@@ -105,7 +105,7 @@ export default function AboutUs() {
             By The <span className="text-borders">Numbers</span>
           </h2>
           <p className="font-sans text-white/70 max-w-2xl text-center mx-auto mb-16 text-base leading-relaxed">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+            Baseline diagnostic survey results from 375 Grade 12 students at Guagua National Colleges, showing the urgent need for stress-free programming introduction.
           </p>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12 w-full text-center">
@@ -114,12 +114,13 @@ export default function AboutUs() {
                <div className="relative w-32 h-32 flex items-center justify-center mb-6">
                  <svg className="absolute w-full h-full transform -rotate-90" viewBox="0 0 36 36">
                    <path className="text-white/10" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="3" />
-                   <path className="text-buttons" strokeDasharray="50, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+                   <path className="text-buttons" strokeDasharray="88, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
                  </svg>
-                 <span className="font-display text-3xl font-bold text-white">50%</span>
+                 <span className="font-display text-3xl font-bold text-white">88%</span>
                </div>
+               <h3 className="font-display text-xl font-bold text-white mb-3">Sandbox Demand</h3>
                <p className="font-sans text-white/70 leading-relaxed text-sm">
-                 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+                 88.3% of GNC students would try programming if mistakes did not impact their academic grades.
                </p>
             </div>
             
@@ -128,12 +129,13 @@ export default function AboutUs() {
                <div className="relative w-32 h-32 flex items-center justify-center mb-6">
                  <svg className="absolute w-full h-full transform -rotate-90" viewBox="0 0 36 36">
                    <path className="text-white/10" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="3" />
-                   <path className="text-borders" strokeDasharray="50, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+                   <path className="text-borders" strokeDasharray="78, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
                  </svg>
-                 <span className="font-display text-3xl font-bold text-white">50%</span>
+                 <span className="font-display text-3xl font-bold text-white">78%</span>
                </div>
+               <h3 className="font-display text-xl font-bold text-white mb-3">Compiler Anxiety</h3>
                <p className="font-sans text-white/70 leading-relaxed text-sm">
-                 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+                 78.1% of novice learners experience elevated stress when encountering code errors they do not understand.
                </p>
             </div>
 
@@ -142,12 +144,13 @@ export default function AboutUs() {
                <div className="relative w-32 h-32 flex items-center justify-center mb-6">
                  <svg className="absolute w-full h-full transform -rotate-90" viewBox="0 0 36 36">
                    <path className="text-white/10" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="3" />
-                   <path className="text-blue-400" strokeDasharray="50, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+                   <path className="text-blue-400" strokeDasharray="89, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
                  </svg>
-                 <span className="font-display text-3xl font-bold text-white">50%</span>
+                 <span className="font-display text-3xl font-bold text-white">89%</span>
                </div>
+               <h3 className="font-display text-xl font-bold text-white mb-3">Adoption Intent</h3>
                <p className="font-sans text-white/70 leading-relaxed text-sm">
-                 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+                 89.1% of surveyed students would use a free, browser-based web app to test their IT readiness.
                </p>
             </div>
           </div>
@@ -168,7 +171,7 @@ export default function AboutUs() {
               <div className="flex-1 bg-[#361d57]/75 backdrop-blur-[10px] p-8 rounded-3xl border border-[#ffc107]/25 shadow-[6px_6px_0_#150524] hover:-translate-y-1 hover:-translate-x-1 hover:border-[#ffc107]/60 hover:shadow-[10px_10px_0_#150524] transition-all duration-300">
                 <h3 className="font-display text-white text-xl font-bold mb-3">Constructivist Learning</h3>
                 <p className="font-sans text-white/80 leading-relaxed">
-                  The platform operates on the principle of &apos;learning by doing&apos; through sandbox environments, rather than passive video consumption.
+                  The platform operates on the principle of 'learning by doing' through browser-based sandbox environments, separating logical reasoning from typographical syntax to minimize cognitive overload.
                 </p>
               </div>
               {/* Card 2 */}
@@ -191,10 +194,10 @@ export default function AboutUs() {
               <div className="flex-1 bg-[#361d57]/75 backdrop-blur-[10px] p-8 rounded-3xl border border-[#ffc107]/25 shadow-[6px_6px_0_#150524] hover:-translate-y-1 hover:-translate-x-1 hover:border-[#ffc107]/60 hover:shadow-[10px_10px_0_#150524] transition-all duration-300">
                 <h3 className="flex items-center gap-2 font-display text-[#ff912d] text-xl font-bold mb-3">
                   <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-                  For Students
+                  For GNC Students
                 </h3>
                 <p className="font-sans text-white/80 leading-relaxed">
-                  A pressure-free, interactive environment to safely test-drive an expensive career choice before paying college tuition.
+                  Provides a pressure-free, interactive environment for Senior High School learners to safely test-drive an IT career trajectory and evaluate logical reasoning before committing to college tuition.
                 </p>
               </div>
               {/* Card 2 */}

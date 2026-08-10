@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
+import { signIn } from 'next-auth/react';
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -43,11 +44,9 @@ export default function Navbar() {
             </Link>
           ))}
         </nav>
-        <Link href="/login">
-          <button className="bg-buttons text-white font-sans font-bold py-2 px-6 rounded-full shadow-[4px_4px_0_#150524] hover:shadow-[6px_6px_0_#150524] hover:-translate-y-1 hover:-translate-x-1 transition-all active:translate-y-1 active:translate-x-1 active:shadow-none cursor-pointer">
-            Login
-          </button>
-        </Link>
+        <button onClick={() => signIn('google', { callbackUrl: '/dashboard' })} className="bg-buttons text-white font-sans font-bold py-2 px-6 rounded-full shadow-[4px_4px_0_#150524] hover:shadow-[6px_6px_0_#150524] hover:-translate-y-1 hover:-translate-x-1 transition-all active:translate-y-1 active:translate-x-1 active:shadow-none cursor-pointer">
+          Login
+        </button>
       </div>
     </header>
   );

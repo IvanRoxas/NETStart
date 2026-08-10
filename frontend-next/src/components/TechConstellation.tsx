@@ -45,13 +45,13 @@ export default function TechConstellation() {
         {/* State A (Default View) */}
         <div className={`absolute w-full flex flex-col gap-6 transition-all duration-700 ease-in-out ${isStateB ? 'opacity-0 -translate-x-10 pointer-events-none' : 'opacity-100 translate-x-0'}`}>
           <span className="font-sans text-xs font-bold uppercase tracking-[0.2em] text-[#ff912d]">
-            Laboratory Map Simulation
+            LABORATORY MAP SIMULATION
           </span>
           <h2 className="font-display text-4xl lg:text-5xl font-bold text-white leading-tight">
-            Lorem Ipsum Dolor Sit Amet Consectetur
+            Your Personalized Pathway to Tech
           </h2>
           <p className="font-sans text-white/70 text-base md:text-lg leading-relaxed">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip.
+            The Adaptive Module Sequencer coordinates progression across three key tracks based on your initial diagnostic scores. Earn 'Gears' and badges as you unlock nodes for Web Development (HTML/CSS), Python, and C++.
           </p>
 
           {/* Map Legend */}
@@ -60,11 +60,11 @@ export default function TechConstellation() {
               <div className="w-8 h-8 rounded-full border-2 border-white flex items-center justify-center">
                 <div className="w-2 h-2 rounded-full bg-white"></div>
               </div>
-              <span className="font-sans text-sm text-white/70 uppercase tracking-widest">Lorem Ipsum Node</span>
+              <span className="font-sans text-sm text-white/70 uppercase tracking-widest">Recommended Next Target</span>
             </div>
             <div className="flex items-center gap-4">
               <div className="w-8 h-[2px] bg-white/40"></div>
-              <span className="font-sans text-sm text-white/70 uppercase tracking-widest">Consectetur Path</span>
+              <span className="font-sans text-sm text-white/70 uppercase tracking-widest">Personalized Learning Route</span>
             </div>
           </div>
         </div>

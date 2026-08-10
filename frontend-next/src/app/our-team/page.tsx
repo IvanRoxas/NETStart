@@ -1,32 +1,38 @@
 "use client";
 
 import { useState } from 'react';
+import Image from 'next/image';
 
 const teamMembers = [
   { 
     name: "Katherine Supan", 
     role: "UI/UX Designer",
+    image: "/kath.jpg",
     links: { fb: "https://www.facebook.com/inklerine", linkedin: "https://www.linkedin.com/in/katherine-supan-83a86438b/", email: "mailto:katherinealfarosupan@gmail.com" }
   },
   { 
     name: "John Ivan Roxas", 
     role: "Lead Systems Developer",
+    image: "/ivan.png",
     links: { fb: "https://www.facebook.com/IvanRoxas2004", linkedin: "https://www.linkedin.com/in/john-ivan-roxas-b4b85a38b/", email: "mailto:johnivanroxas@gmail.com" }
   },
   { 
     name: "Matt Christian Magbanua", 
     role: "Frontend Developer",
+    image: "/matt.jpg",
     links: { fb: "https://www.facebook.com/mcsm195", linkedin: "https://www.linkedin.com/in/matt-christian-magbanua-b47055180/", email: "mailto:matt.magbanua01@gmail.com" }
   }
 ];
 
-function TeamCard({ name, role, links }: { name: string, role: string, links: { fb: string, linkedin: string, email: string } }) {
+function TeamCard({ name, role, image, links }: { name: string, role: string, image: string, links: { fb: string, linkedin: string, email: string } }) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
     <div className="relative h-full min-h-[300px] rounded-2xl overflow-hidden group border border-white/10 bg-main/80 shadow-[6px_6px_0_#150524] hover:-translate-y-1 hover:-translate-x-1 hover:shadow-[10px_10px_0_#150524] transition-all flex flex-col">
-      {/* Image Placeholder */}
-      <div className="absolute inset-0 bg-gradient-to-br from-main/50 to-subs flex items-center justify-center">
+      {/* Image Background */}
+      <div className="absolute inset-0 w-full h-full bg-main">
+        <Image src={image} alt={name} fill className="object-cover object-top opacity-70 group-hover:opacity-100 transition-opacity duration-300" sizes="(max-width: 768px) 100vw, 33vw" />
+        <div className="absolute inset-0 bg-gradient-to-t from-subs via-transparent to-transparent opacity-80" />
       </div>
       
       {/* Info Block (Full Width Bottom) */}
@@ -81,7 +87,7 @@ export default function OurTeam() {
         {/* Grid Section - 3 Columns */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 w-full items-stretch">
           {teamMembers.map((member, idx) => (
-            <TeamCard key={idx} name={member.name} role={member.role} links={member.links} />
+            <TeamCard key={idx} name={member.name} role={member.role} image={member.image} links={member.links} />
           ))}
         </div>
 
