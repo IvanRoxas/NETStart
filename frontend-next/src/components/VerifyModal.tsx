@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
+import { SessionContext } from 'next-auth/react';
 import { generateAndSendCode, verifyCode } from '@/app/actions/verification';
 import { X } from 'lucide-react';
 import { createPortal } from 'react-dom';
@@ -12,7 +12,9 @@ interface VerifyModalProps {
 }
 
 export default function VerifyModal({ isOpen, onClose }: VerifyModalProps) {
-  const { data: session, update } = useSession();
+  const sessionContext = React.useContext(SessionContext);
+  const session = sessionContext?.data;
+  const update = sessionContext?.update || (async () => null);
   
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);

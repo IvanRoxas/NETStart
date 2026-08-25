@@ -14,7 +14,7 @@ export default function ConditionalLayout({ children }: { children: React.ReactN
   const pathname = usePathname();
   
   const isAuthPage = pathname === "/login" || pathname === "/register" || pathname?.startsWith("/auth");
-  const isAppPage = pathname === "/sandbox" || pathname?.startsWith("/dashboard") || pathname === "/settings" || pathname?.startsWith("/modules") || pathname === "/missions" || pathname === "/profile" || pathname === "/notifications" || pathname === "/achievements" || pathname === "/shop";
+  const isAppPage = pathname === "/sandbox" || pathname?.startsWith("/dashboard") || pathname === "/settings" || pathname?.startsWith("/modules") || pathname?.startsWith("/profile") || pathname === "/notifications" || pathname === "/achievements" || pathname?.startsWith("/shop") || pathname?.startsWith("/aptitude-test");
   const isAdminPage = pathname?.startsWith("/admin") || pathname === "/admin-login";
 
   if (isAdminPage) {

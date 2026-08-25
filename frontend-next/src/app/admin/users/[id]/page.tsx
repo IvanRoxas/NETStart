@@ -4,10 +4,14 @@ import UserDetailsClientWrapper from './UserDetailsClientWrapper';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 
-export default async function AdminUserDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function AdminUserDetailPage({ params }: { params: Promise<{ id: string }> | { id: string } }) {
   try {
-    const resolvedParams = await params;
-    const user = await getUserDetails(resolvedParams.id);
+    const resolvedParams = await Promise.resolve(params);
+    const userId = resolvedParams?.id;
+    if (!userId) {
+      throw new Error("Missing or invalid User ID");
+    }
+    const user = await getUserDetails(userId);
     return <UserDetailsClientWrapper user={user} />;
   } catch (error: any) {
     console.error("Error in AdminUserDetailPage:", error);

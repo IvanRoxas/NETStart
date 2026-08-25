@@ -6,14 +6,11 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const SECRET_KEY = 'netstart_super_secret_key_gnc_capstone'; // For mock purposes
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 
-// Mock Database
 const users = [];
 
-// Helper function to generate JWT
 const generateToken = (user) => {
   return jwt.sign(
     { id: user.id, email: user.email, name: user.name },
@@ -22,12 +19,9 @@ const generateToken = (user) => {
   );
 };
 
-// @route   POST /api/auth/register
-// @desc    Register a new student
 app.post('/api/auth/register', (req, res) => {
   const { studentId, fullName, email, password } = req.body;
 
-  // Basic validation
   if (!studentId || !fullName || !email || !password) {
     return res.status(400).json({ message: 'All fields are required.' });
   }

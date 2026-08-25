@@ -141,6 +141,24 @@ export default function BlocklyMaze() {
     }
   }, []);
 
+  useEffect(() => {
+    if (!missionId) return;
+
+    const startMission = async () => {
+      try {
+        await fetch('/api/missions/start', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ missionId })
+        });
+      } catch (error) {
+        console.error("Failed to start/resume mission:", error);
+      }
+    };
+
+    startMission();
+  }, [missionId]);
+
   const loadLevel = (levelIndex: number) => {
     setCurrentLevel(levelIndex);
     setCharState(INITIAL_STATES[levelIndex]);

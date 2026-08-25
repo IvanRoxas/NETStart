@@ -11,25 +11,40 @@ export default async function ModulesPage() {
     redirect("/login");
   }
 
-  const userId = (session.user as any)?.id;
+  const sessionUser = session?.user as any;
+  const userId = sessionUser?.id;
+  const userEmail = sessionUser?.email;
+
+  if (!userId && !userEmail) {
+    redirect("/login");
+  }
 
   const dbUser = await prisma.user.findUnique({
-    where: { id: userId },
+    where: userId ? { id: userId } : { email: userEmail },
     select: {
+      id: true,
       xp: true,
       gears: true,
       isVerified: true,
+      hasTakenAptitudeTest: true,
     }
   });
 
+  if (!dbUser) {
+    redirect("/login");
+  }
+
+  const activeUserId = dbUser.id;
+
   const isVerified = dbUser?.isVerified === true;
+  const hasTakenAptitudeTest = dbUser?.hasTakenAptitudeTest === true;
   const xp = dbUser?.xp || 0;
   const gears = dbUser?.gears || 0;
   const { level, progress } = getXPDetails(xp);
 
   const completedMissions = await prisma.missionProgress.findMany({
     where: {
-      userId,
+      userId: activeUserId,
       status: "COMPLETED",
     },
     select: {
@@ -48,6 +63,7 @@ export default async function ModulesPage() {
     <div className="relative w-full h-full overflow-x-hidden overflow-y-auto bg-[#130927]">
       <ModulesClient 
         isVerified={isVerified} 
+        hasTakenAptitudeTest={hasTakenAptitudeTest}
         liveStats={liveStats} 
         completedMissions={completedMissions} 
       />

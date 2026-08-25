@@ -4,9 +4,14 @@ import { requireAdmin } from '@/app/admin/actions';
 import { History, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
-export default async function UserLogsPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function UserLogsPage({ params }: { params: Promise<{ id: string }> | { id: string } }) {
   await requireAdmin();
-  const { id } = await params;
+  const resolvedParams = await Promise.resolve(params);
+  const id = resolvedParams?.id;
+
+  if (!id) {
+    return <div className="text-white p-8">Invalid or missing User ID.</div>;
+  }
 
   const user = await prisma.user.findUnique({
     where: { id },

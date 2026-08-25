@@ -52,9 +52,13 @@ model User {
   createdAt     DateTime  @default(now()) @map("created_at")
   showcasedBadges String[] @default([])
   
-  // Verification & Gamification Fields
+  // Verification, Aptitude & Gamification Fields
   studentId     String?   @unique @map("student_id")
   isVerified    Boolean   @default(false) @map("is_verified")
+  hasTakenAptitudeTest Boolean @default(false) @map("has_taken_aptitude_test")
+  logicScore    Int?      @map("logic_score")
+  patternRecognitionScore Int? @map("pattern_recognition_score")
+  recommendedLearningPath String? @map("recommended_learning_path")
   xp            Int       @default(0)
   gears         Int       @default(0)
   verifiedRewardClaimed Boolean @default(false) @map("verified_reward_claimed")
@@ -106,14 +110,15 @@ model UserAchievement {
 }
 
 model MissionProgress {
-  id            String   @id @default(cuid())
-  userId        String   @map("user_id")
-  missionId     String   @map("mission_id")
-  status        String   @default("IN_PROGRESS")
-  submittedCode String?  @db.Text @map("submitted_code")
+  id            String    @id @default(cuid())
+  userId        String    @map("user_id")
+  missionId     String    @map("mission_id")
+  status        String    @default("IN_PROGRESS")
+  submittedCode String?   @db.Text @map("submitted_code")
   completedAt   DateTime? @map("completed_at")
+  startedAt     DateTime  @default(now()) @map("started_at")
 
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, missionId])
   @@map("mission_progresses")
@@ -199,10 +204,12 @@ model UserInventory {
 }
 
 model SystemAdmin {
-  id        String   @id @default(cuid())
-  username  String   @unique
-  password  String
-  createdAt DateTime @default(now()) @map("created_at")
+  id                  String    @id @default(cuid())
+  username            String    @unique
+  password            String
+  createdAt           DateTime  @default(now()) @map("created_at")
+  failedLoginAttempts Int       @default(0)
+  lockedUntil         DateTime?
 }
 
 model SystemLog {
@@ -217,12 +224,39 @@ model SystemLog {
   @@map("system_logs")
 }
 
+model AuditLog {
+  id           String   @id @default(cuid())
+  actorId      String   @map("actor_id")
+  actorRole    String   @map("actor_role")
+  action       String
+  targetUserId String?  @map("target_user_id")
+  details      String   @db.Text
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@map("audit_logs")
+}
+
+model AptitudeQuestion {
+  id            String   @id @default(cuid())
+  question      String   @db.Text
+  questionType  String   @default("MULTIPLE_CHOICE") @map("question_type") // MULTIPLE_CHOICE, TRUE_FALSE, SHORT_ANSWER
+  category      String   // LOGIC, PATTERN, CODING_READINESS
+  options       Json     // Array of option strings
+  correctAnswer Int      @default(0) @map("correct_answer")
+  shortAnswer   String?  @map("short_answer") @db.Text
+  explanation   String?  @db.Text
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@map("aptitude_questions")
+}
+
 model Report {
   id          String   @id @default(cuid())
   userId      String   @map("user_id")
   type        String
   description String   @db.Text
-  attachments String[] @default([]) // Array of base64 strings
+  attachments String[] @default([])
   status      String   @default("PENDING")
   createdAt   DateTime @default(now()) @map("created_at")
 
@@ -230,3 +264,4 @@ model Report {
 
   @@map("reports")
 }
+

@@ -69,9 +69,23 @@ export function formatLogDetails(action: string, details: string): string {
         return `Deleted their account`;
       case 'OTP_REQUESTED':
         return `Requested an email verification code`;
+      case 'ADMIN_LOGIN_SUCCESS':
+        return 'Logged in successfully';
+      case 'ADMIN_LOGIN_FAILED':
+        return 'Failed login attempt';
+      case 'ADMIN_LOGOUT':
+        return 'Logged out successfully';
+      case 'ADMIN_ACCOUNT_LOCKED':
+        if (data.lockedUntil) {
+          const timeString = new Date(data.lockedUntil).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          return `Account temporarily locked until ${timeString}`;
+        }
+        return 'Account temporarily locked due to multiple failed login attempts';
       default:
-        // Try to construct a readable sentence if generic
-        const parts = Object.entries(data).map(([k, v]) => `${k}: ${v}`);
+        // Try to construct a readable sentence if generic, but exclude timestamp
+        const parts = Object.entries(data)
+          .filter(([k]) => k !== 'timestamp')
+          .map(([k, v]) => `${k}: ${v}`);
         if (parts.length > 0 && parts.length <= 3) {
           return `${formatActionName(action)} - ${parts.join(', ')}`;
         }

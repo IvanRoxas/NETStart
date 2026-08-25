@@ -13,16 +13,28 @@ const prisma = new PrismaClient({ adapter });
 async function main() {
   console.log("Seeding master admin account...");
   
-  const hashedPassword = await bcrypt.hash('admin_secure_2026', 10);
+  let seedPassword = process.env.ADMIN_SEED_PASSWORD;
+  if (!seedPassword) {
+    seedPassword = 'dev_admin_temp_2026';
+    console.warn('\x1b[33m%s\x1b[0m', 'WARNING: process.env.ADMIN_SEED_PASSWORD is not set.');
+    console.warn('\x1b[33m%s\x1b[0m', 'Falling back to temporary development password: dev_admin_temp_2026');
+    console.warn('\x1b[33m%s\x1b[0m', 'Please configure ADMIN_SEED_PASSWORD in your production environment.');
+  }
+
+  const hashedPassword = await bcrypt.hash(seedPassword, 10);
   
   const admin = await prisma.systemAdmin.upsert({
-    where: { username: 'admin_netstart' },
+    where: { username: 'NETStart_Admin' },
     update: {
-      password: hashedPassword
+      password: hashedPassword,
+      failedLoginAttempts: 0,
+      lockedUntil: null
     },
     create: {
-      username: 'admin_netstart',
-      password: hashedPassword
+      username: 'NETStart_Admin',
+      password: hashedPassword,
+      failedLoginAttempts: 0,
+      lockedUntil: null
     }
   });
 

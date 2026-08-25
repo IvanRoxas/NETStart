@@ -79,12 +79,20 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({ isOpen, onClose, imageS
             const canvas = document.createElement('canvas');
             const scaleX = imgRef.current.naturalWidth / imgRef.current.width;
             const scaleY = imgRef.current.naturalHeight / imgRef.current.height;
-            
+
             canvas.width = completedCrop.width * scaleX;
             canvas.height = completedCrop.height * scaleY;
             const ctx = canvas.getContext('2d');
 
             if (ctx) {
+                // If it's a circular crop, clip the canvas context to a circle
+                if (aspect === 1) {
+                    ctx.beginPath();
+                    const radius = canvas.width / 2;
+                    ctx.arc(radius, radius, radius, 0, 2 * Math.PI);
+                    ctx.clip();
+                }
+
                 ctx.drawImage(
                     imgRef.current,
                     completedCrop.x * scaleX,
@@ -97,8 +105,8 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({ isOpen, onClose, imageS
                     canvas.height
                 );
 
-                // Convert to base64
-                const base64Image = canvas.toDataURL('image/jpeg', 0.9);
+                // Convert to base64 as PNG to preserve transparency
+                const base64Image = canvas.toDataURL('image/png');
                 onSave(base64Image);
             }
         } catch (e) {
@@ -112,13 +120,13 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({ isOpen, onClose, imageS
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
             <div className="bg-[#1e0a2d] border-2 border-[#ff912d]/50 rounded-2xl shadow-[0_0_30px_rgba(255,145,45,0.2)] w-full max-w-md overflow-hidden flex flex-col">
                 {/* Header */}
                 <div className="flex justify-between items-center p-4 border-b border-white/10 bg-black/20">
                     <h3 className="text-white font-bold text-lg">{title}</h3>
-                    <button 
-                        onClick={onClose} 
+                    <button
+                        onClick={onClose}
                         className="text-white/50 hover:text-white transition-colors cursor-pointer"
                         disabled={isSaving}
                     >
@@ -151,14 +159,14 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({ isOpen, onClose, imageS
 
                 {/* Footer */}
                 <div className="p-5 border-t border-white/10 bg-black/20 flex justify-end gap-3">
-                    <button 
+                    <button
                         className="px-6 py-2 rounded-full font-bold text-white/70 hover:text-white bg-white/5 hover:bg-white/10 transition-colors cursor-pointer disabled:opacity-50"
                         onClick={onClose}
                         disabled={isSaving}
                     >
                         Cancel
                     </button>
-                    <button 
+                    <button
                         className="px-6 py-2 rounded-full font-bold text-white bg-[#ff912d] hover:bg-[#ff912d]/80 transition-colors flex items-center gap-2 cursor-pointer shadow-md disabled:opacity-50"
                         onClick={handleSave}
                         disabled={isSaving || !completedCrop}

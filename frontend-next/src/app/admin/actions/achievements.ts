@@ -4,9 +4,11 @@ import { prisma } from "@/lib/auth";
 import { requireAdmin } from "@/app/admin/actions";
 import { revalidatePath } from "next/cache";
 import { logSystemAction } from "@/lib/logger";
+import { ensureDefaultAchievements } from "@/app/actions/achievements";
 
 export async function getAchievements(searchQuery?: string) {
   await requireAdmin();
+  await ensureDefaultAchievements();
 
   let whereClause: any = {};
   if (searchQuery) {

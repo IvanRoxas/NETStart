@@ -182,10 +182,8 @@ export default function Sidebar() {
       </nav>
 
       {/* Bottom Actions */}
-      <div className={`p-6 border-t border-white/5 flex transition-all duration-300 ${isMinimized ? 'justify-center px-2' : ''}`}>
-        <div className="w-full">
-          <LogoutButton isMinimized={isMinimized} />
-        </div>
+      <div className={`p-4 border-t border-white/5 flex items-center transition-all duration-300 ${isMinimized ? 'justify-center px-0' : 'px-4'}`}>
+        <LogoutButton isMinimized={isMinimized} />
       </div>
     </aside>
   );

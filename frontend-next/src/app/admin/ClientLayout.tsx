@@ -18,7 +18,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
           <ShieldAlert className="text-[#ff912d]" size={28} />
           <div>
             <h1 className="font-display font-black text-xl text-white tracking-wider">NET<span className="text-[#ff912d]">START</span></h1>
-            <p className="text-xs text-red-500 font-bold uppercase tracking-widest">Admin Panel</p>
+            <p className="text-xs text-white font-bold uppercase tracking-widest">Admin Panel</p>
           </div>
         </div>
 

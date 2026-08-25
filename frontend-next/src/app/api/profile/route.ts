@@ -55,7 +55,13 @@ export async function GET(req: Request) {
       }
     }
 
-    return NextResponse.json({ user });
+    const missionProgress = await prisma.missionProgress.findMany({
+      where: { userId: user.id },
+      orderBy: { startedAt: 'desc' },
+      take: 3
+    });
+
+    return NextResponse.json({ user, missionProgress });
   } catch (error) {
     console.error('Error fetching profile:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
@@ -97,6 +103,55 @@ export async function PUT(req: Request) {
       }
     });
 
+    const userId = (session.user as any).id;
+    if (image !== undefined) {
+      const changePfpAch = await prisma.achievement.findUnique({ where: { triggerCode: 'B_CHANGE_PFP' } });
+      if (changePfpAch) {
+        const hasChangePfp = await prisma.userAchievement.findUnique({
+          where: { userId_achievementId: { userId, achievementId: changePfpAch.id } }
+        });
+        if (!hasChangePfp) {
+          await prisma.userAchievement.create({
+            data: { userId, achievementId: changePfpAch.id }
+          });
+          const { addXPAndCheckLevelUp } = await import('@/lib/xp');
+          await addXPAndCheckLevelUp(userId, changePfpAch.xpReward);
+          
+          await prisma.notification.create({
+            data: {
+              userId,
+              notificationType: 'achievement_unlocked',
+              data: { badgeId: 'b_change_pfp', badgeName: 'A New Look', badgeImage: changePfpAch.iconUrl || '/Planet 3.svg' }
+            }
+          });
+        }
+      }
+    }
+
+    if (banner !== undefined) {
+      const changeBgAch = await prisma.achievement.findUnique({ where: { triggerCode: 'B_CHANGE_BG' } });
+      if (changeBgAch) {
+        const hasChangeBg = await prisma.userAchievement.findUnique({
+          where: { userId_achievementId: { userId, achievementId: changeBgAch.id } }
+        });
+        if (!hasChangeBg) {
+          await prisma.userAchievement.create({
+            data: { userId, achievementId: changeBgAch.id }
+          });
+          const { addXPAndCheckLevelUp } = await import('@/lib/xp');
+          await addXPAndCheckLevelUp(userId, changeBgAch.xpReward);
+          
+          await prisma.notification.create({
+            data: {
+              userId,
+              notificationType: 'achievement_unlocked',
+              data: { badgeId: 'b_change_bg', badgeName: 'Interior Designer', badgeImage: changeBgAch.iconUrl || '/Planet 8.svg' }
+            }
+          });
+        }
+      }
+    }
+
     await logSystemAction({
       actorId: (session.user as any).id,
       actorRole: "STUDENT",
@@ -112,3 +167,4 @@ export async function PUT(req: Request) {
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
+// Trigger schema refresh

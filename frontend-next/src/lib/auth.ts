@@ -86,6 +86,7 @@ export const authOptions: NextAuthOptions = {
         token.isBanned = (user as any).isBanned || false;
         token.displayName = (user as any).displayName;
         token.isVerified = (user as any).isVerified || false;
+        token.hasTakenAptitudeTest = (user as any).hasTakenAptitudeTest || false;
         token.studentId = (user as any).studentId || null;
         token.xp = (user as any).xp || 0;
         token.activeTitle = (user as any).activeTitle || null;
@@ -102,9 +103,23 @@ export const authOptions: NextAuthOptions = {
         if (session.displayName !== undefined) token.displayName = session.displayName;
         if (session.image) token.picture = session.image;
         if (session.isVerified !== undefined) token.isVerified = session.isVerified;
+        if (session.hasTakenAptitudeTest !== undefined) token.hasTakenAptitudeTest = session.hasTakenAptitudeTest;
         if (session.studentId !== undefined) token.studentId = session.studentId;
         if (session.xp !== undefined) token.xp = session.xp;
         if (session.activeTitle !== undefined) token.activeTitle = session.activeTitle;
+      }
+
+      // Sync latest db value on token refresh if missing
+      if (token.id && token.hasTakenAptitudeTest === undefined) {
+        try {
+          const dbU = await prisma.user.findUnique({
+            where: { id: token.id as string },
+            select: { hasTakenAptitudeTest: true }
+          });
+          if (dbU) {
+            token.hasTakenAptitudeTest = dbU.hasTakenAptitudeTest;
+          }
+        } catch (e) {}
       }
       
       return token;
@@ -115,6 +130,7 @@ export const authOptions: NextAuthOptions = {
         session.user.type = token.type as "student" | "admin";
         session.user.isBanned = token.isBanned as boolean;
         session.user.isVerified = token.isVerified as boolean;
+        session.user.hasTakenAptitudeTest = token.hasTakenAptitudeTest as boolean;
         session.user.studentId = token.studentId as string | null;
         session.user.xp = token.xp as number;
         session.user.activeTitle = token.activeTitle as string | null;
@@ -145,6 +161,66 @@ export const authOptions: NextAuthOptions = {
           activeTitle: 'Novice Explorer'
         }
       });
+
+      try {
+        // Seed default achievements first if not done
+        const { ensureDefaultAchievements } = await import('@/app/actions/achievements');
+        await ensureDefaultAchievements();
+
+        // Unlock B_CREATE_ACCOUNT
+        const createAch = await prisma.achievement.findUnique({
+          where: { triggerCode: 'B_CREATE_ACCOUNT' }
+        });
+
+        if (createAch) {
+          const hasAch = await prisma.userAchievement.findUnique({
+            where: {
+              userId_achievementId: {
+                userId: user.id,
+                achievementId: createAch.id
+              }
+            }
+          });
+          if (!hasAch) {
+            await prisma.userAchievement.create({
+              data: {
+                userId: user.id,
+                achievementId: createAch.id
+              }
+            });
+            const { addXPAndCheckLevelUp } = await import('@/lib/xp');
+            await addXPAndCheckLevelUp(user.id, createAch.xpReward);
+          }
+
+          // Create notification
+          const userNotifications = await prisma.notification.findMany({
+            where: {
+              userId: user.id,
+              notificationType: 'achievement_unlocked'
+            }
+          });
+          const hasNotification = userNotifications.some(n => {
+            const d = n.data as any;
+            return d && (d.badgeId === 'b_create_account' || d.badgeId === createAch.id);
+          });
+
+          if (!hasNotification) {
+            await prisma.notification.create({
+              data: {
+                userId: user.id,
+                notificationType: 'achievement_unlocked',
+                data: {
+                  badgeId: 'b_create_account',
+                  badgeName: 'Ready for Blast Off!',
+                  badgeImage: '/Planet 1.svg'
+                }
+              }
+            });
+          }
+        }
+      } catch (err) {
+        console.error("Error setting initial achievements in createUser event:", err);
+      }
     },
     async linkAccount({ user, account, profile }) {
       if (account.provider === 'google') {

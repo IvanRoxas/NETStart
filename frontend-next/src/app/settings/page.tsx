@@ -8,6 +8,7 @@ import Image from 'next/image';
 import TopHeader from '@/components/TopHeader';
 import ImageCropModal from '@/components/ImageCropModal';
 import { createPortal } from 'react-dom';
+import SpaceLoader from '@/components/SpaceLoader';
 
 export default function SettingsPage() {
   const { data: session, status, update } = useSession();
@@ -18,7 +19,7 @@ export default function SettingsPage() {
   const [avatarUrl, setAvatarUrl] = useState('');
   const [showToast, setShowToast] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   // Cropping State
   const [cropModalOpen, setCropModalOpen] = useState(false);
   const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
@@ -72,7 +73,7 @@ export default function SettingsPage() {
     }
     if (session?.user) {
       setEmail(session.user.email || '');
-      
+
       // Fetch latest profile from DB to override any stale session cookies
       fetch(`/api/profile?t=${Date.now()}`)
         .then(res => res.json())
@@ -114,7 +115,7 @@ export default function SettingsPage() {
   const handleCropSave = async (base64String: string) => {
     setAvatarUrl(base64String);
     setCropModalOpen(false);
-    
+
     // Automatically save profile after cropping
     setLoading(true);
     try {
@@ -126,7 +127,7 @@ export default function SettingsPage() {
       });
       const nextAuthImageUrl = `/api/profile/avatar?id=${(session?.user as any)?.id}&t=${Date.now()}`;
       await update({ image: nextAuthImageUrl });
-      
+
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
     } catch (err) {
@@ -140,7 +141,7 @@ export default function SettingsPage() {
     if (e) e.preventDefault();
     if (!username.trim()) return; // Don't save empty usernames
     setLoading(true);
-    
+
     try {
       const payload: any = { name: username };
       if (avatarUrl && avatarUrl.startsWith('data:')) {
@@ -155,7 +156,7 @@ export default function SettingsPage() {
       // Update next-auth session with dynamic URL to avoid cookie size limit
       const nextAuthImageUrl = `/api/profile/avatar?id=${(session?.user as any)?.id}&t=${Date.now()}`;
       await update({ name: username, image: nextAuthImageUrl });
-      
+
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
     } catch (err) {
@@ -180,10 +181,10 @@ export default function SettingsPage() {
       const res = await fetch('/api/settings/security', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           email,
           currentPassword,
-          newPassword: password || undefined 
+          newPassword: password || undefined
         })
       });
 
@@ -216,11 +217,11 @@ export default function SettingsPage() {
       const res = await fetch('/api/settings/security', { method: 'DELETE' });
       if (res.ok) {
         setMessage({ text: 'Your account has been deleted.', type: 'success' });
-        
+
         // Clear saved auto-login credentials
         localStorage.removeItem('netstart_remember_email');
         localStorage.removeItem('netstart_remember_password');
-        
+
         // Immediately sign out and redirect to prevent stale session
         await signOut({ redirect: true, callbackUrl: '/login?deleted=true' });
       } else {
@@ -238,14 +239,14 @@ export default function SettingsPage() {
     if (e.target.files && e.target.files.length > 0) {
       const newFiles = Array.from(e.target.files);
       const remainingSlots = 5 - reportAttachments.length;
-      
+
       if (remainingSlots <= 0) {
         e.target.value = '';
         return; // Max 5 attachments
       }
-      
+
       const filesToProcess = newFiles.slice(0, remainingSlots);
-      
+
       filesToProcess.forEach(file => {
         const reader = new FileReader();
         reader.onload = (event) => {
@@ -255,7 +256,7 @@ export default function SettingsPage() {
         };
         reader.readAsDataURL(file);
       });
-      
+
       e.target.value = '';
     }
   };
@@ -267,18 +268,18 @@ export default function SettingsPage() {
   const handleReportSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!reportDescription.trim()) return;
-    
+
     try {
       await fetch('/api/reports', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          type: reportIssueType, 
+        body: JSON.stringify({
+          type: reportIssueType,
           description: reportDescription,
           attachments: reportAttachments
         })
       });
-      
+
       setIsReportSubmitted(true);
       setTimeout(() => {
         setIsReportModalOpen(false);
@@ -295,13 +296,20 @@ export default function SettingsPage() {
 
 
   if (status === 'loading') {
-    return <div className="h-screen bg-[#1e0a2d] flex items-center justify-center text-white">Loading...</div>;
+    return (
+      <main className="flex-1 flex flex-col z-10 w-full h-full overflow-hidden bg-[#1e0a2d]">
+        <TopHeader title="Settings" />
+        <div className="flex-1 flex items-center justify-center p-6">
+          <SpaceLoader text="...loading settings..." />
+        </div>
+      </main>
+    );
   }
 
   const tabs = ['General', 'Account', 'Help & Support'];
 
   const Toggle = ({ checked, onChange }: { checked: boolean, onChange: (val: boolean) => void }) => (
-    <div 
+    <div
       onClick={() => onChange(!checked)}
       className={`w-10 h-6 shrink-0 rounded-full flex items-center p-1 cursor-pointer transition-colors duration-300 ease-in-out ${checked ? 'bg-[#ff912d]' : 'bg-white/10'}`}
     >
@@ -328,7 +336,7 @@ export default function SettingsPage() {
 
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto w-full flex flex-col items-start pl-8 lg:pl-16 pr-12 lg:pr-48 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-          
+
           <div className="w-full max-w-[1000px] pt-12">
             {/* Tabs */}
             <div className="flex gap-8 border-b border-white/10">
@@ -351,24 +359,24 @@ export default function SettingsPage() {
             {activeTab === 'General' && (
               <div className="flex flex-col">
                 <h2 className="font-display text-2xl font-bold text-[#ff912d] mb-4 mt-2">Preferences</h2>
-                <SettingItem 
+                <SettingItem
                   title="Sound Effects"
                   description="Play sounds for interactions and incoming messages."
                   control={<Toggle checked={sounds} onChange={(v) => handleToggle('sounds', v, setSounds)} />}
                 />
-                
+
                 <h2 className="font-display text-2xl font-bold text-[#ff912d] mb-4 mt-8">Notifications</h2>
-                <SettingItem 
+                <SettingItem
                   title="Push Notifications"
                   description="Receive browser alerts when a module is completed or when your code runs successfully."
                   control={<Toggle checked={pushNotifs} onChange={(v) => handleToggle('pushNotifs', v, setPushNotifs)} />}
                 />
-                <SettingItem 
+                <SettingItem
                   title="System Announcements"
                   description="Receive emails regarding platform updates, maintenance, or downtime."
                   control={<Toggle checked={systemAnnouncements} onChange={(v) => handleToggle('systemAnnouncements', v, setSystemAnnouncements)} />}
                 />
-                <SettingItem 
+                <SettingItem
                   title="Academic Alerts"
                   description="Get notified when a new coding module is unlocked or assigned."
                   control={<Toggle checked={academicAlerts} onChange={(v) => handleToggle('academicAlerts', v, setAcademicAlerts)} />}
@@ -385,7 +393,7 @@ export default function SettingsPage() {
                     <p className="text-white/50 text-[13px] mt-1">Let us know so we can fix it as soon as possible.</p>
                   </div>
                   <div className="pl-4">
-                    <button 
+                    <button
                       onClick={() => setIsReportModalOpen(true)}
                       className="bg-white/10 hover:bg-white/20 text-white font-medium text-sm py-2 px-6 rounded-full transition-colors cursor-pointer"
                     >
@@ -401,7 +409,7 @@ export default function SettingsPage() {
               <div className="flex flex-col gap-10">
                 <div>
                   <h2 className="font-display text-2xl font-bold text-[#ff912d] mb-6">Account Details</h2>
-                  
+
                   {/* Crop Modal */}
                   <ImageCropModal
                     isOpen={cropModalOpen}
@@ -423,14 +431,14 @@ export default function SettingsPage() {
                             <Image src="/Profile.svg" alt="Default Profile" width={96} height={96} className="object-cover w-full h-full" />
                           )}
                         </div>
-                        <input 
-                          type="file" 
-                          ref={fileInputRef} 
-                          onChange={handleAvatarChange} 
-                          accept="image/*" 
-                          className="hidden" 
+                        <input
+                          type="file"
+                          ref={fileInputRef}
+                          onChange={handleAvatarChange}
+                          accept="image/*"
+                          className="hidden"
                         />
-                        <button 
+                        <button
                           type="button"
                           onClick={() => fileInputRef.current?.click()}
                           className="absolute bottom-0 right-0 bg-[#ff912d] w-7 h-7 rounded-full flex items-center justify-center text-white border-2 border-[#1e0a2d] hover:bg-orange-500 transition-colors cursor-pointer"
@@ -449,8 +457,8 @@ export default function SettingsPage() {
 
                     <div className="flex flex-col gap-2 max-w-md">
                       <label className="text-white/70 text-[13px] font-medium">Username</label>
-                      <input 
-                        type="text" 
+                      <input
+                        type="text"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
                         onBlur={handleProfileUpdate}
@@ -468,7 +476,7 @@ export default function SettingsPage() {
                     )}
 
                     <div className="pt-2">
-                      <button 
+                      <button
                         type="submit"
                         disabled={loading}
                         className="bg-[#ff912d] text-white font-bold text-sm py-2.5 px-6 rounded-lg hover:bg-orange-500 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
@@ -483,16 +491,16 @@ export default function SettingsPage() {
                   <div className="flex items-center justify-between mb-6">
                     <h2 className="font-display text-2xl font-bold text-[#ff912d]">Account Security</h2>
                     {!isEditingSecurity ? (
-                      <button 
-                        type="button" 
+                      <button
+                        type="button"
                         onClick={() => setIsEditingSecurity(true)}
                         className="text-sm font-medium text-[#ff912d] hover:text-orange-400 transition-colors cursor-pointer flex items-center gap-1"
                       >
                         Edit Credentials
                       </button>
                     ) : (
-                      <button 
-                        type="button" 
+                      <button
+                        type="button"
                         onClick={() => setIsEditingSecurity(false)}
                         className="text-sm font-medium text-white/50 hover:text-white transition-colors cursor-pointer"
                       >
@@ -500,7 +508,7 @@ export default function SettingsPage() {
                       </button>
                     )}
                   </div>
-                  
+
                   <form onSubmit={handleSecurityUpdate} className="flex flex-col gap-6">
                     <div className="flex flex-col gap-2 max-w-md">
                       <label className="text-white/70 text-[13px] font-medium">Email Address</label>
@@ -509,8 +517,8 @@ export default function SettingsPage() {
                           {email || 'Loading...'}
                         </div>
                       ) : (
-                        <input 
-                          type="email" 
+                        <input
+                          type="email"
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
                           className="w-full bg-[#2a133d] text-white px-4 py-2.5 rounded-lg border border-gray-700 outline-none focus:ring-1 focus:ring-[#ff912d] transition-colors text-sm"
@@ -530,8 +538,8 @@ export default function SettingsPage() {
                       <>
                         <div className="flex flex-col gap-2 max-w-md">
                           <label className="text-white/70 text-[13px] font-medium">Current Password</label>
-                          <input 
-                            type="password" 
+                          <input
+                            type="password"
                             value={currentPassword}
                             onChange={(e) => setCurrentPassword(e.target.value)}
                             className="w-full bg-[#2a133d] text-white px-4 py-2.5 rounded-lg border border-gray-700 outline-none focus:ring-1 focus:ring-[#ff912d] transition-colors text-sm"
@@ -543,8 +551,8 @@ export default function SettingsPage() {
 
                         <div className="flex flex-col gap-2 max-w-md">
                           <label className="text-white/70 text-[13px] font-medium">New Password</label>
-                          <input 
-                            type="password" 
+                          <input
+                            type="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             className="w-full bg-[#2a133d] text-white px-4 py-2.5 rounded-lg border border-gray-700 outline-none focus:ring-1 focus:ring-[#ff912d] transition-colors text-sm"
@@ -556,8 +564,8 @@ export default function SettingsPage() {
 
                         <div className="flex flex-col gap-2 max-w-md">
                           <label className="text-white/70 text-[13px] font-medium">Confirm Password</label>
-                          <input 
-                            type="password" 
+                          <input
+                            type="password"
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
                             className="w-full bg-[#2a133d] text-white px-4 py-2.5 rounded-lg border border-gray-700 outline-none focus:ring-1 focus:ring-[#ff912d] transition-colors text-sm"
@@ -576,7 +584,7 @@ export default function SettingsPage() {
 
                     {isEditingSecurity && (
                       <div className="pt-2">
-                        <button 
+                        <button
                           type="submit"
                           disabled={loading}
                           className="bg-[#ff912d] text-white font-bold text-sm py-2.5 px-6 rounded-lg hover:bg-orange-500 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
@@ -593,7 +601,7 @@ export default function SettingsPage() {
                     <h2 className="font-display text-2xl font-bold text-[#ff912d] mb-4">Account Deletion</h2>
                     <div className="flex flex-col gap-4 max-w-2xl">
                       <p className="text-white/60 text-sm">Once you delete your account, there is no going back. All your progress, missions, and data will be permanently wiped.</p>
-                      <button 
+                      <button
                         onClick={confirmDeleteAccount}
                         disabled={deleteLoading}
                         className="self-start bg-red-500 hover:bg-red-600 text-white font-bold text-sm py-2.5 px-6 rounded-lg transition-colors cursor-pointer shadow-lg shadow-red-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -628,11 +636,11 @@ export default function SettingsPage() {
               <>
                 <h2 className="font-display text-2xl font-bold text-white mb-2">Report an Issue</h2>
                 <p className="text-white/50 text-sm mb-6">Please provide details about the problem you are experiencing.</p>
-                
+
                 <form onSubmit={handleReportSubmit} className="flex flex-col space-y-6">
                   <div className="w-full flex flex-col space-y-2">
                     <label className="text-white/80 text-[13px] font-medium">Issue Type</label>
-                    <select 
+                    <select
                       value={reportIssueType}
                       onChange={(e) => setReportIssueType(e.target.value)}
                       className="w-full bg-white/5 text-white px-4 py-3 rounded-lg border border-white/10 outline-none focus:border-[#ff912d]/50 transition-colors text-sm appearance-none cursor-pointer"
@@ -649,7 +657,7 @@ export default function SettingsPage() {
                     {/* Description Section (Left) */}
                     <div className="w-full flex-1 flex flex-col space-y-2">
                       <label className="text-white/80 text-[13px] font-medium">Description</label>
-                      <textarea 
+                      <textarea
                         value={reportDescription}
                         onChange={(e) => setReportDescription(e.target.value)}
                         placeholder="Describe the issue here..."
@@ -664,13 +672,13 @@ export default function SettingsPage() {
                         <span className="text-white/80 text-[13px] font-medium">Attachments</span>
                         <span className="text-gray-500 text-sm">{reportAttachments.length}/5 attachments</span>
                       </div>
-                      
+
                       <div className="flex flex-wrap gap-3 items-start h-full">
                         {reportAttachments.map((src, idx) => (
                           <div key={idx} className="relative w-24 h-24 rounded-lg overflow-hidden border border-gray-600 bg-black/40 group">
                             <Image src={src} alt={`Attachment ${idx + 1}`} width={96} height={96} className="object-cover w-full h-full opacity-80 group-hover:opacity-100 transition-opacity" />
                             <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
-                              <button 
+                              <button
                                 type="button"
                                 onClick={(e) => { e.stopPropagation(); removeReportAttachment(idx); }}
                                 className="bg-red-500 text-white rounded-full p-2 hover:bg-red-600 transition-colors"
@@ -681,7 +689,7 @@ export default function SettingsPage() {
                             </div>
                           </div>
                         ))}
-                        
+
                         {reportAttachments.length < 5 && (
                           <div className="flex flex-col items-center gap-2">
                             <button
@@ -694,7 +702,7 @@ export default function SettingsPage() {
                             </button>
                           </div>
                         )}
-                        <input 
+                        <input
                           type="file"
                           multiple
                           ref={reportImageInputRef}
@@ -707,14 +715,14 @@ export default function SettingsPage() {
                   </div>
 
                   <div className="flex items-center gap-3 mt-4 pt-4 border-t border-white/5">
-                    <button 
+                    <button
                       type="button"
                       onClick={() => setIsReportModalOpen(false)}
                       className="flex-1 bg-white/5 hover:bg-white/10 text-white font-medium text-sm py-2.5 rounded-full transition-colors cursor-pointer"
                     >
                       Cancel
                     </button>
-                    <button 
+                    <button
                       type="submit"
                       className="flex-1 bg-[#ff912d] hover:bg-orange-500 text-white font-bold text-sm py-2.5 rounded-full transition-colors shadow-lg shadow-[#ff912d]/20 cursor-pointer"
                     >
@@ -728,23 +736,23 @@ export default function SettingsPage() {
         </div>
       )}
 
-      
+
       {/* Delete Account Modal */}
       {isDeleteModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
           <div className="bg-[#1e0a2d] border border-red-500/20 rounded-2xl p-6 md:p-8 w-full max-w-lg shadow-2xl relative transition-all duration-300">
             <h2 className="font-display text-2xl font-bold text-red-500 mb-2">Delete Account</h2>
             <p className="text-white/60 text-sm mb-6">Are you ABSOLUTELY sure you want to delete your account? This action cannot be undone and you will lose all your progress.</p>
-            
+
             <div className="flex items-center gap-3 pt-4 border-t border-white/5">
-              <button 
+              <button
                 type="button"
                 onClick={() => setIsDeleteModalOpen(false)}
                 className="flex-1 bg-white/5 hover:bg-white/10 text-white font-medium text-sm py-2.5 rounded-full transition-colors cursor-pointer"
               >
                 Cancel
               </button>
-              <button 
+              <button
                 type="button"
                 onClick={handleDeleteAccount}
                 className="flex-1 bg-red-500 hover:bg-red-600 text-white font-bold text-sm py-2.5 rounded-full transition-colors shadow-lg shadow-red-500/20 cursor-pointer"

@@ -9,12 +9,9 @@ export default function Footer() {
           {/* Column 1: Project Identity & Institution */}
           <div className="flex flex-col">
             <h3 className="font-display font-bold text-white text-2xl mb-4">About the Project</h3>
-            <p className="font-sans text-white/80 text-sm leading-relaxed mb-6">
-              An AI-Enhanced IT Career Orientation and Adaptive Practical Laboratory System.
+            <p className="font-sans text-white/80 text-sm leading-relaxed">
+              NETStart serves as an optional diagnostic bridge to make Information Technology fundamentals accessible. By eliminating setup demands, we help senior high school students transition to tertiary IT fields with confidence.
             </p>
-            <span className="font-sans text-[#ff912d] text-xs font-bold uppercase tracking-widest leading-loose">
-              placeholder ewannn hahahaha
-            </span>
           </div>
 
           {/* Column 2: Quick Navigation Hub */}
@@ -32,7 +29,7 @@ export default function Footer() {
           <div className="flex flex-col md:ml-auto">
             <h3 className="font-sans font-semibold text-white text-lg mb-6">Contact Us!</h3>
             <ul className="flex flex-col gap-4">
-              <li className="font-sans text-white/80 text-sm">Email: ccs.support@gnc.edu.ph</li>
+              <li className="font-sans text-white/80 text-sm">Email: netstartcapstone@gmail.com</li>
               <li className="font-sans text-white/80 text-sm">Hotline: +63 (45) 912 3456</li>
               <li className="font-sans text-white/80 text-sm">Location: TIP Manila</li>
             </ul>
@@ -43,7 +40,7 @@ export default function Footer() {
         {/* Bottom Copyright Bar */}
         <div className="w-full mt-10 pt-6 border-t border-white/10 flex justify-center">
           <p className="font-sans text-white/50 text-sm text-center">
-            © 2026 NetStart. All Rights Reserved. Developed as a Capstone 2 requirement.
+            © 2026 NetStart. All Rights Reserved. Developed in partnership with Guagua National Colleges (SHS Department) & Technological Institute of the Philippines.
           </p>
         </div>
       </div>

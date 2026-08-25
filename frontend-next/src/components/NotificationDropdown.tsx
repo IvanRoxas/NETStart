@@ -100,28 +100,31 @@ export default function NotificationDropdown({
             {displayedNotifs.map((notif: any) => {
               const isProcessing = processingIds.includes(notif.id);
               const isUnread = !notif.read_at;
+              const notifData = typeof notif.data === 'string' ? JSON.parse(notif.data) : (notif.data || {});
+              const badgeImg = notifData?.badgeImage || notifData?.badgeIcon || notifData?.iconUrl || notifData?.image;
+              const isBadgeImage = badgeImg && (badgeImg.startsWith('/') || badgeImg.startsWith('http') || badgeImg.startsWith('data:'));
               
               return (
                 <div key={notif.id} className={`p-4 border-b border-white/5 flex gap-3 hover:bg-white/5 transition-colors ${isUnread ? 'bg-[#ff912d]/5' : ''}`}>
-                  <div className="w-10 h-10 rounded-full bg-[#361d57] flex-shrink-0 flex items-center justify-center overflow-hidden border border-[#ff912d]/30">
+                  <div className="w-10 h-10 rounded-full bg-[#361d57] flex-shrink-0 flex items-center justify-center overflow-hidden border border-[#ff912d]/40 p-1">
                     {(notif.type === 'system_verify_reward' || notif.notification_type === 'system_verify_reward') ? (
                       <div className="w-full h-full flex items-center justify-center bg-[#ff912d]/20 rounded-full shadow-inner text-[#ff912d]">
-                        <Settings size={20} />
+                        <Settings size={18} />
                       </div>
                     ) : (notif.type === 'achievement_unlocked' || notif.notification_type === 'achievement_unlocked' || notif.type === 'level_up' || notif.notification_type === 'level_up') ? (
-                       notif.data?.badgeImage ? (
-                         <img src={notif.data.badgeImage} alt="" className="w-full h-full object-cover" />
+                       isBadgeImage ? (
+                         <img src={badgeImg} alt={notifData?.badgeName || "Badge"} className="w-full h-full object-contain drop-shadow" />
                        ) : (notif.type === 'level_up' || notif.notification_type === 'level_up') ? (
                          <div className="w-full h-full flex items-center justify-center bg-[#ffb703] rounded-full shadow-inner">
-                           <span className="text-black font-black text-lg">{notif.data?.level || notif.data?.badgeName?.replace(/\D/g, '') || ''}</span>
+                           <span className="text-black font-black text-sm">{notifData?.level || notifData?.badgeName?.replace(/\D/g, '') || 'LVL'}</span>
                          </div>
                        ) : (
-                         <span className="text-[#ff912d] font-bold text-lg">{notif.data?.badgeIcon || '🏆'}</span>
+                         <span className="text-[#ff912d] font-bold text-base">{badgeImg || '🏆'}</span>
                        )
                     ) : notif.sender?.avatar_url ? (
-                      <Image src={notif.sender.avatar_url} alt="" width={40} height={40} className="w-full h-full object-cover" />
+                      <Image src={notif.sender.avatar_url} alt="" width={40} height={40} className="w-full h-full object-cover rounded-full" />
                     ) : (
-                      <span className="text-[#ff912d] font-bold text-lg">{(notif.sender?.displayName || notif.sender?.name)?.charAt(0) || '?'}</span>
+                      <span className="text-[#ff912d] font-bold text-base">{(notif.sender?.displayName || notif.sender?.name)?.charAt(0) || '?'}</span>
                     )}
                   </div>
                   
@@ -130,22 +133,22 @@ export default function NotificationDropdown({
                       {(notif.type === 'system_verify_reward' || notif.notification_type === 'system_verify_reward') ? (
                         <>
                           <strong className="text-[#ff912d] font-bold block mb-0.5">Verification Reward!</strong>
-                          You received {notif.data?.amount} Gears for verifying your account.
+                          You received {notifData?.amount || 50} Gears for verifying your account.
                         </>
                       ) : (notif.type === 'achievement_unlocked' || notif.notification_type === 'achievement_unlocked') ? (
                         <>
                           <strong className="text-[#ff912d] font-bold block mb-0.5">Achievement Unlocked!</strong>
-                          You earned "{notif.data?.badgeName}".
+                          You earned "{notifData?.badgeName || 'Achievement'}".
                         </>
                       ) : (notif.type === 'level_up' || notif.notification_type === 'level_up') ? (
                         <>
                           <strong className="text-[#ff912d] font-bold block mb-0.5">Level Up!</strong>
-                          {notif.data?.badgeName}
+                          {notifData?.badgeName || 'Level Up!'}
                         </>
                       ) : (
                         <>
                           <strong className="text-white font-bold">{notif.sender?.displayName || notif.sender?.name || 'System'}</strong>
-                          {notif.data?.message && <span className="block mt-1">{notif.data.message}</span>}
+                          {notifData?.message && <span className="block mt-1">{notifData.message}</span>}
                         </>
                       )}
                     </p>

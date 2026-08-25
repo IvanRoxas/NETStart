@@ -3,9 +3,11 @@ import { prisma } from "@/lib/auth";
 import bcrypt from "bcryptjs";
 import { validatePassword } from "@/lib/password";
 import { logSystemAction } from "@/lib/logger";
+import { ensureDefaultAchievements } from "@/app/actions/achievements";
 
 export async function POST(req: Request) {
   try {
+    await ensureDefaultAchievements();
     const { username, email, password } = await req.json();
 
     if (!username || !email || !password) {

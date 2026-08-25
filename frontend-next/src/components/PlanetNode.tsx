@@ -17,7 +17,6 @@ interface PlanetNodeProps {
   status?: 'COMPLETED' | 'CURRENT' | 'LOCKED';
   completedCount?: number;
   totalCount?: number;
-  onSelect?: (id: string) => void;
 }
 
 export default function PlanetNode({ 
@@ -34,8 +33,7 @@ export default function PlanetNode({
   reverse = false,
   status = 'LOCKED',
   completedCount = 0,
-  totalCount = 5,
-  onSelect
+  totalCount = 5
 }: PlanetNodeProps) {
   // Uppercase the name in JS so the browser calculates widths based on capital letters
   const upperName = name.toUpperCase();
@@ -91,20 +89,12 @@ export default function PlanetNode({
     return null;
   };
 
-  // Prevent click navigation if node is locked, or intercept if onSelect is provided
+  // Prevent click navigation if node is locked
   const handleLinkClick = (e: React.MouseEvent) => {
     if (isLocked) {
       e.preventDefault();
-      return;
-    }
-    if (onSelect) {
-      e.preventDefault();
-      onSelect(id);
     }
   };
-
-  const isTopHalf = parseFloat(top) < 50;
-  const tooltipPositionClass = isTopHalf ? "top-full mt-4" : "bottom-full mb-4";
 
   return (
     <Link 
@@ -171,7 +161,7 @@ export default function PlanetNode({
       </svg>
 
       {/* Floating Hover Tooltip Info (Frosted Glass select page tooltip) */}
-      <div className={`absolute z-[100] w-max min-w-[280px] px-5 py-4 bg-[#1a082c]/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl shadow-black/50 transform -translate-x-1/2 left-1/2 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none ${tooltipPositionClass}`}>
+      <div className="absolute z-50 w-80 p-4 bg-[#1a082c]/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl shadow-black/50 transform -translate-x-1/2 left-1/2 top-full mt-4 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none">
         <div className="flex flex-col items-center text-center">
           <span className="text-white font-black tracking-widest uppercase text-sm">{name}</span>
           <span className="text-gray-400 text-xs font-medium mt-1">{subtitle}</span>
@@ -180,18 +170,18 @@ export default function PlanetNode({
         <div className="w-full h-px bg-white/10 my-3" />
         
         {/* Progress & Action Row */}
-        <div className="flex items-center justify-between w-full gap-3 mt-1">
+        <div className="flex items-center justify-between w-full">
           <div className="flex flex-col items-start leading-none">
             <span className="text-white font-bold text-sm">{completedCount}/{totalCount}</span>
-            <span className="text-[10px] text-gray-500 uppercase tracking-wider leading-tight mt-0.5">Completed</span>
+            <span className="text-[10px] text-gray-500 uppercase tracking-wider mt-0.5">Completed</span>
           </div>
           
           {isLocked ? (
-            <span className="bg-red-500/10 text-red-400 border border-red-500/20 px-3 py-1.5 rounded-full text-[10px] font-bold tracking-widest uppercase flex items-center gap-1 flex-shrink-0 whitespace-nowrap">
+            <span className="bg-red-500/10 text-red-400 border border-red-500/20 px-3 py-1.5 rounded-full text-[10px] font-bold tracking-widest uppercase flex items-center gap-1">
               <Lock size={10} /> Locked
             </span>
           ) : (
-            <span className="bg-[#ff912d]/20 text-[#ff912d] border border-[#ff912d]/30 px-3 py-1.5 rounded-full text-[10px] font-bold tracking-widest uppercase flex items-center gap-1 flex-shrink-0 whitespace-nowrap">
+            <span className="bg-[#ff912d]/20 text-[#ff912d] border border-[#ff912d]/30 px-3 py-1.5 rounded-full text-[10px] font-bold tracking-widest uppercase flex items-center gap-1">
               <Rocket size={10} className="animate-pulse" /> {isCompleted ? 'Revisit' : 'Enter Orbit'}
             </span>
           )}

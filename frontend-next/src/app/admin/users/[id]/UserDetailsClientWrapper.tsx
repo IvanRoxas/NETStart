@@ -3,9 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, ShieldAlert, CheckCircle, Ban, Zap, Star, Trophy, Package, Target, Users as UsersIcon, X, Check, RefreshCcw, History, Trash2 } from 'lucide-react';
+import { ArrowLeft, ShieldAlert, CheckCircle, Ban, Zap, Star, Trophy, Package, Target, Users as UsersIcon, X, Check, RefreshCcw, History, Trash2, Brain } from 'lucide-react';
 import Image from 'next/image';
-import { editGamificationStats, deleteUser } from '@/app/admin/actions';
+import { editGamificationStats, deleteUser, adminResetAptitudeTest, adminSetAptitudeStatus } from '@/app/admin/actions';
 import AdminToast from '@/components/AdminToast';
 import { getXPDetails } from '@/lib/leveling';
 
@@ -24,6 +24,45 @@ export default function UserDetailsClientWrapper({ user: initialUser }: { user: 
   
   const { level, progress: progressPercentage, nextThreshold } = getXPDetails(user.xp);
   const xpToNextLevel = level < 10 ? nextThreshold - user.xp : 0;
+
+  const handleResetAptitudeTest = async () => {
+    if (!confirm("Are you sure you want to reset this user's Aptitude Test status and scores?")) return;
+    try {
+      setLoading(true);
+      await adminResetAptitudeTest(user.id);
+      setUser((prev: any) => ({
+        ...prev,
+        hasTakenAptitudeTest: false,
+        logicScore: null,
+        patternRecognitionScore: null,
+        recommendedLearningPath: null,
+      }));
+      setToast({ message: "Aptitude Test reset successfully.", type: 'success' });
+    } catch (err: any) {
+      console.error(err);
+      setToast({ message: "Failed to reset aptitude test.", type: 'error' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleToggleAptitudeTest = async () => {
+    const target = !user.hasTakenAptitudeTest;
+    try {
+      setLoading(true);
+      await adminSetAptitudeStatus(user.id, target);
+      setUser((prev: any) => ({
+        ...prev,
+        hasTakenAptitudeTest: target,
+      }));
+      setToast({ message: `Aptitude test status updated to ${target ? 'Completed' : 'Pending'}.`, type: 'success' });
+    } catch (err: any) {
+      console.error(err);
+      setToast({ message: "Failed to update aptitude test status.", type: 'error' });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleEditStats = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -202,6 +241,49 @@ export default function UserDetailsClientWrapper({ user: initialUser }: { user: 
           >
             Edit Currency
           </button>
+        </div>
+
+        {/* Aptitude Test Status & Admin Reset Control Card */}
+        <div className="bg-[#1e0a2d] border border-white/5 rounded-3xl shadow-xl flex flex-col overflow-hidden">
+          <div className="p-6 flex items-center gap-4 flex-1">
+            <div className="w-14 h-14 rounded-full bg-purple-500/20 border-2 border-purple-500/30 flex items-center justify-center shrink-0">
+              <Brain className="text-purple-400" size={24} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-gray-400 font-bold text-xs uppercase tracking-wider">Aptitude Status</h3>
+                <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded ${
+                  user.hasTakenAptitudeTest ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/15 text-amber-400 border border-amber-500/30 animate-pulse'
+                }`}>
+                  {user.hasTakenAptitudeTest ? 'COMPLETED' : 'PENDING'}
+                </span>
+              </div>
+              <div className="text-xs font-bold text-white mt-1 truncate">
+                {user.recommendedLearningPath || 'No Path Diagnostic'}
+              </div>
+              {user.hasTakenAptitudeTest && (
+                <div className="text-[11px] text-gray-400 mt-1">
+                  Logic: <span className="text-[#ff912d] font-bold">{user.logicScore ?? 0}%</span> | Pattern: <span className="text-purple-400 font-bold">{user.patternRecognitionScore ?? 0}%</span>
+                </div>
+              )}
+            </div>
+          </div>
+          <div className="grid grid-cols-2 border-t border-white/5 text-center">
+            <button 
+              onClick={handleResetAptitudeTest}
+              disabled={loading}
+              className="py-3 bg-red-500/10 hover:bg-red-500/20 text-red-400 font-bold text-xs transition-colors border-r border-white/5 cursor-pointer disabled:opacity-50"
+            >
+              Reset Test
+            </button>
+            <button 
+              onClick={handleToggleAptitudeTest}
+              disabled={loading}
+              className="py-3 bg-[#ff912d]/10 hover:bg-[#ff912d]/20 text-[#ff912d] font-bold text-xs transition-colors cursor-pointer disabled:opacity-50"
+            >
+              {user.hasTakenAptitudeTest ? 'Set Pending' : 'Set Completed'}
+            </button>
+          </div>
         </div>
       </div>
 

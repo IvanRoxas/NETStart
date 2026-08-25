@@ -10,7 +10,7 @@ export default function AchievementClientWrapper({ initialItems }: { initialItem
   const [items, setItems] = useState(initialItems);
   const [searchQuery, setSearchQuery] = useState('');
   const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
-  
+
   const [modalOpen, setModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
   const [loading, setLoading] = useState(false);
@@ -38,7 +38,7 @@ export default function AchievementClientWrapper({ initialItems }: { initialItem
   });
 
   // Process items (Search + Filter + Sort)
-  let processedItems = items.filter(i => 
+  let processedItems = items.filter(i =>
     i.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     i.triggerCode.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -137,7 +137,7 @@ export default function AchievementClientWrapper({ initialItems }: { initialItem
   return (
     <div className="w-full max-w-7xl mx-auto flex flex-col gap-6 relative">
       {toast && <AdminToast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
-      
+
       {/* Header */}
       <div className="flex items-center justify-between bg-[#1e0a2d] p-6 rounded-2xl border border-white/5 shadow-lg flex-wrap gap-4">
         <div>
@@ -160,8 +160,8 @@ export default function AchievementClientWrapper({ initialItems }: { initialItem
           </div>
 
           {/* Filter by Batch */}
-          <select 
-            value={filterBatch} 
+          <select
+            value={filterBatch}
             onChange={(e: any) => setFilterBatch(e.target.value)}
             className="bg-[#1e0a2d] border border-white/10 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:ring-1 focus:ring-[#ff912d] cursor-pointer"
           >
@@ -172,8 +172,8 @@ export default function AchievementClientWrapper({ initialItems }: { initialItem
           </select>
 
           {/* Sort By */}
-          <select 
-            value={sortBy} 
+          <select
+            value={sortBy}
             onChange={(e: any) => setSortBy(e.target.value)}
             className="bg-[#1e0a2d] border border-white/10 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:ring-1 focus:ring-[#ff912d] cursor-pointer"
           >
@@ -185,7 +185,7 @@ export default function AchievementClientWrapper({ initialItems }: { initialItem
             <option value="gears_low">Sort: Gears (Low to High)</option>
           </select>
 
-          <button 
+          <button
             onClick={() => openModal()}
             className="flex items-center gap-2 px-4 py-2 bg-[#ff912d] hover:bg-[#ff912d]/90 text-black font-extrabold rounded-xl transition-all shadow-lg text-xs cursor-pointer active:scale-95"
           >
@@ -205,7 +205,7 @@ export default function AchievementClientWrapper({ initialItems }: { initialItem
           <div key={item.id} className="bg-[#1e0a2d] border border-white/5 hover:border-[#ff912d]/30 hover:shadow-[0_0_20px_rgba(255,145,45,0.1)] rounded-2xl p-6 transition-all duration-300 flex flex-col justify-between group relative overflow-hidden">
             {/* Background glowing gradient */}
             <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-indigo-500/10 to-transparent rounded-bl-full pointer-events-none group-hover:from-indigo-500/20 transition-all duration-300" />
-            
+
             <div className="flex gap-4">
               {/* Badge Icon */}
               <div className="w-16 h-16 shrink-0 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-purple-600/20 border-2 border-white/10 flex items-center justify-center overflow-hidden p-1 group-hover:border-[#ff912d]/50 transition-colors">
@@ -215,7 +215,7 @@ export default function AchievementClientWrapper({ initialItems }: { initialItem
                   <span className="text-[#ff912d] font-bold text-2xl">🏆</span>
                 )}
               </div>
-              
+
               {/* Text details */}
               <div className="flex-1 min-w-0 flex flex-col gap-1">
                 <h3 className="text-base font-bold text-white truncate leading-snug">{item.name}</h3>
@@ -252,7 +252,7 @@ export default function AchievementClientWrapper({ initialItems }: { initialItem
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
           <div className="bg-[#1e0a2d]/95 backdrop-blur-md border border-white/10 rounded-3xl p-8 max-w-md w-full relative shadow-[0_0_50px_rgba(0,0,0,0.5)] animate-in fade-in zoom-in-95 duration-200">
             {/* Close Button */}
-            <button 
+            <button
               type="button"
               onClick={() => setModalOpen(false)}
               className="absolute top-4 right-4 text-white/40 hover:text-white transition-colors cursor-pointer p-1 rounded-lg hover:bg-white/5"
@@ -262,17 +262,17 @@ export default function AchievementClientWrapper({ initialItems }: { initialItem
 
             <h2 className="text-2xl font-bold text-white mb-6 pr-6">{editingItem ? 'Edit Achievement' : 'Create Achievement'}</h2>
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-              
+
               <div>
                 <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Badge Name</label>
                 <div className="relative">
                   <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-500">
                     <Award size={18} />
                   </span>
-                  <input 
-                    type="text" 
-                    required 
-                    value={formData.name} 
+                  <input
+                    type="text"
+                    required
+                    value={formData.name}
                     onChange={e => {
                       const newName = e.target.value;
                       setFormData(prev => ({
@@ -280,9 +280,9 @@ export default function AchievementClientWrapper({ initialItems }: { initialItem
                         name: newName,
                         triggerCode: editingItem ? prev.triggerCode : newName.toUpperCase().replace(/[^A-Z0-9]/g, '_')
                       }));
-                    }} 
-                    className="w-full bg-black/30 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white focus:outline-none focus:border-[#ff912d] focus:ring-1 focus:ring-[#ff912d] transition-all text-sm font-sans" 
-                    placeholder="e.g. Master Hacker" 
+                    }}
+                    className="w-full bg-black/30 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white focus:outline-none focus:border-[#ff912d] focus:ring-1 focus:ring-[#ff912d] transition-all text-sm font-sans"
+                    placeholder="e.g. Master Hacker"
                   />
                 </div>
               </div>
@@ -293,12 +293,12 @@ export default function AchievementClientWrapper({ initialItems }: { initialItem
                   <span className="absolute top-3.5 left-3.5 flex items-start pointer-events-none text-gray-500">
                     <FileText size={18} />
                   </span>
-                  <textarea 
-                    required 
-                    value={formData.description} 
-                    onChange={e => setFormData({...formData, description: e.target.value})} 
-                    className="w-full bg-black/30 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white focus:outline-none focus:border-[#ff912d] focus:ring-1 focus:ring-[#ff912d] resize-none h-24 transition-all text-sm leading-relaxed font-sans" 
-                    placeholder="How is this unlocked?" 
+                  <textarea
+                    required
+                    value={formData.description}
+                    onChange={e => setFormData({ ...formData, description: e.target.value })}
+                    className="w-full bg-black/30 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white focus:outline-none focus:border-[#ff912d] focus:ring-1 focus:ring-[#ff912d] resize-none h-24 transition-all text-sm leading-relaxed font-sans"
+                    placeholder="How is this unlocked?"
                   />
                 </div>
               </div>
@@ -310,13 +310,13 @@ export default function AchievementClientWrapper({ initialItems }: { initialItem
                     <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-500">
                       <Sparkles size={16} />
                     </span>
-                    <input 
-                      type="number" 
-                      min="0" 
-                      required 
-                      value={formData.xpReward} 
-                      onChange={e => setFormData({...formData, xpReward: parseInt(e.target.value) || 0})} 
-                      className="w-full bg-black/30 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white focus:outline-none focus:border-[#ff912d] focus:ring-1 focus:ring-[#ff912d] transition-all text-sm font-sans" 
+                    <input
+                      type="number"
+                      min="0"
+                      required
+                      value={formData.xpReward}
+                      onChange={e => setFormData({ ...formData, xpReward: parseInt(e.target.value) || 0 })}
+                      className="w-full bg-black/30 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white focus:outline-none focus:border-[#ff912d] focus:ring-1 focus:ring-[#ff912d] transition-all text-sm font-sans"
                     />
                   </div>
                 </div>
@@ -327,13 +327,13 @@ export default function AchievementClientWrapper({ initialItems }: { initialItem
                     <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-500">
                       <Settings size={16} />
                     </span>
-                    <input 
-                      type="number" 
-                      min="0" 
-                      required 
-                      value={formData.gearsReward} 
-                      onChange={e => setFormData({...formData, gearsReward: parseInt(e.target.value) || 0})} 
-                      className="w-full bg-black/30 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white focus:outline-none focus:border-[#ff912d] focus:ring-1 focus:ring-[#ff912d] transition-all text-sm font-sans" 
+                    <input
+                      type="number"
+                      min="0"
+                      required
+                      value={formData.gearsReward}
+                      onChange={e => setFormData({ ...formData, gearsReward: parseInt(e.target.value) || 0 })}
+                      className="w-full bg-black/30 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white focus:outline-none focus:border-[#ff912d] focus:ring-1 focus:ring-[#ff912d] transition-all text-sm font-sans"
                     />
                   </div>
                 </div>
@@ -344,10 +344,10 @@ export default function AchievementClientWrapper({ initialItems }: { initialItem
                 <div className="flex items-center space-x-4 mt-2">
                   <div className="shrink-0">
                     {formData.iconUrl ? (
-                      <img 
-                        src={formData.iconUrl} 
-                        alt="Preview" 
-                        className="w-24 h-24 object-cover rounded-lg border border-gray-600 bg-black/20" 
+                      <img
+                        src={formData.iconUrl}
+                        alt="Preview"
+                        className="w-24 h-24 object-cover rounded-lg border border-gray-600 bg-black/20"
                       />
                     ) : (
                       <div className="w-24 h-24 flex items-center justify-center rounded-lg border border-gray-600 bg-black/40 text-gray-500">
@@ -357,26 +357,35 @@ export default function AchievementClientWrapper({ initialItems }: { initialItem
                   </div>
 
                   <div className="flex flex-col gap-2.5">
-                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Badge Image</span>
+                     <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Badge Image</span>
                     <label className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs cursor-pointer transition-colors active:scale-95 shadow-md flex items-center gap-1.5 w-max">
                       Upload File
-                      <input 
-                        type="file" 
-                        accept="image/*" 
-                        className="hidden" 
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
                         onChange={(e) => {
                           if (e.target.files && e.target.files[0]) {
+                            const file = e.target.files[0];
+                            const isSvg = file.type === 'image/svg+xml' || file.name.toLowerCase().endsWith('.svg');
+                            
                             const reader = new FileReader();
                             reader.onload = (ev) => {
-                              if (ev.target?.result) {
-                                setCropImageSrc(ev.target.result as string);
-                                setCropModalOpen(true);
+                              const resultStr = ev.target?.result as string;
+                              if (resultStr) {
+                                if (isSvg) {
+                                  setFormData(prev => ({ ...prev, iconUrl: resultStr }));
+                                  setToast({ message: "SVG uploaded directly (vector quality preserved).", type: "success" });
+                                } else {
+                                  setCropImageSrc(resultStr);
+                                  setCropModalOpen(true);
+                                }
                               }
                             };
-                            reader.readAsDataURL(e.target.files[0]);
+                            reader.readAsDataURL(file);
                           }
                           e.target.value = '';
-                        }} 
+                        }}
                       />
                     </label>
                   </div>
@@ -384,16 +393,16 @@ export default function AchievementClientWrapper({ initialItems }: { initialItem
               </div>
 
               <div className="flex gap-3 mt-6 border-t border-white/5 pt-5">
-                <button 
-                  type="button" 
-                  onClick={() => setModalOpen(false)} 
+                <button
+                  type="button"
+                  onClick={() => setModalOpen(false)}
                   className="flex-1 py-3 px-4 rounded-xl border border-white/10 text-white/70 font-bold hover:text-white hover:bg-white/5 transition-colors text-sm cursor-pointer active:scale-95"
                 >
                   Cancel
                 </button>
-                <button 
-                  type="submit" 
-                  disabled={loading} 
+                <button
+                  type="submit"
+                  disabled={loading}
                   className="flex-1 py-3 px-4 rounded-xl bg-[#ff912d] hover:bg-[#ff912d]/90 text-black font-extrabold transition-colors disabled:opacity-50 flex items-center justify-center gap-2 text-sm cursor-pointer active:scale-95 shadow-lg shadow-[#ff912d]/10"
                 >
                   {loading ? <RefreshCcw size={18} className="animate-spin" /> : 'Save Achievement'}
@@ -403,9 +412,9 @@ export default function AchievementClientWrapper({ initialItems }: { initialItem
           </div>
         </div>
       )}
-      
+
       {/* Image Crop Modal */}
-      <ImageCropModal 
+      <ImageCropModal
         isOpen={cropModalOpen}
         onClose={() => setCropModalOpen(false)}
         imageSrc={cropImageSrc}
@@ -423,7 +432,7 @@ export default function AchievementClientWrapper({ initialItems }: { initialItem
             <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center border border-red-500/20 text-red-500">
               <AlertTriangle size={32} className="animate-pulse" />
             </div>
-            
+
             <div>
               <h3 className="text-xl font-bold text-white mb-2">Delete Achievement?</h3>
               <p className="text-sm text-gray-400 leading-relaxed">
@@ -432,16 +441,16 @@ export default function AchievementClientWrapper({ initialItems }: { initialItem
             </div>
 
             <div className="flex gap-3 w-full mt-4">
-              <button 
-                type="button" 
-                onClick={() => setDeleteConfirmId(null)} 
+              <button
+                type="button"
+                onClick={() => setDeleteConfirmId(null)}
                 className="flex-1 py-3 px-4 rounded-xl border border-white/10 text-white/70 font-bold hover:text-white hover:bg-white/5 transition-colors text-sm cursor-pointer active:scale-95"
               >
                 Cancel
               </button>
-              <button 
+              <button
                 type="button"
-                onClick={executeDelete} 
+                onClick={executeDelete}
                 className="flex-1 py-3 px-4 rounded-xl bg-red-600 hover:bg-red-700 text-white font-extrabold transition-colors flex items-center justify-center gap-2 text-sm cursor-pointer active:scale-95 shadow-lg shadow-red-600/10"
               >
                 Confirm Delete

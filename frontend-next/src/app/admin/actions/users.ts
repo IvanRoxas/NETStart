@@ -6,6 +6,10 @@ import { requireAdmin } from "@/app/admin/actions";
 export async function getUserDetails(id: string) {
   await requireAdmin();
 
+  if (!id || typeof id !== 'string') {
+    return null;
+  }
+
   const user = await prisma.user.findUnique({
     where: { id },
     include: {
@@ -21,7 +25,7 @@ export async function getUserDetails(id: string) {
     }
   });
 
-  if (!user) throw new Error("User not found");
+  if (!user) return null;
 
   // Filter out sensitive info just in case
   const { password, ...safeUser } = user;

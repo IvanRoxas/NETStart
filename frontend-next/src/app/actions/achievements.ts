@@ -100,8 +100,46 @@ export async function unlockAchievement(triggerCode: string) {
   }
 }
 
+export async function ensureDefaultAchievements() {
+  try {
+    const defaultBadges = [
+      { triggerCode: 'B_CREATE_ACCOUNT', name: 'Ready for Blast Off!', iconUrl: '/Planet 1.svg', description: 'Create an account', xpReward: 100 },
+      { triggerCode: 'B_VERIFY_ACCOUNT', name: 'Verified Explorer', iconUrl: '/Planet 2.svg', description: 'Verify your account', xpReward: 100 },
+      { triggerCode: 'B_CHANGE_PFP', name: 'A New Look', iconUrl: '/Planet 3.svg', description: 'Change your profile picture', xpReward: 100 },
+      { triggerCode: 'B_APTITUDE_TEST', name: 'Aptitude Tested', iconUrl: '/Planet 4.svg', description: 'Take the aptitude test', xpReward: 100 },
+      { triggerCode: 'B_FIRST_MISSION', name: 'First Mission', iconUrl: '/Planet 5.svg', description: 'Complete your first mission', xpReward: 100 },
+      { triggerCode: 'B_FIRST_PLANET', name: 'First Planet', iconUrl: '/Planet 6.svg', description: 'Complete your first planet', xpReward: 100 },
+      { triggerCode: 'B_BUY_REWARD', name: 'Shopaholic', iconUrl: '/Planet 7.svg', description: 'Buy something from the rewards shop', xpReward: 100 },
+      { triggerCode: 'B_CHANGE_BG', name: 'Interior Designer', iconUrl: '/Planet 8.svg', description: 'Change your profile background', xpReward: 100 },
+      { triggerCode: 'B_REACH_LVL5', name: 'Level 5 Reached', iconUrl: '/Meteor.svg', description: 'Reach Level 5', xpReward: 100 },
+      { triggerCode: 'B_REACH_LVL10', name: 'Level 10 Reached', iconUrl: '/Spaceship.svg', description: 'Reach Level 10', xpReward: 100 }
+    ];
+
+    for (const badge of defaultBadges) {
+      const existing = await prisma.achievement.findUnique({
+        where: { triggerCode: badge.triggerCode }
+      });
+      if (!existing) {
+        await prisma.achievement.create({
+          data: {
+            name: badge.name,
+            description: badge.description,
+            iconUrl: badge.iconUrl,
+            xpReward: badge.xpReward,
+            gearsReward: 0,
+            triggerCode: badge.triggerCode
+          }
+        });
+      }
+    }
+  } catch (error) {
+    console.error("Error seeding default achievements:", error);
+  }
+}
+
 export async function getUnlockedAchievements() {
   try {
+    await ensureDefaultAchievements();
     const session = await getServerSession(authOptions);
     if (!session?.user || !(session.user as any).id) {
       return { success: false, unlockedCodes: [] };
@@ -121,6 +159,19 @@ export async function getUnlockedAchievements() {
 
         const { addXPAndCheckLevelUp } = await import('@/lib/xp');
         await addXPAndCheckLevelUp(userId, createAch.xpReward);
+
+        // Also create a notification so the popup shows
+        await prisma.notification.create({
+          data: {
+            userId: userId,
+            notificationType: 'achievement_unlocked',
+            data: {
+              badgeId: createAch.id,
+              badgeName: createAch.name,
+              badgeImage: createAch.iconUrl
+            }
+          }
+        });
       }
     }
 

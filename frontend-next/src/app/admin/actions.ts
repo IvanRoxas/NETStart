@@ -153,3 +153,67 @@ export async function deleteUser(userId: string) {
   revalidatePath('/admin');
   return { success: true };
 }
+
+export async function adminResetAptitudeTest(userId: string) {
+  const session = await requireAdmin();
+  const adminId = (session.user as any).id;
+
+  await prisma.$transaction(async (tx) => {
+    await tx.user.update({
+      where: { id: userId },
+      data: {
+        hasTakenAptitudeTest: false,
+        logicScore: null,
+        patternRecognitionScore: null,
+        recommendedLearningPath: null,
+      }
+    });
+
+    await tx.auditLog.create({
+      data: {
+        actorId: adminId,
+        actorRole: "ADMIN",
+        action: "ADMIN_RESET_APTITUDE_TEST",
+        targetUserId: userId,
+        details: `Reset aptitude test status and diagnostic scores for user ID: ${userId}`
+      }
+    });
+  });
+
+  revalidatePath('/admin');
+  return { success: true };
+}
+
+export async function adminSetAptitudeStatus(userId: string, targetStatus: boolean) {
+  const session = await requireAdmin();
+  const adminId = (session.user as any).id;
+
+  if (!targetStatus) {
+    return adminResetAptitudeTest(userId);
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.user.update({
+      where: { id: userId },
+      data: {
+        hasTakenAptitudeTest: true,
+        logicScore: 85,
+        patternRecognitionScore: 90,
+        recommendedLearningPath: "Fullstack Systems (Admin Set)"
+      }
+    });
+
+    await tx.auditLog.create({
+      data: {
+        actorId: adminId,
+        actorRole: "ADMIN",
+        action: "ADMIN_SET_APTITUDE_STATUS_TRUE",
+        targetUserId: userId,
+        details: `Manually set aptitude test completed for user ID: ${userId}`
+      }
+    });
+  });
+
+  revalidatePath('/admin');
+  return { success: true };
+}

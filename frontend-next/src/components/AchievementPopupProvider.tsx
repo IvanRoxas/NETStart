@@ -1,11 +1,12 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from 'react';
-import { useSession } from 'next-auth/react';
+import { SessionContext } from 'next-auth/react';
 import Image from 'next/image';
 
 export default function AchievementPopupProvider({ children }: { children: React.ReactNode }) {
-  const { data: session } = useSession();
+  const sessionContext = React.useContext(SessionContext);
+  const session = sessionContext?.data;
   const [queue, setQueue] = useState<any[]>([]);
   const [currentBadge, setCurrentBadge] = useState<any | null>(null);
   const [show, setShow] = useState(false);
@@ -13,8 +14,11 @@ export default function AchievementPopupProvider({ children }: { children: React
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      audioRef.current = new Audio('/Notification.mp3');
-      audioRef.current.preload = 'auto';
+      const audio = new Audio();
+      const canPlayMp3 = audio.canPlayType && audio.canPlayType('audio/mpeg') !== '';
+      audio.src = canPlayMp3 ? '/notification.mp3' : '/Notification.ogg';
+      audio.preload = 'auto';
+      audioRef.current = audio;
     }
   }, []);
   const fetchUnreadAchievements = async () => {

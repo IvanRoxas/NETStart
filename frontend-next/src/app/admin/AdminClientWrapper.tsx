@@ -1,12 +1,14 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Search, ShieldAlert, CheckCircle, Ban, Settings, RefreshCcw, X, Check, Eye, Trash2, History } from 'lucide-react';
+import { Search, ShieldAlert, CheckCircle, Ban, Settings, RefreshCcw, X, Check, Eye, Trash2, History, Users, Brain } from 'lucide-react';
 import Link from 'next/link';
 import { toggleUserBan, forceVerifyUser, deleteUser } from './actions';
 import AdminToast from '@/components/AdminToast';
+import AptitudeManagement from './AptitudeManagement';
 
 export default function AdminClientWrapper({ initialUsers }: { initialUsers: any[] }) {
+  const [activeTab, setActiveTab] = useState<'USERS' | 'APTITUDE'>('USERS');
   const [users, setUsers] = useState(initialUsers);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'VERIFIED' | 'UNVERIFIED' | 'BANNED'>('ALL');
@@ -54,13 +56,40 @@ export default function AdminClientWrapper({ initialUsers }: { initialUsers: any
     }
   };
 
-
   return (
     <div className="w-full max-w-7xl mx-auto flex flex-col gap-6 relative">
       {toast && <AdminToast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       
-      {/* Search Header */}
-      <div className="flex items-center justify-between bg-[#1e0a2d] p-6 rounded-2xl border border-white/5 shadow-lg">
+      {/* Top Admin Navigation Tabs Container */}
+      <div className="bg-[#1e0a2d] border border-white/10 p-2.5 rounded-2xl flex items-center gap-3 shadow-xl">
+        <button
+          onClick={() => setActiveTab('USERS')}
+          className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all cursor-pointer ${
+            activeTab === 'USERS'
+              ? 'bg-[#ff912d] text-black font-black shadow-[0_0_15px_rgba(255,145,45,0.4)]'
+              : 'bg-black/30 text-gray-400 hover:text-white hover:bg-white/5 border border-white/5'
+          }`}
+        >
+          <Users size={16} /> User Directory
+        </button>
+        <button
+          onClick={() => setActiveTab('APTITUDE')}
+          className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all cursor-pointer ${
+            activeTab === 'APTITUDE'
+              ? 'bg-[#ff912d] text-black font-black shadow-[0_0_15px_rgba(255,145,45,0.4)]'
+              : 'bg-black/30 text-gray-400 hover:text-white hover:bg-white/5 border border-white/5'
+          }`}
+        >
+          <Brain size={16} /> AI Aptitude Engine
+        </button>
+      </div>
+
+      {activeTab === 'APTITUDE' ? (
+        <AptitudeManagement />
+      ) : (
+        <>
+          {/* Search Header */}
+          <div className="flex items-center justify-between bg-[#1e0a2d] p-6 rounded-2xl border border-white/5 shadow-lg">
         <div>
           <h2 className="text-2xl font-bold text-white mb-1">User Management</h2>
           <p className="text-sm text-gray-400">View, search, and manage all registered users.</p>
@@ -177,6 +206,8 @@ export default function AdminClientWrapper({ initialUsers }: { initialUsers: any
           </table>
         </div>
       </div>
+      </>
+      )}
 
     </div>
   );

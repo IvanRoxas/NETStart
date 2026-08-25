@@ -3,17 +3,15 @@ import Link from 'next/link';
 export default function Home() {
   return (
     <>
+      {/* Hero Section */}
       <section className="flex flex-col items-center justify-center min-h-[calc(100vh-80px)] text-center relative overflow-hidden px-6">
-        
-
-        
         <div className="z-10 max-w-3xl">
           <h1 className="font-display text-5xl md:text-7xl font-bold text-white leading-tight mb-6 drop-shadow-lg">
-            Lorem ipsum dolor sit <span className="text-borders">amet</span> consectetur
+            Discover Your Tech <span className="text-borders">Potential</span> Without the Stress
           </h1>
           
           <p className="font-sans text-lg md:text-xl text-white/90 mb-10 max-w-2xl mx-auto drop-shadow-md">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+            An AI-enhanced programming sandbox and adaptive virtual laboratory designed specifically for undecided Senior High School students at Guagua National Colleges. Assess your logical aptitude and explore coding fundamentals in a risk-free, gamified environment where mistakes never impact your academic grades.
           </p>
           
           <Link href="/login">
@@ -23,10 +21,6 @@ export default function Home() {
           </Link>
         </div>
       </section>
-
-
-
-
     </>
   );
 }
