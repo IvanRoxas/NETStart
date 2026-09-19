@@ -1,9 +1,13 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Brain, ArrowRight, CheckCircle2, Award, RefreshCw, Cpu, Activity, Sparkles, X } from 'lucide-react';
+import Link from 'next/link';
+import { Brain, ArrowRight, CheckCircle2, Award, RefreshCw, Cpu, Activity, Sparkles, X, Rocket } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { getAptitudeQuestions, submitAptitudeTest } from '../actions/aptitudeClient';
+import VisualNovelCutscene from '@/components/VisualNovelCutscene';
+import introScenes from '@/data/introduction_scenes.json';
 
 interface AptitudeTestClientProps {
   initialUser: any;
@@ -12,10 +16,12 @@ interface AptitudeTestClientProps {
 export default function AptitudeTestClient({ initialUser }: AptitudeTestClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { update } = useSession();
+  const fromCutscene = searchParams ? searchParams.get('fromCutscene') === 'true' : false;
   const shouldOpenModal = searchParams ? searchParams.get('openModal') === 'true' : false;
   
-  // View states: 'BRIEFING' | 'QUIZ' | 'COMPLETED'
-  const [viewState, setViewState] = useState<'BRIEFING' | 'QUIZ' | 'COMPLETED'>(
+  // View states: 'BRIEFING' | 'QUIZ' | 'COMPLETED' | 'CUTSCENE'
+  const [viewState, setViewState] = useState<'BRIEFING' | 'QUIZ' | 'COMPLETED' | 'CUTSCENE'>(
     initialUser?.hasTakenAptitudeTest 
       ? 'COMPLETED' 
       : shouldOpenModal 
@@ -87,6 +93,11 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
 
       const res = await submitAptitudeTest(formattedPayload);
       setResults(res);
+      try {
+        await update({ hasTakenAptitudeTest: true });
+      } catch (e) {
+        console.error("Failed to update session claim:", e);
+      }
       setViewState('COMPLETED');
     } catch (err) {
       console.error("Failed to submit diagnostic assessment:", err);
@@ -96,7 +107,7 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
   };
 
   // Loading Terminal State
-  if (loading && viewState !== 'COMPLETED') {
+  if (loading && viewState !== 'COMPLETED' && viewState !== 'CUTSCENE') {
     return (
       <div className="w-full max-w-2xl mx-auto py-20 flex flex-col items-center justify-center gap-4 text-center">
         <div className="p-4 rounded-2xl bg-[#ff912d]/10 border border-[#ff912d]/30 text-[#ff912d] animate-spin">
@@ -365,7 +376,23 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
     );
   }
 
-  // State 3: Assessment Results Summary Report
+  // State 3: Visual Novel Animated Cutscene
+  if (viewState === 'CUTSCENE') {
+    return (
+      <div className="animate-in fade-in duration-300">
+        <VisualNovelCutscene
+          username={initialUser?.name || "Chief"}
+          scenes={introScenes as any}
+          backgroundBase="/scenes/backgrounds/"
+          onFinished={() => {
+            router.push('/modules?fromCutscene=true');
+          }}
+        />
+      </div>
+    );
+  }
+
+  // State 4: Assessment Results Summary Report
   return (
     <div className="w-full max-w-5xl mx-auto space-y-6">
       
@@ -463,10 +490,10 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
             <RefreshCw size={16} /> Retake Assessment
           </button>
           <button
-            onClick={() => router.push('/dashboard')}
+            onClick={() => setViewState('CUTSCENE')}
             className="w-full sm:w-auto px-8 py-4 bg-[#ff912d] hover:bg-[#ff912d]/90 text-black font-black text-xs sm:text-sm uppercase tracking-widest rounded-xl shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
           >
-            Enter Dashboard <ArrowRight size={18} />
+            Start Journey <Rocket size={18} />
           </button>
         </div>
 

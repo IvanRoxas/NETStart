@@ -1,7 +1,8 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { Lock, Rocket, Award, Settings, Zap, Brain } from 'lucide-react';
 import PlanetNode from '@/components/PlanetNode';
 
@@ -24,6 +25,8 @@ interface ModulesClientProps {
 }
 
 export default function ModulesClient({ isVerified, hasTakenAptitudeTest = false, liveStats, completedMissions }: ModulesClientProps) {
+  const searchParams = useSearchParams();
+  const fromCutscene = searchParams ? searchParams.get('fromCutscene') === 'true' : false;
   // Container logic for blurring unverified/untested users
   const containerClass = `absolute inset-0 w-full h-full transition-all duration-500 overflow-hidden ${
     (!isVerified || !hasTakenAptitudeTest) ? 'blur-sm pointer-events-none opacity-40' : ''
@@ -73,8 +76,35 @@ export default function ModulesClient({ isVerified, hasTakenAptitudeTest = false
     return 'LOCKED';
   };
 
+  const [revealOverlay, setRevealOverlay] = useState(fromCutscene);
+  const [fadeOverlay, setFadeOverlay] = useState(false);
+
+  useEffect(() => {
+    if (fromCutscene) {
+      // Hold the solid black screen for a moment to ensure loading transitions have finished
+      const fadeTimer = setTimeout(() => setFadeOverlay(true), 800);
+      
+      // Completely remove the overlay from the DOM after the long fade transition completes
+      const removeTimer = setTimeout(() => setRevealOverlay(false), 4000);
+      
+      return () => {
+        clearTimeout(fadeTimer);
+        clearTimeout(removeTimer);
+      };
+    }
+  }, [fromCutscene]);
+
   return (
     <div className="relative w-full h-full min-h-screen bg-[#180729] overflow-y-auto">
+      
+      {/* Reveal Overlay (Only shown when coming from cutscene) */}
+      {revealOverlay && (
+        <div 
+          className={`fixed inset-0 bg-black z-[9999] pointer-events-none transition-opacity duration-[3000ms] ease-in-out ${
+            fadeOverlay ? 'opacity-0' : 'opacity-100'
+          }`}
+        />
+      )}
       
       {/* Background Mission Orbit Canvas */}
       <div className={containerClass}>

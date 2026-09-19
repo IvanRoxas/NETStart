@@ -305,11 +305,16 @@ export default async function DashboardPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   
                   {/* Track 1: Web Development (Active) */}
-                  <div className="relative group/track-card">
+                  <Link href={hasTakenAptitudeTest ? "/modules/html" : "/modules"} className="block relative group/track-card cursor-pointer">
                     <div className="absolute inset-0 bg-[#090311]/75 rounded-2xl translate-x-2 translate-y-2 z-0 transition-all duration-300 group-hover/track-card:translate-x-3 group-hover/track-card:translate-y-3" />
                     <div className="relative z-10 bg-gradient-to-br from-[#ff912d] to-[#e67e22] text-white p-5 rounded-2xl transition-all duration-300 shadow-xl group-hover/track-card:-translate-x-1 group-hover/track-card:-translate-y-1 flex flex-col justify-between gap-5 border border-white/20">
                       <div className="flex items-center justify-between">
-                        <div className="font-display font-black text-lg tracking-tight">Web Development</div>
+                        <div>
+                          <div className="font-display font-black text-lg tracking-tight">Web Development</div>
+                          <div className="text-[10px] font-mono uppercase tracking-wider text-white/80 mt-0.5">
+                            {hasTakenAptitudeTest ? "HTML Sector Unlocked ▸" : "Aptitude Pending"}
+                          </div>
+                        </div>
                         <span className="bg-[#1e0a2d]/80 text-white text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border border-white/10 flex items-center gap-1.5 shadow-sm">
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> Active
                         </span>
@@ -329,7 +334,7 @@ export default async function DashboardPage() {
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </Link>
 
                   {/* Track 2: Python (Upcoming) */}
                   <div className="relative group/track-card">

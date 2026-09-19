@@ -23,6 +23,7 @@ export default async function AptitudeTestPage() {
     where: userId ? { id: userId } : { email: userEmail },
     select: {
       id: true,
+      name: true,
       isVerified: true,
       hasTakenAptitudeTest: true,
       logicScore: true,
