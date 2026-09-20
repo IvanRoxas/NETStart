@@ -300,7 +300,7 @@ export default function SettingsPage() {
       <main className="flex-1 flex flex-col z-10 w-full h-full overflow-hidden bg-[#1e0a2d]">
         <TopHeader title="Settings" />
         <div className="flex-1 flex items-center justify-center p-6">
-          <SpaceLoader text="...loading settings..." />
+          <SpaceLoader text="loading..." />
         </div>
       </main>
     );

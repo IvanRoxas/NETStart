@@ -129,6 +129,7 @@ export default function AdminClientWrapper({ initialUsers }: { initialUsers: any
               <tr>
                 <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">User</th>
                 <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Status</th>
+                <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Aptitude</th>
                 <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Account State</th>
                 <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Stats</th>
                 <th scope="col" className="px-6 py-4 text-right text-xs font-bold text-gray-400 uppercase tracking-wider">Actions</th>
@@ -137,7 +138,7 @@ export default function AdminClientWrapper({ initialUsers }: { initialUsers: any
             <tbody className="divide-y divide-white/5 bg-transparent">
               {filteredUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
+                  <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
                     No users found matching your current search and filter criteria.
                   </td>
                 </tr>
@@ -155,6 +156,14 @@ export default function AdminClientWrapper({ initialUsers }: { initialUsers: any
                     }`}>
                       {user.isVerified ? <CheckCircle size={14} /> : <ShieldAlert size={14} />}
                       {user.isVerified ? 'Verified' : 'Unverified'}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
+                      user.hasTakenAptitudeTest ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
+                    }`}>
+                      <Brain size={14} />
+                      {user.hasTakenAptitudeTest ? 'Completed' : 'Pending'}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">

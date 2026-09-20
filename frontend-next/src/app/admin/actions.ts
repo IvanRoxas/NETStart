@@ -36,6 +36,7 @@ export async function getUsers(searchQuery?: string) {
       email: true,
       isVerified: true,
       isBanned: true,
+      hasTakenAptitudeTest: true,
       xp: true,
       gears: true,
       createdAt: true,
@@ -112,9 +113,9 @@ export async function editGamificationStats(userId: string, actionType: 'ADD' | 
     if (value <= 1) {
       updates.xp = 0;
     } else if (value >= 10) {
-      updates.xp = LEVEL_THRESHOLDS[8].nextLevelAt;
+      updates.xp = LEVEL_THRESHOLDS[8].cumulativeXp;
     } else {
-      updates.xp = LEVEL_THRESHOLDS[value - 2].nextLevelAt;
+      updates.xp = LEVEL_THRESHOLDS[value - 2].cumulativeXp;
     }
   }
   
@@ -178,6 +179,14 @@ export async function adminResetAptitudeTest(userId: string) {
         details: `Reset aptitude test status and diagnostic scores for user ID: ${userId}`
       }
     });
+  });
+
+  await logSystemAction({
+    actorId: adminId,
+    actorRole: "ADMIN",
+    action: "ADMIN_RESET_APTITUDE_TEST",
+    targetUserId: userId,
+    details: { event: 'Reset student aptitude diagnostic status', targetUserId: userId }
   });
 
   revalidatePath('/admin');

@@ -3,6 +3,7 @@
 import { getServerSession } from "next-auth/next";
 import { authOptions, prisma } from "@/lib/auth";
 import { addXPAndCheckLevelUp } from "@/lib/xp";
+import { logSystemAction } from "@/lib/logger";
 
 export interface AptitudeQuestionData {
   id: string;
@@ -97,7 +98,7 @@ export async function getAptitudeQuestions(): Promise<AptitudeQuestionData[]> {
       shortAnswer: true,
       explanation: true,
     },
-    take: 10,
+    orderBy: { createdAt: "asc" },
   });
 
   return questions.map(q => ({
@@ -188,8 +189,8 @@ export async function submitAptitudeTest(userAnswers: Record<string, number | st
         userId,
         notificationType: "aptitude_completed",
         data: {
-          title: "Aptitude Assessment Verified!",
-          message: `Diagnostic Completed. Recommended Path: ${recommendedLearningPath}`,
+          title: "Aptitude Test Ready",
+          message: "Your aptitude test is ready! Check it out to see your recommended learning path.",
           logicScore,
           patternRecognitionScore,
         }
@@ -198,6 +199,20 @@ export async function submitAptitudeTest(userAnswers: Record<string, number | st
   });
 
   await addXPAndCheckLevelUp(userId, 150);
+
+  await logSystemAction({
+    actorId: userId,
+    actorRole: "STUDENT",
+    action: "APTITUDE_TEST_COMPLETED",
+    targetUserId: userId,
+    details: {
+      logicScore,
+      patternRecognitionScore,
+      recommendedLearningPath,
+      xpAwarded: 150,
+      gearsAwarded: 50,
+    }
+  });
 
   return {
     success: true,

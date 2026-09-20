@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions, prisma } from "@/lib/auth";
+import { XP_REWARDS } from "@/lib/xpEconomy";
 
 export async function POST(req: Request) {
   try {
@@ -58,7 +59,7 @@ export async function POST(req: Request) {
       let gearsEarned = 0;
       
       if (!wasCompleted) {
-        xpEarned = 100;
+        xpEarned = XP_REWARDS.TOTAL_LEVEL_YIELD; // 150 XP Level Completion Total (50 XP x 3 sections)
         gearsEarned = 20;
 
         await tx.user.update({
@@ -72,6 +73,67 @@ export async function POST(req: Request) {
 
       return { progress, xpEarned, gearsEarned };
     });
+
+    // 3. After transaction: check if a new planet was just unlocked (first completion of this mission)
+    if (!wasCompleted) {
+      // Planet → mission prefix mapping (mirrors ModulesClient.tsx)
+      const planetOrder = [
+        { id: 'moon',    name: 'The Moon',  prefixes: ['moon'],                         nextId: 'mars',    nextName: 'Mars',    nextSrc: '/Planets/Mars.svg' },
+        { id: 'mars',    name: 'Mars',      prefixes: ['mars', 'html'],                 nextId: 'venus',   nextName: 'Venus',   nextSrc: '/Planets/Venus.svg' },
+        { id: 'venus',   name: 'Venus',     prefixes: ['venus', 'css'],                 nextId: 'mercury', nextName: 'Mercury', nextSrc: '/Planets/Mercury.svg' },
+        { id: 'mercury', name: 'Mercury',   prefixes: ['mercury', 'javascript', 'js'],  nextId: 'jupiter', nextName: 'Jupiter', nextSrc: '/Planets/Jupiter.svg' },
+        { id: 'jupiter', name: 'Jupiter',   prefixes: ['jupiter', 'java'],              nextId: 'saturn',  nextName: 'Saturn',  nextSrc: '/Planets/Saturn.svg' },
+        { id: 'saturn',  name: 'Saturn',    prefixes: ['saturn', 'cpp'],                nextId: 'earth',   nextName: 'Earth (HQ)', nextSrc: '/Planets/Earth.svg' },
+        { id: 'earth',   name: 'Earth (HQ)', prefixes: ['earth', 'python'],             nextId: null,      nextName: null,      nextSrc: null },
+      ];
+
+      const missionIdLower = missionId.toLowerCase();
+      const completedPlanet = planetOrder.find(p =>
+        p.prefixes.some(prefix => missionIdLower.startsWith(prefix))
+      );
+
+      if (completedPlanet && completedPlanet.nextId) {
+        // Count how many missions of this planet the user has now completed
+        const allMissions = await prisma.missionProgress.findMany({
+          where: { userId, status: 'COMPLETED' },
+          select: { missionId: true },
+        });
+
+        const completedForThisPlanet = allMissions.filter(m =>
+          completedPlanet.prefixes.some(prefix => m.missionId.toLowerCase().startsWith(prefix))
+        ).length;
+
+        // If exactly 3 are done, this was the trigger that unlocked the next planet
+        if (completedForThisPlanet === 3) {
+          // Avoid duplicate planet_unlocked notifications for the same planet
+          const existing = await prisma.notification.findFirst({
+            where: {
+              userId,
+              notificationType: 'planet_unlocked',
+              data: {
+                path: ['planetId'],
+                equals: completedPlanet.nextId,
+              },
+            },
+          });
+
+          if (!existing) {
+            await prisma.notification.create({
+              data: {
+                userId,
+                notificationType: 'planet_unlocked',
+                data: {
+                  planetId: completedPlanet.nextId,
+                  planetName: completedPlanet.nextName,
+                  planetSrc: completedPlanet.nextSrc,
+                  unlockedFrom: completedPlanet.name,
+                },
+              },
+            });
+          }
+        }
+      }
+    }
 
     return NextResponse.json({
       success: true,

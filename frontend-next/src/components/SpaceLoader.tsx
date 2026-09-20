@@ -11,7 +11,7 @@ interface SpaceLoaderProps {
 
 export default function SpaceLoader({ 
   fullScreen = false, 
-  text = "...loading...", 
+  text = "loading...", 
   scale = 1,
   className = "" 
 }: SpaceLoaderProps) {

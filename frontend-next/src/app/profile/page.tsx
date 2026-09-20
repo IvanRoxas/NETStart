@@ -12,43 +12,58 @@ import { allBadges } from '@/lib/badgesData';
 import { getXPDetails } from '@/lib/leveling';
 import { getUnlockedAchievements } from '@/app/actions/achievements';
 import SpaceLoader from '@/components/SpaceLoader';
+import DailyTaskTracker from '@/components/DailyTaskTracker';
 
 const vt323 = VT323({ weight: '400', subsets: ['latin'] });
 
 const getMissionDetails = (missionId: string) => {
-  const allMissions = {
-    // HTML
-    "html-1": { title: "HTML Level 1: Core Tags", desc: "Embark on learning fundamental HTML tags like headings, paragraphs, and list components.", module: "HTML", icon: "/Planet 7.svg" },
-    "html-2": { title: "HTML Level 2: Structured Forms", desc: "Build input fields, select elements, textareas, and master form attributes.", module: "HTML", icon: "/Planet 7.svg" },
-    "html-3": { title: "HTML Level 3: Tables and Frames", desc: "Master the structure of rows, headers, cells, and embed framing details.", module: "HTML", icon: "/Planet 7.svg" },
+  const allMissions: Record<string, { title: string; desc: string; module: string; icon: string }> = {
+    // The Moon
+    "moon-1": { title: "Level 1: Stellar Beginnings", desc: "Welcome to NETStart! Team up with your trusty assistant, Nova, to learn how to guide your rover safely to the goal.", module: "The Moon", icon: "/MainMoon.svg" },
+    "moon-2": { title: "Level 2: Resource Classification", desc: "Nova needs your help packing the ship! Use your new sensors and repeat blocks to scan the assembly line. Figure out what's fuel and what's junk so we can get flying!", module: "The Moon", icon: "/MainMoon.svg" },
+    "moon-3": { title: "Level 3: The Starship Protocol", desc: "Get the starship ready for launch! Guide air through the vents with If/Else, mix rocket fuel with loops, and survive the automated flight simulation.", module: "The Moon", icon: "/MainMoon.svg" },
+    // Mars (HTML)
+    "mars-1": { title: "Mars Level 1: Semantic Habitat Tags", desc: "Construct semantic habitat components using header, main, section, and article tags.", module: "Mars (HTML)", icon: "/Planets/Mars.svg" },
+    "mars-2": { title: "Mars Level 2: Environmental Forms & Telemetry", desc: "Build input fields, select elements, textareas, and master telemetry form attributes.", module: "Mars (HTML)", icon: "/Planets/Mars.svg" },
+    "mars-3": { title: "Mars Level 3: Mineral Data Tables", desc: "Master the structure of rows, headers, cells, and embed framing details.", module: "Mars (HTML)", icon: "/Planets/Mars.svg" },
+    "html-1": { title: "Level 1: Stellar Beginnings", desc: "Welcome to NETStart! Team up with your trusty assistant, Nova, to learn how to guide your rover safely to the goal.", module: "The Moon", icon: "/MainMoon.svg" },
+    "html-2": { title: "Level 2: Resource Classification", desc: "Nova needs your help packing the ship! Use your new sensors and repeat blocks to scan the assembly line. Figure out what's fuel and what's junk so we can get flying!", module: "The Moon", icon: "/MainMoon.svg" },
+    "html-3": { title: "Level 3: The Starship Protocol", desc: "Get the starship ready for launch! Guide air through the vents with If/Else, mix rocket fuel with loops, and survive the automated flight simulation.", module: "The Moon", icon: "/MainMoon.svg" },
     "html-4": { title: "HTML Level 4: Layout Schemas", desc: "Create semantic webpage hierarchies using nav, footer, sections, and articles.", module: "HTML", icon: "/Planet 7.svg" },
     "html-5": { title: "HTML Level 5: Media Embeds", desc: "Embed audios, videos, images, and configure frame overrides.", module: "HTML", icon: "/Planet 7.svg" },
-    // CSS
+    // Venus (CSS)
+    "venus-1": { title: "Venus Level 1: Thermal Selectors & Cascades", desc: "Master targeting classes, ids, properties, and the cascade tree.", module: "Venus (CSS)", icon: "/Planets/Venus.svg" },
     "css-1": { title: "CSS Level 1: Style Selectors", desc: "Master targeting classes, ids, properties, and the cascade tree.", module: "CSS", icon: "/Planet 4.svg" },
     "css-2": { title: "CSS Level 2: Box Model Schemas", desc: "Style border widths, margins, padding constraints, and display blocks.", module: "CSS", icon: "/Planet 4.svg" },
     "css-3": { title: "CSS Level 3: Flexbox Systems", desc: "Master flex-direction, justify-content, align-items, and alignment layouts.", module: "CSS", icon: "/Planet 4.svg" },
     "css-4": { title: "CSS Level 4: Grid Architectures", desc: "Design structured column-row layouts, grid-areas, and alignments.", module: "CSS", icon: "/Planet 4.svg" },
     "css-5": { title: "CSS Level 5: Transits & Keyframes", desc: "Implement active transforms, smooth animations, and transitions.", module: "CSS", icon: "/Planet 4.svg" },
-    // JavaScript
+    // Mercury (JavaScript)
+    "mercury-1": { title: "Mercury Level 1: Variable Orbital Bindings", desc: "Learn variables, let, const, primitive types, and math routines.", module: "Mercury (JavaScript)", icon: "/Planets/Mercury.svg" },
     "javascript-1": { title: "JS Level 1: Core Bindings", desc: "Learn variables, let, const, primitive types, and math routines.", module: "JavaScript", icon: "/Planet 2.svg" },
     "javascript-2": { title: "JS Level 2: Control Logic", desc: "Master branching structures (if-else), switch cases, and loops.", module: "JavaScript", icon: "/Planet 2.svg" },
     "javascript-3": { title: "JS Level 3: Function Declarations", desc: "Implement reusable function expressions, closures, and scoping.", module: "JavaScript", icon: "/Planet 2.svg" },
     "javascript-4": { title: "JS Level 4: Array Iterators", desc: "Master maps, filters, reductions, and sorting loops.", module: "JavaScript", icon: "/Planet 2.svg" },
     "javascript-5": { title: "JS Level 5: DOM Injections", desc: "Query elements, inject styles, dynamic texts, and event listeners.", module: "JavaScript", icon: "/Planet 2.svg" },
-    // React
-    "react-1": { title: "React Level 1: JSX Injections", desc: "Master building functional components using declarative JSX tags.", module: "React", icon: "/Planet 1.svg" },
-    "react-2": { title: "React Level 2: State Hooks", desc: "Master React state hooks, inputs, re-renders, and lifecycle binds.", module: "React", icon: "/Planet 1.svg" },
-    "react-3": { title: "React Level 3: Prop Transits", desc: "Pass data down parent components, configure defaults, and handle callbacks.", module: "React", icon: "/Planet 1.svg" },
-    "react-4": { title: "React Level 4: Context Providers", desc: "Share states globally across subtrees using Context wrappers.", module: "React", icon: "/Planet 1.svg" },
-    "react-5": { title: "React Level 5: Hooks Customizer", desc: "Build reusable hooks encapsulating state routines.", module: "React", icon: "/Planet 1.svg" },
-    // Node
-    "node-1": { title: "Node Level 1: File Actions", desc: "Read and write local configuration assets using fs bindings.", module: "Node Backend", icon: "/Planet 3.svg" },
-    "node-2": { title: "Node Level 2: HTTP Hosts", desc: "Spin up HTTP servers listening to custom ports.", module: "Node Backend", icon: "/Planet 3.svg" },
-    "node-3": { title: "Node Level 3: Express Routing", desc: "Design route controllers handling GET and POST payloads.", module: "Node Backend", icon: "/Planet 3.svg" },
-    "node-4": { title: "Node Level 4: DB Bindings", desc: "Integrate queries connecting schema layouts.", module: "Node Backend", icon: "/Planet 3.svg" },
-    "node-5": { title: "Node Level 5: Middlewares", desc: "Build pipeline controllers filtering inbound requests.", module: "Node Backend", icon: "/Planet 3.svg" }
   };
-  return allMissions[missionId.toLowerCase() as keyof typeof allMissions] || { title: "Custom Lab Session", desc: "Explore and test custom logic inside the sandbox lab environment.", module: "Sandbox", icon: "/Planet 5.svg" };
+  const key = (missionId || "").toLowerCase();
+  if (key === '1' || key === 'level-1') return allMissions['moon-1'];
+  if (key === '2' || key === 'level-2') return allMissions['moon-2'];
+  if (key === '3' || key === 'level-3') return allMissions['moon-3'];
+  if (key.startsWith("daily-level") || key.startsWith("daily")) {
+    return {
+      title: "Daily Mission Level",
+      desc: "Today's practice level exercise completed in the sandbox.",
+      module: "Daily Level",
+      icon: "/Planet 7.svg"
+    };
+  }
+  return allMissions[key] || { 
+    title: key.startsWith('moon') ? `Moon: Level ${key.split('-')[1] || '1'}` : `Mission ${missionId}`, 
+    desc: "Complete objectives and guide your rover or starship safely through the mission challenges.", 
+    module: key.startsWith('moon') ? "The Moon" : key.startsWith('mars') ? "Mars (HTML)" : key.startsWith('venus') ? "Venus (CSS)" : key.startsWith('mercury') ? "Mercury (JavaScript)" : "Space Mission", 
+    icon: key.startsWith('moon') ? "/MainMoon.svg" : key.startsWith('mars') ? "/Planets/Mars.svg" : key.startsWith('venus') ? "/Planets/Venus.svg" : key.startsWith('mercury') ? "/Planets/Mercury.svg" : "/MainMoon.svg" 
+  };
 };
 
 const getRelativeTimeString = (dateString: string | Date) => {
@@ -114,7 +129,57 @@ export default function ProfilePage() {
       if (res.ok) {
         setProfile(data.user);
         setXp(data.user.xp || 0);
-        setOngoingMissions(data.missionProgress || []);
+        let ongoing = data.missionProgress || [];
+        if (typeof window !== 'undefined') {
+          try {
+            const rawSaved = localStorage.getItem('netstart_active_saved_level');
+            const rawActive = localStorage.getItem('netstart_active_level');
+            let savedObj: any = null;
+            let activeObj: any = null;
+            if (rawSaved) {
+              try {
+                const parsed = JSON.parse(rawSaved);
+                if (parsed.missionId) {
+                  savedObj = {
+                    id: 'active-session',
+                    missionId: parsed.missionId,
+                    sectionIndex: parsed.sectionIndex,
+                    startedAt: parsed.timestamp ? new Date(parsed.timestamp).toISOString() : new Date().toISOString(),
+                    timeVal: parsed.timestamp ? Number(parsed.timestamp) : 0
+                  };
+                }
+              } catch (e) {}
+            }
+            if (rawActive) {
+              try {
+                const parsed = JSON.parse(rawActive);
+                if (parsed.missionId) {
+                  const t = parsed.startedAt ? new Date(parsed.startedAt).getTime() : 0;
+                  activeObj = {
+                    id: 'active-session',
+                    missionId: parsed.missionId,
+                    startedAt: parsed.startedAt || new Date().toISOString(),
+                    timeVal: t
+                  };
+                }
+              } catch (e) {}
+            }
+
+            let activeFromLocal: any = null;
+            if (savedObj && activeObj) {
+              activeFromLocal = (savedObj.timeVal >= activeObj.timeVal) ? savedObj : activeObj;
+            } else {
+              activeFromLocal = savedObj || activeObj;
+            }
+
+            if (activeFromLocal) {
+              ongoing = [activeFromLocal];
+            }
+          } catch (e) {
+            console.warn("Could not parse active level from localStorage:", e);
+          }
+        }
+        setOngoingMissions(ongoing);
         setFormData({
           displayName: data.user.displayName || `Explorer${Math.floor(10000 + Math.random() * 90000)}`,
           status: data.user.status || '',
@@ -218,7 +283,10 @@ export default function ProfilePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ image: base64String })
       });
-      if (!res.ok) {
+      if (res.ok) {
+        // Refetch full profile and unlocked achievements so showcase & XP update immediately
+        await fetchProfile();
+      } else {
         console.error('Failed to save avatar');
       }
     } catch (e) {
@@ -232,7 +300,7 @@ export default function ProfilePage() {
       <main className="flex-1 flex flex-col z-10 w-full h-full overflow-hidden bg-[#270d3c]">
         <TopHeader title="Profile" />
         <div className="flex-1 flex items-center justify-center p-6">
-          <SpaceLoader text="...loading profile..." />
+          <SpaceLoader text="loading..." />
         </div>
       </main>
     );
@@ -242,6 +310,7 @@ export default function ProfilePage() {
 
   return (
     <main className="flex-1 flex flex-col z-10 w-full h-full overflow-hidden bg-[#270d3c]">
+      <DailyTaskTracker taskIds={["task-achieve-2"]} />
       <TopHeader title="Profile" />
       <div className="flex-1 overflow-y-auto overflow-x-hidden p-6 lg:p-10 pr-10 lg:pr-16 no-scrollbar @container">
 
@@ -373,7 +442,7 @@ export default function ProfilePage() {
                           )}
                         </div>
                         <div className="flex flex-col gap-1.5 h-full min-w-0">
-                          <label className={`${vt323.className} font-bold text-white/70 text-lg tracking-[0.1em] uppercase truncate`}>Joined Date</label>
+                          <label className={`${vt323.className} font-bold text-white/70 text-lg tracking-[0.1em] uppercase truncate`}>Joined on</label>
                           <div className="bg-black/20 text-white/50 px-4 py-3 rounded-lg border border-white/5 font-sans font-bold cursor-not-allowed truncate w-full">
                             {joinedDate}
                           </div>
@@ -487,7 +556,11 @@ export default function ProfilePage() {
               <div className="flex flex-col flex-1 gap-2">
                 <div className="flex justify-between items-end">
                   <h3 className="text-white text-lg font-bold uppercase tracking-wider">{profile?.title || 'Novice Explorer'}</h3>
-                  <span className="text-[#ff912d] text-xs font-bold uppercase">{xp} / {getXPDetails(xp).nextThreshold} XP (Level {getXPDetails(xp).level < 10 ? getXPDetails(xp).level + 1 : 10})</span>
+                  <span className="text-[#ff912d] text-xs font-bold uppercase">
+                    {getXPDetails(xp).isMaxLevel 
+                      ? `${xp.toLocaleString()} XP (Level 10 - MAX)` 
+                      : `${getXPDetails(xp).levelCurrentXp} / ${getXPDetails(xp).levelRequiredXp} XP (Level ${getXPDetails(xp).level + 1})`}
+                  </span>
                 </div>
 
                 <div className="w-full h-2.5 bg-black/50 rounded-full overflow-hidden border border-white/5 relative shadow-inner">
@@ -594,7 +667,7 @@ export default function ProfilePage() {
                       </div>
                     </div>
                   ) : (
-                    ongoingMissions.map((mission) => {
+                    ongoingMissions.slice(0, 1).map((mission) => {
                       const details = getMissionDetails(mission.missionId);
                       const timeStr = getRelativeTimeString(mission.startedAt);
                       return (

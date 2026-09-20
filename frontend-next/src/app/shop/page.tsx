@@ -6,6 +6,7 @@ import { Settings, Image as ImageIcon, Smile, Shirt, Zap, Brush, Footprints, Che
 import TopHeader from '@/components/TopHeader';
 import { getShopItems, getUserInventory, purchaseItem, claimVerificationReward } from '@/app/actions/shop';
 import VerifyModal from '@/components/VerifyModal';
+import DailyTaskTracker from '@/components/DailyTaskTracker';
 import Image from 'next/image';
 
 type ShopItem = {
@@ -130,7 +131,7 @@ export default function ShopPage() {
 
   return (
     <div className="flex h-full text-white overflow-hidden font-sans bg-transparent">
-      
+      <DailyTaskTracker taskIds={["task-explore-1", "task-explore-3"]} />
       <div className="flex-1 flex flex-col h-full overflow-hidden">
         <TopHeader title="Points Shop" />
         

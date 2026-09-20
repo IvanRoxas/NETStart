@@ -5,9 +5,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import LogoutButton from "@/components/LogoutButton";
+import { useNavigationGuard } from "@/context/NavigationGuardContext";
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const { isInLevel, requestNavigation } = useNavigationGuard();
   const [isMinimized, setIsMinimized] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
@@ -152,6 +154,12 @@ export default function Sidebar() {
               
               <Link 
                 href={link.path} 
+                onClick={(e) => {
+                  if (isInLevel) {
+                    e.preventDefault();
+                    requestNavigation(link.path);
+                  }
+                }}
                 className={`flex items-center gap-4 py-3 rounded-xl font-medium transition-all duration-200 group relative overflow-hidden ${
                   isMinimized ? 'px-0 justify-center w-12 h-12 mx-auto' : 'px-4 w-full'
                 } ${

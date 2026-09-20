@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Settings } from 'lucide-react';
+import { Settings, Rocket } from 'lucide-react';
 
 interface NotificationDropdownProps {
   notifications: any[];
@@ -107,7 +107,15 @@ export default function NotificationDropdown({
               return (
                 <div key={notif.id} className={`p-4 border-b border-white/5 flex gap-3 hover:bg-white/5 transition-colors ${isUnread ? 'bg-[#ff912d]/5' : ''}`}>
                   <div className="w-10 h-10 rounded-full bg-[#361d57] flex-shrink-0 flex items-center justify-center overflow-hidden border border-[#ff912d]/40 p-1">
-                    {(notif.type === 'system_verify_reward' || notif.notification_type === 'system_verify_reward') ? (
+                    {(notif.type === 'planet_unlocked' || notif.notification_type === 'planet_unlocked') ? (
+                      notifData?.planetSrc ? (
+                        <img src={notifData.planetSrc} alt={notifData.planetName || 'Planet'} className="w-full h-full object-contain" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-[#ff912d]/20 rounded-full text-[#ff912d]">
+                          <Rocket size={16} />
+                        </div>
+                      )
+                    ) : (notif.type === 'system_verify_reward' || notif.notification_type === 'system_verify_reward') ? (
                       <div className="w-full h-full flex items-center justify-center bg-[#ff912d]/20 rounded-full shadow-inner text-[#ff912d]">
                         <Settings size={18} />
                       </div>
@@ -130,7 +138,12 @@ export default function NotificationDropdown({
                   
                   <div className="flex-1 flex flex-col gap-1 pr-24 relative">
                     <p className="text-sm text-white/90 leading-tight">
-                      {(notif.type === 'system_verify_reward' || notif.notification_type === 'system_verify_reward') ? (
+                      {(notif.type === 'planet_unlocked' || notif.notification_type === 'planet_unlocked') ? (
+                        <>
+                          <strong className="text-[#ff912d] font-bold block mb-0.5">Planet Unlocked!</strong>
+                          {notifData?.planetName || 'A new planet'} is now accessible.
+                        </>
+                      ) : (notif.type === 'system_verify_reward' || notif.notification_type === 'system_verify_reward') ? (
                         <>
                           <strong className="text-[#ff912d] font-bold block mb-0.5">Verification Reward!</strong>
                           You received {notifData?.amount || 50} Gears for verifying your account.

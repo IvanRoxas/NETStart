@@ -5,13 +5,14 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { VT323 } from 'next/font/google';
 import TopHeader from '@/components/TopHeader';
-import { Lock } from 'lucide-react';
+import { Lock, Trophy } from 'lucide-react';
 
 const vt323 = VT323({ weight: '400', subsets: ['latin'] });
 
 import { modulesData, specialBadges } from '@/lib/badgesData';
 import { getXPDetails } from '@/lib/leveling';
 import { getUnlockedAchievements } from '@/app/actions/achievements';
+import DailyTaskTracker from '@/components/DailyTaskTracker';
 
 export default function AchievementsPage() {
   const [showcasedBadges, setShowcasedBadges] = useState<string[]>([]);
@@ -89,6 +90,7 @@ export default function AchievementsPage() {
 
   return (
     <main className="flex-1 flex flex-col z-10 w-full h-full overflow-hidden bg-[#270d3c]">
+      <DailyTaskTracker taskIds={["task-achieve-1", "task-achieve-3"]} />
       <TopHeader title="Achievements" />
 
       {/* Toast Notification */}
@@ -105,10 +107,10 @@ export default function AchievementsPage() {
           <div className="bg-[#1e0a2d]/80 border border-[#ff912d]/50 rounded-2xl p-6 md:p-8 flex flex-col md:flex-row gap-8 items-center shadow-[0_0_20px_rgba(255,145,45,0.15)] relative overflow-hidden">
             {/* Decorative Background Icon */}
             <div className="absolute -right-10 -bottom-10 opacity-10 pointer-events-none blur-[2px]">
-              <Image src="/Planet 5.svg" alt="Planet" width={300} height={300} />
+              <Image src="/Planets/Jupiter.svg" alt="Planet" width={300} height={300} />
             </div>
 
-            <div className="relative w-24 h-24 shrink-0 z-10 flex items-center justify-center shadow-[0_0_15px_rgba(255,145,45,0.4)] rounded-full bg-[#1e0a2d]">
+            <div className="relative w-28 h-28 shrink-0 z-10 flex items-center justify-center shadow-[0_0_15px_rgba(255,145,45,0.4)] rounded-full bg-[#1e0a2d]">
               <svg className="absolute inset-0 w-full h-full -rotate-90 drop-shadow-md" viewBox="0 0 100 100">
                 <circle cx="50" cy="50" r="46" fill="none" stroke="#361d57" strokeWidth="8" />
                 <circle
@@ -117,23 +119,23 @@ export default function AchievementsPage() {
                   strokeLinecap="round" className="transition-all duration-1000 ease-out"
                 />
               </svg>
-              <div className="w-20 h-20 bg-[#1e0a2d] rounded-full flex items-center justify-center overflow-hidden border-2 border-[#1e0a2d] z-10 relative shadow-inner">
-                <span className={`${vt323.className} text-[#ff912d] text-5xl font-bold mt-1`}>{getXPDetails(xp).level}</span>
+              <div className="w-24 h-24 bg-[#1e0a2d] rounded-full flex items-center justify-center overflow-hidden border-2 border-[#1e0a2d] z-10 relative shadow-inner">
+                <span className={`${vt323.className} text-[#ff912d] text-6xl font-bold mt-1`}>{getXPDetails(xp).level}</span>
               </div>
             </div>
 
-            <div className="flex-1 flex flex-col gap-2 z-10 text-center md:text-left w-full">
-              <h1 className={`${vt323.className} text-[#ff912d] text-4xl md:text-5xl uppercase tracking-widest drop-shadow-md`}>
+            <div className="flex-1 flex flex-col gap-3 z-10 text-center md:text-left w-full">
+              <h1 className={`${vt323.className} text-[#ff912d] text-5xl md:text-6xl uppercase tracking-widest drop-shadow-md`}>
                 Badges & Achievements
               </h1>
 
               {/* Minimalist XP Progress Bar */}
               <div className="w-full max-w-md mx-auto md:mx-0 my-2">
-                <div className="flex justify-between text-xs text-white/50 mb-1 font-sans font-bold">
-                  <span>{xp} XP</span>
-                  <span>Next Level at {getXPDetails(xp).nextThreshold} XP</span>
+                <div className="flex justify-between text-sm text-white/70 mb-1 font-sans font-bold">
+                  <span>{getXPDetails(xp).isMaxLevel ? `${xp.toLocaleString()} XP` : `${getXPDetails(xp).levelCurrentXp} / ${getXPDetails(xp).levelRequiredXp} XP`}</span>
+                  <span>{getXPDetails(xp).isMaxLevel ? "Max Level Reached" : `${getXPDetails(xp).xpToNextLevel} XP to Level ${getXPDetails(xp).level + 1}`}</span>
                 </div>
-                <div className="h-2 w-full bg-[#361d57] rounded-full overflow-hidden border border-[#ff912d]/20">
+                <div className="h-2.5 w-full bg-[#361d57] rounded-full overflow-hidden border border-[#ff912d]/20">
                   <div
                     className="h-full bg-gradient-to-r from-[#ff912d]/50 to-[#ff912d] transition-all duration-1000 ease-out"
                     style={{ width: `${Math.max(2, getXPDetails(xp).progress)}%` }}
@@ -141,17 +143,17 @@ export default function AchievementsPage() {
                 </div>
               </div>
 
-              <p className="text-white/70 font-sans text-sm md:text-base max-w-xl">
+              <p className="text-white/80 font-sans text-base md:text-lg max-w-xl">
                 Track your progress across the NETStart galaxy. Earn badges by completing modules and mastering coding concepts.
               </p>
               <div className="flex flex-wrap gap-4 mt-2 justify-center md:justify-start">
-                <div className="bg-black/40 border border-white/10 px-4 py-2 rounded-lg text-sm">
-                  <span className="text-white/50 uppercase tracking-wider text-xs font-bold block mb-0.5">Unlocked Badges</span>
-                  <span className="text-[#ffb703] font-bold text-lg">{unlockedCodes.size}</span>
+                <div className="bg-black/40 border border-white/10 px-5 py-3 rounded-xl text-base">
+                  <span className="text-white/60 uppercase tracking-wider text-xs md:text-sm font-bold block mb-1">Unlocked Badges</span>
+                  <span className="text-[#ffb703] font-black text-2xl">{unlockedCodes.size}</span>
                 </div>
-                <div className="bg-black/40 border border-white/10 px-4 py-2 rounded-lg text-sm">
-                  <span className="text-white/50 uppercase tracking-wider text-xs font-bold block mb-0.5">Perfect Modules</span>
-                  <span className="text-[#ff912d] font-bold text-lg">
+                <div className="bg-black/40 border border-white/10 px-5 py-3 rounded-xl text-base">
+                  <span className="text-white/60 uppercase tracking-wider text-xs md:text-sm font-bold block mb-1">Perfect Modules</span>
+                  <span className="text-[#ff912d] font-black text-2xl">
                     {modulesData.filter(m => m.badges.length > 0 && m.totalAchievements > 0 && m.badges.filter(b => unlockedCodes.has(b.id.toUpperCase())).length === m.totalAchievements).length}
                   </span>
                 </div>
@@ -160,32 +162,32 @@ export default function AchievementsPage() {
           </div>
 
           {/* Academic Milestones */}
-          <div className="bg-[#361d57]/40 border border-[#ffb703]/50 rounded-xl p-4 md:p-6 flex flex-col md:flex-row gap-6 items-center shadow-inner relative z-20 mt-4">
+          <div className="bg-[#361d57]/40 border border-[#ffb703]/50 rounded-xl p-5 md:p-6 flex flex-col md:flex-row gap-5 items-center shadow-inner relative z-20 mt-2">
             <div className="absolute inset-0 bg-gradient-to-r from-[#ffb703]/10 to-transparent pointer-events-none opacity-50 rounded-xl"></div>
-            <div className="w-24 h-24 shrink-0 bg-black/40 rounded-xl flex items-center justify-center p-3 border border-white/5 z-10 relative shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]">
-              <div className="absolute -top-2 -right-2 bg-[#ffb703] text-black w-6 h-6 rounded-full flex items-center justify-center shadow-lg z-20">
+            <div className="w-20 h-20 shrink-0 bg-black/40 rounded-xl flex items-center justify-center p-2.5 border border-white/5 z-10 relative shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]">
+              <div className="absolute -top-1.5 -right-1.5 bg-[#ffb703] text-black w-6 h-6 rounded-full flex items-center justify-center shadow-lg z-20">
                 <span className="font-bold text-xs">★</span>
               </div>
-              <Image src="/Planet 5.svg" alt="Milestones" width={64} height={64} className="object-contain drop-shadow-[0_0_10px_rgba(255,183,3,0.5)]" />
+              <Trophy className="w-11 h-11 text-[#ffb703] drop-shadow-[0_0_12px_rgba(255,183,3,0.6)]" />
             </div>
-            <div className="flex-1 flex flex-col gap-2 w-full z-10">
-              <h3 className={`${vt323.className} text-2xl text-[#ffb703] tracking-widest drop-shadow`}>
+            <div className="flex-1 flex flex-col gap-1 w-full z-10">
+              <h3 className={`${vt323.className} text-3xl md:text-4xl text-[#ffb703] tracking-widest drop-shadow`}>
                 Academic Milestones
               </h3>
-              <p className="text-white/40 text-xs">Milestone achievements you've earned on your journey.</p>
+              <p className="text-white/60 text-sm">Milestone achievements you've earned on your journey.</p>
             </div>
-            <div className="w-full md:w-48 shrink-0 flex flex-col gap-2 z-10 md:border-l md:border-white/10 md:pl-6">
-              <span className="text-white/50 text-[10px] font-bold uppercase tracking-wider flex justify-between items-center">
+            <div className="w-full md:w-auto shrink-0 flex flex-col gap-1.5 z-10 md:border-l md:border-white/10 md:pl-5">
+              <span className="text-white/60 text-xs font-bold uppercase tracking-wider flex justify-between items-center gap-4">
                 Unlocked
                 <button
                   onClick={() => setViewAllCategory({ title: 'Academic Milestones', badges: specialBadges })}
-                  className="text-[#ff912d] hover:text-[#ffb703] transition-colors cursor-pointer"
+                  className="text-[#ff912d] hover:text-[#ffb703] text-xs font-bold transition-colors cursor-pointer"
                 >
                   See all
                 </button>
               </span>
-              <div className="flex flex-wrap gap-2">
-                {specialBadges.map((baseBadge, idx) => {
+              <div className="grid grid-cols-5 gap-2">
+                {specialBadges.map((baseBadge) => {
                   const triggerCode = baseBadge.id.toUpperCase();
                   const isUnlocked = unlockedCodes.has(triggerCode);
                   const isShowcased = showcasedBadges.includes(baseBadge.id);
@@ -205,29 +207,29 @@ export default function AchievementsPage() {
                     <div
                       key={badge.id}
                       onClick={() => isUnlocked && setSelectedBadge({ ...badge, isUnlocked, unlockedAt: unlockedDates[triggerCode] || unlockedDates[badge.id] })}
-                      className={`w-8 h-8 rounded-full flex items-center justify-center relative group/badge transition-all shadow-sm p-0.5
-                          ${isUnlocked ? 'cursor-pointer' : 'cursor-not-allowed'}
-                          ${isShowcased ? 'bg-indigo-500/40 border-2 border-[#ff912d] scale-110 shadow-[0_0_10px_rgba(255,145,45,0.4)]' : 'bg-gradient-to-br from-indigo-500/20 to-purple-600/20 border border-[#ff912d]/30 hover:border-[#ff912d] hover:bg-[#ff912d]/20'}`}
+                      className={`w-10 h-10 rounded-full flex items-center justify-center relative group/badge transition-all shadow-md p-1
+                          ${isUnlocked ? 'cursor-pointer hover:scale-105' : 'cursor-not-allowed'}
+                          ${isShowcased ? 'bg-indigo-500/40 border-2 border-[#ff912d] scale-105 shadow-[0_0_10px_rgba(255,145,45,0.5)]' : 'bg-gradient-to-br from-indigo-500/20 to-purple-600/20 border border-[#ff912d]/30 hover:border-[#ff912d] hover:bg-[#ff912d]/20'}`}
                     >
                       <div className={`w-full h-full rounded-full overflow-hidden flex items-center justify-center ${!isUnlocked ? 'opacity-50 grayscale' : ''}`}>
                         {!isUnlocked ? (
-                          <Lock className="text-white/50 w-3.5 h-3.5" />
+                          <Lock className="text-white/50 w-4 h-4" />
                         ) : badge.image ? (
                           <img src={badge.image} alt={badge.name} className="w-full h-full object-cover rounded-full" />
                         ) : (
-                          <span className="text-[#ff912d] font-bold text-xs">{badge.icon}</span>
+                          <span className="text-[#ff912d] font-bold text-sm">{badge.icon}</span>
                         )}
                       </div>
                       {isShowcased && (
-                        <div className="absolute -top-1 -right-1 bg-[#ff912d] text-black rounded-full p-[1px] shadow-md z-10">
-                          <svg className="w-2 h-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7"></path></svg>
+                        <div className="absolute -top-1 -right-1 bg-[#ff912d] text-black rounded-full p-0.5 shadow-md z-10">
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7"></path></svg>
                         </div>
                       )}
-                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-[150px] bg-black/90 border border-[#ff912d]/50 text-white text-xs px-2 py-1.5 rounded opacity-0 group-hover/badge:opacity-100 pointer-events-none transition-opacity z-[9999] text-center shadow-lg">
-                        <strong className="block text-[#ff912d] mb-0.5">{isUnlocked ? `"${badge.name}"` : '???'}</strong>
-                        <span className="text-[9px] text-white/60 block uppercase tracking-wider mb-1">{isUnlocked ? 'Click to view details' : 'To be unlocked'}</span>
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-[180px] bg-black/90 border border-[#ff912d]/50 text-white text-xs px-2.5 py-2 rounded-lg opacity-0 group-hover/badge:opacity-100 pointer-events-none transition-opacity z-[9999] text-center shadow-xl">
+                        <strong className="block text-[#ff912d] text-sm mb-0.5">{isUnlocked ? `"${badge.name}"` : '???'}</strong>
+                        <span className="text-[10px] text-white/60 block uppercase tracking-wider mb-1">{isUnlocked ? 'Click to view details' : 'To be unlocked'}</span>
                         {isUnlocked && (
-                          <span className="inline-block bg-[#ff912d]/20 text-[#ff912d] text-[8px] font-bold px-1.5 py-0.5 rounded-full">
+                          <span className="inline-block bg-[#ff912d]/20 text-[#ff912d] text-[10px] font-bold px-2 py-0.5 rounded-full">
                             +{badge.xpReward || 100} EXP
                           </span>
                         )}
@@ -239,108 +241,6 @@ export default function AchievementsPage() {
             </div>
           </div>
 
-          {/* Custom Milestones */}
-          {(() => {
-            const allHardcodedIds = new Set([
-              ...modulesData.flatMap(m => m.badges.map(b => b.id.toUpperCase())),
-              ...specialBadges.map(b => b.id.toUpperCase())
-            ]);
-            const customAchievements = dbAchievements.filter(a => {
-              const code = a.triggerCode.toUpperCase();
-              return !allHardcodedIds.has(code) && !allHardcodedIds.has(a.id.toUpperCase());
-            });
-
-            if (customAchievements.length === 0) return null;
-
-            return (
-              <div className="bg-[#361d57]/40 border border-indigo-500/50 rounded-xl p-4 md:p-6 flex flex-col md:flex-row gap-6 items-center shadow-inner relative z-20 mt-4">
-                <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-transparent pointer-events-none opacity-50 rounded-xl"></div>
-                <div className="w-24 h-24 shrink-0 bg-black/40 rounded-xl flex items-center justify-center p-3 border border-white/5 z-10 relative shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]">
-                  <div className="absolute -top-2 -right-2 bg-indigo-500 text-white w-6 h-6 rounded-full flex items-center justify-center shadow-lg z-20">
-                    <span className="font-bold text-xs">✦</span>
-                  </div>
-                  <Image src="/Planet 3.svg" alt="Custom Achievements" width={64} height={64} className="object-contain drop-shadow-[0_0_10px_rgba(99,102,241,0.5)]" />
-                </div>
-                <div className="flex-1 flex flex-col gap-2 w-full z-10">
-                  <h3 className={`${vt323.className} text-2xl text-indigo-400 tracking-widest drop-shadow`}>
-                    Special Missions
-                  </h3>
-                  <p className="text-white/40 text-xs">Extra achievements created by the Academy administrators.</p>
-                </div>
-                <div className="w-full md:w-48 shrink-0 flex flex-col gap-2 z-10 md:border-l md:border-white/10 md:pl-6">
-                  <span className="text-white/50 text-[10px] font-bold uppercase tracking-wider flex justify-between items-center">
-                    Unlocked
-                    <button
-                      onClick={() => setViewAllCategory({ title: 'Special Missions', badges: customAchievements.map(a => ({
-                        id: a.id,
-                        name: a.name,
-                        description: a.description,
-                        xpReward: a.xpReward,
-                        gearsReward: a.gearsReward || 0,
-                        icon: a.iconUrl,
-                        image: a.iconUrl,
-                      })) })}
-                      className="text-[#ff912d] hover:text-[#ffb703] transition-colors cursor-pointer"
-                    >
-                      See all
-                    </button>
-                  </span>
-                  <div className="flex flex-wrap gap-2">
-                    {customAchievements.map((badge) => {
-                      const triggerCode = badge.triggerCode.toUpperCase();
-                      const isUnlocked = unlockedCodes.has(triggerCode);
-                      const isShowcased = showcasedBadges.includes(badge.id) || showcasedBadges.includes(badge.triggerCode.toLowerCase());
-
-                      return (
-                        <div
-                          key={badge.id}
-                          onClick={() => isUnlocked && setSelectedBadge({
-                            id: badge.id,
-                            name: badge.name,
-                            description: badge.description,
-                            xpReward: badge.xpReward,
-                            gearsReward: badge.gearsReward || 0,
-                            icon: badge.iconUrl,
-                            image: badge.iconUrl,
-                            isUnlocked,
-                            unlockedAt: unlockedDates[triggerCode] || unlockedDates[badge.id]
-                          })}
-                          className={`w-8 h-8 rounded-full flex items-center justify-center relative group/badge transition-all shadow-sm p-0.5
-                              ${isUnlocked ? 'cursor-pointer' : 'cursor-not-allowed'}
-                              ${isShowcased ? 'bg-indigo-500/40 border-2 border-[#ff912d] scale-110 shadow-[0_0_10px_rgba(255,145,45,0.4)]' : 'bg-gradient-to-br from-indigo-500/20 to-purple-600/20 border border-[#ff912d]/30 hover:border-[#ff912d] hover:bg-[#ff912d]/20'}`}
-                        >
-                          <div className={`w-full h-full rounded-full overflow-hidden flex items-center justify-center ${!isUnlocked ? 'opacity-50 grayscale' : ''}`}>
-                            {!isUnlocked ? (
-                              <Lock className="text-white/50 w-3.5 h-3.5" />
-                            ) : badge.iconUrl ? (
-                              <img src={badge.iconUrl} alt={badge.name} className="w-full h-full object-cover rounded-full" />
-                            ) : (
-                              <span className="text-[#ff912d] font-bold text-xs">🏆</span>
-                            )}
-                          </div>
-                          {isShowcased && (
-                            <div className="absolute -top-1 -right-1 bg-[#ff912d] text-black rounded-full p-[1px] shadow-md z-10">
-                              <svg className="w-2 h-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7"></path></svg>
-                            </div>
-                          )}
-                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-[150px] bg-black/90 border border-[#ff912d]/50 text-white text-xs px-2 py-1.5 rounded opacity-0 group-hover/badge:opacity-100 pointer-events-none transition-opacity z-[9999] text-center shadow-lg">
-                            <strong className="block text-[#ff912d] mb-0.5">{isUnlocked ? `"${badge.name}"` : '???'}</strong>
-                            <span className="text-[9px] text-white/60 block uppercase tracking-wider mb-1">{isUnlocked ? 'Click to view details' : 'To be unlocked'}</span>
-                            {isUnlocked && (
-                              <span className="inline-block bg-[#ff912d]/20 text-[#ff912d] text-[8px] font-bold px-1.5 py-0.5 rounded-full">
-                                +{badge.xpReward || 100} EXP
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            );
-          })()}
-
           {/* Module List (Steam Style) */}
           <div className="flex flex-col gap-4 z-30 relative">
             {modulesData.map((module) => {
@@ -351,7 +251,7 @@ export default function AchievementsPage() {
               return (
                 <div
                   key={module.id}
-                  className={`bg-[#361d57]/40 border ${isCompleted ? 'border-[#ffb703]/50' : 'border-white/10'} rounded-xl p-4 md:p-6 flex flex-col md:flex-row gap-6 items-center transition-all hover:bg-[#361d57]/60 group relative shadow-inner`}
+                  className={`bg-[#361d57]/40 border ${isCompleted ? 'border-[#ffb703]/50' : 'border-white/10'} rounded-xl p-5 md:p-6 flex flex-col md:flex-row gap-5 items-center transition-all hover:bg-[#361d57]/60 group relative shadow-inner`}
                 >
                   {/* Completion Glow */}
                   {isCompleted && (
@@ -359,45 +259,45 @@ export default function AchievementsPage() {
                   )}
 
                   {/* Left Side: Module Icon */}
-                  <div className="w-24 h-24 shrink-0 bg-black/40 rounded-xl flex items-center justify-center p-3 border border-white/5 group-hover:border-[#ff912d]/30 transition-colors z-10 relative shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]">
+                  <div className="w-20 h-20 md:w-22 md:h-22 shrink-0 bg-black/40 rounded-xl flex items-center justify-center p-2.5 border border-white/5 group-hover:border-[#ff912d]/30 transition-colors z-10 relative shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]">
                     {isCompleted && (
-                      <div className="absolute -top-2 -right-2 bg-[#ffb703] text-black w-6 h-6 rounded-full flex items-center justify-center shadow-lg z-20">
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                      <div className="absolute -top-1.5 -right-1.5 bg-[#ffb703] text-black w-6 h-6 rounded-full flex items-center justify-center shadow-lg z-20">
+                        <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
                       </div>
                     )}
-                    <Image src={module.planet} alt={module.title} width={64} height={64} className={`object-contain ${isCompleted ? 'drop-shadow-[0_0_10px_rgba(255,183,3,0.5)]' : ''}`} />
+                    <Image src={module.planet} alt={module.title} width={60} height={60} className={`object-contain ${isCompleted ? 'drop-shadow-[0_0_10px_rgba(255,183,3,0.5)]' : ''}`} />
                   </div>
 
                   {/* Center: Details & Progress */}
                   <div className="flex-1 flex flex-col gap-2 w-full z-10">
                     <div className="flex flex-col md:flex-row md:items-end justify-between gap-2">
-                      <h3 className={`${vt323.className} text-2xl text-white tracking-widest ${isCompleted ? 'text-[#ffb703]' : ''} drop-shadow`}>
+                      <h3 className={`${vt323.className} text-3xl md:text-4xl text-white tracking-widest ${isCompleted ? 'text-[#ffb703]' : ''} drop-shadow`}>
                         {module.title}
                       </h3>
-                      <span className="text-white/40 text-xs font-bold uppercase tracking-wider shrink-0">
+                      <span className="text-white/60 text-sm font-bold uppercase tracking-wider shrink-0">
                         {module.playtime} on record
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-4 mt-2">
+                    <div className="flex items-center gap-4 mt-1">
                       <div className="flex-1 h-2.5 bg-black/60 rounded-full overflow-hidden border border-white/5 shadow-inner">
                         <div
                           className={`h-full rounded-full transition-all duration-1000 ${isCompleted ? 'bg-[#ffb703]' : 'bg-[#ff912d]'}`}
                           style={{ width: `${progressPercentage}%` }}
                         ></div>
                       </div>
-                      <span className={`text-sm font-bold shrink-0 ${isCompleted ? 'text-[#ffb703]' : 'text-[#ff912d]'}`}>
+                      <span className={`text-base font-black shrink-0 ${isCompleted ? 'text-[#ffb703]' : 'text-[#ff912d]'}`}>
                         {moduleUnlockedCount} / {module.totalAchievements}
                       </span>
                     </div>
-                    <span className="text-white/40 text-xs mt-1">
+                    <span className="text-white/60 text-xs mt-0.5">
                       {progressPercentage === 0 ? "You haven't earned any achievements yet." : `${progressPercentage}% of achievements earned.`}
                     </span>
                   </div>
 
                   {/* Right: Badges Showcase */}
-                  <div className="w-full md:w-48 shrink-0 flex flex-col gap-2 z-10 md:border-l md:border-white/10 md:pl-6">
-                    <span className="text-white/50 text-[10px] font-bold uppercase tracking-wider flex justify-between items-center">
+                  <div className="w-full md:w-auto shrink-0 flex flex-col gap-1.5 z-10 md:border-l md:border-white/10 md:pl-5">
+                    <span className="text-white/60 text-xs font-bold uppercase tracking-wider flex justify-between items-center gap-4">
                       Unlocked
                       <button
                         onClick={() => {
@@ -414,14 +314,14 @@ export default function AchievementsPage() {
                           });
                           setViewAllCategory({ title: module.title, badges: mergedBadges });
                         }}
-                        className="text-[#ff912d] hover:text-[#ffb703] transition-colors cursor-pointer"
+                        className="text-[#ff912d] hover:text-[#ffb703] text-xs font-bold transition-colors cursor-pointer"
                       >
                         See all
                       </button>
                     </span>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex items-center gap-2">
                       {module.badges.length > 0 ? (
-                        module.badges.map((baseBadge, idx) => {
+                        module.badges.map((baseBadge) => {
                           const triggerCode = baseBadge.id.toUpperCase();
                           const isUnlocked = unlockedCodes.has(triggerCode);
                           const isShowcased = showcasedBadges.includes(baseBadge.id);
@@ -442,31 +342,31 @@ export default function AchievementsPage() {
                             <div
                               key={badge.id}
                               onClick={() => isUnlocked && setSelectedBadge({ ...badge, isUnlocked, unlockedAt: unlockedDates[triggerCode] || unlockedDates[badge.id] })}
-                              className={`w-8 h-8 rounded-full flex items-center justify-center relative group/badge transition-all shadow-sm p-0.5
-                                 ${isUnlocked ? 'cursor-pointer' : 'cursor-not-allowed'}
-                                 ${isShowcased ? 'bg-indigo-500/40 border-2 border-[#ff912d] scale-110 shadow-[0_0_10px_rgba(255,145,45,0.4)]' : 'bg-gradient-to-br from-indigo-500/20 to-purple-600/20 border border-[#ff912d]/30 hover:border-[#ff912d] hover:bg-[#ff912d]/20'}`}
+                              className={`w-10 h-10 rounded-full flex items-center justify-center relative group/badge transition-all shadow-md p-1
+                                  ${isUnlocked ? 'cursor-pointer hover:scale-105' : 'cursor-not-allowed'}
+                                  ${isShowcased ? 'bg-indigo-500/40 border-2 border-[#ff912d] scale-105 shadow-[0_0_10px_rgba(255,145,45,0.5)]' : 'bg-gradient-to-br from-indigo-500/20 to-purple-600/20 border border-[#ff912d]/30 hover:border-[#ff912d] hover:bg-[#ff912d]/20'}`}
                             >
                               <div className={`w-full h-full rounded-full overflow-hidden flex items-center justify-center ${!isUnlocked ? 'opacity-50 grayscale' : ''}`}>
                                 {!isUnlocked ? (
-                                  <Lock className="text-white/50 w-3.5 h-3.5" />
+                                  <Lock className="text-white/50 w-4 h-4" />
                                 ) : badge.image ? (
                                   <img src={badge.image} alt={badge.name} className="w-full h-full object-cover rounded-full" />
                                 ) : (
-                                  <span className="text-[#ff912d] font-bold text-xs">{badge.icon}</span>
+                                  <span className="text-[#ff912d] font-bold text-sm">{badge.icon}</span>
                                 )}
                               </div>
 
                               {isShowcased && (
-                                <div className="absolute -top-1 -right-1 bg-[#ff912d] text-black rounded-full p-[1px] shadow-md z-10">
-                                  <svg className="w-2 h-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7"></path></svg>
+                                <div className="absolute -top-1 -right-1 bg-[#ff912d] text-black rounded-full p-0.5 shadow-md z-10">
+                                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7"></path></svg>
                                 </div>
                               )}
                               {/* Tooltip */}
-                              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-[150px] bg-black/90 border border-[#ff912d]/50 text-white text-xs px-2 py-1.5 rounded opacity-0 group-hover/badge:opacity-100 pointer-events-none transition-opacity z-[9999] text-center shadow-lg">
-                                <strong className="block text-[#ff912d] mb-0.5">{isUnlocked ? `"${badge.name}"` : '???'}</strong>
-                                <span className="text-[9px] text-white/60 block uppercase tracking-wider mb-1">{isUnlocked ? 'Click to view details' : 'To be unlocked'}</span>
+                              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-[180px] bg-black/90 border border-[#ff912d]/50 text-white text-xs px-2.5 py-2 rounded-lg opacity-0 group-hover/badge:opacity-100 pointer-events-none transition-opacity z-[9999] text-center shadow-xl">
+                                <strong className="block text-[#ff912d] text-sm mb-0.5">{isUnlocked ? `"${badge.name}"` : '???'}</strong>
+                                <span className="text-[10px] text-white/60 block uppercase tracking-wider mb-1">{isUnlocked ? 'Click to view details' : 'To be unlocked'}</span>
                                 {isUnlocked && (
-                                  <span className="inline-block bg-[#ff912d]/20 text-[#ff912d] text-[8px] font-bold px-1.5 py-0.5 rounded-full">
+                                  <span className="inline-block bg-[#ff912d]/20 text-[#ff912d] text-[10px] font-bold px-2 py-0.5 rounded-full">
                                     +{badge.xpReward} EXP
                                   </span>
                                 )}
@@ -475,15 +375,8 @@ export default function AchievementsPage() {
                           );
                         })
                       ) : (
-                        <div className="text-white/30 text-xs italic py-2">
+                        <div className="text-white/40 text-sm italic py-2">
                           No badges unlocked yet.
-                        </div>
-                      )}
-
-                      {/* Overflow indicator if many badges */}
-                      {module.badges.length > 8 && (
-                        <div className="w-8 h-8 bg-black/40 border border-white/5 rounded flex items-center justify-center text-white/50 text-[10px] font-bold shadow-inner">
-                          +{module.badges.length - 8}
                         </div>
                       )}
                     </div>

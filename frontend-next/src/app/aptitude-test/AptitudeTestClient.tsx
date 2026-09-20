@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Brain, ArrowRight, CheckCircle2, Award, RefreshCw, Cpu, Activity, Sparkles, X } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { getAptitudeQuestions, submitAptitudeTest } from '../actions/aptitudeClient';
 
 interface AptitudeTestClientProps {
@@ -11,6 +12,7 @@ interface AptitudeTestClientProps {
 
 export default function AptitudeTestClient({ initialUser }: AptitudeTestClientProps) {
   const router = useRouter();
+  const { update: updateSession } = useSession();
   const searchParams = useSearchParams();
   const shouldOpenModal = searchParams ? searchParams.get('openModal') === 'true' : false;
   
@@ -87,6 +89,10 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
 
       const res = await submitAptitudeTest(formattedPayload);
       setResults(res);
+      if (updateSession) {
+        await updateSession({ hasTakenAptitudeTest: true });
+      }
+      router.refresh();
       setViewState('COMPLETED');
     } catch (err) {
       console.error("Failed to submit diagnostic assessment:", err);
@@ -95,7 +101,7 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
     }
   };
 
-  // Loading Terminal State
+  // Loading State
   if (loading && viewState !== 'COMPLETED') {
     return (
       <div className="w-full max-w-2xl mx-auto py-20 flex flex-col items-center justify-center gap-4 text-center">
@@ -104,17 +110,17 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
         </div>
         <div className="space-y-1">
           <h3 className="text-white font-bold text-base uppercase tracking-wider font-display">
-            Calibrating Diagnostic Console...
+            Loading Aptitude Test...
           </h3>
           <p className="text-xs text-gray-400 font-mono">
-            Fetching active algorithmic diagnostic questions...
+            Getting your questions ready...
           </p>
         </div>
       </div>
     );
   }
 
-  // State 1: System Diagnostic Briefing Intro (Custom UI Modal Popup)
+  // State 1: Aptitude Briefing Intro (Custom UI Modal Popup)
   if (viewState === 'BRIEFING') {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/40 backdrop-blur-md animate-in fade-in duration-200">
@@ -142,14 +148,14 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
                 <Sparkles size={14} /> Aptitude Test
               </div>
               <h1 className="text-3xl sm:text-4xl font-black font-display text-white uppercase tracking-wider leading-tight">
-                Test Your Knowledge!
+                Test Your Skills!
               </h1>
               <p className="text-xs sm:text-sm text-gray-300 leading-relaxed font-sans pr-4">
-                Evaluates core algorithmic logic and pattern recognition skills. Let our engine find your path for you!
+                This quick test measures your logic and problem-solving skills. Let us help find the best starting point for you!
               </p>
             </div>
 
-            {/* Quick Telemetry Chips */}
+            {/* Quick Chips */}
             <div className="flex items-center gap-2.5 flex-wrap">
               <span className="px-3.5 py-1.5 rounded-xl bg-white/5 border border-white/10 text-xs font-mono text-gray-300 font-bold">
                 {questions.length || 5} Questions
@@ -168,12 +174,12 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
                 onClick={() => setViewState('QUIZ')}
                 className="w-full sm:w-auto px-9 py-3.5 bg-[#ff912d] hover:bg-[#ff912d]/90 text-black font-black text-xs sm:text-sm uppercase tracking-widest rounded-xl shadow-[0_0_20px_rgba(255,145,45,0.4)] transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
               >
-                Start Assessment <ArrowRight size={18} />
+                Start Test <ArrowRight size={18} />
               </button>
             </div>
           </div>
 
-          {/* Right Side: Glowing Square Graphic Box (No Telemetry Text) */}
+          {/* Right Side: Glowing Graphic Box */}
           <div className="w-full md:w-5/12 aspect-square max-w-[260px] sm:max-w-[280px] bg-gradient-to-br from-[#160528] via-[#260847] to-[#0f0320] border-2 border-[#ff912d]/50 shadow-[0_0_25px_rgba(255,145,45,0.3)] rounded-2xl p-6 relative flex flex-col justify-center items-center overflow-hidden shrink-0 z-10">
             <div className="absolute inset-0 bg-gradient-to-tr from-[#ff912d]/15 via-purple-600/10 to-transparent opacity-60" />
             
@@ -202,7 +208,7 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
     return (
       <div className="w-full max-w-6xl mx-auto space-y-6">
         
-        {/* Terminal Header Telemetry Bar */}
+        {/* Header Progress Bar */}
         <div className="bg-[#1e0a2d] border border-white/10 rounded-2xl p-6 shadow-lg space-y-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
@@ -241,12 +247,12 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
           </div>
         </div>
 
-        {/* Diagnostic Problem Console Card */}
+        {/* Problem Console Card */}
         <div className="bg-[#1e0a2d] border border-white/10 rounded-3xl p-6 sm:p-10 shadow-2xl space-y-8">
           
           <div className="space-y-3 border-b border-white/10 pb-6">
             <div className="text-sm font-mono text-[#ff912d] font-bold uppercase tracking-widest flex items-center gap-2">
-              <span>DIAGNOSTIC PROBLEM #{currentIndex + 1}</span>
+              <span>QUESTION #{currentIndex + 1}</span>
               <span className="text-gray-500">•</span>
               <span className="text-gray-400">{currentQ.questionType.replace('_', ' ')}</span>
             </div>
@@ -255,11 +261,11 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
             </h2>
           </div>
 
-          {/* Cyber Telemetry Choice Grid (Scales up to 8 choices) */}
+          {/* Choice Grid */}
           {currentQ.questionType === "SHORT_ANSWER" ? (
             <div className="space-y-3 max-w-2xl">
               <label className="text-sm font-mono text-gray-300 uppercase tracking-wider block font-bold">
-                Type Short Answer / Keyword:
+                Type Your Answer:
               </label>
               <input
                 type="text"
@@ -340,11 +346,11 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
               >
                 {submitting ? (
                   <>
-                    <RefreshCw size={18} className="animate-spin text-black" /> Submitting Diagnostics...
+                    <RefreshCw size={18} className="animate-spin text-black" /> Submitting...
                   </>
                 ) : (
                   <>
-                    Submit Diagnostic <CheckCircle2 size={20} />
+                    Submit Test <CheckCircle2 size={20} />
                   </>
                 )}
               </button>
@@ -369,7 +375,7 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
   return (
     <div className="w-full max-w-5xl mx-auto space-y-6">
       
-      {/* System Status Verified Header */}
+      {/* Status Header */}
       <div className="bg-[#1e0a2d] border border-emerald-500/30 rounded-2xl p-5 flex items-center justify-between shadow-lg">
         <div className="flex items-center gap-3">
           <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
@@ -377,9 +383,9 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
           </div>
           <div>
             <div className="text-xs font-mono font-bold text-emerald-400 uppercase tracking-wider">
-              [DIAGNOSTIC STATUS: CALIBRATED & VERIFIED]
+              Aptitude Test Complete!
             </div>
-            <div className="text-sm font-bold text-white">System Profile Successfully Generated</div>
+            <div className="text-sm font-bold text-white">Your test results are ready</div>
           </div>
         </div>
 
@@ -389,19 +395,19 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
         </div>
       </div>
 
-      {/* Main Results Console Card */}
+      {/* Main Results Card */}
       <div className="bg-[#1e0a2d] border border-white/10 rounded-3xl p-6 sm:p-10 shadow-2xl space-y-8">
         
         <div className="text-center space-y-2">
           <h2 className="text-2xl sm:text-3xl font-black font-display text-white uppercase tracking-wider">
-            Diagnostic Profile Report
+            Your Test Results
           </h2>
           <p className="text-xs sm:text-sm text-gray-300">
-            Your system readiness and cognitive skill breakdown.
+            Here is a summary of your scores and recommended track.
           </p>
         </div>
 
-        {/* Score Domain Cards */}
+        {/* Score Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           
           <div className="bg-black/30 border border-white/10 rounded-2xl p-6 space-y-3">
@@ -438,16 +444,16 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
 
         </div>
 
-        {/* Recommended Orbit Learning Path */}
+        {/* Recommended Track */}
         <div className="bg-gradient-to-r from-[#ff912d]/10 to-purple-900/20 border border-[#ff912d]/30 rounded-2xl p-6 space-y-2">
           <div className="flex items-center gap-2 text-xs font-mono text-[#ff912d] font-bold uppercase tracking-wider">
-            <Sparkles size={14} /> Recommended Orbit Path
+            <Sparkles size={14} /> Recommended Learning Path
           </div>
           <div className="text-lg font-bold text-white">
             {results?.recommendedLearningPath ?? "Fullstack Systems & Distributed Architecture"}
           </div>
           <p className="text-xs text-gray-300 leading-relaxed">
-            Based on your high analytical scores, all mission sectors and learning paths have been unlocked.
+            Based on your test scores, you are ready to start learning. All levels and planets are now unlocked!
           </p>
         </div>
 
@@ -460,7 +466,7 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
             }}
             className="w-full sm:w-auto px-6 py-4 bg-white/10 hover:bg-white/20 text-white font-bold text-xs sm:text-sm uppercase tracking-widest rounded-xl transition-all border border-white/10 flex items-center justify-center gap-2 cursor-pointer"
           >
-            <RefreshCw size={16} /> Retake Assessment
+            <RefreshCw size={16} /> Retake Test
           </button>
           <button
             onClick={() => router.push('/dashboard')}

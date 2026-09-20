@@ -5,6 +5,7 @@ import Link from "next/link";
 import TopHeader from "@/components/TopHeader";
 import DailyCommissionClaimButton from "@/components/DailyCommissionClaimButton";
 import { getXPDetails } from "@/lib/leveling";
+import { XP_REWARDS } from "@/lib/xpEconomy";
 import { Zap, Settings, Rocket, Award, ShieldCheck, Compass, ArrowRight, Lock, CheckCircle2, Circle, Sparkles, Play, Gift, Clock, Flame, Brain } from "lucide-react";
 
 export default async function DashboardPage() {
@@ -45,7 +46,7 @@ export default async function DashboardPage() {
   const hasTakenAptitudeTest = dbUser.hasTakenAptitudeTest === true;
 
   const xp = dbUser?.xp || 0;
-  const { level, progress, nextThreshold } = getXPDetails(xp);
+  const { level, progress, nextThreshold, levelCurrentXp, levelRequiredXp, isMaxLevel } = getXPDetails(xp);
 
   // Retrieve completed missions
   const completedMissions = await prisma.missionProgress.findMany({
@@ -65,95 +66,327 @@ export default async function DashboardPage() {
   });
 
   const userDisplayName = dbUser?.displayName || dbUser?.name || session.user?.name || "Explorer";
-  const TOTAL_WEB_MODULES = 28; // HTML: 5, CSS: 5, JS: 8, React: 10
-  const webProgress = Math.min(100, Math.round((completedMissions.length / TOTAL_WEB_MODULES) * 100));
+
+  // Filter out daily missions from campaign mission progress
+  const campaignCompletedMissions = completedMissions.filter(m => !m.missionId.startsWith("daily-"));
+
+  // Planetary progression order and total levels (3 levels per planet)
+  const PLANET_TRACKS = [
+    { id: "moon", name: "The Moon", subtitle: "Tutorial", totalLevels: 3, prefix: "moon" },
+    { id: "mars", name: "Mars", subtitle: "HTML5", totalLevels: 3, prefix: "mars" },
+    { id: "venus", name: "Venus", subtitle: "CSS", totalLevels: 3, prefix: "venus" },
+    { id: "mercury", name: "Mercury", subtitle: "JavaScript", totalLevels: 3, prefix: "mercury" },
+    { id: "jupiter", name: "Jupiter", subtitle: "Java", totalLevels: 3, prefix: "jupiter" },
+    { id: "saturn", name: "Saturn", subtitle: "C++", totalLevels: 3, prefix: "saturn" },
+    { id: "earth", name: "Earth (HQ)", subtitle: "Python", totalLevels: 3, prefix: "earth" },
+  ];
+
+  const getPlanetCompletedCount = (prefix: string) => {
+    return campaignCompletedMissions.filter(m => {
+      const mid = m.missionId.toLowerCase();
+      return mid.startsWith(prefix);
+    }).length;
+  };
+
+  // Find active planet (first planet where completed < totalLevels)
+  let currentPlanet = PLANET_TRACKS[0];
+  for (const planet of PLANET_TRACKS) {
+    const completed = getPlanetCompletedCount(planet.prefix);
+    if (completed < planet.totalLevels) {
+      currentPlanet = planet;
+      break;
+    }
+  }
+
+  const currentPlanetCompleted = getPlanetCompletedCount(currentPlanet.prefix);
+  const currentPlanetTotal = currentPlanet.totalLevels;
+
+  // Moon tutorial state
+  const completedMoonLevels = getPlanetCompletedCount("moon");
+  const isTutorialComplete = completedMoonLevels >= 3;
+
+  // Web Development Track (HTML Mars + CSS Venus + JS Mercury = 9 levels / 3 courses)
+  // Only unlocks / accumulates progress once tutorial is cleared
+  const marsCompleted = getPlanetCompletedCount("mars");
+  const venusCompleted = getPlanetCompletedCount("venus");
+  const mercuryCompleted = getPlanetCompletedCount("mercury");
+  const isWebDevActive = isTutorialComplete || (marsCompleted + venusCompleted + mercuryCompleted) > 0;
+  const webLevelsCompleted = isWebDevActive ? (marsCompleted + venusCompleted + mercuryCompleted) : 0;
+  const TOTAL_WEB_LEVELS = 9;
+  const webProgress = isWebDevActive ? Math.min(100, Math.round((webLevelsCompleted / TOTAL_WEB_LEVELS) * 100)) : 0;
+  const webProgressLabel = `${webLevelsCompleted} / ${TOTAL_WEB_LEVELS} Modules`;
 
   // Determine user's expertise sector
   const isHtmlExpert = level <= 2;
   const isCssExpert = level > 2 && level <= 4;
 
-  // Daily Generated Level Details (Clean & Natural)
-  const dailyGeneratedLevel = {
-    title: isHtmlExpert 
-      ? "Daily Practice: Web Structure & Tags" 
-      : isCssExpert 
-        ? "Daily Practice: Layouts & Selectors" 
-        : "Daily Practice: Functions & Logic",
-    sector: isHtmlExpert ? "HTML Sector" : isCssExpert ? "CSS Sector" : "JavaScript Sector",
-    difficulty: isHtmlExpert ? "Beginner" : isCssExpert ? "Intermediate" : "Advanced",
-    desc: isHtmlExpert 
-      ? "Practice structuring headings, paragraphs, and list components in today's sandbox exercise." 
-      : isCssExpert 
-        ? "Practice styling responsive elements, margins, and colors in the code editor." 
-        : "Write variables and conditional logic statements to clear today's practice level.",
-    planetIcon: isHtmlExpert ? "/Planet 7.svg" : isCssExpert ? "/Planet 4.svg" : "/Planet 1.svg",
-    xpReward: 100,
-    gearsReward: 25,
-    link: `/sandbox?mode=daily&tier=${level}`,
+  // Philippine Standard Time (PHT, UTC+8) Date & 12:00 AM Midnight Reset Calculation
+  const nowUtc = new Date();
+  const phtFormatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Manila",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+  const todayStrPHT = phtFormatter.format(nowUtc); // "YYYY-MM-DD" in PHT
+
+  // Compute exact time remaining until 12:00 AM PHT
+  const phtNow = new Date(nowUtc.toLocaleString("en-US", { timeZone: "Asia/Manila" }));
+  const phtMidnight = new Date(phtNow);
+  phtMidnight.setHours(24, 0, 0, 0);
+  const msUntilPhtReset = Math.max(0, phtMidnight.getTime() - phtNow.getTime());
+  const phtHoursLeft = Math.floor(msUntilPhtReset / (1000 * 60 * 60));
+  const phtMinutesLeft = Math.floor((msUntilPhtReset % (1000 * 60 * 60)) / (1000 * 60));
+  const phtTimeLeftDisplay = `${phtHoursLeft}h ${phtMinutesLeft}m Left`;
+
+  // Deterministic seed for daily rotation
+  const [pYear, pMonth, pDay] = todayStrPHT.split("-").map(Number);
+  const phtDaySeed = (pYear * 372) + (pMonth * 31) + pDay;
+
+  // Daily Mission Level DB Check (Checked against PHT Date)
+  const dailyMissionId = `daily-level-${todayStrPHT}`;
+
+  const dailyMissionProgress = await prisma.missionProgress.findFirst({
+    where: {
+      userId,
+      OR: [
+        { missionId: dailyMissionId },
+        { missionId: "daily-level" }
+      ]
+    }
+  });
+
+  const isDailyLevelCompleted = dailyMissionProgress?.status === "COMPLETED";
+  const isDailyLevelStarted = !!dailyMissionProgress;
+
+  const isCompletedTodayPHT = (date: Date | null | undefined) => {
+    if (!date) return false;
+    try {
+      const dStr = phtFormatter.format(new Date(date));
+      return dStr === todayStrPHT;
+    } catch {
+      return false;
+    }
   };
 
-  // Genshin-style Daily Commissions (3 Tasks)
-  const dailyTasks = [
+  // Check today's distinct daily tasks from DB
+  const todayDailyTaskRecords = completedMissions.filter(m => m.missionId.startsWith("daily-task-"));
+  const completedTaskIdsToday = new Set(
+    todayDailyTaskRecords
+      .filter(r => r.missionId.endsWith(`-${todayStrPHT}`) || isCompletedTodayPHT(r.completedAt))
+      .map(r => r.missionId.replace(/^daily-task-/, '').replace(new RegExp(`-${todayStrPHT}$`), ''))
+  );
+
+  const isDailyBonusClaimed = completedMissions.some(m => 
+    m.missionId === `daily-commission-bonus-${todayStrPHT}` || 
+    (m.missionId === "daily-commission-bonus" && isCompletedTodayPHT(m.completedAt))
+  );
+
+  const hasCampaignCompletedToday = campaignCompletedMissions.some(m => isCompletedTodayPHT(m.completedAt));
+
+  // Daily Rotating Challenge Pool (7 Unique Practice Mission Options)
+  const DAILY_LEVEL_POOL = [
     {
-      id: "task-1",
-      title: "Complete Today's Daily Level",
-      tag: "DAILY LEVEL",
-      desc: "Finish today's practice exercise in the sandbox.",
-      xpReward: 80,
-      gearsReward: 20,
-      completed: false,
-      link: `/sandbox?mode=daily&tier=${level}`,
+      title: "Space Station Cafeteria Menu",
+      sector: "HTML Sector",
+      difficulty: "Beginner",
+      desc: "Write headings, paragraphs, and lists to create a clean astronaut meal menu.",
+      planetIcon: "/Planet 7.svg",
+      xpReward: 100,
+      gearsReward: 25,
     },
     {
-      id: "task-2",
-      title: isHtmlExpert 
-        ? "Complete 1 HTML Lesson" 
-        : isCssExpert 
-          ? "Complete 1 CSS Challenge" 
-          : "Complete 1 JavaScript Mission",
-      tag: "CURRICULUM",
-      desc: "Clear an active level from your current course track.",
-      xpReward: 50,
+      title: "Cosmic Neon Color Palette",
+      sector: "CSS Sector",
+      difficulty: "Intermediate",
+      desc: "Style colorful glowing cards, rounded borders, and custom background colors.",
+      planetIcon: "/Planet 4.svg",
+      xpReward: 100,
+      gearsReward: 25,
+    },
+    {
+      title: "Rocket Launch Fuel Check",
+      sector: "JavaScript Sector",
+      difficulty: "Intermediate",
+      desc: "Use variables and simple math logic to check if a rocket has enough fuel to launch.",
+      planetIcon: "/Planet 1.svg",
+      xpReward: 100,
+      gearsReward: 25,
+    },
+    {
+      title: "Space Rover Flexbox Parking",
+      sector: "CSS Sector",
+      difficulty: "Intermediate",
+      desc: "Align and center rovers in their parking bays using Flexbox row and column layouts.",
+      planetIcon: "/Planet 2.svg",
+      xpReward: 100,
+      gearsReward: 25,
+    },
+    {
+      title: "Spaceship Defense Shield Switch",
+      sector: "JavaScript Sector",
+      difficulty: "Intermediate",
+      desc: "Write a button click event that turns a spaceship shield on and updates status text.",
+      planetIcon: "/Planet 3.svg",
+      xpReward: 100,
+      gearsReward: 25,
+    },
+    {
+      title: "Astronaut Cadet Sign-Up Form",
+      sector: "HTML Sector",
+      difficulty: "Beginner",
+      desc: "Create text boxes, checkboxes, and a submit button for new cadet registration.",
+      planetIcon: "/Planet 5.svg",
+      xpReward: 100,
+      gearsReward: 25,
+    },
+    {
+      title: "Solar System Planet Scanner",
+      sector: "JavaScript Sector",
+      difficulty: "Advanced",
+      desc: "Loop through a list of discovered planets and display each planet name on the screen.",
+      planetIcon: "/Planet 6.svg",
+      xpReward: 100,
+      gearsReward: 25,
+    },
+  ];
+
+  const dailyLevelTemplate = DAILY_LEVEL_POOL[phtDaySeed % DAILY_LEVEL_POOL.length];
+  const dailyGeneratedLevel = {
+    ...dailyLevelTemplate,
+    link: `/sandbox?mode=daily&missionId=${dailyMissionId}&tier=${level}`,
+  };
+
+  // 10 Distinct Rotating Daily Tasks Pool (Resetting cleanly every day at 12:00 AM PHT)
+  const DAILY_TASK_POOL = [
+    {
+      id: "task-daily-level",
+      title: "Complete Today's Daily Challenge",
+      tag: "DAILY",
+      desc: "Finish today's quick practice coding challenge.",
+      xpReward: XP_REWARDS.DAILY_COMMISSIONS.MISSION_XP,
+      gearsReward: 20,
+      completed: isDailyLevelCompleted,
+      link: `/sandbox?mode=daily&missionId=${dailyMissionId}&tier=${level}`,
+    },
+    {
+      id: "task-curriculum-1",
+      title: isHtmlExpert ? "Finish 1 HTML Lesson" : isCssExpert ? "Finish 1 CSS Lesson" : "Finish 1 JavaScript Lesson",
+      tag: "LESSON",
+      desc: "Complete any 1 lesson in your current course.",
+      xpReward: XP_REWARDS.DAILY_COMMISSIONS.MISSION_XP,
       gearsReward: 10,
-      completed: completedMissions.length > 0,
+      completed: hasCampaignCompletedToday || completedTaskIdsToday.has("task-curriculum-1"),
       link: isHtmlExpert ? "/modules/html" : isCssExpert ? "/modules/css" : "/modules/javascript",
     },
     {
-      id: "task-3",
-      title: "Visit the Galactic Shop",
-      tag: "EXPLORATION",
-      desc: "Check out available accessories and gear.",
-      xpReward: 40,
+      id: "task-curriculum-2",
+      title: "Finish 1 Planet Level",
+      tag: "PLANET",
+      desc: "Solve any 1 coding level on the planet map.",
+      xpReward: XP_REWARDS.DAILY_COMMISSIONS.MISSION_XP,
+      gearsReward: 10,
+      completed: hasCampaignCompletedToday || completedTaskIdsToday.has("task-curriculum-2"),
+      link: "/modules",
+    },
+    {
+      id: "task-curriculum-3",
+      title: "Play 1 Rover Level",
+      tag: "GAME",
+      desc: "Move your rover past blocks to reach the goal.",
+      xpReward: XP_REWARDS.DAILY_COMMISSIONS.MISSION_XP,
+      gearsReward: 10,
+      completed: hasCampaignCompletedToday || completedTaskIdsToday.has("task-curriculum-3"),
+      link: "/modules",
+    },
+    {
+      id: "task-explore-1",
+      title: "Visit the Shop",
+      tag: "EXPLORE",
+      desc: "Take a look at items and outfits in the shop.",
+      xpReward: XP_REWARDS.DAILY_COMMISSIONS.MISSION_XP,
       gearsReward: 5,
-      completed: true,
+      completed: completedTaskIdsToday.has("task-explore-1"),
       link: "/shop",
     },
     {
-      id: "task-4",
-      title: "Check Cadet Achievements",
-      tag: "ACHIEVEMENTS",
-      desc: "Inspect your unlocked badges & trophies.",
-      xpReward: 30,
+      id: "task-explore-2",
+      title: "View the Planet Map",
+      tag: "EXPLORE",
+      desc: "Look at the planets and courses on the map.",
+      xpReward: XP_REWARDS.DAILY_COMMISSIONS.MISSION_XP,
       gearsReward: 5,
-      completed: true,
+      completed: completedTaskIdsToday.has("task-explore-2"),
+      link: "/modules",
+    },
+    {
+      id: "task-explore-3",
+      title: "Look at Space Suits",
+      tag: "SHOP",
+      desc: "Check out astronaut suits and gear in the shop.",
+      xpReward: XP_REWARDS.DAILY_COMMISSIONS.MISSION_XP,
+      gearsReward: 5,
+      completed: completedTaskIdsToday.has("task-explore-3"),
+      link: "/shop",
+    },
+    {
+      id: "task-achieve-1",
+      title: "Check Your Badges",
+      tag: "BADGES",
+      desc: "See the badges and trophies you have unlocked.",
+      xpReward: XP_REWARDS.DAILY_COMMISSIONS.MISSION_XP,
+      gearsReward: 5,
+      completed: completedTaskIdsToday.has("task-achieve-1"),
+      link: "/achievements",
+    },
+    {
+      id: "task-achieve-2",
+      title: "View Your Profile",
+      tag: "PROFILE",
+      desc: "Check your level, gears, and stats on your profile.",
+      xpReward: XP_REWARDS.DAILY_COMMISSIONS.MISSION_XP,
+      gearsReward: 5,
+      completed: completedTaskIdsToday.has("task-achieve-2"),
+      link: "/profile",
+    },
+    {
+      id: "task-achieve-3",
+      title: "Check Achievements",
+      tag: "BADGES",
+      desc: "See your progress toward new achievements.",
+      xpReward: XP_REWARDS.DAILY_COMMISSIONS.MISSION_XP,
+      gearsReward: 5,
+      completed: completedTaskIdsToday.has("task-achieve-3"),
       link: "/achievements",
     },
   ];
 
+  // Pick 4 distinct tasks from the 10-task pool for today based on PHT Day Seed
+  const curTask = DAILY_TASK_POOL[1 + (phtDaySeed % 3)];
+  const expTask = DAILY_TASK_POOL[4 + ((phtDaySeed + 1) % 3)];
+  const achTask = DAILY_TASK_POOL[7 + ((phtDaySeed + 2) % 3)];
+
+  const dailyTasks = [
+    DAILY_TASK_POOL[0], // Daily Level
+    curTask,            // Rotating Curriculum
+    expTask,            // Rotating Exploration
+    achTask,            // Rotating Accolades
+  ];
+
   const completedTasksCount = dailyTasks.filter(t => t.completed).length;
 
-  // Ordis-style quirky, bubbly AI companion quips
+  // Simple, encouraging daily companion quips
   const COMPANION_QUIPS = [
-    "All systems nominal! ...Well, except for the coffee machine. Let's write some stellar code today!",
-    "Vital signs: optimal! Learning matrix: charged! Ready to conquer new star sectors?",
-    "Diagnostic voyage in progress. Remind me to sweep space dust from your thrusters later!",
-    "Sensors detect a 100% chance of breakthrough today. Shall we ignite the main engines?",
-    "Recalibrating enthusiasm processors... OVERFLOW ERROR! Let's get straight to coding!",
-    "Sub-space transmitters tuned to your learning frequency. Awaiting your command!",
-    "Proximity warning: severe genius detected in your sector. Keep up the momentum!",
-    "Flight log updated: Cadet is looking exceptionally sharp and ready today!",
-    "Orbital telemetry suggests today is an excellent day to solve complex challenges!",
-    "Shields up, code ready! I've pre-warmed your developer sandbox, Explorer!"
+    "Ready to write some code today? Let's get started!",
+    "Great to see you again! Pick a mission and start coding.",
+    "Your coding workspace is ready. Let's make progress!",
+    "Take it one level at a time. You're doing great!",
+    "Ready for today's challenge? Let's solve some puzzles!",
+    "Practice makes progress. Let's learn something new today!",
+    "Welcome back! Your next mission is waiting for you.",
+    "Small steps every day lead to big achievements. Let's go!",
+    "Time to level up your skills. Which mission are we tackling today?",
+    "Every line of code counts. Have fun learning today!"
   ];
 
   const randomQuip = COMPANION_QUIPS[Math.floor(Math.random() * COMPANION_QUIPS.length)];
@@ -177,7 +410,7 @@ export default async function DashboardPage() {
                   <h1 className="font-display font-black text-2xl sm:text-3xl md:text-4xl text-white tracking-tight">
                     Salutations, <span className="text-[#ff912d] italic">{userDisplayName}!</span>
                   </h1>
-                  <p className="text-white/80 text-xs sm:text-sm md:text-base font-medium mt-1.5 flex items-start gap-2 leading-snug">
+                  <p className="text-white/80 text-xs sm:text-sm md:text-base font-medium mt-3 md:mt-3.5 flex items-start gap-2 leading-snug">
                     <Sparkles className="text-[#ff912d] flex-shrink-0 mt-0.5" size={16} />
                     <span>{randomQuip}</span>
                   </p>
@@ -186,13 +419,18 @@ export default async function DashboardPage() {
                 {/* Live Badges (XP & Gears) - Permanently locked to the Right */}
                 <div className="flex items-center gap-2.5 flex-shrink-0">
                   {/* XP Badge */}
-                  <div className="flex items-center gap-2 bg-[#361d57] border border-[#ff912d]/40 rounded-2xl px-3 sm:px-4 py-2 shadow-md">
+                  <div 
+                    title={`Total XP: ${xp.toLocaleString()} XP • Level ${level} (${Math.round(progress)}%)`}
+                    className="flex items-center gap-2 bg-[#361d57] border border-[#ff912d]/40 rounded-2xl px-3 sm:px-4 py-2 shadow-md"
+                  >
                     <div className="w-7 h-7 rounded-xl bg-yellow-400/20 text-yellow-400 flex items-center justify-center font-bold flex-shrink-0">
                       <Zap size={15} className="fill-yellow-400" />
                     </div>
                     <div className="flex flex-col">
                       <span className="text-xs font-mono font-bold uppercase tracking-wider text-white/50 leading-none">Experience</span>
-                      <span className="text-xs sm:text-sm font-black font-display text-white mt-0.5 whitespace-nowrap">{xp} / {nextThreshold}</span>
+                      <span className="text-xs sm:text-sm font-black font-display text-white mt-0.5 whitespace-nowrap">
+                        {isMaxLevel ? `${xp.toLocaleString()} XP` : `${levelCurrentXp} / ${levelRequiredXp} XP`}
+                      </span>
                     </div>
                   </div>
 
@@ -233,35 +471,41 @@ export default async function DashboardPage() {
               {/* 3 Top Stat / Metric Cards with 3D Depth */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
                 
-                {/* Metric 1: Missions Completed */}
+                {/* Metric 1: Current Planet & Levels Completed */}
                 <div className="relative group/stat-card">
                   <div className="absolute inset-0 bg-[#090311]/75 rounded-2xl translate-x-1.5 translate-y-1.5 z-0 transition-all duration-300 group-hover/stat-card:translate-x-2 group-hover/stat-card:translate-y-2" />
                   <div className="relative z-10 bg-[#361d57] border border-[#ff912d]/30 p-5 rounded-2xl transition-all duration-300 shadow-xl group-hover/stat-card:-translate-x-0.5 group-hover/stat-card:-translate-y-0.5 flex flex-col justify-between gap-3 h-full">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-mono font-bold uppercase tracking-wider text-white/50">Missions</span>
-                      <div className="w-8 h-8 rounded-xl bg-[#ff912d]/20 text-[#ff912d] flex items-center justify-center">
-                        <Rocket size={16} />
+                      <span className="text-sm sm:text-base font-mono font-black uppercase tracking-wider text-white/70">
+                        {currentPlanet.name}
+                      </span>
+                      <div className="w-9 h-9 rounded-xl bg-[#ff912d]/20 text-[#ff912d] flex items-center justify-center">
+                        <Rocket size={18} />
                       </div>
                     </div>
                     <div>
-                      <div className="text-2xl font-black font-display text-white">{completedMissions.length} <span className="text-sm font-normal text-white/50">/ {TOTAL_WEB_MODULES}</span></div>
-                      <div className="text-xs sm:text-sm text-white/70 font-medium mt-1">Completed Missions</div>
+                      <div className="text-2xl sm:text-3xl font-black font-display text-white">
+                        {currentPlanetCompleted} <span className="text-base font-normal text-white/50">/ {currentPlanetTotal}</span>
+                      </div>
+                      <div className="text-xs sm:text-sm text-white/70 font-medium mt-1">
+                        {currentPlanet.subtitle ? `${currentPlanet.subtitle} • Levels Completed` : "Levels Completed"}
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Metric 2: Rank & Level */}
+                {/* Metric 2: Rank & Level (Astronaut Level) */}
                 <div className="relative group/stat-card">
                   <div className="absolute inset-0 bg-[#090311]/75 rounded-2xl translate-x-1.5 translate-y-1.5 z-0 transition-all duration-300 group-hover/stat-card:translate-x-2 group-hover/stat-card:translate-y-2" />
                   <div className="relative z-10 bg-[#361d57] border border-[#ffc107]/30 p-5 rounded-2xl transition-all duration-300 shadow-xl group-hover/stat-card:-translate-x-0.5 group-hover/stat-card:-translate-y-0.5 flex flex-col justify-between gap-3 h-full">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-mono font-bold uppercase tracking-wider text-white/50">Cadet Rank</span>
-                      <div className="w-8 h-8 rounded-xl bg-yellow-400/20 text-yellow-400 flex items-center justify-center">
-                        <Award size={16} />
+                      <span className="text-sm sm:text-base font-mono font-black uppercase tracking-wider text-white/70">Astronaut Level</span>
+                      <div className="w-9 h-9 rounded-xl bg-yellow-400/20 text-yellow-400 flex items-center justify-center">
+                        <Award size={18} />
                       </div>
                     </div>
                     <div>
-                      <div className="text-2xl font-black font-display text-white">Level {level}</div>
+                      <div className="text-2xl sm:text-3xl font-black font-display text-white">Level {level}</div>
                       <div className="text-xs sm:text-sm text-white/70 font-medium mt-1">{Math.round(progress)}% to Level {level < 10 ? level + 1 : 'MAX'}</div>
                     </div>
                   </div>
@@ -272,13 +516,13 @@ export default async function DashboardPage() {
                   <div className="absolute inset-0 bg-[#090311]/75 rounded-2xl translate-x-1.5 translate-y-1.5 z-0 transition-all duration-300 group-hover/stat-card:translate-x-2 group-hover/stat-card:translate-y-2" />
                   <div className="relative z-10 bg-[#361d57] border border-[#a855f7]/30 p-5 rounded-2xl transition-all duration-300 shadow-xl group-hover/stat-card:-translate-x-0.5 group-hover/stat-card:-translate-y-0.5 flex flex-col justify-between gap-3 h-full">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-mono font-bold uppercase tracking-wider text-white/50">Badges</span>
-                      <div className="w-8 h-8 rounded-xl bg-purple-500/20 text-[#a855f7] flex items-center justify-center">
-                        <ShieldCheck size={16} />
+                      <span className="text-sm sm:text-base font-mono font-black uppercase tracking-wider text-white/70">Badges</span>
+                      <div className="w-9 h-9 rounded-xl bg-purple-500/20 text-[#a855f7] flex items-center justify-center">
+                        <ShieldCheck size={18} />
                       </div>
                     </div>
                     <div>
-                      <div className="text-2xl font-black font-display text-white">{unlockedAchievementsCount}</div>
+                      <div className="text-2xl sm:text-3xl font-black font-display text-white">{unlockedAchievementsCount}</div>
                       <div className="text-xs sm:text-sm text-white/70 font-medium mt-1">Badges Collected</div>
                     </div>
                   </div>
@@ -304,28 +548,42 @@ export default async function DashboardPage() {
                 {/* 2x2 Course Track Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   
-                  {/* Track 1: Web Development (Active) */}
+                  {/* Track 1: Web Development */}
                   <div className="relative group/track-card">
                     <div className="absolute inset-0 bg-[#090311]/75 rounded-2xl translate-x-2 translate-y-2 z-0 transition-all duration-300 group-hover/track-card:translate-x-3 group-hover/track-card:translate-y-3" />
                     <div className="relative z-10 bg-gradient-to-br from-[#ff912d] to-[#e67e22] text-white p-5 rounded-2xl transition-all duration-300 shadow-xl group-hover/track-card:-translate-x-1 group-hover/track-card:-translate-y-1 flex flex-col justify-between gap-5 border border-white/20">
                       <div className="flex items-center justify-between">
                         <div className="font-display font-black text-lg tracking-tight">Web Development</div>
-                        <span className="bg-[#1e0a2d]/80 text-white text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border border-white/10 flex items-center gap-1.5 shadow-sm">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> Active
-                        </span>
+                        {isWebDevActive ? (
+                          <span className="bg-[#1e0a2d]/80 text-white text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border border-white/10 flex items-center gap-1.5 shadow-sm">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> Active
+                          </span>
+                        ) : (
+                          <span className="bg-black/40 text-white/80 text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border border-white/10 flex items-center gap-1">
+                            <Lock size={9} /> Sector Locked
+                          </span>
+                        )}
                       </div>
 
                       <div className="space-y-2">
                         <div className="flex justify-between items-baseline">
-                          <span className="text-3xl font-black font-display tracking-tight">{webProgress}%</span>
-                          <span className="text-xs font-bold text-white/90">{completedMissions.length} / {TOTAL_WEB_MODULES} Modules</span>
+                          <span className={`${isWebDevActive ? 'text-[#361d57]' : 'text-white'} font-black text-3xl font-display tracking-tight`}>
+                            {webProgress}%
+                          </span>
+                          <span className={`text-xs ${isWebDevActive ? 'font-black text-[#361d57]' : 'font-bold text-white/90'}`}>
+                            {webProgressLabel}
+                          </span>
                         </div>
                         {/* Progress Bar Track */}
                         <div className="h-3 w-full bg-[#1e0a2d]/60 rounded-full overflow-hidden p-0.5 border border-black/20">
-                          <div 
-                            className="h-full bg-white rounded-full transition-all duration-500 shadow-sm"
-                            style={{ width: `${Math.max(4, webProgress)}%` }}
-                          />
+                          {isWebDevActive ? (
+                            <div 
+                              className="h-full bg-white rounded-full transition-all duration-500 shadow-sm"
+                              style={{ width: `${webProgress}%` }}
+                            />
+                          ) : (
+                            <div className="h-full bg-white/20 rounded-full w-0" />
+                          )}
                         </div>
                       </div>
                     </div>
@@ -345,7 +603,7 @@ export default async function DashboardPage() {
                       <div className="space-y-2">
                         <div className="flex justify-between items-baseline">
                           <span className="text-3xl font-black font-display tracking-tight">0%</span>
-                          <span className="text-xs font-bold text-white/90">0 / 20 Modules</span>
+                          <span className="text-xs font-bold text-white/90">0 / 3 Modules</span>
                         </div>
                         <div className="h-3 w-full bg-[#1e0a2d]/60 rounded-full overflow-hidden p-0.5 border border-black/20">
                           <div className="h-full bg-white/20 rounded-full w-0" />
@@ -368,7 +626,7 @@ export default async function DashboardPage() {
                       <div className="space-y-2">
                         <div className="flex justify-between items-baseline">
                           <span className="text-3xl font-black font-display tracking-tight">0%</span>
-                          <span className="text-xs font-bold text-white/90">0 / 18 Modules</span>
+                          <span className="text-xs font-bold text-white/90">0 / 3 Modules</span>
                         </div>
                         <div className="h-3 w-full bg-[#1e0a2d]/60 rounded-full overflow-hidden p-0.5 border border-black/20">
                           <div className="h-full bg-white/20 rounded-full w-0" />
@@ -391,7 +649,7 @@ export default async function DashboardPage() {
                       <div className="space-y-2">
                         <div className="flex justify-between items-baseline">
                           <span className="text-3xl font-black font-display tracking-tight">0%</span>
-                          <span className="text-xs font-bold text-white/90">0 / 22 Modules</span>
+                          <span className="text-xs font-bold text-white/90">0 / 3 Modules</span>
                         </div>
                         <div className="h-3 w-full bg-[#1e0a2d]/60 rounded-full overflow-hidden p-0.5 border border-black/20">
                           <div className="h-full bg-white/20 rounded-full w-0" />
@@ -411,8 +669,15 @@ export default async function DashboardPage() {
                   {/* Top Header Row: Sector & Category Badges + Time Remaining */}
                   <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
                     <div className="flex items-center gap-2">
-                      <span className="bg-[#ff912d] text-black font-sans font-black text-xs uppercase tracking-wider px-3 py-1 rounded-full flex items-center gap-1.5 shadow-sm">
-                        <Flame size={13} className="fill-black" /> Daily Mission Level
+                      <span className={`font-sans font-black text-xs uppercase tracking-wider px-3 py-1 rounded-full flex items-center gap-1.5 shadow-sm ${
+                        isDailyLevelCompleted 
+                          ? "bg-emerald-500 text-black" 
+                          : isDailyLevelStarted 
+                          ? "bg-amber-500 text-black" 
+                          : "bg-[#ff912d] text-black"
+                      }`}>
+                        {isDailyLevelCompleted ? <CheckCircle2 size={13} /> : <Flame size={13} className="fill-black" />} 
+                        {isDailyLevelCompleted ? "Daily Challenge Complete" : isDailyLevelStarted ? "Daily Challenge In Progress" : "Daily Challenge"}
                       </span>
                       <span className="bg-white/10 text-white font-mono text-xs uppercase tracking-wider px-2.5 py-1 rounded-full border border-white/10">
                         {dailyGeneratedLevel.sector}
@@ -422,18 +687,18 @@ export default async function DashboardPage() {
                       </span>
                     </div>
 
-                    {/* Clean Timer Label (24 Hours Left) */}
-                    <div className="flex items-center gap-1.5 text-[#ff912d] text-sm font-bold font-mono">
+                    {/* Clean Timer Label (Dynamic PHT 12:00 AM Countdown) */}
+                    <div className="flex items-center gap-1.5 text-[#ff912d] text-xs sm:text-sm font-bold font-mono">
                       <Clock size={15} />
-                      <span>24 Hours Left</span>
+                      <span>{phtTimeLeftDisplay}</span>
                     </div>
                   </div>
 
                   {/* Main Content Area: Planet Graphic + Mission Description & Launch Action */}
                   <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 flex-1 justify-center">
                     
-                    {/* Planet Thumbnail Container */}
-                    <div className="w-22 h-22 sm:w-28 sm:h-28 rounded-2xl bg-gradient-to-b from-[#1a082c] to-[#130927] border border-white/10 flex items-center justify-center relative overflow-hidden flex-shrink-0 shadow-inner">
+                    {/* Planet Thumbnail Container (Enlarged while preserving 1:1 square proportions) */}
+                    <div className="w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 rounded-3xl bg-gradient-to-b from-[#1a082c] to-[#130927] border border-white/10 flex items-center justify-center relative overflow-hidden flex-shrink-0 shadow-inner p-3">
                       <img 
                         src="/Landing Page BG.png" 
                         alt="Starfield"
@@ -442,7 +707,7 @@ export default async function DashboardPage() {
                       <img 
                         src={dailyGeneratedLevel.planetIcon} 
                         alt="Planet" 
-                        className="w-14 h-14 sm:w-16 sm:h-16 object-contain relative z-10 drop-shadow-[0_0_12px_rgba(255,145,45,0.4)] transition-transform duration-500 group-hover/daily-level-card:scale-110" 
+                        className="w-full h-full object-contain relative z-10 drop-shadow-[0_0_20px_rgba(255,145,45,0.45)] transition-transform duration-500 group-hover/daily-level-card:scale-110" 
                       />
                     </div>
 
@@ -470,9 +735,25 @@ export default async function DashboardPage() {
 
                         <Link 
                           href={dailyGeneratedLevel.link}
-                          className="w-full sm:w-auto px-6 py-2.5 bg-[#ff912d] hover:bg-orange-400 text-black font-sans font-black text-sm uppercase tracking-wider rounded-xl shadow-lg transition-all duration-200 hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
+                          className={`w-full sm:w-auto px-6 py-2.5 font-sans font-black text-sm uppercase tracking-wider rounded-xl shadow-lg transition-all duration-200 hover:scale-105 active:scale-95 flex items-center justify-center gap-2 ${
+                            isDailyLevelCompleted 
+                              ? "bg-emerald-500 hover:bg-emerald-400 text-black" 
+                              : "bg-[#ff912d] hover:bg-orange-400 text-black"
+                          }`}
                         >
-                          <Play size={14} className="fill-black" /> START MISSION
+                          {isDailyLevelCompleted ? (
+                            <>
+                              <CheckCircle2 size={14} /> REVIEW CHALLENGE
+                            </>
+                          ) : isDailyLevelStarted ? (
+                            <>
+                              <Play size={14} className="fill-black" /> CONTINUE CHALLENGE
+                            </>
+                          ) : (
+                            <>
+                              <Play size={14} className="fill-black" /> START CHALLENGE
+                            </>
+                          )}
                         </Link>
                       </div>
                     </div>
@@ -528,30 +809,31 @@ export default async function DashboardPage() {
                 </div>
               </div>
 
-              {/* Daily Expeditions Card (Tasks Completed) */}
+              {/* Daily Tasks Card (Tasks Completed) */}
               <div className="relative group/commissions-card flex-1">
                 <div className="absolute inset-0 bg-[#090311]/75 rounded-3xl translate-x-2 translate-y-2 z-0 transition-all duration-300 group-hover/commissions-card:translate-x-3 group-hover/commissions-card:translate-y-3" />
                 <div className="relative z-10 bg-[#361d57] border-2 border-[#ff912d]/50 p-4 sm:p-5 rounded-3xl transition-all duration-300 shadow-xl group-hover/commissions-card:-translate-x-1 group-hover/commissions-card:-translate-y-1 flex flex-col justify-start gap-3 h-full">
                   
-                  {/* Expeditions Header */}
+                  {/* Daily Tasks Header */}
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <Sparkles className="text-[#ff912d]" size={18} />
-                      <h3 className="font-display font-black text-base text-white tracking-wide uppercase">
-                        Daily Expeditions
+                      <h3 className="font-display font-black text-lg text-white tracking-wide uppercase">
+                        Daily Tasks
                       </h3>
                     </div>
 
-                    {/* Top Expeditions Progress Bar & Claim Button */}
+                    {/* Top Tasks Progress Bar & Claim Button */}
                     <DailyCommissionClaimButton 
                       completedTasksCount={completedTasksCount}
                       totalTasksCount={dailyTasks.length}
                       bonusGears={50}
-                      bonusXP={150}
+                      bonusXP={XP_REWARDS.DAILY_COMMISSIONS.COMPLETION_BONUS}
+                      initialIsClaimed={isDailyBonusClaimed}
                     />
                   </div>
 
-                  {/* Expeditions List (Distinct Gap from Rewards Claim Box) */}
+                  {/* Tasks List (Distinct Gap from Rewards Claim Box) */}
                   <div className="flex flex-col gap-2.5 mt-3.5 sm:mt-4">
                     {dailyTasks.map((task) => (
                       <Link 

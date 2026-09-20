@@ -3,6 +3,7 @@
 import { getServerSession } from "next-auth/next";
 import { adminAuthOptions } from "@/lib/adminAuth";
 import { prisma } from "@/lib/auth";
+import { logSystemAction } from "@/lib/logger";
 
 export interface CreateQuestionInput {
   question: string;
@@ -49,6 +50,13 @@ export async function toggleAptitudeQuestionStatus(id: string, isActive: boolean
     data: { isActive }
   });
 
+  await logSystemAction({
+    actorId: session.user.id,
+    actorRole: "ADMIN",
+    action: "APTITUDE_QUESTION_TOGGLED",
+    details: { questionId: id, isActive }
+  });
+
   return { success: true };
 }
 
@@ -60,6 +68,13 @@ export async function deleteAptitudeQuestion(id: string) {
 
   await prisma.aptitudeQuestion.delete({
     where: { id }
+  });
+
+  await logSystemAction({
+    actorId: session.user.id,
+    actorRole: "ADMIN",
+    action: "APTITUDE_QUESTION_DELETED",
+    details: { questionId: id }
   });
 
   return { success: true };
@@ -97,6 +112,13 @@ export async function updateAptitudeQuestion(input: UpdateQuestionInput) {
     }
   });
 
+  await logSystemAction({
+    actorId: session.user.id,
+    actorRole: "ADMIN",
+    action: "APTITUDE_QUESTION_UPDATED",
+    details: { questionId: input.id, category: input.category }
+  });
+
   return { success: true, question: updated };
 }
 
@@ -126,6 +148,13 @@ export async function createManualAptitudeQuestion(input: CreateQuestionInput) {
       explanation: input.explanation || null,
       isActive: true
     }
+  });
+
+  await logSystemAction({
+    actorId: session.user.id,
+    actorRole: "ADMIN",
+    action: "APTITUDE_QUESTION_CREATED",
+    details: { questionId: newQuestion.id, category: input.category }
   });
 
   return { success: true, question: newQuestion };
@@ -278,6 +307,13 @@ STRICT REQUIREMENT: Respond ONLY with a valid raw JSON object conforming EXACTLY
       action: "ADMIN_GENERATE_APTITUDE_QUESTIONS",
       details: `Generated ${createdQuestions.length} AI Aptitude Diagnostic questions in category: ${categoryFocus}`
     }
+  });
+
+  await logSystemAction({
+    actorId: session.user.id,
+    actorRole: "ADMIN",
+    action: "APTITUDE_QUESTIONS_AI_GENERATED",
+    details: { count: createdQuestions.length, categoryFocus }
   });
 
   return {

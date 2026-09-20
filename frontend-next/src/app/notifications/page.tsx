@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, ChevronLeft, ChevronRight, X, UserIcon, Check, Settings } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, X, UserIcon, Check, Settings, Brain, Rocket } from 'lucide-react';
 import TopHeader from '@/components/TopHeader';
 import './notifications.css';
 
@@ -143,6 +143,10 @@ export default function NotificationsPage() {
     const handleView = async (notif: any) => {
         if (notif.type === 'achievement_unlocked' || notif.notification_type === 'achievement_unlocked') {
             router.push('/achievements');
+        } else if (notif.type === 'aptitude_completed' || notif.notification_type === 'aptitude_completed') {
+            router.push('/aptitude-test');
+        } else if (notif.type === 'planet_unlocked' || notif.notification_type === 'planet_unlocked') {
+            router.push('/modules');
         } else if (notif.sender_id) {
             router.push(`/profile/${notif.sender_id}`);
         }
@@ -217,9 +221,21 @@ export default function NotificationsPage() {
                         return (
                             <div key={notif.id} className="neo-notif-card flex-row">
                                 <div className="neo-notif-avatar">
-                                    {(notif.type === 'system_verify_reward' || notif.notification_type === 'system_verify_reward') ? (
+                                    {(notif.type === 'planet_unlocked' || notif.notification_type === 'planet_unlocked') ? (
+                                        notif.data?.planetSrc ? (
+                                            <img src={notif.data.planetSrc} alt={notif.data.planetName || 'Planet'} className="w-full h-full object-contain" />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center bg-[#ff912d]/20 rounded-full text-[#ff912d]">
+                                                <Rocket size={28} />
+                                            </div>
+                                        )
+                                    ) : (notif.type === 'system_verify_reward' || notif.notification_type === 'system_verify_reward') ? (
                                         <div className="w-full h-full flex items-center justify-center bg-[#ff912d]/20 rounded-full shadow-inner text-[#ff912d]">
                                             <Settings size={28} />
+                                        </div>
+                                    ) : (notif.type === 'aptitude_completed' || notif.notification_type === 'aptitude_completed') ? (
+                                        <div className="w-full h-full flex items-center justify-center bg-[#ff912d]/20 rounded-full shadow-inner text-[#ff912d]">
+                                            <Brain size={28} />
                                         </div>
                                     ) : (notif.type === 'achievement_unlocked' || notif.notification_type === 'achievement_unlocked' || notif.type === 'level_up' || notif.notification_type === 'level_up') ? (
                                         notif.data?.badgeImage ? (
@@ -242,13 +258,29 @@ export default function NotificationsPage() {
                                 <div className="neo-notif-content">
                                     <div className="neo-notif-title">
                                         <span className="neo-notif-name">
-                                            {(notif.type === 'system_verify_reward' || notif.notification_type === 'system_verify_reward') ? 'Verification Reward!' : (notif.type === 'achievement_unlocked' || notif.notification_type === 'achievement_unlocked') ? 'Achievement Unlocked!' : (notif.type === 'level_up' || notif.notification_type === 'level_up') ? 'Level Up!' : (notif.sender?.username || notif.sender?.name || 'System')}
+                                            {(notif.type === 'planet_unlocked' || notif.notification_type === 'planet_unlocked')
+                                                ? 'Planet Unlocked!'
+                                                : (notif.type === 'system_verify_reward' || notif.notification_type === 'system_verify_reward') 
+                                                ? 'Verification Reward!' 
+                                                : (notif.type === 'aptitude_completed' || notif.notification_type === 'aptitude_completed')
+                                                ? 'Aptitude Test'
+                                                : (notif.type === 'achievement_unlocked' || notif.notification_type === 'achievement_unlocked') 
+                                                ? 'Achievement Unlocked!' 
+                                                : (notif.type === 'level_up' || notif.notification_type === 'level_up') 
+                                                ? 'Level Up!' 
+                                                : (notif.sender?.username || notif.sender?.name || 'System')}
                                         </span>
                                         <span className="neo-notif-time">{timeAgo(notif.created_at || notif.createdAt)}</span>
                                     </div>
                                     <p className="neo-notif-desc">
-                                        {(notif.type === 'system_verify_reward' || notif.notification_type === 'system_verify_reward')
+                                        {(notif.type === 'planet_unlocked' || notif.notification_type === 'planet_unlocked')
+                                            ? `${notif.data?.planetName || 'A new planet'} is now accessible. Head to Missions to explore it!`
+                                            : (notif.type === 'system_verify_reward' || notif.notification_type === 'system_verify_reward')
                                             ? `You received ${notif.data?.amount} Gears for verifying your account.`
+                                            : (notif.type === 'aptitude_completed' || notif.notification_type === 'aptitude_completed')
+                                            ? (notif.data?.message?.startsWith('Diagnostic Completed') 
+                                                ? 'Your aptitude test is ready! Check it out to see your recommended learning path.' 
+                                                : (notif.data?.message || 'Your aptitude test is ready! Check it out to see your recommended learning path.'))
                                             : (notif.type === 'friend_request' || notif.notification_type === 'friend_request') && notif.read_at
                                             ? 'Friend request accepted.'
                                             : (notif.type === 'achievement_unlocked' || notif.notification_type === 'achievement_unlocked')
