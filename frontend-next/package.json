@@ -17,6 +17,8 @@
     "blockly": "^13.1.1",
     "date-fns": "^4.4.0",
     "dotenv": "^17.4.2",
+    "html-to-image": "^1.11.13",
+    "html2canvas": "^1.4.1",
     "lucide-react": "^1.24.0",
     "next": "16.2.10",
     "nodemailer": "^7.0.13",
@@ -25,7 +27,8 @@
     "prisma-pglite": "^3.0.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
-    "react-image-crop": "^11.1.2"
+    "react-image-crop": "^11.1.2",
+    "recharts": "^3.10.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

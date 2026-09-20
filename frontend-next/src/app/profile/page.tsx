@@ -12,6 +12,7 @@ import { allBadges } from '@/lib/badgesData';
 import { getXPDetails } from '@/lib/leveling';
 import { getUnlockedAchievements } from '@/app/actions/achievements';
 import SpaceLoader from '@/components/SpaceLoader';
+import PassportStatsCard from '@/components/PassportStatsCard';
 
 const vt323 = VT323({ weight: '400', subsets: ['latin'] });
 
@@ -75,6 +76,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [dbAchievements, setDbAchievements] = useState<any[]>([]);
   const [ongoingMissions, setOngoingMissions] = useState<any[]>([]);
+  const [completedMissionIds, setCompletedMissionIds] = useState<string[]>([]);
 
   // Edit Profile State
   const [isEditing, setIsEditing] = useState(false);
@@ -115,6 +117,7 @@ export default function ProfilePage() {
         setProfile(data.user);
         setXp(data.user.xp || 0);
         setOngoingMissions(data.missionProgress || []);
+        setCompletedMissionIds(data.completedMissionIds || []);
         setFormData({
           displayName: data.user.displayName || `Explorer${Math.floor(10000 + Math.random() * 90000)}`,
           status: data.user.status || '',
@@ -267,7 +270,7 @@ export default function ProfilePage() {
         <div className="max-w-7xl mx-auto w-full grid grid-cols-1 @5xl:grid-cols-[1.5fr_1fr] gap-10">
 
           {/* LEFT COLUMN */}
-          <div className="flex flex-col gap-10">
+          <div className="flex flex-col gap-10 min-w-0">
 
             {/* IDENTIFICATION CARD */}
             <div className="relative group/id-card">
@@ -397,72 +400,8 @@ export default function ProfilePage() {
             </div>
             </div>
 
-            {/* PROFILE STATISTICS */}
-            <div className="relative group/stats-card flex flex-col mt-2 flex-1">
-              {/* Shaded background depth layer */}
-              <div className="absolute inset-0 bg-[#090311]/75 rounded-3xl translate-x-2 translate-y-2 z-0 transition-all duration-300 group-hover/stats-card:translate-x-3 group-hover/stats-card:translate-y-3" />
-              
-              <div className="relative z-10 flex flex-col flex-1 gap-4 bg-[#361d57] border-2 border-[#ff912d]/50 p-6 rounded-3xl hover:-translate-x-1 hover:-translate-y-1 transition-all duration-300 shadow-xl">
-                {/* Title Box */}
-                <div className="border border-[#ff912d]/50 p-3 bg-[#361d57]/60 text-center rounded-xl shrink-0">
-                  <h2 className={`${vt323.className} font-bold text-[#ff912d] text-2xl tracking-[0.2em] uppercase`}>Profile Statistics</h2>
-                </div>
-
-                {/* Tabs and Content */}
-                <div className="flex flex-col flex-1">
-                  <div className="flex border border-[#ff912d]/50 border-b-0 bg-[#361d57]/60 rounded-t-xl px-2 pt-2 gap-2">
-                  <button
-                    onClick={() => setStatsTab('overview')}
-                    className={`flex-1 py-2 text-xs font-bold uppercase tracking-widest rounded-t-lg transition-colors ${statsTab === 'overview' ? 'bg-black/30 text-[#ff912d] border-t border-x border-[#ff912d]/50' : 'text-white/50 hover:bg-black/10 hover:text-white/80'}`}
-                  >
-                    Overview
-                  </button>
-                  <button
-                    onClick={() => setStatsTab('progress')}
-                    className={`flex-1 py-2 text-xs font-bold uppercase tracking-widest rounded-t-lg transition-colors ${statsTab === 'progress' ? 'bg-black/30 text-[#ff912d] border-t border-x border-[#ff912d]/50' : 'text-white/50 hover:bg-black/10 hover:text-white/80'}`}
-                  >
-                    Progress
-                  </button>
-                </div>
-                <div className="border-x border-b border-[#ff912d]/50 bg-black/30 rounded-b-xl p-6 flex flex-col gap-6 justify-center shadow-inner min-h-[160px] flex-1">
-                  {statsTab === 'overview' ? (
-                    <div className="grid grid-cols-2 gap-6">
-                      <div className="bg-[#361d57]/40 border border-[#ff912d]/30 rounded-xl p-6 text-center shadow-inner flex flex-col items-center justify-center">
-                        <span className={`${vt323.className} text-[#ff912d] text-5xl mb-2 drop-shadow-md`}>0</span>
-                        <span className="text-white/60 text-xs font-bold uppercase tracking-widest text-center">Modules Completed</span>
-                      </div>
-                      <div className="bg-[#361d57]/40 border border-[#ff912d]/30 rounded-xl p-6 text-center shadow-inner flex flex-col items-center justify-center">
-                        <span className={`${vt323.className} text-[#ffb703] text-5xl mb-2 drop-shadow-md`}>0</span>
-                        <span className="text-white/60 text-xs font-bold uppercase tracking-widest text-center">Planets Explored</span>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col gap-4">
-                      <div className="bg-[#361d57]/30 border border-white/5 rounded-lg p-4 flex flex-col gap-2">
-                        <div className="flex justify-between items-end">
-                          <span className="text-white/80 text-xs font-bold uppercase tracking-wider">Frontend Track</span>
-                          <span className="text-[#ff912d] text-xs font-bold">0%</span>
-                        </div>
-                        <div className="w-full h-1.5 bg-black/60 rounded-full overflow-hidden">
-                          <div className="h-full bg-[#ff912d] w-0 rounded-full"></div>
-                        </div>
-                      </div>
-
-                      <div className="bg-[#361d57]/30 border border-white/5 rounded-lg p-4 flex flex-col gap-2">
-                        <div className="flex justify-between items-end">
-                          <span className="text-white/80 text-xs font-bold uppercase tracking-wider">Backend Track</span>
-                          <span className="text-[#9b4dff] text-xs font-bold">0%</span>
-                        </div>
-                        <div className="w-full h-1.5 bg-black/60 rounded-full overflow-hidden">
-                          <div className="h-full bg-[#9b4dff] w-0 rounded-full"></div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
+            {/* PASSPORT STATISTICS CARD */}
+            <PassportStatsCard profile={profile} completedMissionIds={completedMissionIds} />
           </div>
 
           {/* RIGHT COLUMN */}

@@ -61,7 +61,12 @@ export async function GET(req: Request) {
       take: 3
     });
 
-    return NextResponse.json({ user, missionProgress });
+    const allCompletedMissions = await prisma.missionProgress.findMany({
+      where: { userId: user.id, status: 'COMPLETED' },
+      select: { missionId: true }
+    });
+
+    return NextResponse.json({ user, missionProgress, completedMissionIds: allCompletedMissions.map(m => m.missionId) });
   } catch (error) {
     console.error('Error fetching profile:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
