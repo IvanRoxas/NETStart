@@ -1,5 +1,8 @@
 .vscode/
 
+# Local staging files
+/staging/
+
 # Dependencies
 node_modules/
 

@@ -34,6 +34,7 @@ export default function ModulesClient({ isVerified, hasTakenAptitudeTest = false
 
   // Winding learning path configuration - spread across 130vh canvas
   const pathNodes = [
+    { id: "moon", name: "The Moon", subtitle: "Blockly Tutorial", top: "10%", left: "50%", sizeClass: "w-36 h-36", src: "/MainMoon.svg", imgScale: 0.9, rotationSpeed: 20, reverse: false, totalMissions: 3 },
     { id: "html", name: "HTML", subtitle: "HyperText Markup", top: "24%", left: "22%", sizeClass: "w-48 h-48", src: "/Planet 7.svg", imgScale: 0.82, rotationSpeed: 30, reverse: true, totalMissions: 5 },
     { id: "css", name: "CSS", subtitle: "Cascading Style Sheets", top: "42%", left: "76%", sizeClass: "w-40 h-40", src: "/Planet 4.svg", imgScale: 0.82, rotationSpeed: 18, reverse: false, totalMissions: 5 },
     { id: "javascript", name: "JavaScript", subtitle: "Dynamic Scripting", top: "60%", left: "48%", sizeClass: "w-64 h-64", src: "/Planet 2.svg", imgScale: 0.82, rotationSpeed: 40, reverse: false, totalMissions: 8 },
@@ -48,6 +49,7 @@ export default function ModulesClient({ isVerified, hasTakenAptitudeTest = false
   };
 
   // Determine path completion indicators
+  const moonCompleted = getCompletedMissionsCount("moon") >= 3;
   const htmlCompleted = getCompletedMissionsCount("html") >= 5;
   const cssCompleted = getCompletedMissionsCount("css") >= 5;
   const jsCompleted = getCompletedMissionsCount("javascript") >= 8 || getCompletedMissionsCount("js") >= 8;
@@ -60,17 +62,20 @@ export default function ModulesClient({ isVerified, hasTakenAptitudeTest = false
       return 'COMPLETED';
     }
 
-    if (id === 'html') {
+    if (id === 'moon') {
       return 'CURRENT';
     }
+    if (id === 'html') {
+      return moonCompleted ? 'CURRENT' : 'LOCKED';
+    }
     if (id === 'css') {
-      return htmlCompleted ? 'CURRENT' : 'LOCKED';
+      return (moonCompleted && htmlCompleted) ? 'CURRENT' : 'LOCKED';
     }
     if (id === 'javascript') {
-      return (htmlCompleted && cssCompleted) ? 'CURRENT' : 'LOCKED';
+      return (moonCompleted && htmlCompleted && cssCompleted) ? 'CURRENT' : 'LOCKED';
     }
     if (id === 'react') {
-      return (htmlCompleted && cssCompleted && jsCompleted) ? 'CURRENT' : 'LOCKED';
+      return (moonCompleted && htmlCompleted && cssCompleted && jsCompleted) ? 'CURRENT' : 'LOCKED';
     }
 
     return 'LOCKED';
@@ -111,6 +116,13 @@ export default function ModulesClient({ isVerified, hasTakenAptitudeTest = false
         
         {/* Constellation Orbit Lines SVG */}
         <svg className="absolute inset-0 w-full h-full pointer-events-none z-0">
+          <line 
+            x1="50%" y1="10%" 
+            x2="22%" y2="24%" 
+            stroke="rgba(255, 145, 45, 0.4)" 
+            strokeWidth="3" 
+            strokeDasharray="8 8" 
+          />
           <line 
             x1="22%" y1="24%" 
             x2="76%" y2="42%" 

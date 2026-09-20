@@ -1,0 +1,124 @@
+[
+  {
+    "id": "moon-001",
+    "type": "divider",
+    "title": "Moon",
+    "subtitle": "Tutorial"
+  },
+  {
+    "id": "moon-002",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "The astronaut landed safely on the Moon and touched down on the ground. They met with the assistance of the communication device, Oberion.",
+    "background": "bg_001.png"
+  },
+  {
+    "id": "moon-003",
+    "type": "dialogue",
+    "speaker": "Oberion",
+    "text": "Greetings, human. Before you start your mission, you will have a short assessment for you to understand the missions.",
+    "background": "bg_001.png"
+  },
+  {
+    "id": "moon-004",
+    "type": "dialogue",
+    "speaker": "Oberion",
+    "text": "Oh, Nova. There you are! This is Nova, and they will be assisting you with the mission. You can count on Nova to evaluate your skills and guide you to your next objectives.",
+    "background": "bg_001.png"
+  },
+  {
+    "id": "moon-005",
+    "type": "dialogue",
+    "speaker": "Oberion",
+    "text": "Now, shall we proceed with your assessment?",
+    "background": "bg_001.png"
+  },
+  {
+    "id": "moon-006",
+    "type": "mission",
+    "mission": "moon-1",
+    "level": 1,
+    "title": "Tutorial 1: The Assessment",
+    "concept": "Tutorial"
+  },
+  {
+    "id": "moon-007",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "Upon arriving at the landing bay, the Astronaut quickly spotted the equipment they needed for their mission.",
+    "background": "bg_002.png"
+  },
+  {
+    "id": "moon-008",
+    "type": "dialogue",
+    "speaker": "Operator",
+    "text": "Let’s go pack our stuff, Nova. This way, we can head to our next mission.",
+    "background": "bg_002.png"
+  },
+  {
+    "id": "moon-009",
+    "type": "mission",
+    "mission": "moon-2",
+    "level": 2,
+    "title": "Tutorial 2: Mini Sorting Game",
+    "concept": "Tutorial"
+  },
+  {
+    "id": "moon-010",
+    "type": "dialogue",
+    "speaker": "Operator",
+    "text": "Is this alright?",
+    "background": "bg_002.png"
+  },
+  {
+    "id": "moon-011",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "The Astronaut asked and glared at Nova. The figure nodded as it double-checked their bag once again.",
+    "background": "bg_002.png"
+  },
+  {
+    "id": "moon-012",
+    "type": "dialogue",
+    "speaker": "Nova",
+    "text": "Perfect! Everything is complete. We can now proceed to the ship!",
+    "background": "bg_001.png"
+  },
+  {
+    "id": "moon-013",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "As they boarded the ship, the lights flared up to reveal buttons of many different colors.",
+    "background": "bg_001.png"
+  },
+  {
+    "id": "moon-014",
+    "type": "dialogue",
+    "speaker": "Operator",
+    "text": "Buckle up, Nova! We are going to the next planet!",
+    "background": "bg_001.png"
+  },
+  {
+    "id": "moon-015",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "But before the Astronaut activated the engine, a warning sound emitted from the system’s window.",
+    "background": "bg_001.png"
+  },
+  {
+    "id": "moon-016",
+    "type": "dialogue",
+    "speaker": "System",
+    "text": "Error! Warning! Fuel insufficient for interplanetary travel!",
+    "background": "bg_001.png",
+    "fx": "alert"
+  },
+  {
+    "id": "moon-017",
+    "type": "mission",
+    "mission": "moon-3",
+    "level": 3,
+    "title": "Tutorial 3: Reboot the Spaceship",
+    "concept": "Tutorial"
+  }
+]

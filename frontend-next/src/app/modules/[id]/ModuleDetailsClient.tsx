@@ -164,7 +164,7 @@ export default function ModuleDetailsClient({
   const completedCount = getCompletedCount(moduleId);
   const progressPct = missions.length > 0 ? Math.round((completedCount / missions.length) * 100) : 0;
 
-  const handleStartMission = (mission: Mission) => {
+  const handleStartMission = (mission: Mission, isRetry = false) => {
     try {
       const rawSave = localStorage.getItem('netstart_active_saved_level');
       if (rawSave) {
@@ -185,10 +185,10 @@ export default function ModuleDetailsClient({
     }
 
     // Direct launch
-    launchLevel(mission);
+    launchLevel(mission, isRetry);
   };
 
-  const launchLevel = (mission: Mission) => {
+  const launchLevel = (mission: Mission, isRetry = false) => {
     try {
       // Set active mission info in localStorage for profile ongoing mission card
       localStorage.setItem('netstart_active_level', JSON.stringify({
@@ -206,7 +206,13 @@ export default function ModuleDetailsClient({
 
     const isSavedProgress = Boolean(savedMissionId && savedMissionId.toLowerCase() === mission.id.toLowerCase());
     const isReplay = !isSavedProgress && completedMissions.some(m => m.missionId.toLowerCase() === mission.id.toLowerCase());
-    router.push(`/sandbox?missionId=${mission.id}${isReplay ? '&mode=replay' : ''}`);
+    
+    let skipCutscene = false;
+    if (isRetry || isSavedProgress) {
+      skipCutscene = true;
+    }
+
+    router.push(`/sandbox?missionId=${mission.id}${isReplay ? '&mode=replay' : ''}&skipCutscene=${skipCutscene}`);
   };
 
   const handleConfirmOverride = () => {
@@ -370,30 +376,43 @@ export default function ModuleDetailsClient({
                     
                     {/* Action/Enter Lab link inside card */}
                     <div className="flex items-center justify-between pt-3 border-t border-white/15 shrink-0 mt-auto">
-                      <button
-                        onClick={() => handleStartMission(mission)}
-                        className={`font-sans font-black text-[11px] uppercase tracking-widest py-2.5 px-5 rounded-xl shadow-md transition-all duration-200 hover:scale-105 active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer text-center w-32 ${
-                          hasActiveProgress
-                            ? 'bg-[#8c2e0b] hover:bg-[#a3360d] text-white border-2 border-[#ffd1a9]/90 shadow-[0_4px_14px_rgba(0,0,0,0.3),0_0_12px_rgba(234,88,12,0.35)]'
-                            : isCompleted
-                            ? 'bg-emerald-600 hover:bg-emerald-500 text-white border-2 border-emerald-300/90 shadow-[0_4px_14px_rgba(0,0,0,0.3),0_0_12px_rgba(16,185,129,0.35)]'
-                            : 'bg-[#130927] hover:bg-[#1e0a2d] text-white border-2 border-white/30 hover:border-white/60 shadow-md'
-                        }`}
-                      >
-                        {hasActiveProgress ? (
+                      <div className="flex items-center gap-2">
+                        {isCompleted ? (
                           <>
-                            <Play size={11} className="fill-white stroke-white" /> Resume
-                          </>
-                        ) : isCompleted ? (
-                          <>
-                            <RotateCcw size={11} className="stroke-[2.5]" /> Replay
+                            <button
+                              onClick={() => handleStartMission(mission, false)}
+                              className="bg-emerald-600 hover:bg-emerald-500 text-white border-2 border-emerald-300/90 shadow-[0_4px_14px_rgba(0,0,0,0.3),0_0_12px_rgba(16,185,129,0.35)] font-sans font-black text-[10px] uppercase tracking-widest py-2.5 px-3 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer text-center flex-1"
+                            >
+                              <RotateCcw size={11} className="stroke-[2.5]" /> Replay
+                            </button>
+                            <button
+                              onClick={() => handleStartMission(mission, true)}
+                              className="bg-sky-600 hover:bg-sky-500 text-white border-2 border-sky-300/90 shadow-[0_4px_14px_rgba(0,0,0,0.3),0_0_12px_rgba(14,165,233,0.35)] font-sans font-black text-[10px] uppercase tracking-widest py-2.5 px-3 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer text-center flex-1"
+                            >
+                              <Rocket size={11} className="stroke-[2]" /> Retry
+                            </button>
                           </>
                         ) : (
-                          <>
-                            <Rocket size={11} className="stroke-[2]" /> Start
-                          </>
+                          <button
+                            onClick={() => handleStartMission(mission, false)}
+                            className={`font-sans font-black text-[11px] uppercase tracking-widest py-2.5 px-5 rounded-xl shadow-md transition-all duration-200 hover:scale-105 active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer text-center w-32 ${
+                              hasActiveProgress
+                                ? 'bg-[#8c2e0b] hover:bg-[#a3360d] text-white border-2 border-[#ffd1a9]/90 shadow-[0_4px_14px_rgba(0,0,0,0.3),0_0_12px_rgba(234,88,12,0.35)]'
+                                : 'bg-[#130927] hover:bg-[#1e0a2d] text-white border-2 border-white/30 hover:border-white/60 shadow-md'
+                            }`}
+                          >
+                            {hasActiveProgress ? (
+                              <>
+                                <Play size={11} className="fill-white stroke-white" /> Resume
+                              </>
+                            ) : (
+                              <>
+                                <Rocket size={11} className="stroke-[2]" /> Start
+                              </>
+                            )}
+                          </button>
                         )}
-                      </button>
+                      </div>
                       <div className="relative group/tooltip">
                         <HelpCircle size={17} className="hover:text-white text-white/80 transition-colors cursor-help" />
                         <div className="absolute bottom-full right-0 mb-2 w-56 p-2.5 bg-[#130927] border border-white/10 rounded-xl text-[10px] text-gray-200 normal-case opacity-0 group-hover/tooltip:opacity-100 transition-opacity duration-200 pointer-events-none shadow-2xl z-30 font-semibold leading-relaxed">

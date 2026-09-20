@@ -38,6 +38,7 @@ export interface VisualNovelCutsceneProps {
   username?: string;
   onMissionGate?: (title: string) => void;
   onFinished: () => void;
+  summaryText?: string;
 }
 
 export interface VisualNovelCutsceneHandle {
@@ -58,6 +59,7 @@ interface SpeakerMetadata {
   role: string;
   pitch: number;
   icon: "crown" | "alert" | "radio" | "user";
+  image?: string;
 }
 
 const SPEAKER_PROFILES: Record<string, SpeakerMetadata> = {
@@ -69,6 +71,7 @@ const SPEAKER_PROFILES: Record<string, SpeakerMetadata> = {
     role: "MOON AMBASSADOR & LEADER",
     pitch: 150,
     icon: "crown",
+    image: "/scenes/characters/OBERION.png",
   },
   Employee: {
     color: "from-[#082f49] via-[#0369a1] to-[#0c4a6e]",
@@ -78,6 +81,7 @@ const SPEAKER_PROFILES: Record<string, SpeakerMetadata> = {
     role: "NETSTART HQ STATION STAFF",
     pitch: 270,
     icon: "radio",
+    image: "/scenes/characters/EMPLOYEE.png",
   },
   "Higher Head": {
     color: "from-[#451a03] via-[#9a3412] to-[#3b0764]",
@@ -87,6 +91,7 @@ const SPEAKER_PROFILES: Record<string, SpeakerMetadata> = {
     role: "EXECUTIVE CRISIS DIRECTOR",
     pitch: 130,
     icon: "alert",
+    image: "/scenes/characters/HIGHER HEAD.png",
   },
   Nova: {
     color: "from-[#042f2e] via-[#0d9488] to-[#134e4a]",
@@ -96,6 +101,7 @@ const SPEAKER_PROFILES: Record<string, SpeakerMetadata> = {
     role: "FLIGHT SPECIALIST",
     pitch: 240,
     icon: "user",
+    image: "/scenes/characters/Nova Idle.png",
   },
   "Operator": {
     color: "from-[#311042] via-[#701a75] to-[#1e1b4b]",
@@ -162,6 +168,7 @@ const VisualNovelCutscene = forwardRef<VisualNovelCutsceneHandle, VisualNovelCut
       username = "Chief",
       onMissionGate = noop,
       onFinished = noop,
+      summaryText,
     },
     ref
   ) {
@@ -360,48 +367,88 @@ const VisualNovelCutscene = forwardRef<VisualNovelCutsceneHandle, VisualNovelCut
             </div>
           ) : (
             <>
-              {/* STATE B: Character Visual Card (Rectangular Sci-Fi Hologram) */}
+              {/* STATE B: Character Visual Card (Rectangular Sci-Fi Hologram or Sprite) */}
               {showCharacterCard && (
                 <div
-                  className={`absolute right-6 sm:right-12 bottom-[34%] z-20 transition-all duration-500 ease-out ${
+                  className={`absolute right-6 sm:right-16 bottom-0 z-20 transition-all duration-500 ease-out flex items-end gap-6 ${
                     spriteIn
-                      ? "opacity-100 translate-x-0"
-                      : "opacity-0 translate-x-12 pointer-events-none"
+                      ? "opacity-100 translate-y-0"
+                      : "opacity-0 translate-y-8 pointer-events-none"
                   }`}
                 >
-                  <div
-                    className={`w-36 sm:w-48 aspect-[3/4] rounded-2xl bg-gradient-to-b ${profile.color} border-2 ${profile.border} ${profile.glow} p-3.5 sm:p-4 flex flex-col justify-between relative overflow-hidden backdrop-blur-md`}
-                  >
-                    {/* Corner Telemetry Accents */}
-                    <div className="flex items-center justify-between text-[8px] font-mono text-white/50">
-                      <span>[HUD_ID]</span>
-                      <span className="text-[#ff912d] animate-pulse">LIVE</span>
-                    </div>
-
-                    {/* Character Avatar Emblem */}
-                    <div className="flex-1 flex flex-col items-center justify-center my-2">
-                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-black/40 border border-white/10 flex items-center justify-center shadow-inner relative group">
-                        <div className="absolute inset-0 bg-[#ff912d]/10 rounded-2xl animate-pulse" />
-                        {profile.icon === "crown" && <Crown size={32} className="text-indigo-400 drop-shadow-md" />}
-                        {profile.icon === "radio" && <Radio size={32} className="text-sky-400 drop-shadow-md" />}
-                        {profile.icon === "alert" && <ShieldAlert size={32} className="text-amber-400 drop-shadow-md" />}
-                        {profile.icon === "user" && <User size={32} className="text-[#ff912d] drop-shadow-md" />}
+                  {rawSpeakerName === "Operator" ? (
+                    <>
+                      {/* Operator Holo-card */}
+                      <div
+                        className={`w-36 sm:w-48 aspect-[3/4] rounded-2xl bg-gradient-to-b ${profile.color} border-2 ${profile.border} ${profile.glow} p-3.5 sm:p-4 flex flex-col justify-between relative overflow-hidden backdrop-blur-md mb-[10rem] sm:mb-[13rem] shrink-0`}
+                      >
+                        <div className="flex items-center justify-between text-[8px] font-mono text-white/50">
+                          <span>[HUD_ID]</span>
+                          <span className="text-[#ff912d] animate-pulse">LIVE</span>
+                        </div>
+                        <div className="flex-1 flex flex-col items-center justify-center my-2">
+                          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-black/40 border border-white/10 flex items-center justify-center shadow-inner relative group">
+                            <div className="absolute inset-0 bg-[#ff912d]/10 rounded-2xl animate-pulse" />
+                            {profile.icon === "crown" && <Crown size={32} className="text-indigo-400 drop-shadow-md" />}
+                            {profile.icon === "radio" && <Radio size={32} className="text-sky-400 drop-shadow-md" />}
+                            {profile.icon === "alert" && <ShieldAlert size={32} className="text-amber-400 drop-shadow-md" />}
+                            {profile.icon === "user" && <User size={32} className="text-[#ff912d] drop-shadow-md" />}
+                          </div>
+                        </div>
+                        <div className="text-center space-y-1 bg-black/50 border border-white/10 p-2 rounded-xl">
+                          <div className="font-display font-black text-xs sm:text-sm text-white uppercase tracking-wider truncate">
+                            {displaySpeakerName}
+                          </div>
+                          <div className="text-[8px] font-mono text-white/60 uppercase tracking-tight truncate">
+                            {profile.role}
+                          </div>
+                        </div>
+                        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/5 to-transparent pointer-events-none opacity-40 animate-pulse" />
                       </div>
-                    </div>
-
-                    {/* Character Identification Chip */}
-                    <div className="text-center space-y-1 bg-black/50 border border-white/10 p-2 rounded-xl">
-                      <div className="font-display font-black text-xs sm:text-sm text-white uppercase tracking-wider truncate">
-                        {displaySpeakerName}
+                      
+                      {/* Nova Companion Sprite */}
+                      <img 
+                        src={SPEAKER_PROFILES["Nova"]?.image} 
+                        alt="Nova" 
+                        className="h-72 sm:h-[26rem] object-contain object-bottom drop-shadow-2xl mb-[8rem] sm:mb-[10rem] shrink-0" 
+                      />
+                    </>
+                  ) : profile.image ? (
+                    /* Actual Character Sprite */
+                    <img 
+                      src={profile.image} 
+                      alt={displaySpeakerName} 
+                      className="h-[32rem] sm:h-[44rem] object-contain object-bottom drop-shadow-[0_0_40px_rgba(0,0,0,0.6)] mb-[8rem] sm:mb-[12rem]" 
+                    />
+                  ) : (
+                    /* Fallback Holo-card if no image */
+                    <div
+                      className={`w-36 sm:w-48 aspect-[3/4] rounded-2xl bg-gradient-to-b ${profile.color} border-2 ${profile.border} ${profile.glow} p-3.5 sm:p-4 flex flex-col justify-between relative overflow-hidden backdrop-blur-md mb-[10rem] sm:mb-[13rem] shrink-0`}
+                    >
+                      <div className="flex items-center justify-between text-[8px] font-mono text-white/50">
+                        <span>[HUD_ID]</span>
+                        <span className="text-[#ff912d] animate-pulse">LIVE</span>
                       </div>
-                      <div className="text-[8px] font-mono text-white/60 uppercase tracking-tight truncate">
-                        {profile.role}
+                      <div className="flex-1 flex flex-col items-center justify-center my-2">
+                        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-black/40 border border-white/10 flex items-center justify-center shadow-inner relative group">
+                          <div className="absolute inset-0 bg-[#ff912d]/10 rounded-2xl animate-pulse" />
+                          {profile.icon === "crown" && <Crown size={32} className="text-indigo-400 drop-shadow-md" />}
+                          {profile.icon === "radio" && <Radio size={32} className="text-sky-400 drop-shadow-md" />}
+                          {profile.icon === "alert" && <ShieldAlert size={32} className="text-amber-400 drop-shadow-md" />}
+                          {profile.icon === "user" && <User size={32} className="text-[#ff912d] drop-shadow-md" />}
+                        </div>
                       </div>
+                      <div className="text-center space-y-1 bg-black/50 border border-white/10 p-2 rounded-xl">
+                        <div className="font-display font-black text-xs sm:text-sm text-white uppercase tracking-wider truncate">
+                          {displaySpeakerName}
+                        </div>
+                        <div className="text-[8px] font-mono text-white/60 uppercase tracking-tight truncate">
+                          {profile.role}
+                        </div>
+                      </div>
+                      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/5 to-transparent pointer-events-none opacity-40 animate-pulse" />
                     </div>
-
-                    {/* Subtle Holographic Scanline */}
-                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/5 to-transparent pointer-events-none opacity-40 animate-pulse" />
-                  </div>
+                  )}
                 </div>
               )}
 
@@ -409,7 +456,7 @@ const VisualNovelCutscene = forwardRef<VisualNovelCutsceneHandle, VisualNovelCut
               <div className="absolute left-4 right-4 bottom-10 sm:left-12 sm:right-12 sm:bottom-16 z-30">
                 {/* Main Dialogue Box */}
                 <div
-                  className={`w-full bg-[#130524]/95 backdrop-blur-xl border-2 border-[#ff912d] rounded-[40px] py-8 px-12 sm:py-12 sm:px-24 shadow-[0_15px_45px_rgba(0,0,0,0.8),0_0_30px_rgba(255,145,45,0.25)] relative transition-all duration-150 ${
+                  className={`w-full bg-[#130524]/95 backdrop-blur-xl border-2 border-[#ff912d] rounded-[40px] py-6 px-10 sm:py-8 sm:px-20 shadow-[0_15px_45px_rgba(0,0,0,0.8),0_0_30px_rgba(255,145,45,0.25)] relative transition-all duration-150 ${
                     typing ? "ring-1 ring-[#ff912d]/50" : ""
                   }`}
                 >
@@ -423,7 +470,7 @@ const VisualNovelCutscene = forwardRef<VisualNovelCutsceneHandle, VisualNovelCut
                   )}
 
                   {/* Typed Text Content */}
-                  <p className="text-white text-xl sm:text-3xl font-medium leading-relaxed font-sans min-h-[100px] sm:min-h-[120px]">
+                  <p className="text-white text-xl sm:text-3xl font-medium leading-relaxed font-sans min-h-[80px] sm:min-h-[100px]">
                     {shownText}
                     {typing && (
                       <span className="inline-block w-4 h-8 ml-2 bg-[#ff912d] animate-pulse align-middle" />
@@ -450,6 +497,15 @@ const VisualNovelCutscene = forwardRef<VisualNovelCutsceneHandle, VisualNovelCut
                 }
                 .animate-wobble {
                   animation: wobbleMove 4s ease-in-out infinite;
+                }
+                @keyframes spriteJitter {
+                  0%, 100% { transform: translateY(0); }
+                  25% { transform: translateY(-8px); }
+                  50% { transform: translateY(0); }
+                  75% { transform: translateY(4px); }
+                }
+                .animate-jitter {
+                  animation: spriteJitter 0.12s cubic-bezier(0.36, 0.07, 0.19, 0.97) infinite;
                 }
               `}</style>
 
@@ -484,7 +540,7 @@ const VisualNovelCutscene = forwardRef<VisualNovelCutsceneHandle, VisualNovelCut
 
                   {/* Right: JSON Summary Text */}
                   <div className="w-2/3 z-10 text-white/95 text-lg sm:text-[22px] font-sans leading-[1.6] text-justify font-medium tracking-wide">
-                    {storySummaries.skip_summary}
+                    {summaryText || storySummaries.skip_summary}
                   </div>
                 </div>
 
