@@ -2,84 +2,89 @@ import { getServerSession } from "next-auth/next";
 import { authOptions, prisma } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from 'next/link';
-import { ArrowLeft, Check, Lock, Rocket, Award, Zap, Settings, HelpCircle } from 'lucide-react';
+import { ArrowLeft, Lock } from 'lucide-react';
+import ModuleDetailsClient from './ModuleDetailsClient';
 
-const MODULE_MISSIONS: Record<string, { id: string; title: string; desc: string }[]> = {
-  html: [
-    { id: "html-1", title: "HTML Level 1: Core Tags", desc: "Embark on learning fundamental HTML tags like headings, paragraphs, and list components." },
-    { id: "html-2", title: "HTML Level 2: Structured Forms", desc: "Build input fields, select elements, textareas, and master form attributes." },
-    { id: "html-3", title: "HTML Level 3: Tables and Frames", desc: "Master the structure of rows, headers, cells, and embed framing details." },
-    { id: "html-4", title: "HTML Level 4: Layout Schemas", desc: "Create semantic webpage hierarchies using nav, footer, sections, and articles." },
-    { id: "html-5", title: "HTML Level 5: Media Embeds", desc: "Embed audios, videos, images, and configure frame overrides." },
+const MODULE_MISSIONS: Record<string, { id: string; title: string; desc: string; tag?: string }[]> = {
+  moon: [
+    { 
+      id: "moon-1", 
+      title: "Level 1: Stellar Beginnings", 
+      desc: "Welcome to NETStart! Team up with your trusty assistant, Nova, to learn how to guide your rover safely to the goal.",
+      tag: "Basic Syntax"
+    },
+    { 
+      id: "moon-2", 
+      title: "Level 2: Resource Classification", 
+      desc: "Nova needs your help packing the ship! Use your new sensors and repeat blocks to scan the assembly line. Figure out what's fuel and what's junk so we can get flying!", 
+      tag: "LOOPS & LOGIC" 
+    },
+    { 
+      id: "moon-3", 
+      title: "Level 3: The Starship Protocol", 
+      desc: "Get the starship ready for launch! Guide air through the vents with If/Else, mix rocket fuel with loops, and survive the automated flight simulation.", 
+      tag: "LOOPS & CONDITIONALS" 
+    },
   ],
-  css: [
-    { id: "css-1", title: "CSS Level 1: Style Selectors", desc: "Master targeting classes, ids, properties, and the cascade tree." },
-    { id: "css-2", title: "CSS Level 2: Box Model Schemas", desc: "Style border widths, margins, padding constraints, and display blocks." },
-    { id: "css-3", title: "CSS Level 3: Flexbox Systems", desc: "Master flex-direction, justify-content, align-items, and alignment layouts." },
-    { id: "css-4", title: "CSS Level 4: Grid Architectures", desc: "Design structured column-row layouts, grid-areas, and alignments." },
-    { id: "css-5", title: "CSS Level 5: Transits & Keyframes", desc: "Implement active transforms, smooth animations, and transitions." },
+  mars: [
+    { id: "mars-1", title: "Mars Level 1: Semantic Habitat Tags", desc: "Construct semantic habitat components using header, main, section, and article tags.", tag: "Semantic Tags" },
+    { id: "mars-2", title: "Mars Level 2: Environmental Forms & Telemetry", desc: "Build input fields, select elements, textareas, and master telemetry form attributes.", tag: "Forms" },
+    { id: "mars-3", title: "Mars Level 3: Mineral Data Tables", desc: "Master the structure of rows, headers, cells, and embed framing details for Martian geology.", tag: "Tables" },
   ],
-  javascript: [
-    { id: "javascript-1", title: "JS Level 1: Core Bindings", desc: "Learn variables, let, const, primitive types, and math routines." },
-    { id: "javascript-2", title: "JS Level 2: Control Logic", desc: "Master branching structures (if-else), switch cases, and loops." },
-    { id: "javascript-3", title: "JS Level 3: Function Declarations", desc: "Implement reusable function expressions, closures, and scoping." },
-    { id: "javascript-4", title: "JS Level 4: Array Iterators", desc: "Master maps, filters, reductions, and sorting loops." },
-    { id: "javascript-5", title: "JS Level 5: DOM Injections", desc: "Query elements, inject styles, dynamic texts, and event listeners." },
+  venus: [
+    { id: "venus-1", title: "Venus Level 1: Thermal Selectors & Cascades", desc: "Master targeting classes, ids, pseudo-selectors, and the CSS cascade tree.", tag: "Selectors" },
+    { id: "venus-2", title: "Venus Level 2: Box Model Atmospheric Shields", desc: "Style border widths, margins, padding constraints, and display blocks.", tag: "Box Model" },
+    { id: "venus-3", title: "Venus Level 3: Flexbox Gas Flow Alignment", desc: "Master flex-direction, justify-content, align-items, and responsive layouts.", tag: "Flexbox" },
   ],
-  react: [
-    { id: "react-1", title: "React Level 1: JSX Injections", desc: "Master building functional components using declarative JSX tags." },
-    { id: "react-2", title: "React Level 2: State Hooks", desc: "Master React state hooks, inputs, re-renders, and lifecycle binds." },
-    { id: "react-3", title: "React Level 3: Prop Transits", desc: "Pass data down parent components, configure defaults, and handle callbacks." },
-    { id: "react-4", title: "React Level 4: Context Providers", desc: "Share states globally across subtrees using Context wrappers." },
-    { id: "react-5", title: "React Level 5: Hooks Customizer", desc: "Build reusable hooks encapsulating state routines." },
+  mercury: [
+    { id: "mercury-1", title: "Mercury Level 1: Variable Orbital Bindings", desc: "Learn variables, let, const, primitive types, and math routines under solar radiation.", tag: "Variables" },
+    { id: "mercury-2", title: "Mercury Level 2: Solar Flare Branching Logic", desc: "Master branching structures (if-else), switch cases, and logic loops.", tag: "Logic" },
+    { id: "mercury-3", title: "Mercury Level 3: Velocity Function Expressions", desc: "Implement reusable function expressions, closures, and orbital scoping.", tag: "Functions" },
   ],
-  node: [
-    { id: "node-1", title: "Node Level 1: File Actions", desc: "Read and write local configuration assets using fs bindings." },
-    { id: "node-2", title: "Node Level 2: HTTP Hosts", desc: "Spin up HTTP servers listening to custom ports." },
-    { id: "node-3", title: "Node Level 3: Express Routing", desc: "Design route controllers handling GET and POST payloads." },
-    { id: "node-4", title: "Node Level 4: DB Bindings", desc: "Integrate queries connecting schema layouts." },
-    { id: "node-5", title: "Node Level 5: Middlewares", desc: "Build pipeline controllers filtering inbound requests." },
+  jupiter: [
+    { id: "jupiter-1", title: "Jupiter Level 1: Class & Object Blueprints", desc: "Design object-oriented classes, instance constructors, and blueprint definitions.", tag: "OOP" },
+    { id: "jupiter-2", title: "Jupiter Level 2: Inheritance & Planetary Subclasses", desc: "Implement superclass inheritance, method overriding, and polymorphic behaviors.", tag: "Inheritance" },
+    { id: "jupiter-3", title: "Jupiter Level 3: Encapsulation & Atmospheric Modifiers", desc: "Protect telemetry state using access modifiers (private, protected, public) and getters/setters.", tag: "Encapsulation" },
+  ],
+  saturn: [
+    { id: "saturn-1", title: "Saturn Level 1: Ring Pointers & References", desc: "Master direct memory addresses, pointer arithmetic, and reference passing.", tag: "Pointers" },
+    { id: "saturn-2", title: "Saturn Level 2: Dynamic Ring Memory Allocation", desc: "Manage heap memory allocations using new/delete and prevent zero-g memory leaks.", tag: "Memory" },
+    { id: "saturn-3", title: "Saturn Level 3: Structural Vectors & Ring Buffers", desc: "Build high-speed data structures and contiguous ring buffers using C++ STL vectors.", tag: "Vectors" },
+  ],
+  earth: [
+    { id: "earth-1", title: "Earth Level 1: Telemetry Data Structures", desc: "Master Python lists, dictionaries, tuples, sets, and data slicing at Headquarters.", tag: "Structures" },
+    { id: "earth-2", title: "Earth Level 2: Satellite Pipeline Loops & Comprehensions", desc: "Process real-time telemetry streams using list comprehensions and iterative generators.", tag: "Loops" },
+    { id: "earth-3", title: "Earth Level 3: Mission Log File Automation", desc: "Automate reading and writing mission logs using Python context managers (with open).", tag: "File I/O" },
   ],
 };
+
+// Aliases for legacy URLs
+MODULE_MISSIONS['html'] = MODULE_MISSIONS['mars'];
+MODULE_MISSIONS['css'] = MODULE_MISSIONS['venus'];
+MODULE_MISSIONS['javascript'] = MODULE_MISSIONS['mercury'];
+MODULE_MISSIONS['js'] = MODULE_MISSIONS['mercury'];
+MODULE_MISSIONS['java'] = MODULE_MISSIONS['jupiter'];
+MODULE_MISSIONS['cpp'] = MODULE_MISSIONS['saturn'];
+MODULE_MISSIONS['python'] = MODULE_MISSIONS['earth'];
 
 const MODULE_META: Record<string, { title: string; category: string; desc: string }> = {
-  html: { title: "HTML Basics", category: "HyperText Markup", desc: "Embark on creating your first structured webpage schemas with clean layouts." },
-  css: { title: "Cascading Styles", category: "Style & Layout", desc: "Elevate your visuals with custom themes, colors, and layout flex grids." },
-  javascript: { title: "JavaScript Logic", category: "Core Dynamic Scripting", desc: "Infuse your apps with branching loops, operations, and dynamic API events." },
-  react: { title: "React Components", category: "Modern SPA Framework", desc: "Architect component structures using states, hook bindings, and transit props." },
-  node: { title: "Node Backend", category: "Server Side Operations", desc: "Build REST route microservices, http hosts, and database schema layers." },
+  moon: { title: "The Moon (Tutorial)", category: "Tutorial", desc: "Calibrate your rover algorithms and master orientation puzzles on the lunar surface." },
+  mars: { title: "Mars (HTML)", category: "Hypertext Markup Language (HTML)", desc: "Construct semantic habitats and environmental sensors across the red Martian landscape." },
+  venus: { title: "Venus (CSS)", category: "Atmospheric Styling Track", desc: "Shield against the intense Venusian atmosphere with responsive stylesheets and grid layouts." },
+  mercury: { title: "Mercury (JavaScript)", category: "Dynamic Scripting Track", desc: "Harness rapid orbital mechanics with variables, conditional loops, and DOM manipulation." },
+  jupiter: { title: "Jupiter (Java)", category: "Object-Oriented Architecture Track", desc: "Navigate the colossal gravity of Jupiter by building robust classes, inheritance hierarchies, and interfaces." },
+  saturn: { title: "Saturn (C++)", category: "High-Performance Systems Track", desc: "Traverse Saturn's icy ring system using memory pointers, memory management, and high-performance algorithms." },
+  earth: { title: "Earth (Headquarters - Python)", category: "Command Headquarters Track", desc: "Return to Earth Mission Control to analyze space telemetry, automate satellite relays, and run data pipelines." },
 };
 
-const getMissionHint = (missionId: string) => {
-  const hints: Record<string, string> = {
-    "html-1": "Hint: Focus on correct nesting of basic tags like h1, p, and lists.",
-    "html-2": "Hint: Remember to specify input type attributes and form label relations.",
-    "html-3": "Hint: Use tr for rows, th for headers, and td for standard cells.",
-    "html-4": "Hint: Use semantic tags (header, nav, main, section, footer) for document outline.",
-    "html-5": "Hint: Configure src, width, height, and controls for video/audio embeds.",
-    "css-1": "Hint: Master targeting classes (.name), IDs (#id), and properties.",
-    "css-2": "Hint: Remember that padding is inside the border and margin is outside.",
-    "css-3": "Hint: Use justify-content for main axis and align-items for cross axis layout.",
-    "css-4": "Hint: Define columns using grid-template-columns and gaps with grid-gap.",
-    "css-5": "Hint: Match transition properties with keyframes and durations.",
-    "javascript-1": "Hint: Use let for mutable variables and const for block-scoped constants.",
-    "javascript-2": "Hint: Check conditions carefully inside if-else blocks.",
-    "javascript-3": "Hint: Understand function scoping and return values.",
-    "javascript-4": "Hint: Use map() to transform, filter() to select, and reduce() to aggregate.",
-    "javascript-5": "Hint: Use document.querySelector() and addEventListener() for user inputs.",
-    "react-1": "Hint: Always return a single parent element or fragment in JSX.",
-    "react-2": "Hint: Call useState() at the top level of your component only.",
-    "react-3": "Hint: Props are read-only; use state or callback handlers to pass data up.",
-    "react-4": "Hint: Wrap the parent tree in <Context.Provider value={...}> to share state.",
-    "react-5": "Hint: Custom hooks must start with the prefix 'use'.",
-    "node-1": "Hint: Use fs.readFile() and fs.writeFile() with correct encoding.",
-    "node-2": "Hint: Use http.createServer() and specify the listening port.",
-    "node-3": "Hint: Define Express GET/POST endpoints with app.get() and app.post().",
-    "node-4": "Hint: Execute Prisma queries inside try-catch blocks.",
-    "node-5": "Hint: Always call next() in middleware to pass control to next handler."
-  };
-  return hints[missionId.toLowerCase()] || "Hint: Complete this level to earn 100 XP and unlock rewards!";
-};
+// Meta Aliases
+MODULE_META['html'] = MODULE_META['mars'];
+MODULE_META['css'] = MODULE_META['venus'];
+MODULE_META['javascript'] = MODULE_META['mercury'];
+MODULE_META['js'] = MODULE_META['mercury'];
+MODULE_META['java'] = MODULE_META['jupiter'];
+MODULE_META['cpp'] = MODULE_META['saturn'];
+MODULE_META['python'] = MODULE_META['earth'];
 
 interface Params {
   id: string;
@@ -115,22 +120,36 @@ export default async function ModuleMissionsPage({ params }: { params: Promise<P
   });
 
   const getCompletedCount = (modId: string) => {
-    return completedMissions.filter(m => m.missionId.toLowerCase().startsWith(modId.toLowerCase())).length;
+    return completedMissions.filter(m => {
+      const mid = m.missionId.toLowerCase();
+      if (modId === 'moon') return mid.startsWith('moon') || mid.startsWith('html-1') || mid.startsWith('html-2') || mid.startsWith('html-3');
+      if (modId === 'mars') return mid.startsWith('mars') || (mid.startsWith('html') && !['html-1', 'html-2', 'html-3'].includes(mid));
+      if (modId === 'venus') return mid.startsWith('venus') || mid.startsWith('css');
+      if (modId === 'mercury') return mid.startsWith('mercury') || mid.startsWith('javascript') || mid.startsWith('js');
+      if (modId === 'jupiter') return mid.startsWith('jupiter') || mid.startsWith('java');
+      if (modId === 'saturn') return mid.startsWith('saturn') || mid.startsWith('cpp');
+      if (modId === 'earth') return mid.startsWith('earth') || mid.startsWith('python');
+      return mid.startsWith(modId.toLowerCase());
+    }).length;
   };
 
-  // Enforce progression checking
-  const htmlCompleted = getCompletedCount("html") >= 5;
-  const cssCompleted = getCompletedCount("css") >= 5;
-  const jsCompleted = getCompletedCount("javascript") >= 8 || getCompletedCount("js") >= 8;
-  const reactCompleted = getCompletedCount("react") >= 10;
+  // Enforce 7-Planet Progression Chain
+  const moonCompleted = getCompletedCount("moon") >= 3;
+  const marsCompleted = getCompletedCount("mars") >= 5;
+  const venusCompleted = getCompletedCount("venus") >= 5;
+  const mercuryCompleted = getCompletedCount("mercury") >= 5;
+  const jupiterCompleted = getCompletedCount("jupiter") >= 5;
+  const saturnCompleted = getCompletedCount("saturn") >= 5;
 
   const isModuleLocked = () => {
-    if (moduleId === "html") return false;
-    if (moduleId === "css") return !htmlCompleted;
-    if (moduleId === "javascript") return !(htmlCompleted && cssCompleted);
-    if (moduleId === "react") return !(htmlCompleted && cssCompleted && jsCompleted);
-    if (moduleId === "node") return !(htmlCompleted && cssCompleted && jsCompleted && reactCompleted);
-    return true;
+    if (moduleId === "moon") return false;
+    if (moduleId === "mars" || moduleId === "html") return !moonCompleted;
+    if (moduleId === "venus" || moduleId === "css") return !(moonCompleted && marsCompleted);
+    if (moduleId === "mercury" || moduleId === "javascript" || moduleId === "js") return !(moonCompleted && marsCompleted && venusCompleted);
+    if (moduleId === "jupiter" || moduleId === "java") return !(moonCompleted && marsCompleted && venusCompleted && mercuryCompleted);
+    if (moduleId === "saturn" || moduleId === "cpp") return !(moonCompleted && marsCompleted && venusCompleted && mercuryCompleted && jupiterCompleted);
+    if (moduleId === "earth" || moduleId === "python") return !(moonCompleted && marsCompleted && venusCompleted && mercuryCompleted && jupiterCompleted && saturnCompleted);
+    return false;
   };
 
   if (isModuleLocked()) {
@@ -164,159 +183,15 @@ export default async function ModuleMissionsPage({ params }: { params: Promise<P
   }
 
   return (
-    <div className="h-full w-full bg-[#130927] text-white flex flex-col relative overflow-y-auto overflow-x-hidden pb-12">
-      {/* Background image elements */}
-      <div 
-        className="fixed inset-0 z-0 pointer-events-none" 
-        style={{ 
-          backgroundImage: "url('/Landing Page BG.png')", 
-          backgroundSize: 'cover', 
-          backgroundPosition: 'center', 
-          opacity: 0.15 
-        }} 
-      />
-      <div className="fixed inset-0 bg-black/50 z-0" />
-
-      {/* Main layout frame */}
-      <div className="relative z-10 max-w-7xl w-full mx-auto px-6 py-12 flex-grow flex flex-col gap-10">
-        
-        {/* Navigation / Header Area matching 3rd image */}
-        <div className="flex items-center justify-between gap-4 mt-2">
-          {/* Back Button (Yellow Circle) */}
-          <Link 
-            href="/modules"
-            className="w-12 h-12 rounded-full bg-yellow-400 text-black hover:bg-yellow-500 transition-all flex items-center justify-center shadow-lg hover:scale-105 group"
-          >
-            <ArrowLeft size={22} className="stroke-[2.5]" />
-          </Link>
-          
-          {/* Welcome Title */}
-          <h1 className="text-2xl md:text-4xl lg:text-5xl font-display font-black text-white uppercase tracking-wider text-center">
-            Welcome to {meta.title}
-          </h1>
-
-          {/* Profile / Progress Capsule */}
-          <div className="flex items-center gap-3 bg-[#1e0a2d]/80 border border-white/10 rounded-full px-4 py-2 backdrop-blur-md">
-            {session.user.image ? (
-              <img 
-                src={session.user.image} 
-                alt={session.user.name || "User"} 
-                className="w-8 h-8 rounded-full border border-[#ff912d]/50" 
-              />
-            ) : (
-              <div className="w-8 h-8 rounded-full bg-[#ff912d] text-black font-black flex items-center justify-center text-sm uppercase">
-                {session.user.name?.[0] || 'U'}
-              </div>
-            )}
-            <span className="text-xs font-bold text-gray-400 uppercase tracking-widest hidden sm:inline">Progress</span>
-            <span className="text-white font-mono font-black text-sm">
-              {Math.round((getCompletedCount(moduleId) / missions.length) * 100)}%
-            </span>
-          </div>
-        </div>
-
-        {/* Level Grid (Grid of Cards) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-4">
-          {missions.map((mission, index) => {
-            const isCompleted = completedMissions.some(m => m.missionId.toLowerCase() === mission.id.toLowerCase());
-            
-            // Find the index of the first uncompleted mission
-            const firstUncompletedIndex = missions.findIndex(m => !completedMissions.some(cm => cm.missionId.toLowerCase() === m.id.toLowerCase()));
-            
-            // If completed or it is the first uncompleted mission, it is unlocked/colored.
-            // If index is greater than firstUncompletedIndex, it is upcoming (grayscale/opacity).
-            const isUnlocked = index <= (firstUncompletedIndex === -1 ? missions.length : firstUncompletedIndex);
-            
-            const imageUrl = "/login-bg.jpg";
-
-            return (
-              <div key={mission.id} className="relative group/card">
-                {/* Shaded background depth layer */}
-                <div className="absolute inset-0 bg-[#090311]/75 rounded-3xl translate-x-2 translate-y-2 z-0 transition-all duration-300 group-hover/card:translate-x-3 group-hover/card:translate-y-3" />
-                
-                {/* Actual Front Card */}
-                <div 
-                  className={`relative z-10 bg-[#1e0a2d]/45 backdrop-blur-md border border-white/10 rounded-3xl overflow-hidden flex flex-col transition-all duration-300 shadow-xl group hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[#ff912d]/10 ${
-                    isUnlocked ? '' : 'pointer-events-none opacity-50'
-                  }`}
-                >
-                  {/* Visual progression details / Image Header */}
-                  <div className="relative aspect-[2.8/1] w-full overflow-hidden bg-black/20">
-                    <img 
-                      src={imageUrl} 
-                      alt={mission.title} 
-                      className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${
-                        isUnlocked ? '' : 'grayscale opacity-40'
-                      }`}
-                    />
-                    
-                    {/* Status Overlay Badges */}
-                    {isCompleted ? (
-                      <div className="absolute top-4 right-4 bg-emerald-500 text-white px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border border-white/20 flex items-center gap-1 shadow-lg">
-                        <Check size={10} className="stroke-[3]" /> Completed
-                      </div>
-                    ) : !isUnlocked ? (
-                      <div className="absolute top-4 right-4 bg-black/60 text-gray-400 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border border-white/10 flex items-center gap-1 shadow-lg">
-                        <Lock size={10} /> Locked
-                      </div>
-                    ) : (
-                      <div className="absolute top-4 right-4 bg-[#ff912d] text-black px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider flex items-center gap-1 shadow-lg animate-pulse">
-                        <Rocket size={10} /> Active
-                      </div>
-                    )}
-                    
-                    {/* Index badge at bottom-left of image */}
-                    <div className="absolute bottom-4 left-4 bg-black/75 backdrop-blur-md text-white font-display font-black text-sm px-3 py-1 rounded-lg border border-white/15">
-                      LEVEL {String(index + 1).padStart(2, '0')}
-                    </div>
-                  </div>
-
-                  {/* Solid Orange Content Block matching 3rd image */}
-                  <div className="bg-[#ff912d] py-3.5 px-5 flex-grow flex flex-col justify-between gap-3">
-                    <div className="space-y-1.5">
-                      {/* Dark capsule badges */}
-                      <div className="flex flex-wrap gap-2">
-                        <span className="bg-[#130927] text-white text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border border-white/5">
-                          {meta.category.split(' ')[0]}
-                        </span>
-                        <span className="bg-[#130927] text-white text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border border-white/5 flex items-center gap-1">
-                          <Zap size={9} className="text-yellow-400" /> +100 XP
-                        </span>
-                      </div>
-
-                      <h3 className="text-white text-lg font-display font-black tracking-tight leading-tight group-hover:underline">
-                        {mission.title}
-                      </h3>
-                      
-                      <p className="text-white/90 text-xs font-semibold leading-relaxed line-clamp-2">
-                        {mission.desc}
-                      </p>
-                    </div>
-                    
-                    {/* Action/Enter Lab link indication inside card */}
-                    <div className="flex items-center justify-between pt-2.5 border-t border-white/10">
-                      <Link
-                        href={`/sandbox?missionId=${mission.id}`}
-                        className="w-32 hover:w-44 text-white bg-[#130927] font-sans font-black text-[10px] uppercase tracking-widest py-2 rounded-xl shadow-md transition-all duration-300 hover:bg-[#1e0a2d] hover:scale-105 active:scale-95 border border-transparent hover:border-white/10 flex items-center justify-center cursor-pointer text-center"
-                      >
-                        {isCompleted ? "Revisit" : "Start"}
-                      </Link>
-                      <div className="relative group/tooltip">
-                        <HelpCircle size={16} className="hover:text-white text-white/80 transition-colors cursor-help" />
-                        <div className="absolute bottom-full right-0 mb-2 w-56 p-2.5 bg-[#130927] border border-white/10 rounded-xl text-[10px] text-gray-200 normal-case opacity-0 group-hover/tooltip:opacity-100 transition-opacity duration-200 pointer-events-none shadow-2xl z-30 font-semibold leading-relaxed">
-                          {getMissionHint(mission.id)}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-      </div>
-    </div>
+    <ModuleDetailsClient
+      moduleId={moduleId}
+      missions={missions}
+      meta={meta}
+      completedMissions={completedMissions}
+      sessionUser={{
+        name: session.user.name,
+        image: session.user.image,
+      }}
+    />
   );
 }
-

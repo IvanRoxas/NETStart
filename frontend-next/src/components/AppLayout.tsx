@@ -13,7 +13,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <Sidebar />
 
       {/* MAIN CONTENT AREA */}
-      <div className="flex-1 h-full overflow-hidden relative z-10 [&>*]:h-full">
+      <div className="flex-1 h-full max-h-screen overflow-hidden relative z-10 flex flex-col min-h-0 [&>*]:h-full [&>*]:w-full">
         {children}
       </div>
     </div>

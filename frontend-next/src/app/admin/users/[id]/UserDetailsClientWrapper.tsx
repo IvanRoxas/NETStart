@@ -22,8 +22,7 @@ export default function UserDetailsClientWrapper({ user: initialUser }: { user: 
   const [editValue, setEditValue] = useState<number>(0);
   const [loading, setLoading] = useState(false);
   
-  const { level, progress: progressPercentage, nextThreshold } = getXPDetails(user.xp);
-  const xpToNextLevel = level < 10 ? nextThreshold - user.xp : 0;
+  const { level, progress: progressPercentage, nextThreshold, xpToNextLevel } = getXPDetails(user.xp);
 
   const handleResetAptitudeTest = async () => {
     if (!confirm("Are you sure you want to reset this user's Aptitude Test status and scores?")) return;

@@ -35,6 +35,7 @@ export default function TopHeader({ title }: TopHeaderProps) {
       const audio = new Audio();
       const canPlayMp3 = audio.canPlayType && audio.canPlayType('audio/mpeg') !== '';
       audio.src = canPlayMp3 ? '/notification.mp3' : '/Notification.ogg';
+      audio.volume = 0.2;
       audio.preload = 'auto';
       audioRef.current = audio;
     }
@@ -142,8 +143,8 @@ export default function TopHeader({ title }: TopHeaderProps) {
 
   const isAdmin = (session?.user as any)?.type === 'admin';
   const headerBgClass = isAdmin 
-    ? "h-24 px-8 flex items-center justify-between border-b border-white/10 bg-[#180729] flex-shrink-0 relative z-30" 
-    : "h-24 px-8 flex items-center justify-between border-b border-white/5 bg-[#150524]/40 backdrop-blur-md flex-shrink-0 relative z-30";
+    ? "h-24 px-8 flex items-center justify-between border-b border-white/10 bg-[#180729] flex-shrink-0 relative z-50" 
+    : "h-24 px-8 flex items-center justify-between border-b border-white/5 bg-[#150524]/40 backdrop-blur-md flex-shrink-0 relative z-50";
 
   return (
     <header className={headerBgClass}>
@@ -180,8 +181,8 @@ export default function TopHeader({ title }: TopHeaderProps) {
               </button>
 
               {/* Futuristic Glassmorphic Dropdown Container (Zero-gap Hover Bridge) */}
-              <div className="absolute right-0 top-full pt-2 w-60 z-50 opacity-0 group-hover/aptitude:opacity-100 transition-opacity duration-150 pointer-events-none group-hover/aptitude:pointer-events-auto">
-                <div className="p-4 rounded-xl bg-[#130927]/95 backdrop-blur-md border border-white/10 shadow-2xl flex flex-col items-center text-center">
+              <div className="absolute right-0 top-full pt-2 w-60 z-[60] opacity-0 group-hover/aptitude:opacity-100 transition-opacity duration-150 pointer-events-none group-hover/aptitude:pointer-events-auto">
+                <div className="p-4 rounded-xl bg-[#130927]/98 backdrop-blur-xl border border-[#ff912d]/40 shadow-[0_10px_40px_rgba(0,0,0,0.8),0_0_20px_rgba(255,145,45,0.25)] flex flex-col items-center text-center">
                   <AlertTriangle size={18} className="text-[#ff912d] mb-1 animate-pulse" />
                   <h4 className="text-white font-bold text-sm tracking-wide mb-0.5 font-display">
                     {hasTakenAptitudeTest ? "Aptitude Verified" : "Diagnostic Pending"}

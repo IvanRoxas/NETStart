@@ -1,8 +1,13 @@
 import { getServerSession } from "next-auth/next";
 import { authOptions, prisma } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import TopHeader from "@/components/TopHeader";
 import ModulesClient from "./ModulesClient";
+import DailyTaskTracker from "@/components/DailyTaskTracker";
 import { getXPDetails } from "@/lib/leveling";
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export default async function ModulesPage() {
   const session = await getServerSession(authOptions);
@@ -40,12 +45,17 @@ export default async function ModulesPage() {
   const hasTakenAptitudeTest = dbUser?.hasTakenAptitudeTest === true;
   const xp = dbUser?.xp || 0;
   const gears = dbUser?.gears || 0;
-  const { level, progress } = getXPDetails(xp);
+  const { level, progress, nextThreshold, levelCurrentXp, levelRequiredXp, isMaxLevel } = getXPDetails(xp);
 
   const completedMissions = await prisma.missionProgress.findMany({
     where: {
       userId: activeUserId,
       status: "COMPLETED",
+      NOT: {
+        missionId: {
+          startsWith: "daily-",
+        },
+      },
     },
     select: {
       missionId: true,
@@ -55,18 +65,26 @@ export default async function ModulesPage() {
   const liveStats = {
     level,
     progress,
+    nextThreshold,
+    levelCurrentXp,
+    levelRequiredXp,
+    isMaxLevel,
     xp,
     gears,
   };
 
   return (
-    <div className="relative w-full h-full overflow-x-hidden overflow-y-auto bg-[#130927]">
-      <ModulesClient 
-        isVerified={isVerified} 
-        hasTakenAptitudeTest={hasTakenAptitudeTest}
-        liveStats={liveStats} 
-        completedMissions={completedMissions} 
-      />
-    </div>
+    <main className="flex-1 flex flex-col z-10 w-full h-full overflow-hidden bg-[#180729]">
+      <DailyTaskTracker taskIds={["task-explore-2"]} />
+      <TopHeader title="Modules" />
+      <div className="flex-1 overflow-y-auto relative w-full h-full">
+        <ModulesClient 
+          isVerified={isVerified} 
+          hasTakenAptitudeTest={hasTakenAptitudeTest}
+          liveStats={liveStats} 
+          completedMissions={completedMissions} 
+        />
+      </div>
+    </main>
   );
 }

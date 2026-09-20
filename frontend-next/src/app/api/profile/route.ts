@@ -55,10 +55,36 @@ export async function GET(req: Request) {
       }
     }
 
+    // Auto-sync unlocked achievements to showcasedBadges if user has open showcase slots (< 6)
+    const userAchievements = await prisma.userAchievement.findMany({
+      where: { userId: user.id },
+      include: { achievement: true }
+    });
+
+    let currentShowcased = [...(user.showcasedBadges || [])];
+    let updatedShowcased = false;
+
+    for (const ua of userAchievements) {
+      if (currentShowcased.length >= 6) break;
+      const code = ua.achievement.triggerCode.toLowerCase();
+      if (!currentShowcased.includes(code) && !currentShowcased.includes(ua.achievement.id)) {
+        currentShowcased.push(code);
+        updatedShowcased = true;
+      }
+    }
+
+    if (updatedShowcased) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { showcasedBadges: currentShowcased }
+      });
+      user.showcasedBadges = currentShowcased;
+    }
+
     const missionProgress = await prisma.missionProgress.findMany({
       where: { userId: user.id },
       orderBy: { startedAt: 'desc' },
-      take: 3
+      take: 1
     });
 
     const allCompletedMissions = await prisma.missionProgress.findMany({
@@ -83,8 +109,10 @@ export async function PUT(req: Request) {
     const data = await req.json();
     const { name, displayName, status, bio, image, banner, showcasedBadges, activeTitle } = data;
 
-    const updatedUser = await prisma.user.update({
-      where: { id: (session.user as any).id },
+    const userId = (session.user as any).id;
+
+    await prisma.user.update({
+      where: { id: userId },
       data: {
         ...(name !== undefined && { name }),
         ...(displayName !== undefined && { displayName }),
@@ -94,21 +122,9 @@ export async function PUT(req: Request) {
         ...(banner !== undefined && { banner }),
         ...(showcasedBadges !== undefined && { showcasedBadges }),
         ...(activeTitle !== undefined && { activeTitle }),
-      },
-      select: {
-        id: true,
-        name: true,
-        displayName: true,
-        image: true,
-        banner: true,
-        status: true,
-        bio: true,
-        showcasedBadges: true,
-        activeTitle: true,
       }
     });
 
-    const userId = (session.user as any).id;
     if (image !== undefined) {
       const changePfpAch = await prisma.achievement.findUnique({ where: { triggerCode: 'B_CHANGE_PFP' } });
       if (changePfpAch) {
@@ -129,6 +145,15 @@ export async function PUT(req: Request) {
               data: { badgeId: 'b_change_pfp', badgeName: 'A New Look', badgeImage: changePfpAch.iconUrl || '/Planet 3.svg' }
             }
           });
+
+          // Auto-showcase if slots available
+          const u = await prisma.user.findUnique({ where: { id: userId }, select: { showcasedBadges: true } });
+          if (u && u.showcasedBadges.length < 6 && !u.showcasedBadges.includes('b_change_pfp')) {
+            await prisma.user.update({
+              where: { id: userId },
+              data: { showcasedBadges: { push: 'b_change_pfp' } }
+            });
+          }
         }
       }
     }
@@ -153,12 +178,21 @@ export async function PUT(req: Request) {
               data: { badgeId: 'b_change_bg', badgeName: 'Interior Designer', badgeImage: changeBgAch.iconUrl || '/Planet 8.svg' }
             }
           });
+
+          // Auto-showcase if slots available
+          const u = await prisma.user.findUnique({ where: { id: userId }, select: { showcasedBadges: true } });
+          if (u && u.showcasedBadges.length < 6 && !u.showcasedBadges.includes('b_change_bg')) {
+            await prisma.user.update({
+              where: { id: userId },
+              data: { showcasedBadges: { push: 'b_change_bg' } }
+            });
+          }
         }
       }
     }
 
     await logSystemAction({
-      actorId: (session.user as any).id,
+      actorId: userId,
       actorRole: "STUDENT",
       action: "UPDATED_PROFILE",
       details: { 
@@ -166,7 +200,24 @@ export async function PUT(req: Request) {
       }
     });
 
-    return NextResponse.json({ user: updatedUser });
+    const finalUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        name: true,
+        displayName: true,
+        image: true,
+        banner: true,
+        status: true,
+        bio: true,
+        showcasedBadges: true,
+        activeTitle: true,
+        xp: true,
+        gears: true,
+      }
+    });
+
+    return NextResponse.json({ user: finalUser });
   } catch (error) {
     console.error('Error updating profile:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

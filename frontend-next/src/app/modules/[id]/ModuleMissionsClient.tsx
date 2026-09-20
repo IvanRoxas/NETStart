@@ -5,17 +5,39 @@ import Link from 'next/link';
 import { Lock, Zap, Settings, X } from 'lucide-react';
 
 const PLANET_IMAGES: Record<string, string> = {
-  html: "/Planet 7.svg",
-  css: "/Planet 4.svg",
-  javascript: "/Planet 2.svg",
-  react: "/Planet 1.svg",
-  node: "/Planet 3.svg",
+  moon: "/MainMoon.svg",
+  mars: "/Planets/Mars.svg",
+  venus: "/Planets/Venus.svg",
+  mercury: "/Planets/Mercury.svg",
+  jupiter: "/Planets/Jupiter.svg",
+  saturn: "/Planets/Saturn.svg",
+  earth: "/Planets/Earth.svg",
+  html: "/Planets/Mars.svg",
+  css: "/Planets/Venus.svg",
+  javascript: "/Planets/Mercury.svg",
+  js: "/Planets/Mercury.svg",
+  java: "/Planets/Jupiter.svg",
+  cpp: "/Planets/Saturn.svg",
+  python: "/Planets/Earth.svg",
+  react: "/Planets/Earth.svg",
+  node: "/Planets/Jupiter.svg",
 };
 
 const MODULE_DISPLAY_NAMES: Record<string, string> = {
-  html: "HTML",
-  css: "CSS",
-  javascript: "Javascript",
+  moon: "The Moon",
+  mars: "Mars",
+  venus: "Venus",
+  mercury: "Mercury",
+  jupiter: "Jupiter",
+  saturn: "Saturn",
+  earth: "Earth",
+  html: "Mars",
+  css: "Venus",
+  javascript: "Mercury",
+  js: "Mercury",
+  java: "Jupiter",
+  cpp: "Saturn",
+  python: "Earth",
   react: "React",
   node: "Node.js",
 };
@@ -64,7 +86,21 @@ export default function ModuleMissionsClient({
   isLocked,
   onClose
 }: ModuleMissionsClientProps) {
+  const [activeMissionModal, setActiveMissionModal] = React.useState<Mission | null>(null);
+  const [savedMissionId, setSavedMissionId] = React.useState<string | null>(null);
   const displayLangName = MODULE_DISPLAY_NAMES[moduleId] || moduleId.toUpperCase();
+
+  React.useEffect(() => {
+    try {
+      const raw = localStorage.getItem('netstart_active_saved_level');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed.missionId) {
+          setSavedMissionId(parsed.missionId.toLowerCase());
+        }
+      }
+    } catch (e) {}
+  }, []);
 
   const handleClose = (e: React.MouseEvent) => {
     if (onClose) {
@@ -143,10 +179,13 @@ export default function ModuleMissionsClient({
             const isUnlocked = index === 0 || completedMissions.some(m => m.missionId.toLowerCase() === missions[index - 1].id.toLowerCase());
 
             return (
-              <Link
+              <div
                 key={mission.id}
-                href={`/sandbox?missionId=${mission.id}`}
-                onClick={(e) => { if (!isUnlocked) e.preventDefault(); }}
+                onClick={() => {
+                  if (isUnlocked) {
+                    setActiveMissionModal(mission);
+                  }
+                }}
                 className={`bg-[#1a082c] border border-white/10 rounded-xl overflow-hidden hover:border-[#ff912d]/50 transition-all duration-300 group flex flex-col shadow-xl ${!isUnlocked ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:-translate-y-1'
                   }`}
               >
@@ -188,17 +227,17 @@ export default function ModuleMissionsClient({
                 </div>
 
                 {/* Bottom Text Area (bg-[#130927] p-5) */}
-                <div className="bg-[#130927] p-5 flex flex-col flex-1 text-left justify-between min-h-[180px]">
-                  <div className="space-y-1">
-                    <h3 className="text-white font-bold text-lg leading-tight flex items-center justify-between gap-3">
-                      <span>{mission.title.replace(/^[a-zA-Z]+\s+Level\s+\d+:\s*/, '')}</span>
+                <div className="bg-[#130927] p-5 flex flex-col flex-1 text-left justify-between min-h-[190px]">
+                  <div className="space-y-2">
+                    <h3 className="text-white font-bold text-base sm:text-lg leading-snug flex items-center justify-between gap-3 h-12 line-clamp-2 overflow-hidden">
+                      <span className="line-clamp-2">{mission.title.replace(/^[a-zA-Z]+\s+Level\s+\d+:\s*/, '')}</span>
                       {isCompleted && (
-                        <span className="bg-emerald-500/10 text-emerald-400 text-[9px] font-black uppercase tracking-wider py-0.5 px-2 rounded-md border border-emerald-500/20 whitespace-nowrap">
+                        <span className="bg-emerald-500/10 text-emerald-400 text-[9px] font-black uppercase tracking-wider py-0.5 px-2 rounded-md border border-emerald-500/20 whitespace-nowrap shrink-0">
                           Complete
                         </span>
                       )}
                     </h3>
-                    <p className="text-gray-400 text-sm leading-relaxed mt-2">
+                    <p className="text-gray-400 text-xs sm:text-sm leading-relaxed h-10 line-clamp-2 overflow-hidden">
                       {mission.desc}
                     </p>
                   </div>
@@ -223,21 +262,101 @@ export default function ModuleMissionsClient({
                         className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all select-none ${!isUnlocked
                             ? 'bg-white/5 text-gray-500 border border-white/5'
                             : isCompleted
-                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                              ? 'bg-[#8c2e0b] hover:bg-[#a3360d] text-white border-2 border-[#ffd1a9]/90 shadow-[0_4px_12px_rgba(0,0,0,0.3),0_0_12px_rgba(234,88,12,0.35)]'
                               : 'bg-gradient-to-r from-[#ff912d] to-[#ff5722] hover:from-[#ff5722] hover:to-[#ff912d] text-white shadow-md shadow-[#ff912d]/10'
                           }`}
                       >
-                        {!isUnlocked ? 'Locked' : isCompleted ? 'Revisit' : 'Enter Lab'}
+                        {!isUnlocked ? 'Locked' : isCompleted ? 'Replay' : 'Enter Lab'}
                       </span>
                     </div>
                   </div>
                 </div>
-              </Link>
+              </div>
             );
           })}
         </div>
 
       </div>
+
+      {/* Mission Briefing Intro Modal Overlay */}
+      {activeMissionModal && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 sm:p-6">
+          <div className="bg-[#1e0a2d]/95 border-2 border-[#ff912d]/60 rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-[0_0_50px_rgba(255,145,45,0.35)] relative overflow-hidden flex flex-col gap-6 text-center">
+            
+            {/* Top Close Button */}
+            <button
+              onClick={() => setActiveMissionModal(null)}
+              className="absolute top-4 right-4 text-white/50 hover:text-white transition-all p-2 rounded-full hover:bg-white/10"
+            >
+              <X size={20} />
+            </button>
+
+            {/* Header Badge & Title */}
+            <div className="space-y-2">
+              <span className="bg-[#ff912d]/15 text-[#ff912d] border border-[#ff912d]/40 font-mono text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full inline-block">
+                [ MISSION BRIEFING ]
+              </span>
+              <h3 className="text-2xl sm:text-3xl font-black font-display text-white uppercase tracking-tight">
+                {activeMissionModal.title}
+              </h3>
+              <p className="text-[#ff912d] text-xs font-mono font-bold uppercase tracking-wider">
+                {displayLangName} Orbit System
+              </p>
+            </div>
+
+            {/* Mission Illustration & Description */}
+            <div className="bg-[#130927] border border-white/10 rounded-2xl p-5 flex flex-col items-center gap-3 relative overflow-hidden">
+              <img 
+                src="/Landing Page BG.png" 
+                alt="Space" 
+                className="absolute inset-0 w-full h-full object-cover opacity-30 pointer-events-none" 
+              />
+              <img 
+                src={PLANET_IMAGES[moduleId] || "/Planet 1.svg"} 
+                alt="Planet" 
+                className="w-16 h-16 object-contain relative z-10 drop-shadow-[0_0_15px_rgba(255,145,45,0.4)] animate-pulse" 
+              />
+              <p className="text-gray-300 text-sm font-medium leading-relaxed relative z-10">
+                {activeMissionModal.desc}
+              </p>
+            </div>
+
+            {/* Rewards Chip Row */}
+            <div className="flex items-center justify-center gap-3">
+              <span className="bg-amber-400/15 text-amber-400 border border-amber-400/30 px-4 py-1.5 rounded-xl font-mono text-xs font-black flex items-center gap-1.5">
+                <Zap size={14} className="fill-amber-400" /> +100 XP
+              </span>
+              <span className="bg-purple-500/15 text-purple-300 border border-purple-500/30 px-4 py-1.5 rounded-xl font-mono text-xs font-black flex items-center gap-1.5">
+                <Settings size={14} className="text-purple-400" /> +20 GEARS
+              </span>
+            </div>
+
+            {/* Modal Actions: Launch Mission vs Cancel */}
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                onClick={() => setActiveMissionModal(null)}
+                className="flex-1 py-3.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer"
+              >
+                Cancel
+              </button>
+              <Link
+                href={`/sandbox?missionId=${activeMissionModal.id}${savedMissionId === activeMissionModal.id.toLowerCase() ? '' : completedMissions.some(m => m.missionId.toLowerCase() === activeMissionModal.id.toLowerCase()) ? '&mode=replay' : ''}`}
+                className={`flex-1 py-3.5 font-black text-xs sm:text-sm uppercase tracking-widest rounded-xl transition-all hover:scale-105 active:scale-95 text-center cursor-pointer ${
+                  savedMissionId === activeMissionModal.id.toLowerCase()
+                    ? 'bg-[#8c2e0b] hover:bg-[#a3360d] text-white border-2 border-[#ffd1a9]/90 shadow-[0_4px_16px_rgba(0,0,0,0.3),0_0_14px_rgba(234,88,12,0.4)]'
+                    : completedMissions.some(m => m.missionId.toLowerCase() === activeMissionModal.id.toLowerCase())
+                    ? 'bg-[#8c2e0b] hover:bg-[#a3360d] text-white border-2 border-[#ffd1a9]/90 shadow-[0_4px_16px_rgba(0,0,0,0.3),0_0_14px_rgba(234,88,12,0.4)]'
+                    : 'bg-[#ff912d] hover:bg-orange-400 text-black shadow-[0_0_20px_rgba(255,145,45,0.4)]'
+                }`}
+              >
+                {savedMissionId === activeMissionModal.id.toLowerCase() ? 'Resume Mission' : completedMissions.some(m => m.missionId.toLowerCase() === activeMissionModal.id.toLowerCase()) ? 'Replay Mission' : 'Start Mission'}
+              </Link>
+            </div>
+
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

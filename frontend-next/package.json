@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "concurrently \"npx prisma dev\" \"next dev\"",
+    "dev": "concurrently \"npx prisma dev --db-port 51214 --shadow-db-port 51215\" \"next dev\"",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",

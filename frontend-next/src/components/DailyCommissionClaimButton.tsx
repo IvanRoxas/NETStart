@@ -3,28 +3,54 @@
 import React, { useState } from 'react';
 import { Gift, Lock, CheckCircle2, Sparkles, X, Settings, Zap } from 'lucide-react';
 
+import { useRouter } from 'next/navigation';
+import { XP_REWARDS } from '@/lib/xpEconomy';
+
 interface DailyCommissionClaimButtonProps {
   completedTasksCount: number;
   totalTasksCount?: number;
   bonusGears?: number;
   bonusXP?: number;
+  initialIsClaimed?: boolean;
 }
 
 export default function DailyCommissionClaimButton({
   completedTasksCount,
   totalTasksCount = 4,
   bonusGears = 50,
-  bonusXP = 150,
+  bonusXP = XP_REWARDS.DAILY_COMMISSIONS.COMPLETION_BONUS,
+  initialIsClaimed = false,
 }: DailyCommissionClaimButtonProps) {
-  const [isClaimed, setIsClaimed] = useState(false);
+  const router = useRouter();
+  const [isClaimed, setIsClaimed] = useState(initialIsClaimed);
+  const [isClaiming, setIsClaiming] = useState(false);
   const [showRewardModal, setShowRewardModal] = useState(false);
 
   const isReadyToClaim = completedTasksCount >= totalTasksCount;
 
-  const handleClaim = () => {
-    if (!isReadyToClaim || isClaimed) return;
-    setIsClaimed(true);
-    setShowRewardModal(true);
+  const handleClaim = async () => {
+    if (!isReadyToClaim || isClaimed || isClaiming) return;
+    setIsClaiming(true);
+    try {
+      const res = await fetch('/api/daily-tasks/claim', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (res.ok) {
+        setIsClaimed(true);
+        setShowRewardModal(true);
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('netstart:xp_gained', {
+            detail: { amount: bonusXP, source: 'Daily Commission Bonus' }
+          }));
+        }
+        router.refresh();
+      }
+    } catch (err) {
+      console.error('Failed to claim daily commission bonus:', err);
+    } finally {
+      setIsClaiming(false);
+    }
   };
 
   return (
@@ -111,10 +137,10 @@ export default function DailyCommissionClaimButton({
 
             <div className="space-y-1">
               <h3 className="text-2xl font-black font-display text-white tracking-wide uppercase">
-                Expeditions Cleared!
+                Daily Tasks Complete!
               </h3>
               <p className="text-xs text-white/70 font-medium">
-                You completed all 4 daily tasks today! Here is your official cadet bonus reward:
+                You finished all 4 daily tasks today! Here is your bonus reward:
               </p>
             </div>
 
@@ -137,7 +163,7 @@ export default function DailyCommissionClaimButton({
               onClick={() => setShowRewardModal(false)}
               className="w-full py-3 bg-[#ff912d] hover:bg-orange-400 text-black font-sans font-black text-xs uppercase tracking-wider rounded-xl shadow-lg transition-all duration-200 hover:scale-105"
             >
-              Collect Rewards
+              Claim Bonus
             </button>
           </div>
         </div>

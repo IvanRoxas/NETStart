@@ -1,15 +1,16 @@
 "use client";
 
-import { signOut } from "next-auth/react";
+import { useNavigationGuard } from "@/context/NavigationGuardContext";
 
 interface LogoutButtonProps {
   isMinimized?: boolean;
 }
 
 export default function LogoutButton({ isMinimized = false }: LogoutButtonProps) {
-  const handleLogout = async () => {
-    // Triggers NextAuth's signOut and forces a redirect to /login
-    await signOut({ callbackUrl: "/login" });
+  const { requestLogout } = useNavigationGuard();
+
+  const handleLogout = () => {
+    requestLogout();
   };
 
   return (

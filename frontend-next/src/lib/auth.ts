@@ -109,15 +109,17 @@ export const authOptions: NextAuthOptions = {
         if (session.activeTitle !== undefined) token.activeTitle = session.activeTitle;
       }
 
-      // Sync latest db value on token refresh if missing
-      if (token.id && token.hasTakenAptitudeTest === undefined) {
+      // Sync latest db value on token evaluation so admin resets reflect immediately
+      if (token.id && token.type !== 'admin') {
         try {
           const dbU = await prisma.user.findUnique({
             where: { id: token.id as string },
-            select: { hasTakenAptitudeTest: true }
+            select: { hasTakenAptitudeTest: true, isVerified: true, isBanned: true }
           });
           if (dbU) {
             token.hasTakenAptitudeTest = dbU.hasTakenAptitudeTest;
+            token.isVerified = dbU.isVerified;
+            token.isBanned = dbU.isBanned;
           }
         } catch (e) {}
       }

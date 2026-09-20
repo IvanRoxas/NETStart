@@ -92,3 +92,242 @@ a.disabled,
 [disabled] {
   cursor: not-allowed;
 }
+
+/* Blockly Workspace & Flyout Scrollbar Customization */
+.blocklyMainWorkspaceScrollbar,
+.blocklyWorkspace > .blocklyScrollbarVertical,
+.blocklyWorkspace > .blocklyScrollbarHorizontal,
+.blocklyScrollbarVertical,
+.blocklyScrollbarHorizontal,
+.blocklyScrollbarBackground,
+svg > .blocklyScrollbarVertical,
+svg > .blocklyScrollbarHorizontal {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  fill: transparent !important;
+  stroke: transparent !important;
+}
+
+/* Only display scrollbar when hovering inside an active flyout that overflows */
+.blocklyFlyout:hover .blocklyFlyoutScrollbar,
+.blocklyFlyoutScrollbar:hover {
+  display: block !important;
+  opacity: 0.85 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+.blocklyFlyout:hover .blocklyFlyoutScrollbar .blocklyScrollbarHandle,
+.blocklyFlyoutScrollbar:hover .blocklyScrollbarHandle {
+  display: block !important;
+  fill: #ff912d !important;
+  opacity: 0.85 !important;
+  visibility: visible !important;
+}
+
+/* Custom sleek scrollbar for Raw Syntax editor */
+.custom-syntax-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.custom-syntax-scroll::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 4px;
+}
+.custom-syntax-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 145, 45, 0.5);
+  border-radius: 4px;
+}
+.custom-syntax-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 145, 45, 0.8);
+}
+
+/* Blockly Custom Right-Click Context Menu Styling */
+.blocklyContextMenu {
+  background: rgba(26, 8, 44, 0.97) !important;
+  border: 1px solid rgba(255, 145, 45, 0.35) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.75), 0 0 20px rgba(255, 145, 45, 0.15) !important;
+  backdrop-filter: blur(16px) !important;
+  padding: 6px !important;
+  min-width: 175px !important;
+  z-index: 99999 !important;
+}
+
+.blocklyContextMenu .blocklyMenuItem {
+  padding: 8px 12px !important;
+  border-radius: 8px !important;
+  color: #f1f5f9 !important;
+  font-family: var(--font-montserrat), sans-serif !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease-in-out !important;
+}
+
+.blocklyContextMenu .blocklyMenuItem:hover,
+.blocklyContextMenu .blocklyMenuItemHighlight {
+  background: rgba(255, 145, 45, 0.22) !important;
+  color: #ff912d !important;
+}
+
+.blocklyContextMenu .blocklyMenuItemDisabled {
+  color: rgba(255, 255, 255, 0.25) !important;
+  cursor: not-allowed !important;
+  background: transparent !important;
+}
+
+/* Blockly Comment Bubble & Textarea Dark Styling */
+.blocklyComment {
+  fill: #1a082c !important;
+  stroke: #ff912d !important;
+  stroke-width: 1.5px !important;
+  filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.6)) !important;
+}
+
+.blocklyCommentTextarea {
+  background: #140722 !important;
+  color: #f8fafc !important;
+  font-family: var(--font-mono), monospace !important;
+  font-size: 12px !important;
+  border: 1px solid rgba(255, 145, 45, 0.3) !important;
+  border-radius: 6px !important;
+  padding: 6px 8px !important;
+  outline: none !important;
+  box-sizing: border-box !important;
+}
+
+.blocklyCommentTextarea:focus {
+  border-color: #ff912d !important;
+  box-shadow: 0 0 10px rgba(255, 145, 45, 0.35) !important;
+}
+
+/* Blockly Block Error & Incompatibility Highlighting */
+.blockly-block-error path,
+.blockly-block-error path.blocklyPath {
+  stroke: #ef4444 !important;
+  stroke-width: 3.5px !important;
+  filter: drop-shadow(0 0 14px rgba(239, 68, 68, 0.95)) !important;
+  animation: blockly-error-pulse 0.75s ease-in-out infinite alternate !important;
+}
+
+@keyframes blockly-error-pulse {
+  from {
+    filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.65));
+    stroke: #ef4444;
+  }
+  to {
+    filter: drop-shadow(0 0 20px rgba(239, 68, 68, 1));
+    stroke: #ff7070;
+  }
+}
+
+/* Blockly Incompatible / Disconnected Block Warning */
+.blockly-block-warning path,
+.blockly-block-warning path.blocklyPath {
+  stroke: #f59e0b !important;
+  stroke-dasharray: 6 3 !important;
+  stroke-width: 2.5px !important;
+  opacity: 0.92 !important;
+}
+
+/* Blockly Drag-to-Select Multi-Selection Glow - Strictly ONLY direct path of the selected block */
+g.blockly-block-multiselected > path.blocklyPath {
+  stroke: #facc15 !important;
+  stroke-width: 3px !important;
+  filter: drop-shadow(0 0 10px rgba(250, 204, 21, 0.95)) !important;
+}
+
+/* Ensure no child block inherits or renders this stroke unless it is also explicitly multi-selected */
+g.blocklyDraggable:not(.blockly-block-multiselected) > path.blocklyPath {
+  stroke: none !important;
+  filter: none !important;
+}
+
+@keyframes rover-bump {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  20% { transform: translate(-3px, -2px) rotate(-4deg) scale(0.95); }
+  40% { transform: translate(3px, 2px) rotate(4deg) scale(0.95); }
+  60% { transform: translate(-2px, 1px) rotate(-2deg); }
+  80% { transform: translate(2px, -1px) rotate(2deg); }
+}
+
+.animate-rover-bump {
+  animation: rover-bump 0.35s ease-in-out;
+}
+
+
+/* ========================================================================= */
+/* BLOCKLY TOOLBOX CATEGORIES & ASSETS MENU (Sleek Space Glassmorphism) */
+/* ========================================================================= */
+
+.blocklyToolboxDiv {
+  background: #160628 !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
+  padding: 10px 8px !important;
+  user-select: none !important;
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.4) !important;
+  overflow: visible !important;
+}
+
+/* Category Rows (Movement, Logic) */
+.blocklyTreeRow {
+  padding: 8px 12px !important;
+  margin-bottom: 6px !important;
+  border-radius: 8px !important;
+  font-family: var(--font-sans), system-ui, sans-serif !important;
+  font-weight: 700 !important;
+  font-size: 11px !important;
+  letter-spacing: 0.04em !important;
+  color: #a79cb8 !important;
+  border: 1px solid transparent !important;
+  background: rgba(255, 255, 255, 0.03) !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  cursor: pointer !important;
+  height: auto !important;
+  line-height: normal !important;
+}
+
+.blocklyTreeRow:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+/* Selected Category Row with Accent Glow */
+.blocklyTreeRow.blocklyTreeSelected {
+  background: linear-gradient(135deg, rgba(255, 145, 45, 0.25), rgba(168, 85, 247, 0.15)) !important;
+  color: #ffffff !important;
+  border: 1px solid #ff912d !important;
+  box-shadow: 0 0 16px rgba(255, 145, 45, 0.3) !important;
+}
+
+.blocklyTreeLabel {
+  font-family: inherit !important;
+  font-size: inherit !important;
+  color: inherit !important;
+  cursor: pointer !important;
+}
+
+.blocklyTreeIcon {
+  display: none !important;
+}
+
+/* Flyout Panel Styling */
+.blocklyFlyoutBackground {
+  fill: #1a082c !important;
+  fill-opacity: 0.96 !important;
+  stroke: rgba(255, 255, 255, 0.12) !important;
+  stroke-width: 1px !important;
+}
+
+/* Hide default collapse tabs / chevron buttons */
+.blocklyFlyoutButton,
+.blocklyFlyoutButtonShadow {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+}

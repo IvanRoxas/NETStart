@@ -101,18 +101,17 @@ export default function OurTeam() {
           {/* Right: Text Content */}
           <div className="w-full md:w-[65%] flex flex-col items-start justify-center text-left relative z-10">
              <span className="bg-buttons/20 text-buttons font-sans font-bold text-[10px] uppercase tracking-widest py-1 px-3 rounded-full mb-4 border border-buttons/30 shadow-lg">
-               Capstone Adviser
+               Capstone Adviser & Mentor
              </span>
              <h3 className="font-display text-3xl lg:text-4xl font-bold text-white mb-4 drop-shadow-lg leading-tight">
                Jasmin <span className="text-borders">Gas</span>
              </h3>
-             <p className="font-sans text-white/80 leading-relaxed text-sm md:text-base mb-6">
-               Lorem ipsum dolor sit amet, consectetur adipiscing elit. Amet consectetur adipiscing elit quisque faucibus ex sapien. Quisque faucibus ex sapien vitae pellentesque sem placerat. Vitae pellentesque sem placerat in id cursus mi.
+             <p className="font-sans text-white/85 leading-relaxed text-sm md:text-base mb-6">
+               We extend our heartfelt gratitude to our Capstone Adviser, Ms. Jasmin Gas, for her invaluable mentorship, unwavering patience, and expert guidance throughout the entire duration of our capstone journey. Her constructive feedback and technical steering played a pivotal role in shaping NETStart from an ambitious concept into a fully realized, student-centric learning platform.
              </p>
-             <button className="bg-buttons text-white font-sans font-bold py-2 px-6 text-sm rounded-full shadow-[4px_4px_0_#150524] hover:shadow-[6px_6px_0_#150524] hover:-translate-y-1 hover:-translate-x-1 transition-all active:translate-y-1 active:translate-x-1 active:shadow-none flex items-center gap-2 cursor-pointer">
-               Learn More
-               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-             </button>
+             <div className="inline-flex items-center gap-2 bg-white/10 border border-white/15 px-4 py-2 rounded-full text-white/90 font-sans text-xs font-semibold tracking-wide">
+               <span className="text-[#ffc107]">★</span> With Sincere Appreciation from the NETStart Developers
+             </div>
           </div>
         </div>
         

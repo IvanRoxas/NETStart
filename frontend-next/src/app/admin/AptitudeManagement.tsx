@@ -15,8 +15,7 @@ export default function AptitudeManagement() {
   const [questions, setQuestions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
-  const [categoryFocus, setCategoryFocus] = useState("MIXED");
-  const [generateCount, setGenerateCount] = useState(5);
+  const [generateCount, setGenerateCount] = useState<number | string>(5);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Deletion Confirmation Modal state (No browser confirm)
@@ -94,9 +93,10 @@ STRICT REQUIREMENT: Respond ONLY with a valid raw JSON object conforming EXACTLY
   };
 
   const handleGenerateAI = async () => {
+    const count = typeof generateCount === 'number' ? generateCount : parseInt(String(generateCount), 10) || 5;
     setGenerating(true);
     try {
-      const res = await generateAptitudeQuestionsAI(customPrompt, categoryFocus, generateCount);
+      const res = await generateAptitudeQuestionsAI(customPrompt, "MIXED", count);
       showNotification(`Successfully generated ${res.count} AI Aptitude questions!`);
       await loadQuestions();
     } catch (err: any) {
@@ -230,30 +230,25 @@ STRICT REQUIREMENT: Respond ONLY with a valid raw JSON object conforming EXACTLY
 
           {/* AI Generation Inputs & Trigger */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
-            <select
-              value={categoryFocus}
-              onChange={(e) => setCategoryFocus(e.target.value)}
-              className="bg-black/40 border border-white/20 text-white text-xs font-bold px-3.5 py-2.5 rounded-xl outline-none focus:border-[#ff912d]"
-            >
-              <option value="MIXED" className="bg-[#1e0a2d]">Category: Mixed</option>
-              <option value="LOGIC" className="bg-[#1e0a2d]">Category: Logic</option>
-              <option value="PATTERN" className="bg-[#1e0a2d]">Category: Pattern</option>
-              <option value="CODING_READINESS" className="bg-[#1e0a2d]">Category: Coding Readiness</option>
-            </select>
-
-            <select
-              value={generateCount}
-              onChange={(e) => setGenerateCount(Number(e.target.value))}
-              className="bg-black/40 border border-white/20 text-white text-xs font-bold px-3.5 py-2.5 rounded-xl outline-none focus:border-[#ff912d]"
-            >
-              <option value={3} className="bg-[#1e0a2d]">3 Questions</option>
-              <option value={5} className="bg-[#1e0a2d]">5 Questions</option>
-              <option value={10} className="bg-[#1e0a2d]">10 Questions</option>
-            </select>
+            <div className="flex items-center gap-2 bg-black/40 border border-white/20 px-3.5 py-2 rounded-xl">
+              <span className="text-xs font-mono text-gray-300 font-bold whitespace-nowrap">Questions:</span>
+              <input
+                type="number"
+                min={1}
+                max={50}
+                value={generateCount}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value, 10);
+                  setGenerateCount(isNaN(val) ? "" : val);
+                }}
+                className="w-16 bg-transparent text-white text-xs font-bold font-mono outline-none text-center"
+                placeholder="5"
+              />
+            </div>
 
             <button
               onClick={handleGenerateAI}
-              disabled={generating}
+              disabled={generating || !generateCount || Number(generateCount) < 1}
               className="px-6 py-2.5 bg-gradient-to-r from-[#ff912d] to-[#ff5722] hover:from-[#ff5722] hover:to-[#ff912d] text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-lg transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer"
             >
               {generating ? (
@@ -301,7 +296,7 @@ STRICT REQUIREMENT: Respond ONLY with a valid raw JSON object conforming EXACTLY
                     onClick={() => {
                       setCustomPrompt(`Act as an expert computer science and cognitive assessment author.
 Generate 5 distinct Aptitude Assessment diagnostic questions for software engineering candidates.
-Target category focus: "${categoryFocus}".
+Target category focus: "MIXED".
 Supported question types: "MULTIPLE_CHOICE", "TRUE_FALSE", "SHORT_ANSWER".
 
 STRICT REQUIREMENT: Respond ONLY with a valid raw JSON object conforming EXACTLY to this schema:
@@ -329,7 +324,7 @@ STRICT REQUIREMENT: Respond ONLY with a valid raw JSON object conforming EXACTLY
                     onClick={() => {
                       setCustomPrompt(`Act as a Senior Systems Architect and Algorithmic Thinking Evaluator.
 Generate high-caliber technical diagnostic questions testing Big-O time complexity, data structures, recursion, and task decomposition.
-Target category focus: "${categoryFocus}".
+Target category focus: "MIXED".
 Supported question types: "MULTIPLE_CHOICE", "TRUE_FALSE", "SHORT_ANSWER".
 
 STRICT REQUIREMENT: Respond ONLY with a valid raw JSON object conforming EXACTLY to the standard questions schema.`);
@@ -344,7 +339,7 @@ STRICT REQUIREMENT: Respond ONLY with a valid raw JSON object conforming EXACTLY
                     onClick={() => {
                       setCustomPrompt(`Act as an encouraging CS educator.
 Generate beginner-friendly algorithmic thinking and logic puzzles suitable for candidates with zero prior coding experience.
-Target category focus: "${categoryFocus}".
+Target category focus: "MIXED".
 Supported question types: "MULTIPLE_CHOICE", "TRUE_FALSE", "SHORT_ANSWER".
 
 STRICT REQUIREMENT: Respond ONLY with a valid raw JSON object conforming EXACTLY to the standard questions schema.`);
@@ -361,7 +356,7 @@ STRICT REQUIREMENT: Respond ONLY with a valid raw JSON object conforming EXACTLY
               <div className="space-y-1">
                 <div className="flex items-center justify-between text-[11px] font-mono text-gray-400 font-bold">
                   <span>Custom Gemini Prompt Instructions:</span>
-                  <span className="text-[#ff912d]">Active Focus: {categoryFocus}</span>
+                  <span className="text-[#ff912d]">Active Focus: Mixed</span>
                 </div>
                 <textarea
                   rows={8}

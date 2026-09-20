@@ -9,6 +9,8 @@ import AdminProviders from "@/components/AdminProviders";
 import AppLayout from "@/components/AppLayout";
 
 import AchievementPopupProvider from "@/components/AchievementPopupProvider";
+import { NavigationGuardProvider } from "@/context/NavigationGuardContext";
+import { ProgressionProvider } from "@/context/ProgressionContext";
 
 export default function ConditionalLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -30,11 +32,15 @@ export default function ConditionalLayout({ children }: { children: React.ReactN
   if (isAppPage) {
     return (
       <Providers>
-        <AchievementPopupProvider>
-          <AppLayout>
-            {children}
-          </AppLayout>
-        </AchievementPopupProvider>
+        <ProgressionProvider>
+          <NavigationGuardProvider>
+            <AchievementPopupProvider>
+              <AppLayout>
+                {children}
+              </AppLayout>
+            </AchievementPopupProvider>
+          </NavigationGuardProvider>
+        </ProgressionProvider>
       </Providers>
     );
   }
