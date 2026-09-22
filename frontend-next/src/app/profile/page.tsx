@@ -473,13 +473,13 @@ export default function ProfilePage() {
       <TopHeader title="Profile" />
       <div className="flex-1 overflow-y-auto overflow-x-hidden p-6 lg:p-10 pr-10 lg:pr-16 no-scrollbar @container">
 
-        <div className="max-w-7xl mx-auto w-full flex flex-col gap-10">
+        <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-[1.75fr_1fr] gap-10 items-start">
 
-          {/* TOP ROW: Identification Card (Left) & Level + Achievements (Right) */}
-          <div className="grid grid-cols-1 lg:grid-cols-[1.75fr_1fr] gap-10 items-stretch">
+          {/* LEFT COLUMN: Identification Card & Passport Statistics */}
+          <div className="flex flex-col gap-10 min-w-0">
 
             {/* IDENTIFICATION CARD */}
-            <div className="relative group/id-card flex flex-col h-full">
+            <div className="relative group/id-card flex flex-col w-full">
               {/* Shaded background depth layer */}
               <div className="absolute inset-0 bg-[#090311]/75 rounded-3xl translate-x-2 translate-y-2 z-0 transition-all duration-300 group-hover/id-card:translate-x-3 group-hover/id-card:translate-y-3" />
 
@@ -663,8 +663,18 @@ export default function ProfilePage() {
               </div>
             </div>
 
+            {/* PASSPORT STATISTICS CARD */}
+            <div className="w-full min-w-0">
+              <PassportStatsCard profile={profile} completedMissionIds={completedMissionIds} />
+            </div>
+
+          </div>
+
+          {/* RIGHT COLUMN: Level & Achievements & Ongoing Missions */}
+          <div className="flex flex-col gap-10 min-w-0">
+
             {/* RIGHT TOP GROUP: Level & XP Bar + Achievements */}
-            <div className="flex flex-col gap-6 h-full justify-between min-w-0">
+            <div className="flex flex-col gap-6 w-full justify-between min-w-0">
               {/* Level Text & XP Bar */}
               <div className="flex items-center gap-4 shrink-0">
                 {/* Dynamic SVG Level Badge */}
@@ -774,17 +784,9 @@ export default function ProfilePage() {
                 </div>
               </div>
             </div>
-          </div>
-
-          {/* BOTTOM ROW: Profile Statistics (Left) & Ongoing Missions (Right) */}
-          <div className="grid grid-cols-1 lg:grid-cols-[1.75fr_1fr] gap-10 items-stretch">
-            {/* PASSPORT STATISTICS CARD */}
-            <div className="relative group/stats-card flex flex-col h-full">
-              <PassportStatsCard profile={profile} completedMissionIds={completedMissionIds} />
-            </div>
 
             {/* ONGOING MISSIONS */}
-            <div className="relative group/ongoing-card flex flex-col h-full min-w-0">
+            <div className="relative group/ongoing-card flex flex-col w-full min-w-0">
               {/* Shaded background depth layer */}
               <div className="absolute inset-0 bg-[#090311]/75 rounded-3xl translate-x-2 translate-y-2 z-0 transition-all duration-300 group-hover/ongoing-card:translate-x-3 group-hover/ongoing-card:translate-y-3" />
 
