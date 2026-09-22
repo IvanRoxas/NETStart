@@ -7,19 +7,19 @@ const teamMembers = [
   { 
     name: "Katherine Supan", 
     role: "UI/UX Designer",
-    image: "/kath.jpg",
+    image: "/assets/global/team/kath.jpg",
     links: { fb: "https://www.facebook.com/inklerine", linkedin: "https://www.linkedin.com/in/katherine-supan-83a86438b/", email: "mailto:katherinealfarosupan@gmail.com" }
   },
   { 
     name: "John Ivan Roxas", 
     role: "Lead Systems Developer",
-    image: "/ivan.png",
+    image: "/assets/global/team/ivan.png",
     links: { fb: "https://www.facebook.com/IvanRoxas2004", linkedin: "https://www.linkedin.com/in/john-ivan-roxas-b4b85a38b/", email: "mailto:johnivanroxas@gmail.com" }
   },
   { 
     name: "Matt Christian Magbanua", 
     role: "Frontend Developer",
-    image: "/matt.jpg",
+    image: "/assets/global/team/matt.jpg",
     links: { fb: "https://www.facebook.com/mcsm195", linkedin: "https://www.linkedin.com/in/matt-christian-magbanua-b47055180/", email: "mailto:matt.magbanua01@gmail.com" }
   }
 ];

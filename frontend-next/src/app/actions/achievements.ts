@@ -103,16 +103,16 @@ export async function unlockAchievement(triggerCode: string) {
 export async function ensureDefaultAchievements() {
   try {
     const defaultBadges = [
-      { triggerCode: 'B_CREATE_ACCOUNT', name: 'Ready for Blast Off!', iconUrl: '/Planet 1.svg', description: 'Create an account', xpReward: 100 },
-      { triggerCode: 'B_VERIFY_ACCOUNT', name: 'Verified Explorer', iconUrl: '/Planet 2.svg', description: 'Verify your account', xpReward: 100 },
-      { triggerCode: 'B_CHANGE_PFP', name: 'A New Look', iconUrl: '/Planet 3.svg', description: 'Change your profile picture', xpReward: 100 },
-      { triggerCode: 'B_APTITUDE_TEST', name: 'Aptitude Tested', iconUrl: '/Planet 4.svg', description: 'Take the aptitude test', xpReward: 100 },
-      { triggerCode: 'B_FIRST_MISSION', name: 'First Mission', iconUrl: '/Planet 5.svg', description: 'Complete your first mission', xpReward: 100 },
-      { triggerCode: 'B_FIRST_PLANET', name: 'First Planet', iconUrl: '/Planet 6.svg', description: 'Complete your first planet', xpReward: 100 },
-      { triggerCode: 'B_BUY_REWARD', name: 'Shopaholic', iconUrl: '/Planet 7.svg', description: 'Buy something from the rewards shop', xpReward: 100 },
-      { triggerCode: 'B_CHANGE_BG', name: 'Interior Designer', iconUrl: '/Planet 8.svg', description: 'Change your profile background', xpReward: 100 },
-      { triggerCode: 'B_REACH_LVL5', name: 'Level 5 Reached', iconUrl: '/Meteor.svg', description: 'Reach Level 5', xpReward: 100 },
-      { triggerCode: 'B_REACH_LVL10', name: 'Level 10 Reached', iconUrl: '/Spaceship.svg', description: 'Reach Level 10', xpReward: 100 }
+      { triggerCode: 'B_CREATE_ACCOUNT', name: 'Ready for Blast Off!', iconUrl: '/assets/global/badges/milestones/CreateAccount.svg', description: 'Create an account', xpReward: 100 },
+      { triggerCode: 'B_VERIFY_ACCOUNT', name: 'Verified Explorer', iconUrl: '/assets/global/badges/milestones/AccountVerified.svg', description: 'Verify your account', xpReward: 100 },
+      { triggerCode: 'B_CHANGE_PFP', name: 'A New Look', iconUrl: '/assets/global/badges/milestones/ChangeProfileIcon.svg', description: 'Change your profile picture', xpReward: 100 },
+      { triggerCode: 'B_APTITUDE_TEST', name: 'Aptitude Tested', iconUrl: '/assets/global/badges/milestones/Aptitude Test.svg', description: 'Take the aptitude test', xpReward: 100 },
+      { triggerCode: 'B_FIRST_MISSION', name: 'First Mission', iconUrl: '/assets/global/badges/milestones/FirstMission.svg', description: 'Complete your first mission', xpReward: 100 },
+      { triggerCode: 'B_FIRST_PLANET', name: 'First Planet', iconUrl: '◆', description: 'Complete your first planet', xpReward: 100 },
+      { triggerCode: 'B_BUY_REWARD', name: 'Shopaholic', iconUrl: '/assets/global/badges/milestones/FirstPurchase.svg', description: 'Buy something from the rewards shop', xpReward: 100 },
+      { triggerCode: 'B_CHANGE_BG', name: 'Interior Designer', iconUrl: '/assets/global/badges/milestones/ChangeBackground.svg', description: 'Change your profile background', xpReward: 100 },
+      { triggerCode: 'B_REACH_LVL5', name: 'Level 5 Reached', iconUrl: '/assets/global/badges/milestones/Level 5.svg', description: 'Reach Level 5', xpReward: 100 },
+      { triggerCode: 'B_REACH_LVL10', name: 'Level 10 Reached', iconUrl: '/assets/global/badges/milestones/Level 10.svg', description: 'Reach Level 10', xpReward: 100 }
     ];
 
     for (const badge of defaultBadges) {
@@ -145,7 +145,7 @@ export async function getUnlockedAchievements() {
       return { success: false, unlockedCodes: [] };
     }
     const userId = (session.user as any).id;
-    
+
     // Auto-sync B_CREATE_ACCOUNT
     const createAch = await prisma.achievement.findUnique({ where: { triggerCode: 'B_CREATE_ACCOUNT' } });
     if (createAch) {
@@ -179,7 +179,7 @@ export async function getUnlockedAchievements() {
       where: { userId },
       include: { achievement: true }
     });
-    
+
     const unlockedCodes = userAchievements.map(ua => ua.achievement.triggerCode);
     const userAchievementsDetails = userAchievements.map(ua => ({
       triggerCode: ua.achievement.triggerCode,
@@ -187,7 +187,7 @@ export async function getUnlockedAchievements() {
       unlockedAt: ua.unlockedAt
     }));
     const allDbAchievements = await prisma.achievement.findMany();
-    
+
     return { success: true, unlockedCodes, userAchievementsDetails, allDbAchievements };
   } catch (error) {
     console.error("Error fetching unlocked achievements:", error);

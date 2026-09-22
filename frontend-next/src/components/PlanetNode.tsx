@@ -137,6 +137,7 @@ export default function PlanetNode({
 
   return (
     <div
+      id={`planet-node-${id}`}
       className={`absolute group transition-transform duration-300 ${sizeClass} ${isLocked ? 'cursor-not-allowed' : 'cursor-pointer'
         }`}
       style={{
@@ -168,7 +169,7 @@ export default function PlanetNode({
           </div>
           <div className="relative animate-bounce duration-1000 cursor-pointer">
             <img 
-              src="/Checkpoint.svg?v=rocket-v3" 
+              src="/assets/global/ui/Checkpoint.svg?v=rocket-v3" 
               alt="Current Mission Checkpoint" 
               className="w-16 h-16 sm:w-20 sm:h-20 object-contain drop-shadow-[0_0_20px_rgba(255,145,45,0.85)] drop-shadow-[0_8px_16px_rgba(0,0,0,0.9)] hover:scale-105 transition-transform duration-200" 
             />

@@ -11,7 +11,7 @@ export const LEVEL_3_BLOCKLY_JSON_DEFINITIONS = [
     previousStatement: null,
     nextStatement: null,
     colour: "#06B6D4",
-    tooltip: "Unlocks the airlock safety door.",
+    tooltip: "Unlocks the safety door.",
     helpUrl: "",
   },
   {
@@ -20,7 +20,7 @@ export const LEVEL_3_BLOCKLY_JSON_DEFINITIONS = [
     previousStatement: null,
     nextStatement: null,
     colour: "#06B6D4",
-    tooltip: "Opens the oxygen pressure equalization valve.",
+    tooltip: "Opens the air valve.",
     helpUrl: "",
   },
   {
@@ -29,7 +29,7 @@ export const LEVEL_3_BLOCKLY_JSON_DEFINITIONS = [
     previousStatement: null,
     nextStatement: null,
     colour: "#06B6D4",
-    tooltip: "Fills the life support chamber with fresh oxygen.",
+    tooltip: "Fills the room with fresh air.",
     helpUrl: "",
   },
 
@@ -40,7 +40,7 @@ export const LEVEL_3_BLOCKLY_JSON_DEFINITIONS = [
     previousStatement: null,
     nextStatement: null,
     colour: "#06B6D4",
-    tooltip: "Unlocks the airlock safety door.",
+    tooltip: "Unlocks the safety door.",
     helpUrl: "",
   },
 
@@ -51,7 +51,7 @@ export const LEVEL_3_BLOCKLY_JSON_DEFINITIONS = [
     previousStatement: null,
     nextStatement: null,
     colour: "#8B5CF6",
-    tooltip: "Charges one shield capacitor cell.",
+    tooltip: "Charges one shield power cell.",
     helpUrl: "",
   },
   {
@@ -60,7 +60,7 @@ export const LEVEL_3_BLOCKLY_JSON_DEFINITIONS = [
     previousStatement: null,
     nextStatement: null,
     colour: "#8B5CF6",
-    tooltip: "Charges one shield capacitor cell.",
+    tooltip: "Charges one shield power cell.",
     helpUrl: "",
   },
 
@@ -80,7 +80,7 @@ export const LEVEL_3_BLOCKLY_JSON_DEFINITIONS = [
     ],
     output: "Boolean",
     colour: "#38BDF8",
-    tooltip: "Checks the fuel tank type.",
+    tooltip: "Checks which fuel you are holding.",
     helpUrl: "",
   },
   {
@@ -89,7 +89,7 @@ export const LEVEL_3_BLOCKLY_JSON_DEFINITIONS = [
     previousStatement: null,
     nextStatement: null,
     colour: "#F97316",
-    tooltip: "Injects cryogenic blue fuel into the reactor.",
+    tooltip: "Pours blue fuel into the engine.",
     helpUrl: "",
   },
   {
@@ -98,7 +98,7 @@ export const LEVEL_3_BLOCKLY_JSON_DEFINITIONS = [
     previousStatement: null,
     nextStatement: null,
     colour: "#F97316",
-    tooltip: "Injects green catalyst fuel into the reactor.",
+    tooltip: "Pours green fuel into the engine.",
     helpUrl: "",
   },
   {
@@ -107,7 +107,7 @@ export const LEVEL_3_BLOCKLY_JSON_DEFINITIONS = [
     previousStatement: null,
     nextStatement: null,
     colour: "#F97316",
-    tooltip: "Injects cryogenic blue fuel into the reactor.",
+    tooltip: "Pours blue fuel into the engine.",
     helpUrl: "",
   },
   {
@@ -116,7 +116,7 @@ export const LEVEL_3_BLOCKLY_JSON_DEFINITIONS = [
     previousStatement: null,
     nextStatement: null,
     colour: "#F97316",
-    tooltip: "Injects green catalyst fuel into the reactor.",
+    tooltip: "Pours green fuel into the engine.",
     helpUrl: "",
   },
 
@@ -136,7 +136,7 @@ export const LEVEL_3_BLOCKLY_JSON_DEFINITIONS = [
     previousStatement: null,
     nextStatement: null,
     colour: "#EAB308",
-    tooltip: "Sets the ship's power variable (must be 100 to launch).",
+    tooltip: "Sets your ship power (make it 100 to launch!).",
     helpUrl: "",
   },
   {
@@ -145,7 +145,7 @@ export const LEVEL_3_BLOCKLY_JSON_DEFINITIONS = [
     previousStatement: null,
     nextStatement: null,
     colour: "#06B6D4",
-    tooltip: "Runs your Oxygen Room function (Unlock Door -> Open Valve -> Pump Air).",
+    tooltip: "Turns on the life support air system.",
     helpUrl: "",
   },
   {
@@ -154,7 +154,7 @@ export const LEVEL_3_BLOCKLY_JSON_DEFINITIONS = [
     previousStatement: null,
     nextStatement: null,
     colour: "#8B5CF6",
-    tooltip: "Runs your Shield Room function (Repeat 4 times: Charge Cell).",
+    tooltip: "Turns on the protective shield system.",
     helpUrl: "",
   },
   {
@@ -163,7 +163,7 @@ export const LEVEL_3_BLOCKLY_JSON_DEFINITIONS = [
     previousStatement: null,
     nextStatement: null,
     colour: "#F97316",
-    tooltip: "Runs your Engine Room function (Add Cryo Fuel & Catalyst).",
+    tooltip: "Turns on the rocket engines.",
     helpUrl: "",
   },
 ];
@@ -209,7 +209,7 @@ export const toolboxShields = {
             TIMES: {
               shadow: {
                 type: 'math_number',
-                fields: { NUM: 4 },
+                fields: { NUM: 1 },
               },
             },
           },

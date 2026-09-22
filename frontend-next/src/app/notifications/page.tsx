@@ -14,9 +14,8 @@ const Toast = ({ message, type, onClose }: { message: string, type: 'success' | 
     }, [onClose]);
 
     return (
-        <div className={`fixed bottom-4 right-4 px-6 py-3 rounded-xl font-medium text-white shadow-xl z-50 flex items-center gap-3 animate-fade-in ${
-            type === 'success' ? 'bg-[#ff912d]' : 'bg-red-500'
-        }`}>
+        <div className={`fixed bottom-4 right-4 px-6 py-3 rounded-xl font-medium text-white shadow-xl z-50 flex items-center gap-3 animate-fade-in ${type === 'success' ? 'bg-[#ff912d]' : 'bg-red-500'
+            }`}>
             {type === 'success' ? <Check size={18} /> : <X size={18} />}
             {message}
         </div>
@@ -47,7 +46,7 @@ export default function NotificationsPage() {
             const res = await fetch(url);
             if (!res.ok) throw new Error('Failed to fetch');
             const data = await res.json();
-            
+
             setNotifications(data.results || data.notifications || data || []);
 
             if (data.count !== undefined) {
@@ -170,171 +169,190 @@ export default function NotificationsPage() {
             <div className="notifications-page-wrapper flex-1 overflow-y-auto">
                 {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
-            {/* Header & Search */}
-            <div className="neo-search-notif">
-                <Search className="search-icon" size={20} />
-                <input
-                    type="text"
-                    placeholder="Search notifications..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                />
-            </div>
-            
-            <div className="notifications-header-row">
-                <h1>Notifications</h1>
+                {/* Header & Search */}
+                <div className="neo-search-notif">
+                    <Search className="search-icon" size={20} />
+                    <input
+                        type="text"
+                        placeholder="Search notifications..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                </div>
 
-                {pageInfo.count > 0 && (
-                    <div className="neo-pagination">
-                        <span className="pagination-text">{startItem}-{endItem} of {pageInfo.count}</span>
-                        <div className="pagination-controls">
-                            <button
-                                className="neo-btn-icon"
-                                disabled={!pageInfo.previous}
-                                onClick={() => pageInfo.previous && fetchNotifications(pageInfo.previous)}
-                            >
-                                <ChevronLeft size={20} />
-                            </button>
-                            <button
-                                className="neo-btn-icon"
-                                disabled={!pageInfo.next}
-                                onClick={() => pageInfo.next && fetchNotifications(pageInfo.next)}
-                            >
-                                <ChevronRight size={20} />
-                            </button>
-                        </div>
-                    </div>
-                )}
-            </div>
+                <div className="notifications-header-row">
+                    <h1>Notifications</h1>
 
-            <div className="notifications-list-container">
-                {loading ? (
-                    <div className="notif-loading">Loading notifications...</div>
-                ) : filteredNotifications.length === 0 ? (
-                    <div className="notif-empty">
-                        <p>{searchQuery ? 'No notifications match your search.' : "You're all caught up! No new notifications."}</p>
-                    </div>
-                ) : (
-                    filteredNotifications.map(notif => {
-                        const isProcessing = processingIds.includes(notif.id);
-
-                        return (
-                            <div key={notif.id} className="neo-notif-card flex-row">
-                                <div className="neo-notif-avatar">
-                                    {(notif.type === 'planet_unlocked' || notif.notification_type === 'planet_unlocked') ? (
-                                        notif.data?.planetSrc ? (
-                                            <img src={notif.data.planetSrc} alt={notif.data.planetName || 'Planet'} className="w-full h-full object-contain" />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center bg-[#ff912d]/20 rounded-full text-[#ff912d]">
-                                                <Rocket size={28} />
-                                            </div>
-                                        )
-                                    ) : (notif.type === 'system_verify_reward' || notif.notification_type === 'system_verify_reward') ? (
-                                        <div className="w-full h-full flex items-center justify-center bg-[#ff912d]/20 rounded-full shadow-inner text-[#ff912d]">
-                                            <Settings size={28} />
-                                        </div>
-                                    ) : (notif.type === 'aptitude_completed' || notif.notification_type === 'aptitude_completed') ? (
-                                        <div className="w-full h-full flex items-center justify-center bg-[#ff912d]/20 rounded-full shadow-inner text-[#ff912d]">
-                                            <Brain size={28} />
-                                        </div>
-                                    ) : (notif.type === 'achievement_unlocked' || notif.notification_type === 'achievement_unlocked' || notif.type === 'level_up' || notif.notification_type === 'level_up') ? (
-                                        notif.data?.badgeImage ? (
-                                            <img src={notif.data.badgeImage} alt={notif.data.badgeName} />
-                                        ) : (notif.type === 'level_up' || notif.notification_type === 'level_up') ? (
-                                            <div className="w-full h-full flex items-center justify-center bg-[#ffb703] rounded-full shadow-inner">
-                                                <span className="text-black font-black text-3xl">{notif.data?.level || notif.data?.badgeName?.replace(/\D/g, '') || ''}</span>
-                                            </div>
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-500/20 to-purple-600/20 rounded-full">
-                                                <span className="text-[#ff912d] font-bold text-xl">{notif.data?.badgeIcon || '🏆'}</span>
-                                            </div>
-                                        )
-                                    ) : notif.sender?.avatar_url
-                                        ? <img src={notif.sender.avatar_url} alt="" />
-                                        : <div className="neo-avatar-placeholder"><UserIcon size={24} /></div>
-                                    }
-                                </div>
-
-                                <div className="neo-notif-content">
-                                    <div className="neo-notif-title">
-                                        <span className="neo-notif-name">
-                                            {(notif.type === 'planet_unlocked' || notif.notification_type === 'planet_unlocked')
-                                                ? 'Planet Unlocked!'
-                                                : (notif.type === 'system_verify_reward' || notif.notification_type === 'system_verify_reward') 
-                                                ? 'Verification Reward!' 
-                                                : (notif.type === 'aptitude_completed' || notif.notification_type === 'aptitude_completed')
-                                                ? 'Aptitude Test'
-                                                : (notif.type === 'achievement_unlocked' || notif.notification_type === 'achievement_unlocked') 
-                                                ? 'Achievement Unlocked!' 
-                                                : (notif.type === 'level_up' || notif.notification_type === 'level_up') 
-                                                ? 'Level Up!' 
-                                                : (notif.sender?.username || notif.sender?.name || 'System')}
-                                        </span>
-                                        <span className="neo-notif-time">{timeAgo(notif.created_at || notif.createdAt)}</span>
-                                    </div>
-                                    <p className="neo-notif-desc">
-                                        {(notif.type === 'planet_unlocked' || notif.notification_type === 'planet_unlocked')
-                                            ? `${notif.data?.planetName || 'A new planet'} is now accessible. Head to Missions to explore it!`
-                                            : (notif.type === 'system_verify_reward' || notif.notification_type === 'system_verify_reward')
-                                            ? `You received ${notif.data?.amount} Gears for verifying your account.`
-                                            : (notif.type === 'aptitude_completed' || notif.notification_type === 'aptitude_completed')
-                                            ? (notif.data?.message?.startsWith('Diagnostic Completed') 
-                                                ? 'Your aptitude test is ready! Check it out to see your recommended learning path.' 
-                                                : (notif.data?.message || 'Your aptitude test is ready! Check it out to see your recommended learning path.'))
-                                            : (notif.type === 'friend_request' || notif.notification_type === 'friend_request') && notif.read_at
-                                            ? 'Friend request accepted.'
-                                            : (notif.type === 'achievement_unlocked' || notif.notification_type === 'achievement_unlocked')
-                                            ? `You unlocked the "${notif.data?.badgeName}" achievement!`
-                                            : (notif.type === 'level_up' || notif.notification_type === 'level_up')
-                                            ? notif.data?.badgeName || 'You leveled up!'
-                                            : notif.data?.message || notif.message || 'New notification received.'}
-                                    </p>
-                                </div>
-
-                                <div className="neo-notif-actions">
-                                    {(notif.type === 'friend_request' || notif.notification_type === 'friend_request') && !notif.read_at ? (
-                                        <>
-                                            <button
-                                                className="neo-btn-accept"
-                                                disabled={isProcessing}
-                                                onClick={() => handleAccept(notif)}
-                                            >
-                                                <Check size={16} /> Accept
-                                            </button>
-                                            <button
-                                                className="neo-btn-reject"
-                                                disabled={isProcessing}
-                                                onClick={() => handleReject(notif)}
-                                            >
-                                                <X size={16} /> Reject
-                                            </button>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <button
-                                                className="neo-btn-view"
-                                                disabled={isProcessing}
-                                                onClick={() => handleView(notif)}
-                                            >
-                                                View
-                                            </button>
-                                            <button
-                                                className="neo-btn-dismiss neo-btn-icon"
-                                                disabled={isProcessing}
-                                                onClick={() => handleDismiss(notif)}
-                                                title="Dismiss notification"
-                                            >
-                                                <X size={18} />
-                                            </button>
-                                        </>
-                                    )}
-                                </div>
+                    {pageInfo.count > 0 && (
+                        <div className="neo-pagination">
+                            <span className="pagination-text">{startItem}-{endItem} of {pageInfo.count}</span>
+                            <div className="pagination-controls">
+                                <button
+                                    className="neo-btn-icon"
+                                    disabled={!pageInfo.previous}
+                                    onClick={() => pageInfo.previous && fetchNotifications(pageInfo.previous)}
+                                >
+                                    <ChevronLeft size={20} />
+                                </button>
+                                <button
+                                    className="neo-btn-icon"
+                                    disabled={!pageInfo.next}
+                                    onClick={() => pageInfo.next && fetchNotifications(pageInfo.next)}
+                                >
+                                    <ChevronRight size={20} />
+                                </button>
                             </div>
-                        )
-                    })
-                )}
+                        </div>
+                    )}
+                </div>
+
+                <div className="notifications-list-container">
+                    {loading ? (
+                        <div className="notif-loading">Loading notifications...</div>
+                    ) : filteredNotifications.length === 0 ? (
+                        <div className="notif-empty">
+                            <p>{searchQuery ? 'No notifications match your search.' : "You're all caught up! No new notifications."}</p>
+                        </div>
+                    ) : (
+                        filteredNotifications.map(notif => {
+                            const isProcessing = processingIds.includes(notif.id);
+
+                            return (
+                                <div key={notif.id} className="neo-notif-card flex-row">
+                                    <div className="neo-notif-avatar">
+                                        {(notif.type === 'planet_unlocked' || notif.notification_type === 'planet_unlocked') ? (
+                                            <img
+                                                src={(() => {
+                                                    const name = String(notif.data?.planetName || notif.data?.planetId || '').toLowerCase();
+                                                    const rawSrc = String(notif.data?.planetSrc || notif.data?.planetImage || notif.data?.iconUrl || notif.data?.image || '');
+                                                    if (name.includes('mars')) return '/assets/planets/celestial/Mars.svg';
+                                                    if (name.includes('moon')) return '/assets/planets/celestial/Planet 7.svg';
+                                                    if (name.includes('venus')) return '/assets/planets/celestial/Venus.svg';
+                                                    if (name.includes('mercury')) return '/assets/planets/celestial/Mercury.svg';
+                                                    if (name.includes('jupiter')) return '/assets/planets/celestial/Jupiter.svg';
+                                                    if (name.includes('saturn')) return '/assets/planets/celestial/Saturn.svg';
+                                                    if (name.includes('earth')) return '/assets/planets/celestial/Earth.svg';
+                                                    if (rawSrc && (rawSrc.startsWith('/') || rawSrc.startsWith('http'))) {
+                                                        if (rawSrc.startsWith('/assets/planets/') && !rawSrc.includes('/celestial/')) {
+                                                            const filename = rawSrc.split('/').pop();
+                                                            return `/assets/planets/celestial/${filename}`;
+                                                        }
+                                                        return rawSrc;
+                                                    }
+                                                    return '/assets/planets/celestial/Mars.svg';
+                                                })()}
+                                                alt={notif.data?.planetName || 'Planet'}
+                                                className="w-full h-full object-contain"
+                                                onError={(e) => {
+                                                    (e.target as HTMLImageElement).src = '/assets/planets/celestial/Mars.svg';
+                                                }}
+                                            />
+                                        ) : (notif.type === 'system_verify_reward' || notif.notification_type === 'system_verify_reward') ? (
+                                            <div className="w-full h-full flex items-center justify-center bg-[#ff912d]/20 rounded-full shadow-inner text-[#ff912d]">
+                                                <Settings size={28} />
+                                            </div>
+                                        ) : (notif.type === 'aptitude_completed' || notif.notification_type === 'aptitude_completed') ? (
+                                            <div className="w-full h-full flex items-center justify-center bg-[#ff912d]/20 rounded-full shadow-inner text-[#ff912d]">
+                                                <Brain size={28} />
+                                            </div>
+                                        ) : (notif.type === 'achievement_unlocked' || notif.notification_type === 'achievement_unlocked' || notif.type === 'level_up' || notif.notification_type === 'level_up') ? (
+                                            notif.data?.badgeImage ? (
+                                                <img src={notif.data.badgeImage} alt={notif.data.badgeName} />
+                                            ) : (notif.type === 'level_up' || notif.notification_type === 'level_up') ? (
+                                                <div className="w-full h-full flex items-center justify-center bg-[#ffb703] rounded-full shadow-inner">
+                                                    <span className="text-black font-black text-3xl">{notif.data?.level || notif.data?.badgeName?.replace(/\D/g, '') || ''}</span>
+                                                </div>
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-500/20 to-purple-600/20 rounded-full">
+                                                    <span className="text-[#ff912d] font-bold text-xl">{notif.data?.badgeIcon || '🏆'}</span>
+                                                </div>
+                                            )
+                                        ) : notif.sender?.avatar_url
+                                            ? <img src={notif.sender.avatar_url} alt="" />
+                                            : <div className="neo-avatar-placeholder"><UserIcon size={24} /></div>
+                                        }
+                                    </div>
+
+                                    <div className="neo-notif-content">
+                                        <div className="neo-notif-title">
+                                            <span className="neo-notif-name">
+                                                {(notif.type === 'planet_unlocked' || notif.notification_type === 'planet_unlocked')
+                                                    ? 'Planet Unlocked!'
+                                                    : (notif.type === 'system_verify_reward' || notif.notification_type === 'system_verify_reward')
+                                                        ? 'Verification Reward!'
+                                                        : (notif.type === 'aptitude_completed' || notif.notification_type === 'aptitude_completed')
+                                                            ? 'Aptitude Test'
+                                                            : (notif.type === 'achievement_unlocked' || notif.notification_type === 'achievement_unlocked')
+                                                                ? 'Achievement Unlocked!'
+                                                                : (notif.type === 'level_up' || notif.notification_type === 'level_up')
+                                                                    ? 'Level Up!'
+                                                                    : (notif.sender?.username || notif.sender?.name || 'System')}
+                                            </span>
+                                            <span className="neo-notif-time">{timeAgo(notif.created_at || notif.createdAt)}</span>
+                                        </div>
+                                        <p className="neo-notif-desc">
+                                            {(notif.type === 'planet_unlocked' || notif.notification_type === 'planet_unlocked')
+                                                ? `${notif.data?.planetName || 'A new planet'} is now accessible. Head to Missions to explore it!`
+                                                : (notif.type === 'system_verify_reward' || notif.notification_type === 'system_verify_reward')
+                                                    ? `You received ${notif.data?.amount} Gears for verifying your account.`
+                                                    : (notif.type === 'aptitude_completed' || notif.notification_type === 'aptitude_completed')
+                                                        ? (notif.data?.message?.startsWith('Diagnostic Completed')
+                                                            ? 'Your aptitude test is ready! Check it out to see your recommended learning path.'
+                                                            : (notif.data?.message || 'Your aptitude test is ready! Check it out to see your recommended learning path.'))
+                                                        : (notif.type === 'friend_request' || notif.notification_type === 'friend_request') && notif.read_at
+                                                            ? 'Friend request accepted.'
+                                                            : (notif.type === 'achievement_unlocked' || notif.notification_type === 'achievement_unlocked')
+                                                                ? `You unlocked the "${notif.data?.badgeName}" achievement!`
+                                                                : (notif.type === 'level_up' || notif.notification_type === 'level_up')
+                                                                    ? notif.data?.badgeName || 'You leveled up!'
+                                                                    : notif.data?.message || notif.message || 'New notification received.'}
+                                        </p>
+                                    </div>
+
+                                    <div className="neo-notif-actions">
+                                        {(notif.type === 'friend_request' || notif.notification_type === 'friend_request') && !notif.read_at ? (
+                                            <>
+                                                <button
+                                                    className="neo-btn-accept"
+                                                    disabled={isProcessing}
+                                                    onClick={() => handleAccept(notif)}
+                                                >
+                                                    <Check size={16} /> Accept
+                                                </button>
+                                                <button
+                                                    className="neo-btn-reject"
+                                                    disabled={isProcessing}
+                                                    onClick={() => handleReject(notif)}
+                                                >
+                                                    <X size={16} /> Reject
+                                                </button>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <button
+                                                    className="neo-btn-view"
+                                                    disabled={isProcessing}
+                                                    onClick={() => handleView(notif)}
+                                                >
+                                                    View
+                                                </button>
+                                                <button
+                                                    className="neo-btn-dismiss neo-btn-icon"
+                                                    disabled={isProcessing}
+                                                    onClick={() => handleDismiss(notif)}
+                                                    title="Dismiss notification"
+                                                >
+                                                    <X size={18} />
+                                                </button>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+                            )
+                        })
+                    )}
+                </div>
             </div>
-        </div>
         </main>
     );
 }

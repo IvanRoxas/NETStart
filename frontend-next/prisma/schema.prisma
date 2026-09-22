@@ -39,8 +39,8 @@ model Session {
 
 model User {
   id            String    @id @default(cuid()) @map("user_id")
-  name          String?   @map("username")
-  displayName   String?   @unique @map("display_name")
+  name          String?   @unique @map("username")
+  displayName   String?   @map("display_name")
   email         String?   @unique
   emailVerified DateTime? @map("email_verified")
   password      String?

@@ -22,7 +22,7 @@ export const modulesData: ModuleData[] = [
   {
     id: 1,
     title: "Mercury",
-    planet: "/Planets/Mercury.svg",
+    planet: "/assets/planets/celestial/Mercury.svg",
     totalAchievements: 3,
     earnedAchievements: 3,
     playtime: "2 hrs",
@@ -36,7 +36,7 @@ export const modulesData: ModuleData[] = [
   {
     id: 2,
     title: "Venus",
-    planet: "/Planets/Venus.svg",
+    planet: "/assets/planets/celestial/Venus.svg",
     totalAchievements: 3,
     earnedAchievements: 2,
     playtime: "4 hrs",
@@ -50,7 +50,7 @@ export const modulesData: ModuleData[] = [
   {
     id: 3,
     title: "Mars",
-    planet: "/Planets/Mars.svg",
+    planet: "/assets/planets/celestial/Mars.svg",
     totalAchievements: 3,
     earnedAchievements: 0,
     playtime: "0 hrs",
@@ -64,7 +64,7 @@ export const modulesData: ModuleData[] = [
   {
     id: 4,
     title: "Jupiter",
-    planet: "/Planets/Jupiter.svg",
+    planet: "/assets/planets/celestial/Jupiter.svg",
     totalAchievements: 3,
     earnedAchievements: 0,
     playtime: "0 hrs",
@@ -78,7 +78,7 @@ export const modulesData: ModuleData[] = [
   {
     id: 5,
     title: "Saturn",
-    planet: "/Planets/Saturn.svg",
+    planet: "/assets/planets/celestial/Saturn.svg",
     totalAchievements: 3,
     earnedAchievements: 0,
     playtime: "0 hrs",
@@ -92,7 +92,7 @@ export const modulesData: ModuleData[] = [
   {
     id: 6,
     title: "Earth",
-    planet: "/Planets/Earth.svg",
+    planet: "/assets/planets/celestial/Earth.svg",
     totalAchievements: 3,
     earnedAchievements: 0,
     playtime: "0 hrs",
@@ -106,16 +106,16 @@ export const modulesData: ModuleData[] = [
 ];
 
 export const specialBadges: Badge[] = [
-  { id: 'b_create_account', name: 'Ready for Blast Off!', image: '/Planets/Mercury.svg', description: 'Create an account' },
-  { id: 'b_verify_account', name: 'Verified Explorer', image: '/Planets/Venus.svg', description: 'Verify your account' },
-  { id: 'b_change_pfp', name: 'A New Look', image: '/Planets/Mars.svg', description: 'Change your profile picture' },
-  { id: 'b_aptitude_test', name: 'Aptitude Tested', image: '/Planets/Jupiter.svg', description: 'Take the aptitude test' },
-  { id: 'b_first_mission', name: 'First Mission', image: '/Planets/Saturn.svg', description: 'Complete your first mission' },
-  { id: 'b_first_planet', name: 'First Planet', image: '/Planets/Earth.svg', description: 'Complete your first planet' },
-  { id: 'b_buy_reward', name: 'Shopaholic', image: '/Planet 7.svg', description: 'Buy something from the rewards shop' },
-  { id: 'b_change_bg', name: 'Interior Designer', image: '/Planet 8.svg', description: 'Change your profile background' },
-  { id: 'b_reach_lvl5', name: 'Level 5 Reached', image: '/Meteor.svg', description: 'Reach Level 5' },
-  { id: 'b_reach_lvl10', name: 'Level 10 Reached', image: '/Spaceship.svg', description: 'Reach Level 10' }
+  { id: 'b_create_account', name: 'Ready for Blast Off!', image: '/assets/global/badges/milestones/CreateAccount.svg', description: 'Create an account' },
+  { id: 'b_verify_account', name: 'Verified Explorer', image: '/assets/global/badges/milestones/AccountVerified.svg', description: 'Verify your account' },
+  { id: 'b_change_pfp', name: 'A New Look', image: '/assets/global/badges/milestones/ChangeProfileIcon.svg', description: 'Change your profile picture' },
+  { id: 'b_aptitude_test', name: 'Aptitude Tested', image: '/assets/global/badges/milestones/Aptitude Test.svg', description: 'Take the aptitude test' },
+  { id: 'b_first_mission', name: 'First Mission', image: '/assets/global/badges/milestones/FirstMission.svg', description: 'Complete your first mission' },
+  { id: 'b_first_planet', name: 'First Planet', icon: '◆', description: 'Complete your first planet' },
+  { id: 'b_buy_reward', name: 'Shopaholic', image: '/assets/global/badges/milestones/FirstPurchase.svg', description: 'Buy something from the rewards shop' },
+  { id: 'b_change_bg', name: 'Interior Designer', image: '/assets/global/badges/milestones/ChangeBackground.svg', description: 'Change your profile background' },
+  { id: 'b_reach_lvl5', name: 'Level 5 Reached', image: '/assets/global/badges/milestones/Level 5.svg', description: 'Reach Level 5' },
+  { id: 'b_reach_lvl10', name: 'Level 10 Reached', image: '/assets/global/badges/milestones/Level 10.svg', description: 'Reach Level 10' }
 ];
 
 export const allBadges: Badge[] = [...modulesData.flatMap(module => module.badges), ...specialBadges];

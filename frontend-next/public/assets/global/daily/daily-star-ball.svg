@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
+  <!-- Minimalist Flat Yellow Ball -->
+  <circle cx="50" cy="50" r="46" fill="#FFB800" />
+
+  <!-- Clean Star Silhouette -->
+  <polygon points="50,26 56.5,41 72.5,42 60,52.5 64.5,68 50,59 35.5,68 40,52.5 27.5,42 43.5,41" 
+           fill="#160628" 
+           stroke="#160628" 
+           stroke-width="1.5" 
+           stroke-linejoin="round"
+  />
+</svg>

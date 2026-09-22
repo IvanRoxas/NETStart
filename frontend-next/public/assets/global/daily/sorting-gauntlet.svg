@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="100%" height="100%">
+  <defs>
+    <radialGradient id="bgGlowSort" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ff9f43" stop-opacity="0.38"/>
+      <stop offset="100%" stop-color="#18072c" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="metalGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8395a7"/>
+      <stop offset="100%" stop-color="#222f3e"/>
+    </linearGradient>
+    <linearGradient id="conveyorNeon" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ff9f43"/>
+      <stop offset="100%" stop-color="#feca57"/>
+    </linearGradient>
+    <filter id="sortGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Outer Ambient Glow & Shield Ring -->
+  <circle cx="100" cy="100" r="90" fill="url(#bgGlowSort)"/>
+  <circle cx="100" cy="100" r="86" fill="#140728" stroke="#ff9f43" stroke-width="2.5" stroke-dasharray="7 4" opacity="0.85"/>
+  <circle cx="100" cy="100" r="76" fill="#1b0a36" stroke="#ffffff" stroke-width="1" stroke-opacity="0.15"/>
+
+  <!-- High-Speed Conveyor Belt Track -->
+  <g transform="translate(30, 115)">
+    <!-- Base Platform -->
+    <rect x="0" y="0" width="140" height="22" rx="11" fill="url(#metalGrad)" stroke="#ff9f43" stroke-width="2" filter="url(#sortGlow)"/>
+    
+    <!-- Rotating Conveyor Rollers -->
+    <circle cx="16" cy="11" r="7" fill="#10ac84" stroke="#ffffff" stroke-width="1.5"/>
+    <circle cx="48" cy="11" r="7" fill="#10ac84" stroke="#ffffff" stroke-width="1.5"/>
+    <circle cx="80" cy="11" r="7" fill="#10ac84" stroke="#ffffff" stroke-width="1.5"/>
+    <circle cx="112" cy="11" r="7" fill="#10ac84" stroke="#ffffff" stroke-width="1.5"/>
+    <circle cx="128" cy="11" r="7" fill="#10ac84" stroke="#ffffff" stroke-width="1.5"/>
+  </g>
+
+  <!-- Robotic Sorting Arm -->
+  <g transform="translate(100, 35)" filter="url(#sortGlow)">
+    <rect x="-14" y="0" width="28" height="12" rx="4" fill="#576574" stroke="#ff9f43" stroke-width="1.5"/>
+    <!-- Upper Arm -->
+    <line x1="0" y1="12" x2="-22" y2="40" stroke="#c8d6e5" stroke-width="6" stroke-linecap="round"/>
+    <!-- Arm Joint -->
+    <circle cx="-22" cy="40" r="6" fill="#ff9f43" stroke="#ffffff" stroke-width="1.5"/>
+    <!-- Forearm -->
+    <line x1="-22" y1="40" x2="-8" y2="68" stroke="#8395a7" stroke-width="5" stroke-linecap="round"/>
+    <!-- Claw / Gripper -->
+    <path d="M -18 72 Q -8 68 2 72 M -16 78 L -12 70 L -4 70 L 0 78" stroke="#ff9f43" stroke-width="3" fill="none" stroke-linecap="round"/>
+  </g>
+
+  <!-- Sorted Cargo Items On Conveyor -->
+  <!-- 1. Orange Cargo Crate -->
+  <g transform="translate(42, 88)" filter="url(#sortGlow)">
+    <rect x="0" y="0" width="24" height="24" rx="4" fill="#ff9f43" stroke="#ffffff" stroke-width="1.5"/>
+    <line x1="0" y1="0" x2="24" y2="24" stroke="#ffffff" stroke-width="1" stroke-opacity="0.6"/>
+    <line x1="0" y1="24" x2="24" y2="0" stroke="#ffffff" stroke-width="1" stroke-opacity="0.6"/>
+  </g>
+
+  <!-- 2. Green Fuel / Battery Canister -->
+  <g transform="translate(86, 84)" filter="url(#sortGlow)">
+    <rect x="0" y="4" width="20" height="26" rx="5" fill="#1dd1a1" stroke="#ffffff" stroke-width="1.5"/>
+    <rect x="5" y="0" width="10" height="4" rx="2" fill="#ffffff"/>
+    <line x1="4" y1="14" x2="16" y2="14" stroke="#10ac84" stroke-width="2"/>
+    <line x1="4" y1="20" x2="16" y2="20" stroke="#10ac84" stroke-width="2"/>
+  </g>
+
+  <!-- 3. Blue Tech Box -->
+  <g transform="translate(130, 92)" filter="url(#sortGlow)">
+    <rect x="0" y="0" width="20" height="20" rx="4" fill="#54a0ff" stroke="#ffffff" stroke-width="1.5"/>
+    <circle cx="10" cy="10" r="4" fill="#ffffff"/>
+  </g>
+</svg>

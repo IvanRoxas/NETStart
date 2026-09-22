@@ -24,12 +24,15 @@ import {
 
 export interface SceneItem {
   slide?: string;
-  type: "divider" | "dialogue";
+  type: "divider" | "dialogue" | "mission";
   title?: string;
   subtitle?: string;
   speaker?: string;
   text?: string;
   background?: string;
+  mission?: string;
+  level?: number;
+  concept?: string;
 }
 
 export interface VisualNovelCutsceneProps {

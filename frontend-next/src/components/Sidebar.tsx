@@ -120,7 +120,7 @@ export default function Sidebar() {
       <div className={`p-6 flex items-center gap-3 transition-all duration-300 h-24 ${isMinimized ? 'justify-center px-0' : 'px-8'}`}>
         <div className="w-10 h-10 flex-shrink-0 relative flex items-center justify-center">
           <Image 
-            src="/NETStartIcon.png" 
+            src="/assets/global/badges/NETStartIcon.png" 
             alt="NETStart Logo" 
             width={40} 
             height={40} 

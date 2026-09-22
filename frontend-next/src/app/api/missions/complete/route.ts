@@ -57,7 +57,7 @@ export async function POST(req: Request) {
       // 2. Award XP and Gears ONLY if the mission is completed for the first time
       let xpEarned = 0;
       let gearsEarned = 0;
-      
+
       if (!wasCompleted) {
         xpEarned = XP_REWARDS.TOTAL_LEVEL_YIELD; // 150 XP Level Completion Total (50 XP x 3 sections)
         gearsEarned = 20;
@@ -78,13 +78,13 @@ export async function POST(req: Request) {
     if (!wasCompleted) {
       // Planet → mission prefix mapping (mirrors ModulesClient.tsx)
       const planetOrder = [
-        { id: 'moon',    name: 'The Moon',  prefixes: ['moon'],                         nextId: 'mars',    nextName: 'Mars',    nextSrc: '/Planets/Mars.svg' },
-        { id: 'mars',    name: 'Mars',      prefixes: ['mars', 'html'],                 nextId: 'venus',   nextName: 'Venus',   nextSrc: '/Planets/Venus.svg' },
-        { id: 'venus',   name: 'Venus',     prefixes: ['venus', 'css'],                 nextId: 'mercury', nextName: 'Mercury', nextSrc: '/Planets/Mercury.svg' },
-        { id: 'mercury', name: 'Mercury',   prefixes: ['mercury', 'javascript', 'js'],  nextId: 'jupiter', nextName: 'Jupiter', nextSrc: '/Planets/Jupiter.svg' },
-        { id: 'jupiter', name: 'Jupiter',   prefixes: ['jupiter', 'java'],              nextId: 'saturn',  nextName: 'Saturn',  nextSrc: '/Planets/Saturn.svg' },
-        { id: 'saturn',  name: 'Saturn',    prefixes: ['saturn', 'cpp'],                nextId: 'earth',   nextName: 'Earth (HQ)', nextSrc: '/Planets/Earth.svg' },
-        { id: 'earth',   name: 'Earth (HQ)', prefixes: ['earth', 'python'],             nextId: null,      nextName: null,      nextSrc: null },
+        { id: 'moon', name: 'The Moon', prefixes: ['moon'], nextId: 'mars', nextName: 'Mars', nextSrc: '/assets/planets/celestial/Mars.svg' },
+        { id: 'mars', name: 'Mars', prefixes: ['mars', 'html'], nextId: 'venus', nextName: 'Venus', nextSrc: '/assets/planets/celestial/Venus.svg' },
+        { id: 'venus', name: 'Venus', prefixes: ['venus', 'css'], nextId: 'mercury', nextName: 'Mercury', nextSrc: '/assets/planets/celestial/Mercury.svg' },
+        { id: 'mercury', name: 'Mercury', prefixes: ['mercury', 'javascript', 'js'], nextId: 'jupiter', nextName: 'Jupiter', nextSrc: '/assets/planets/celestial/Jupiter.svg' },
+        { id: 'jupiter', name: 'Jupiter', prefixes: ['jupiter', 'java'], nextId: 'saturn', nextName: 'Saturn', nextSrc: '/assets/planets/celestial/Saturn.svg' },
+        { id: 'saturn', name: 'Saturn', prefixes: ['saturn', 'cpp'], nextId: 'earth', nextName: 'Earth (HQ)', nextSrc: '/assets/planets/celestial/Earth.svg' },
+        { id: 'earth', name: 'Earth (HQ)', prefixes: ['earth', 'python'], nextId: null, nextName: null, nextSrc: null },
       ];
 
       const missionIdLower = missionId.toLowerCase();

@@ -257,43 +257,21 @@ export const FuelSynthesis = forwardRef<FuelSynthesisRef, FuelSynthesisProps>(({
 
     const col = stateRef.current.currentColor;
 
-    // 1. Initial Activation from Grey (Requires both Heat and Solution)
     if (col === 'Grey') {
       setIsHeatedOnce(true);
       stateRef.current.isHeatedOnce = true;
 
       if (stateRef.current.solutionAdded) {
-        // Both Heat and Solution are done -> Activate fuel to deterministic batch color!
-        const activatedColor = BATCH_COLORS[stateRef.current.currentBatch % BATCH_COLORS.length];
-        setCurrentColor(activatedColor);
-        stateRef.current.currentColor = activatedColor;
-        addLog(`Heat & Solution added -> Activated to ${activatedColor}!`, 'info');
+        addLog('Heated fuel mixture (Step 2). Ready to Mix 5 times!', 'info');
       } else {
-        addLog('Heated Grey fuel. Now Add Solution to activate!', 'info');
+        addLog('Heated vat. Remember to Add Solution before mixing!', 'info');
       }
       await delay(400);
       return;
     }
 
-    // 2. Condition B: Blue -> Needs both Heat and Solution to turn Orange
-    if (col === 'Blue') {
-      setIsBlueHeated(true);
-      stateRef.current.blueHeated = true;
-
-      if (stateRef.current.blueSolutionAdded) {
-        setCurrentColor('Orange');
-        stateRef.current.currentColor = 'Orange';
-        addLog('Heated & added solution to Blue fuel -> Turned Perfect Orange!', 'success');
-      } else {
-        addLog('Heated Blue fuel. Now Add Solution to finish turning it Orange!', 'info');
-      }
-      await delay(400);
-      return;
-    }
-
-    // 3. Any other color heated -> EXPLOSION!
     if (col === 'Green') {
-      triggerExplosion('Oops! Heating Green fuel made it explode. Green fuel needs mixing!');
+      triggerExplosion('Oops! Heating Green fuel caused it to explode. Green fuel needs Add Solution to turn Orange!');
       throw new Error("SIMULATION_FAILED");
     }
     if (col === 'Orange') {
@@ -323,91 +301,83 @@ export const FuelSynthesis = forwardRef<FuelSynthesisRef, FuelSynthesisProps>(({
 
     const col = stateRef.current.currentColor;
 
-    // 1. Initial Activation from Grey (Requires both Heat and Solution)
+    // 1. Initial Step 1 for raw Grey fuel
     if (col === 'Grey') {
       setSolutionAdded(true);
       stateRef.current.solutionAdded = true;
-
       if (stateRef.current.isHeatedOnce) {
-        // Both Heat and Solution are done -> Activate fuel to deterministic batch color!
-        const activatedColor = BATCH_COLORS[stateRef.current.currentBatch % BATCH_COLORS.length];
-        setCurrentColor(activatedColor);
-        stateRef.current.currentColor = activatedColor;
-        addLog(`Solution & Heat added -> Activated to ${activatedColor}!`, 'info');
+        addLog('Chemical Solution added (Step 1) to heated vat. Ready to Mix 5 times!', 'info');
       } else {
-        addLog('Added Solution to Grey fuel. Now Increase Heat to activate!', 'info');
+        addLog('Chemical Solution added to vat (Step 1). Next: Increase Heat!', 'info');
       }
       await delay(400);
       return;
     }
 
-    // 2. Condition B: Blue -> Needs both Heat and Solution to turn Orange
-    if (col === 'Blue') {
-      setIsBlueSolutionAdded(true);
-      stateRef.current.blueSolutionAdded = true;
-
-      if (stateRef.current.blueHeated) {
-        setCurrentColor('Orange');
-        stateRef.current.currentColor = 'Orange';
-        addLog('Added solution & heated Blue fuel -> Turned Perfect Orange!', 'success');
-      } else {
-        addLog('Added Solution to Blue fuel. Now Increase Heat to finish turning it Orange!', 'info');
-      }
+    // 2. 50/50 Green Fuel -> Add Solution turns it to Perfect Orange!
+    if (col === 'Green') {
+      setCurrentColor('Orange');
+      stateRef.current.currentColor = 'Orange';
+      addLog('Added Solution to Green fuel -> Refined to Perfect Orange!', 'success');
       await delay(400);
       return;
     }
 
-    // If solution added again on active fuel, acknowledge safely
-    addLog('Solution added to mixture.', 'info');
-    await delay(300);
+    // 3. Orange fuel does not need more solution
+    if (col === 'Orange') {
+      triggerExplosion('Oops! Orange fuel is already refined. Put it into the fuel tank!');
+      throw new Error("SIMULATION_FAILED");
+    }
   };
 
   // Node 3: Mix()
   const executeMix = async () => {
     if (stateRef.current.isGameOver) throw new Error("SIMULATION_FAILED");
     if (stateRef.current.isVictory) return;
-    // Longer mixing animation duration so the stirring action is clearly visible
-    await performNovaAction('MIX', 'MIX', 1400);
+    // Mixing animation duration
+    await performNovaAction('MIX', 'MIX', 900);
     if (stateRef.current.isGameOver) throw new Error("SIMULATION_FAILED");
 
     const col = stateRef.current.currentColor;
 
-    // Grey fuel cannot be mixed before activation
+    // Grey fuel must have solution and heat before mixing
     if (col === 'Grey') {
-      triggerExplosion('Oops! Start raw fuel with Increase Heat and Add Solution before mixing.');
-      throw new Error("SIMULATION_FAILED");
-    }
+      if (!stateRef.current.solutionAdded || !stateRef.current.isHeatedOnce) {
+        triggerExplosion('Oops! You must Add Solution (Step 1) and Increase Heat (Step 2) before mixing.');
+        throw new Error("SIMULATION_FAILED");
+      }
 
-    // 1. Condition C: Green Fuel (Requires exactly 3 mixes)
-    if (col === 'Green') {
       const nextCount = stateRef.current.greenMixCount + 1;
       setGreenMixCount(nextCount);
       stateRef.current.greenMixCount = nextCount;
 
-      if (nextCount === 3) {
-        // Exactly 3 mixes -> turns Orange!
-        setCurrentColor('Orange');
-        stateRef.current.currentColor = 'Orange';
-        addLog('Mix 3/3 complete on Green fuel -> Turned Perfect Orange!', 'success');
-      } else if (nextCount > 3) {
-        triggerExplosion('Oops! Green fuel only needs to be mixed 3 times.');
-        throw new Error("SIMULATION_FAILED");
+      if (nextCount < 5) {
+        addLog(`Mixing fuel mixture (${nextCount}/5)...`, 'info');
+      } else if (nextCount === 5) {
+        // Deterministic 50/50 distribution across 3 batches: Batch 0 = Green, Batch 1 = Orange, Batch 2 = Green
+        const resultColor: FuelColor = (stateRef.current.currentBatch % 2 === 0) ? 'Green' : 'Orange';
+        setCurrentColor(resultColor);
+        stateRef.current.currentColor = resultColor;
+        if (resultColor === 'Green') {
+          addLog('Mix 5/5 complete! Fuel turned Green. Add Solution to turn it Orange!', 'warn');
+        } else {
+          addLog('Mix 5/5 complete! Fuel turned Perfect Orange! Ready for spaceship.', 'success');
+        }
       } else {
-        addLog(`Mixed Green fuel (${nextCount}/3)...`, 'info');
+        triggerExplosion('Oops! Fuel only needs to be mixed 5 times.');
+        throw new Error("SIMULATION_FAILED");
       }
       await delay(400);
       return;
     }
 
-    // 2. Condition B: Blue Fuel (Needs heat and solution, not mixing)
-    if (col === 'Blue') {
-      triggerExplosion('Oops! Blue fuel needs Increase Heat and Add Solution to turn Orange!');
+    if (col === 'Green') {
+      triggerExplosion('Oops! Mixing is finished. Add Solution to turn Green fuel Orange!');
       throw new Error("SIMULATION_FAILED");
     }
 
-    // 3. Mixing Orange -> Wrong sequence
     if (col === 'Orange') {
-      triggerExplosion('Oops! Orange fuel is already done. Send it to the spaceship!');
+      triggerExplosion('Oops! Orange fuel is already done. Put it into the fuel tank!');
       throw new Error("SIMULATION_FAILED");
     }
   };
@@ -423,9 +393,13 @@ export const FuelSynthesis = forwardRef<FuelSynthesisRef, FuelSynthesisProps>(({
 
     const col = stateRef.current.currentColor;
 
-    // Strict Requirement: Premature Packing Check
+    if (col === 'Green') {
+      triggerExplosion('Oops! Green fuel is not finished yet. Add Solution to turn it Orange before fueling!');
+      throw new Error("SIMULATION_FAILED");
+    }
+
     if (col !== 'Orange') {
-      triggerExplosion('Oops! Only finished Orange fuel can be put in the spaceship.');
+      triggerExplosion('Oops! Fuel is not finished synthesizing. Follow all 5 steps: Add Solution, Heat, Mix 5x, check Green -> Add Solution, then Fuel!');
       throw new Error("SIMULATION_FAILED");
     }
 
@@ -470,8 +444,8 @@ export const FuelSynthesis = forwardRef<FuelSynthesisRef, FuelSynthesisProps>(({
         await executePutIntoFuelTank();
       },
       getColor: () => stateRef.current.currentColor,
-      isColor: (c: FuelColor) => stateRef.current.currentColor === c,
-      isNotColor: (c: FuelColor) => stateRef.current.currentColor !== c,
+      isColor: (c: FuelColor) => stateRef.current.currentColor.toLowerCase() === c.toLowerCase(),
+      isNotColor: (c: FuelColor) => stateRef.current.currentColor.toLowerCase() !== c.toLowerCase(),
       checkStatus: async () => {
         if (stateRef.current.isGameOver) throw new Error("SIMULATION_FAILED");
         safetyTickCount++;
@@ -689,19 +663,23 @@ export const FuelSynthesis = forwardRef<FuelSynthesisRef, FuelSynthesisProps>(({
                 <ul className="space-y-1.5 pl-1">
                   <li className="flex items-start gap-1.5">
                     <span className="text-amber-400 font-bold">1.</span>
-                    <span>Start each batch with <strong className="text-orange-300">Increase Heat</strong> and <strong className="text-cyan-300">Add Solution</strong> to activate the fuel.</span>
+                    <span><strong className="text-cyan-300">Add Solution</strong> into the vat.</span>
                   </li>
                   <li className="flex items-start gap-1.5">
                     <span className="text-amber-400 font-bold">2.</span>
-                    <span><strong className="text-orange-400">Orange Fuel:</strong> It is ready! Click <strong className="text-emerald-300">Fuel Spaceship</strong>.</span>
+                    <span><strong className="text-orange-300">Increase Heat</strong> to activate the mixture.</span>
                   </li>
                   <li className="flex items-start gap-1.5">
                     <span className="text-amber-400 font-bold">3.</span>
-                    <span><strong className="text-cyan-300">Blue Fuel:</strong> Use <strong className="text-orange-300">Increase Heat</strong> and <strong className="text-cyan-300">Add Solution</strong> to turn it Orange.</span>
+                    <span><strong className="text-purple-300">Mix Solution</strong> 5 times (use a Repeat 5 times loop).</span>
                   </li>
                   <li className="flex items-start gap-1.5">
                     <span className="text-amber-400 font-bold">4.</span>
-                    <span><strong className="text-emerald-400">Green Fuel:</strong> Use <strong className="text-purple-300">Mix Solution</strong> 3 times to turn it Orange.</span>
+                    <span>If the fuel turns <strong className="text-emerald-400">Green</strong>, use <strong className="text-cyan-300">Add Solution</strong> to refine it into <strong className="text-orange-400">Orange</strong>.</span>
+                  </li>
+                  <li className="flex items-start gap-1.5">
+                    <span className="text-amber-400 font-bold">5.</span>
+                    <span>Once the fuel is <strong className="text-orange-400">Orange</strong>, use <strong className="text-emerald-300">Put into Fuel Tank</strong> to fuel the spaceship.</span>
                   </li>
                 </ul>
 
@@ -760,7 +738,7 @@ export const FuelSynthesis = forwardRef<FuelSynthesisRef, FuelSynthesisProps>(({
             {/* Top Left: Add Solution */}
             <div className="flex flex-col items-center justify-center gap-1 transition-transform duration-300">
               <img 
-                src="/Solution.svg" 
+                src="/assets/global/ui/Solution.svg" 
                 alt="Add Solution" 
                 className={`w-16 h-16 sm:w-20 sm:h-20 object-contain transition-all duration-300 ${
                   activeStationGlow === 'SOLUTION' ? 'scale-125 drop-shadow-[0_0_24px_rgba(6,182,212,0.95)]' : 'hover:scale-105'
@@ -773,7 +751,7 @@ export const FuelSynthesis = forwardRef<FuelSynthesisRef, FuelSynthesisProps>(({
             {/* Top Right: Mix Solution */}
             <div className="flex flex-col items-center justify-center gap-1 transition-transform duration-300">
               <img 
-                src="/Nova Mixing.svg" 
+                src="/assets/global/npcs/Nova Mixing.svg" 
                 alt="Mix Solution" 
                 className={`w-16 h-16 sm:w-20 sm:h-20 object-contain transition-all duration-700 ${
                   activeStationGlow === 'MIX' ? 'scale-125 animate-pulse drop-shadow-[0_0_24px_rgba(168,85,247,0.95)]' : 'hover:scale-105'
@@ -828,7 +806,7 @@ export const FuelSynthesis = forwardRef<FuelSynthesisRef, FuelSynthesisProps>(({
                       style={{ animation: 'pourFlaskTilt 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards' }}
                     >
                       <img 
-                        src="/Solution.svg" 
+                        src="/assets/global/ui/Solution.svg" 
                         alt="Pouring Solution" 
                         className="w-14 h-14 sm:w-16 sm:h-16 object-contain drop-shadow-[0_0_18px_rgba(6,182,212,0.95)]"
                         style={stickerStyle} 
@@ -916,7 +894,7 @@ export const FuelSynthesis = forwardRef<FuelSynthesisRef, FuelSynthesisProps>(({
             {isExploding && (
               <div className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none animate-in fade-in zoom-in duration-75">
                 <img 
-                  src="/Explosion.svg" 
+                  src="/assets/planets/00_moon/environment/Explosion.svg" 
                   alt="Explosion" 
                   className="w-48 h-48 sm:w-56 sm:h-56 object-contain animate-ping opacity-100 drop-shadow-[0_0_35px_rgba(239,68,68,0.95)]"
                   style={stickerStyle}
@@ -941,7 +919,7 @@ export const FuelSynthesis = forwardRef<FuelSynthesisRef, FuelSynthesisProps>(({
             {/* Bottom Left: Increase Heat */}
             <div className="flex flex-col items-center justify-center gap-1 transition-transform duration-300">
               <img 
-                src="/Heat.svg" 
+                src="/assets/planets/00_moon/environment/Heat.svg" 
                 alt="Increase Heat" 
                 className={`w-16 h-16 sm:w-20 sm:h-20 object-contain transition-all duration-300 ${
                   activeStationGlow === 'HEAT' ? 'scale-125 animate-bounce drop-shadow-[0_0_24px_rgba(249,115,22,0.95)]' : 'hover:scale-105'
@@ -954,7 +932,7 @@ export const FuelSynthesis = forwardRef<FuelSynthesisRef, FuelSynthesisProps>(({
             {/* Bottom Right: Fuel Spaceship */}
             <div className="flex flex-col items-center justify-center gap-1 transition-transform duration-300">
               <img 
-                src="/Checkpoint.svg" 
+                src="/assets/global/ui/Checkpoint.svg" 
                 alt="Fuel Spaceship" 
                 className={`w-16 h-16 sm:w-20 sm:h-20 object-contain transition-all duration-300 ${
                   activeStationGlow === 'TANK' ? 'scale-125 drop-shadow-[0_0_24px_rgba(16,185,129,0.95)]' : 'hover:scale-105'
@@ -981,14 +959,14 @@ export const FuelSynthesis = forwardRef<FuelSynthesisRef, FuelSynthesisProps>(({
               <img 
                 src={
                   isNovaRunning
-                    ? '/Nova Running.svg'
-                    : '/Nova Idle.svg'
+                    ? '/assets/global/npcs/Nova Running.svg'
+                    : '/assets/global/npcs/Nova Idle.svg'
                 } 
                 alt="Nova Operator"
                 className="w-14 h-14 sm:w-16 sm:h-16 object-contain"
                 style={stickerStyle}
                 onError={(e) => {
-                  e.currentTarget.src = '/kath.jpg';
+                  e.currentTarget.src = '/assets/global/team/kath.jpg';
                 }}
               />
             </div>

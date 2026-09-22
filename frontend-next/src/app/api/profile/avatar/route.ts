@@ -15,8 +15,8 @@ export async function GET(req: Request) {
       select: { image: true, name: true }
     });
 
-    if (!user || !user.image || user.image === '/Planet 1.svg') {
-      return NextResponse.redirect(new URL('/Profile.svg', req.url));
+    if (!user || !user.image || user.image === '/assets/planets/celestial/Planet 1.svg') {
+      return NextResponse.redirect(new URL('/assets/global/badges/Profile.svg', req.url));
     }
 
     // if image is a base64 string, return it directly as binary

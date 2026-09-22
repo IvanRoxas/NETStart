@@ -5,6 +5,8 @@ import { useSession } from "next-auth/react";
 import { calculateLevel, getXPDetails, MAX_LEVEL, XPDetails } from "@/lib/leveling";
 import { Sparkles, Trophy, Zap, X } from "lucide-react";
 
+import { getUserStorageItem, setUserStorageItem, clearLegacyUnscopedData } from "@/lib/userStorage";
+
 interface ProgressionContextType {
   currentXp: number;
   playerLevel: number;
@@ -23,21 +25,29 @@ const ProgressionContext = createContext<ProgressionContextType | undefined>(und
 export function ProgressionProvider({ children }: { children: React.ReactNode }) {
   const { data: session, update: updateSession } = useSession();
   const sessionUser = session?.user as any;
+  const userId = sessionUser?.id as string | undefined;
 
-  // Initialize XP from session or localStorage
+  // Initialize XP strictly from session or user-scoped storage
   const [currentXp, setCurrentXp] = useState<number>(0);
   const [levelUpModal, setLevelUpModal] = useState<{ isOpen: boolean; newLevel: number } | null>(null);
 
   useEffect(() => {
+    // Purge any old unscoped netstart data left by previous users
+    clearLegacyUnscopedData();
+
     if (sessionUser?.xp !== undefined && typeof sessionUser.xp === "number") {
       setCurrentXp(sessionUser.xp);
-    } else if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("netstart_player_xp");
+    } else if (userId && typeof window !== "undefined") {
+      const stored = getUserStorageItem("player_xp", userId);
       if (stored) {
         setCurrentXp(parseInt(stored, 10) || 0);
+      } else {
+        setCurrentXp(0);
       }
+    } else {
+      setCurrentXp(0);
     }
-  }, [sessionUser?.xp]);
+  }, [sessionUser?.xp, userId]);
 
   const xpDetails = getXPDetails(currentXp);
   const playerLevel = xpDetails.level;
@@ -58,7 +68,9 @@ export function ProgressionProvider({ children }: { children: React.ReactNode })
       const newLevel = calculateLevel(newXp);
 
       if (typeof window !== "undefined") {
-        localStorage.setItem("netstart_player_xp", String(newXp));
+        if (userId) {
+          setUserStorageItem("player_xp", String(newXp), userId);
+        }
         window.dispatchEvent(new CustomEvent("netstart:xp_gained", {
           detail: { amount, newXp, newLevel, source: sourceLabel }
         }));
@@ -76,18 +88,18 @@ export function ProgressionProvider({ children }: { children: React.ReactNode })
 
       return newXp;
     });
-  }, [triggerLevelUpUI]);
+  }, [triggerLevelUpUI, userId]);
 
   const removeXp = useCallback((amount: number) => {
     if (amount <= 0) return;
     setCurrentXp(prevXp => {
       const newXp = Math.max(0, prevXp - amount);
-      if (typeof window !== "undefined") {
-        localStorage.setItem("netstart_player_xp", String(newXp));
+      if (typeof window !== "undefined" && userId) {
+        setUserStorageItem("player_xp", String(newXp), userId);
       }
       return newXp;
     });
-  }, []);
+  }, [userId]);
 
   const closeLevelUpModal = () => {
     setLevelUpModal(null);

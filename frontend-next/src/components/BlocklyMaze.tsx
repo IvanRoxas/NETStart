@@ -9,16 +9,17 @@ import '@/lib/customblocks';
 import { generatePlainEnglishPseudocode } from '@/lib/customblocks';
 import PlainEnglishCodeViewer from '@/components/PlainEnglishCodeViewer';
 import { useNavigationGuard } from '@/context/NavigationGuardContext';
-import { 
-  Play, 
-  RotateCcw, 
-  Rocket, 
-  Zap, 
-  Radio, 
-  CheckCircle2, 
-  Circle, 
-  Check, 
-  ChevronDown, 
+import {
+  Play,
+  RotateCcw,
+  Rocket,
+  Zap,
+  Radio,
+  CheckCircle2,
+  Circle,
+  Check,
+  ChevronDown,
+  ChevronUp,
   ChevronRight,
   Flame,
   Settings,
@@ -29,15 +30,14 @@ import {
   Plus,
   Minus,
   Trash2,
-  BoxSelect,
   Copy,
   ClipboardPaste,
   Layers,
   Flag,
   Pause,
   AlertTriangle,
-  AlertCircle, 
-  Bomb, 
+  AlertCircle,
+  Bomb,
   Lock,
   X,
   LogOut,
@@ -47,11 +47,13 @@ import {
   Scan,
   HelpCircle,
   Apple,
-  ChevronLeft
+  ChevronLeft,
+  Undo2
 } from 'lucide-react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useProgression } from '@/context/ProgressionContext';
+import { getUserStorageItem, setUserStorageItem, removeUserStorageItem } from '@/lib/userStorage';
 import { XP_REWARDS } from '@/lib/leveling';
 import {
   getSectionConveyorQueue,
@@ -64,8 +66,61 @@ import StarshipProtocolConsole from '@/components/level3/StarshipProtocolConsole
 import OxygenMaze from '@/components/level3/OxygenMaze';
 import FlightSimulation, { FlightSimulationRef, FlightSimulationState, FlightAction } from '@/components/level3/FlightSimulation';
 import FuelSynthesis, { FuelSynthesisRef, FuelSimulationMethods } from '@/components/level3/FuelSynthesis';
+import {
+  registerHtmlBlocks,
+  parseWorkspaceHtml,
+  MARS_CAMPAIGN_PRESETS,
+  setActiveMarsCampaign,
+  getActiveMarsCampaign,
+  type MarsCampaignPreset,
+  type ParsedHtmlElement,
+  type MarsValidationResult
+} from '@/lib/mars/htmlBlocklyDefinitions';
+import MartianBillboard from '@/components/mars/MartianBillboard';
+import MarsSyntaxTab from '@/components/mars/MarsSyntaxTab';
+import MarkDialogueModal from '@/components/mars/MarkDialogueModal';
+import {
+  registerMarsLevel2Blocks,
+  parseMarsLevel2Workspace,
+  MARS_LEVEL_2_DEFAULT_STARTER_XML,
+  type MarsLevel2Validation,
+  type ParsedImageContainer,
+} from '@/lib/mars/marsLevel2Definitions';
+import MarsImageBillboards from '@/components/mars/MarsImageBillboards';
+import {
+  registerMarsLevel3Blocks,
+  parseMarsLevel3Workspace,
+  MARS_LEVEL_3_TOOLBOX,
+  MARS_LEVEL_3_STARTER_XML,
+  type MarsLevel3Validation,
+} from '@/lib/mars/marsLevel3Definitions';
+import MarsLevel3 from '@/components/mars/level3/MarsLevel3';
+
+// Defensive Polyfill for Blockly connection previewer & insertion marker highlighting on detached SVG roots
+if (typeof window !== 'undefined') {
+  const getElemByIdFallback = function (this: Element | DocumentFragment | SVGElement, id: string) {
+    try {
+      if (this.querySelector) {
+        const found = this.querySelector(`[id="${id}"]`);
+        if (found) return found;
+      }
+    } catch (e) { }
+    return document.getElementById(id);
+  };
+
+  if (typeof Element !== 'undefined' && !(Element.prototype as any).getElementById) {
+    (Element.prototype as any).getElementById = getElemByIdFallback;
+  }
+  if (typeof DocumentFragment !== 'undefined' && !(DocumentFragment.prototype as any).getElementById) {
+    (DocumentFragment.prototype as any).getElementById = getElemByIdFallback;
+  }
+  if (typeof SVGElement !== 'undefined' && !(SVGElement.prototype as any).getElementById) {
+    (SVGElement.prototype as any).getElementById = getElemByIdFallback;
+  }
+}
 
 Blockly.setLocale(En as any);
+registerHtmlBlocks();
 
 export interface LevelSection {
   sectionIndex: number;
@@ -78,14 +133,14 @@ export interface LevelSection {
   objectives: { id: number; text: string; completed: boolean; isClaimed?: boolean }[];
 }
 
-// 4 Sections for Level 1 (Moon: Level 1 - Level 1: Stellar Beginnings)
+// 3 Sections for Level 1 (Moon: Level 1 - Level 1: Stellar Beginnings)
 // Tile Legend: 0 = Invisible/Unplayable Void, 1 = Playable Tile, 2 = Bomb, 3 = Start, 4 = Goal
 export const LEVEL_1_SECTIONS: LevelSection[] = [
   // Section 1: Intro corridor teaching basic linear sequencing
   {
     sectionIndex: 0,
     name: "Section 1",
-    subtag: "Section 1 of 4",
+    subtag: "Section 1 of 3",
     desc: "Welcome to NETStart! Team up with your trusty assistant, Nova, to learn how to guide your rover safely to the goal.",
     tip: "Hint: Stack your movement blocks between the Start and End blocks, then click Run Code!",
     initialState: { x: 1, y: 1, direction: 1 }, // Start at (1,1) facing East
@@ -106,7 +161,7 @@ export const LEVEL_1_SECTIONS: LevelSection[] = [
   {
     sectionIndex: 1,
     name: "Section 2",
-    subtag: "Section 2 of 4",
+    subtag: "Section 2 of 3",
     desc: "Practice directional navigation by guiding the rover across the stepped lunar pathway.",
     tip: "Hint: Plan each movement step-by-step to follow the clear pathway to the goal.",
     initialState: { x: 1, y: 1, direction: 1 }, // Start at (1,1) facing East
@@ -127,7 +182,7 @@ export const LEVEL_1_SECTIONS: LevelSection[] = [
   {
     sectionIndex: 2,
     name: "Section 3",
-    subtag: "Section 3 of 4",
+    subtag: "Section 3 of 3",
     desc: "Navigate the switchback ridge by combining three different movement directions.",
     tip: "Hint: You will need to move Right, Down, and Left to stay on track!",
     initialState: { x: 1, y: 1, direction: 1 }, // Start at (1,1) facing East
@@ -143,29 +198,6 @@ export const LEVEL_1_SECTIONS: LevelSection[] = [
     objectives: [
       { id: 1, text: "Use both the Start and End blocks", completed: false, isClaimed: false },
       { id: 2, text: "Use 3 different movement directions", completed: false, isClaimed: false },
-      { id: 3, text: "Reach the Goal", completed: false, isClaimed: false }
-    ]
-  },
-  // Section 4: Complex multi-directional maze path
-  {
-    sectionIndex: 3,
-    name: "Section 4",
-    subtag: "Section 4 of 4",
-    desc: "Master linear navigation by guiding the rover through a complex full-grid path utilizing all four directions.",
-    tip: "Hint: Plan your complete route from start to finish using Up, Down, Left, and Right blocks.",
-    initialState: { x: 1, y: 1, direction: 1 }, // Start at (1,1) facing East
-    maze: [
-      [0, 0, 0, 0, 0, 0, 0, 0],
-      [0, 3, 1, 1, 0, 0, 0, 0], // Start (1,1) East -> (3,1)
-      [0, 0, 0, 1, 1, 1, 0, 0], // (3,2) -> (5,2)
-      [0, 4, 0, 0, 0, 1, 1, 0], // Goal at (1,3) | (5,3) -> (6,3)
-      [0, 1, 1, 1, 0, 0, 1, 0], // (1,4) <- (2,4) <- (3,4) | (6,4)
-      [0, 0, 0, 1, 1, 1, 1, 0], // (3,5) <- (4,5) <- (5,5) <- (6,5)
-      [0, 0, 0, 0, 0, 0, 0, 0],
-    ],
-    objectives: [
-      { id: 1, text: "Use both the Start and End blocks", completed: false, isClaimed: false },
-      { id: 2, text: "Use all 4 movement directions", completed: false, isClaimed: false },
       { id: 3, text: "Reach the Goal", completed: false, isClaimed: false }
     ]
   }
@@ -196,19 +228,19 @@ export const LEVEL_3_SECTIONS: LevelSection[] = [
       { id: 3, text: "Reach the Cabin goal", completed: false, isClaimed: false }
     ]
   },
-  // Section 2: Fuel Synthesis (Nested Loops & Colors)
+  // Section 2: Fuel Synthesis (5-Step Chemical Synthesis Protocol)
   {
     sectionIndex: 1,
     name: "Fuel Synthesis",
     subtag: "Section 2 of 3",
-    desc: "Synthesize 3 batches of fuel. Activate each batch with Heat and Solution, refine Blue and Green fuel to Orange, and store in the fuel tank.",
-    tip: "Hint: Repeat 3 times: Activate with Heat and Solution first, check the fuel color, refine to Orange, and store.",
+    desc: "Synthesize 3 batches of fuel: Add solution, increase heat, mix 5 times, refine green fuel to orange, and fuel the spaceship.",
+    tip: "Hint: Repeat 3 times: 1. Add Solution, 2. Increase Heat, 3. Repeat 5 times: Mix, 4. If fuel is Green -> Add Solution, 5. Put into Fuel Tank.",
     initialState: { x: 0, y: 0, direction: 0 },
     maze: [[1]],
     objectives: [
       { id: 1, text: "Use both Start and End blocks", completed: false, isClaimed: false },
-      { id: 2, text: "Refine blue fuel and green fuel", completed: false, isClaimed: false },
-      { id: 3, text: "Store all 3 batches in the fuel tank", completed: false, isClaimed: false }
+      { id: 2, text: "Use If condition to check if color is green", completed: false, isClaimed: false },
+      { id: 3, text: "Synthesize and fuel all 3 batches", completed: false, isClaimed: false }
     ]
   },
   // Section 3: Flight Simulation (Emergency Reactions & Friendly UFOs)
@@ -228,13 +260,67 @@ export const LEVEL_3_SECTIONS: LevelSection[] = [
   }
 ];
 
-// 4 Sections for Level 2 (Moon: Level 2 - Level 2: Resource Classification - Conveyor Belt Sorting)
+// Unified Single Section for Mars Level 1 (Mars: Level 1 - The Blank Billboard)
+export const MARS_1_SECTIONS: LevelSection[] = [
+  {
+    sectionIndex: 0,
+    name: "The Blank Billboard",
+    subtag: "Level 1",
+    desc: "Compose and transmit a Martian billboard broadcast! Match your content to the chosen theme, style with the Creative Kit, and score a top rating from the Colony Director.",
+    tip: "Hint: Select title, subtitle, and body lines that fit your campaign theme. Connect Creative Kit modifiers to make keywords pop!",
+    initialState: { x: 0, y: 0, direction: 0 },
+    maze: [[1]],
+    objectives: [
+      { id: 1, text: "Assemble Title, Subtitle, and Text matching your theme", completed: false, isClaimed: false },
+      { id: 2, text: "Style your billboard with Creative Kit modifiers", completed: false, isClaimed: false },
+      { id: 3, text: "Score a perfect 5/5 rating from the Colony Director", completed: false, isClaimed: false }
+    ]
+  }
+];
+
+// Unified Single Section for Mars Level 2 (Mars: Level 2 - Picture Perfect!)
+export const MARS_2_SECTIONS: LevelSection[] = [
+  {
+    sectionIndex: 0,
+    name: "Picture Perfect!",
+    subtag: "Level 2",
+    desc: "Emma and Penny's screens are stuck on default placeholder images! Read the clues and pick the correct pictures from your toolbox to fix them.",
+    tip: "Hint: Click on the desert billboards to inspect their clues, hover over promo items to preview graphic thumbnails, and connect matching <img src=\"...\"> inside <div> Container blocks.",
+    initialState: { x: 0, y: 0, direction: 0 },
+    maze: [[1]],
+    objectives: [
+      { id: 1, text: "Add custom Captions to at least 2 billboards", completed: false, isClaimed: false },
+      { id: 2, text: "Place images inside all 5 billboard containers", completed: false, isClaimed: false },
+      { id: 3, text: "Correctly link all 5 billboard image sources (src)", completed: false, isClaimed: false }
+    ]
+  }
+];
+
+// Unified Single Section for Mars Level 3 (Mars: Level 3 - The Big Space Message!)
+export const MARS_3_SECTIONS: LevelSection[] = [
+  {
+    sectionIndex: 0,
+    name: "The Big Space Message!",
+    subtag: "Level 3",
+    desc: "The AstroLink is turned on, but Earth and Venus don't recognize us! Put all your HTML blocks together to build a friendly message that proves who we are so they will answer our call.",
+    tip: "Hint: Keep it organized inside a Container <div>. Add a Heading <h1>, the official Mars Seal <img>, and Links <a> targeting Earth and Venus!",
+    initialState: { x: 0, y: 0, direction: 0 },
+    maze: [[1]],
+    objectives: [
+      { id: 1, text: "Enclose your message in a Container <div> structure", completed: false, isClaimed: false },
+      { id: 2, text: "Include Heading <h1> and official Mars Seal <img>", completed: false, isClaimed: false },
+      { id: 3, text: "Link live hyper-connections to Earth and Venus <a>", completed: false, isClaimed: false }
+    ]
+  }
+];
+
+// 3 Sections for Level 2 (Moon: Level 2 - Level 2: Resource Classification - Conveyor Belt Sorting)
 export const LEVEL_2_SECTIONS: LevelSection[] = [
   // Section 1: Exactly 10 items (100% Cargo - Intro to Loops, Mandatory Scanning & Packing)
   {
     sectionIndex: 0,
     name: "Section 1",
-    subtag: "Section 1 of 4",
+    subtag: "Section 1 of 3",
     desc: "Learn the conveyor workflow: Use a repeat loop to scan and pack 10 Cargo containers into the cargo bay.",
     tip: "Tip: Place 'Scan Current Item' and 'Pack Cargo' inside a 'Repeat 10 times' loop.",
     initialState: { x: 0, y: 0, direction: 0 },
@@ -249,7 +335,7 @@ export const LEVEL_2_SECTIONS: LevelSection[] = [
   {
     sectionIndex: 1,
     name: "Section 2",
-    subtag: "Section 2 of 4",
+    subtag: "Section 2 of 3",
     desc: "Sort 15 items: Pack Cargo into the cargo bay and discard Space Junk into the trash chute.",
     tip: "Tip: Scan current item. If it is Cargo, pack it; otherwise discard it into the trash chute.",
     initialState: { x: 0, y: 0, direction: 0 },
@@ -264,7 +350,7 @@ export const LEVEL_2_SECTIONS: LevelSection[] = [
   {
     sectionIndex: 2,
     name: "Section 3",
-    subtag: "Section 3 of 4",
+    subtag: "Section 3 of 3",
     desc: "Sort 20 items: Route Fuel to the Fuel Bay, Cargo to the Cargo Bay, and discard Space Junk.",
     tip: "Tip: Scan the item, check if it is Fuel, Cargo, or Trash, and route each item to its designated bay.",
     initialState: { x: 0, y: 0, direction: 0 },
@@ -273,21 +359,6 @@ export const LEVEL_2_SECTIONS: LevelSection[] = [
       { id: 1, text: "Route all Fuel to Fuel Bay", completed: false, isClaimed: false },
       { id: 2, text: "Pack all Cargo Containers", completed: false, isClaimed: false },
       { id: 3, text: "Discard all Space Junk", completed: false, isClaimed: false }
-    ]
-  },
-  // Section 4: Exactly 25 items (Quad-Classifier Master Sorting Gauntlet)
-  {
-    sectionIndex: 3,
-    name: "Section 4",
-    subtag: "Section 4 of 4",
-    desc: "Sort all 25 items on the conveyor: Cargo, Trash, Fuel, and Food without errors.",
-    tip: "Tip: Repeat 25 times to scan and route all four item types to their designated bays.",
-    initialState: { x: 0, y: 0, direction: 0 },
-    maze: [[1]],
-    objectives: [
-      { id: 1, text: "Route all Fuel & Food", completed: false, isClaimed: false },
-      { id: 2, text: "Pack Cargo & Discard Trash", completed: false, isClaimed: false },
-      { id: 3, text: "Sort all 25 items with 0 errors", completed: false, isClaimed: false }
     ]
   }
 ];
@@ -362,10 +433,44 @@ export const DAILY_CHALLENGE_HAZARD_LABYRINTH: LevelSection = {
   ]
 };
 
+// Reworked from Moon Level 2 Section 4: Standalone 25-item master sorting challenge
+export const DAILY_CHALLENGE_CONVEYOR_GAUNTLET: LevelSection = {
+  sectionIndex: 0,
+  name: "Master Sorting Gauntlet",
+  subtag: "Daily Challenge Mission",
+  desc: "Sort all 25 items on the conveyor: Cargo, Trash, Fuel, and Food without errors.",
+  tip: "Tip: Repeat 25 times to scan and route all four item types to their designated bays.",
+  initialState: { x: 0, y: 0, direction: 0 },
+  maze: [[1]],
+  objectives: [
+    { id: 1, text: "Route all Fuel & Food", completed: false, isClaimed: false },
+    { id: 2, text: "Pack Cargo & Discard Trash", completed: false, isClaimed: false },
+    { id: 3, text: "Sort all 25 items with 0 errors", completed: false, isClaimed: false }
+  ]
+};
+
+// Standalone Fuel Synthesis challenge
+export const DAILY_CHALLENGE_FUEL_SYNTHESIS: LevelSection = {
+  sectionIndex: 0,
+  name: "Fuel Synthesis Protocol",
+  subtag: "Daily Challenge Mission",
+  desc: "Synthesize 3 batches of fuel for the lunar fleet: Add solution, increase heat, mix 5 times, refine green fuel to orange, and fuel the spaceship.",
+  tip: "Hint: Repeat 3 times: Add Solution, Increase Heat, Mix 5 times, check if green -> Add Solution, then Put Into Fuel Tank.",
+  initialState: { x: 0, y: 0, direction: 0 },
+  maze: [[1]],
+  objectives: [
+    { id: 1, text: "Use both Start and End blocks", completed: false, isClaimed: false },
+    { id: 2, text: "Use If condition to check if color is green", completed: false, isClaimed: false },
+    { id: 3, text: "Synthesize and fuel all 3 batches", completed: false, isClaimed: false }
+  ]
+};
+
 export const DAILY_CHALLENGE_POOL: LevelSection[] = [
   DAILY_CHALLENGE_WEAVE_TRAP,
   DAILY_CHALLENGE_LANE_CHANGER,
-  DAILY_CHALLENGE_HAZARD_LABYRINTH
+  DAILY_CHALLENGE_HAZARD_LABYRINTH,
+  DAILY_CHALLENGE_CONVEYOR_GAUNTLET,
+  DAILY_CHALLENGE_FUEL_SYNTHESIS
 ];
 
 export const getDailyChallengeSection = (missionId: string): LevelSection => {
@@ -378,6 +483,12 @@ export const getDailyChallengeSection = (missionId: string): LevelSection => {
   }
   if (m === 'daily-3' || m === 'daily-hazard-labyrinth' || m.includes('hazard') || m.includes('labyrinth')) {
     return DAILY_CHALLENGE_HAZARD_LABYRINTH;
+  }
+  if (m === 'daily-4' || m === 'daily-conveyor-gauntlet' || m.includes('conveyor') || m.includes('gauntlet')) {
+    return DAILY_CHALLENGE_CONVEYOR_GAUNTLET;
+  }
+  if (m === 'daily-5' || m === 'daily-fuel-synthesis' || m.includes('fuel-synth') || m.includes('synthesis')) {
+    return DAILY_CHALLENGE_FUEL_SYNTHESIS;
   }
 
   // Deterministic daily date hash for daily rotation
@@ -418,10 +529,7 @@ export const tutorialToolbox = {
       name: 'Movement',
       colour: '#EAB308',
       contents: [
-        { kind: 'block', type: 'move_up' },
-        { kind: 'block', type: 'move_down' },
-        { kind: 'block', type: 'move_left' },
-        { kind: 'block', type: 'move_right' },
+        { kind: 'block', type: 'action_move' },
       ],
     },
   ],
@@ -460,7 +568,6 @@ export const getConveyorToolboxForSection = (sectionIndex: number) => {
           colour: '#06B6D4',
           contents: [
             { kind: 'block', type: 'item_cargo' },
-            { kind: 'block', type: 'item_trash' },
           ],
         },
         {
@@ -485,7 +592,7 @@ export const getConveyorToolboxForSection = (sectionIndex: number) => {
                   shadow: {
                     type: 'math_number',
                     fields: {
-                      NUM: 10,
+                      NUM: 1,
                     },
                   },
                 },
@@ -543,7 +650,7 @@ export const getConveyorToolboxForSection = (sectionIndex: number) => {
                   shadow: {
                     type: 'math_number',
                     fields: {
-                      NUM: 15,
+                      NUM: 1,
                     },
                   },
                 },
@@ -602,7 +709,7 @@ export const getConveyorToolboxForSection = (sectionIndex: number) => {
                   shadow: {
                     type: 'math_number',
                     fields: {
-                      NUM: 20,
+                      NUM: 1,
                     },
                   },
                 },
@@ -661,7 +768,7 @@ export const getConveyorToolboxForSection = (sectionIndex: number) => {
                 shadow: {
                   type: 'math_number',
                   fields: {
-                    NUM: 25,
+                    NUM: 1,
                   },
                 },
               },
@@ -693,10 +800,9 @@ export const advancedToolbox = {
       name: 'Movement',
       colour: '#EAB308',
       contents: [
-        { kind: 'block', type: 'move_up' },
-        { kind: 'block', type: 'move_down' },
-        { kind: 'block', type: 'move_left' },
-        { kind: 'block', type: 'move_right' },
+        { kind: 'block', type: 'action_move_forward' },
+        { kind: 'block', type: 'turn_left' },
+        { kind: 'block', type: 'turn_right' },
       ],
     },
     {
@@ -713,7 +819,7 @@ export const advancedToolbox = {
               shadow: {
                 type: 'math_number',
                 fields: {
-                  NUM: 10,
+                  NUM: 1,
                 },
               },
             },
@@ -733,10 +839,76 @@ export const advancedToolbox = {
   ],
 };
 
+export const getMars1ToolboxForSection = (sectionIndex: number = 0, themeId: string = 'welcome') => {
+  const contentCategory = {
+    kind: 'category',
+    name: 'Content',
+    colour: '#059669',
+    contents: [
+      {
+        kind: 'block',
+        type: 'html_text_welcome',
+      },
+      {
+        kind: 'block',
+        type: 'html_text_subtitle',
+      },
+      {
+        kind: 'block',
+        type: 'html_text_body',
+      },
+    ],
+  };
+
+  const structureCategory = {
+    kind: 'category',
+    name: 'Structure',
+    colour: '#E44D26',
+    contents: [
+      { kind: 'block', type: 'html_h1' },
+      { kind: 'block', type: 'html_h3' },
+      { kind: 'block', type: 'html_p' },
+      { kind: 'block', type: 'html_div' },
+      { kind: 'block', type: 'html_hr' },
+      { kind: 'block', type: 'html_br' },
+    ],
+  };
+
+  const creativeKitCategory = {
+    kind: 'category',
+    name: 'Creative Kit',
+    colour: '#A855F7',
+    contents: [
+      { kind: 'block', type: 'html_bold' },
+      { kind: 'block', type: 'html_underline' },
+      { kind: 'block', type: 'html_mark' },
+      { kind: 'block', type: 'html_cross_out' },
+    ],
+  };
+
+  return {
+    kind: 'categoryToolbox',
+    contents: [
+      contentCategory,
+      structureCategory,
+      creativeKitCategory,
+    ],
+  };
+};
+
 export const getSectionsForMission = (missionId: string): LevelSection[] => {
   const m = (missionId || '').toLowerCase();
   if (m.startsWith('daily') || m.includes('daily')) {
     return [getDailyChallengeSection(missionId)];
+  }
+  if (m === 'mars-1' || m === 'html-1-mars') {
+    return MARS_1_SECTIONS;
+  }
+  if (m === 'mars-2') {
+    return MARS_2_SECTIONS;
+  }
+  if (m === 'mars-3' || m === 'html-3-mars') {
+    return MARS_3_SECTIONS;
   }
   if (m === 'moon-2' || m === 'html-2') {
     return LEVEL_2_SECTIONS;
@@ -763,11 +935,7 @@ export const getLevelThreeToolboxForSection = (sectionIndex: number) => {
     name: 'Movement',
     colour: '#EAB308',
     contents: [
-      { kind: 'block', type: 'move_forward' },
-      { kind: 'block', type: 'move_up' },
-      { kind: 'block', type: 'move_down' },
-      { kind: 'block', type: 'move_left' },
-      { kind: 'block', type: 'move_right' },
+      { kind: 'block', type: 'action_move_forward' },
       { kind: 'block', type: 'turn_left' },
       { kind: 'block', type: 'turn_right' },
     ],
@@ -816,7 +984,7 @@ export const getLevelThreeToolboxForSection = (sectionIndex: number) => {
                 TIMES: {
                   shadow: {
                     type: 'math_number',
-                    fields: { NUM: 3 },
+                    fields: { NUM: 1 },
                   },
                 },
               },
@@ -899,10 +1067,51 @@ export const getLevelThreeToolboxForSection = (sectionIndex: number) => {
   };
 };
 
-export const getToolboxForMission = (missionId: string, sectionIndex = 0) => {
+export const getToolboxForMission = (missionId: string, sectionIndex = 0, themeId = 'welcome') => {
   const m = (missionId || '').toLowerCase();
   if (m.startsWith('daily') || m.includes('daily')) {
+    const dSec = getDailyChallengeSection(missionId);
+    if (dSec.name === 'Master Sorting Gauntlet') {
+      return getConveyorToolboxForSection(3);
+    }
+    if (dSec.name === 'Fuel Synthesis Protocol') {
+      return getLevelThreeToolboxForSection(1);
+    }
     return advancedToolbox;
+  }
+  if (m === 'mars-1' || m === 'html-1-mars') {
+    return getMars1ToolboxForSection(sectionIndex, themeId);
+  }
+  if (m === 'mars-2') {
+    return {
+      kind: 'categoryToolbox',
+      contents: [
+        {
+          kind: 'category',
+          name: 'Structure',
+          colour: '#8B5CF6',
+          contents: [
+            { kind: 'block', type: 'html_billboard_1' },
+            { kind: 'block', type: 'html_billboard_2' },
+            { kind: 'block', type: 'html_billboard_3' },
+            { kind: 'block', type: 'html_billboard_4' },
+            { kind: 'block', type: 'html_billboard_5' },
+          ],
+        },
+        {
+          kind: 'category',
+          name: 'Content',
+          colour: '#0ea5e9',
+          contents: [
+            { kind: 'block', type: 'html_img' },
+            { kind: 'block', type: 'html_caption' },
+          ],
+        },
+      ],
+    };
+  }
+  if (m === 'mars-3' || m === 'html-3-mars') {
+    return MARS_LEVEL_3_TOOLBOX;
   }
   if (m === 'moon-2' || m === 'html-2') {
     return getConveyorToolboxForSection(sectionIndex);
@@ -920,8 +1129,8 @@ function getBlocksInOrder(ws: Blockly.WorkspaceSvg): string[] {
     if (!b) return;
     ids.push(b.id);
     const statementInputs = b.inputList.filter(i => {
-      const statementType = (Blockly.inputs && (Blockly.inputs as any).inputTypes) 
-        ? (Blockly.inputs as any).inputTypes.STATEMENT 
+      const statementType = (Blockly.inputs && (Blockly.inputs as any).inputTypes)
+        ? (Blockly.inputs as any).inputTypes.STATEMENT
         : (Blockly as any).inputTypes?.STATEMENT ?? 3;
       return i.type === statementType;
     });
@@ -940,14 +1149,15 @@ function getBlocksInOrder(ws: Blockly.WorkspaceSvg): string[] {
 
 const getPlanetIconForMission = (mId: string) => {
   const id = (mId || '').toLowerCase();
-  if (id.startsWith('moon') || id.startsWith('html-1') || id.startsWith('html-2') || id.startsWith('html-3')) return '/MainMoon.svg';
-  if (id.startsWith('mars') || id.startsWith('html')) return '/Planets/Mars.svg';
-  if (id.startsWith('venus') || id.startsWith('css')) return '/Planets/Venus.svg';
-  if (id.startsWith('mercury') || id.startsWith('javascript') || id.startsWith('js')) return '/Planets/Mercury.svg';
-  if (id.startsWith('jupiter') || id.startsWith('java')) return '/Planets/Jupiter.svg';
-  if (id.startsWith('saturn') || id.startsWith('cpp')) return '/Planets/Saturn.svg';
-  if (id.startsWith('earth') || id.startsWith('python')) return '/Planets/Earth.svg';
-  return '/MainMoon.svg';
+  if (id.startsWith('daily') || id.includes('daily')) return '/assets/global/daily/daily-star-ball.svg';
+  if (id.startsWith('moon') || id.startsWith('html-1') || id.startsWith('html-2') || id.startsWith('html-3')) return '/assets/planets/00_moon/environment/MainMoon.svg';
+  if (id.startsWith('mars') || id.startsWith('html')) return '/assets/planets/celestial/Mars.svg';
+  if (id.startsWith('venus') || id.startsWith('css')) return '/assets/planets/celestial/Venus.svg';
+  if (id.startsWith('mercury') || id.startsWith('javascript') || id.startsWith('js')) return '/assets/planets/celestial/Mercury.svg';
+  if (id.startsWith('jupiter') || id.startsWith('java')) return '/assets/planets/celestial/Jupiter.svg';
+  if (id.startsWith('saturn') || id.startsWith('cpp')) return '/assets/planets/celestial/Saturn.svg';
+  if (id.startsWith('earth') || id.startsWith('python')) return '/assets/planets/celestial/Earth.svg';
+  return '/assets/planets/00_moon/environment/MainMoon.svg';
 };
 
 const getMissionDescForMission = (mId: string, isDaily: boolean) => {
@@ -959,9 +1169,9 @@ const getMissionDescForMission = (mId: string, isDaily: boolean) => {
     'html-1': "Welcome to NETStart! Team up with your trusty assistant, Nova, to learn how to guide your rover safely to the goal.",
     'html-2': "Nova needs your help packing the ship! Use your new sensors and repeat blocks to scan the assembly line. Figure out what's fuel and what's junk so we can get flying!",
     'html-3': "Get the starship ready for launch! Guide air through the vents with If/Else, mix rocket fuel with loops, and survive the automated flight simulation.",
-    'mars-1': "Construct semantic habitat components using header, main, section, and article tags.",
-    'mars-2': "Build input fields, select elements, textareas, and master telemetry form attributes.",
-    'mars-3': "Master the structure of rows, headers, cells, and embed framing details.",
+    'mars-1': "The giant space signs have all gone completely blank! Team up with the locals to fix this planet.",
+    'mars-2': "Teach the HTML <img> tag and file path linking (src) by solving visual riddles to replace default placeholder images for the NPCs Emma G. and Penny G.",
+    'mars-3': "The AstroLink is turned on, but Earth and Venus don't recognize us! Put all your HTML blocks together to build a friendly message that proves who we are so they will answer our call.",
     'venus-1': "Master targeting classes, ids, properties, and the cascade tree.",
     'mercury-1': "Learn variables, let, const, primitive types, and math routines.",
   };
@@ -980,13 +1190,30 @@ const getMissionModuleForMission = (mId: string, isDaily: boolean) => {
   return isDaily ? 'Daily Level' : 'The Moon';
 };
 
+const getMissionPlanetSlug = (mId: string, isDaily: boolean) => {
+  const id = (mId || '').toLowerCase();
+  if (id.startsWith('moon') || id.startsWith('html-1') || id.startsWith('html-2') || id.startsWith('html-3')) return 'moon';
+  if (id.startsWith('mars') || id.startsWith('html')) return 'mars';
+  if (id.startsWith('venus') || id.startsWith('css')) return 'venus';
+  if (id.startsWith('mercury') || id.startsWith('javascript') || id.startsWith('js')) return 'mercury';
+  if (id.startsWith('jupiter') || id.startsWith('java')) return 'jupiter';
+  if (id.startsWith('saturn') || id.startsWith('cpp')) return 'saturn';
+  if (id.startsWith('earth') || id.startsWith('python')) return 'earth';
+  return isDaily ? 'moon' : 'moon';
+};
+
 export default function BlocklyMaze() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const missionId = searchParams.get('missionId') || 'moon-1';
-  const isLevel2 = (missionId || '').toLowerCase() === 'moon-2' || (missionId || '').toLowerCase() === 'html-2';
-  const isLevel3 = (missionId || '').toLowerCase() === 'moon-3' || (missionId || '').toLowerCase() === 'html-3';
-  const currentMissionSections = getSectionsForMission(missionId);
+  const isDaily = (missionId || '').toLowerCase().startsWith('daily') || (missionId || '').toLowerCase().includes('daily');
+  const dailySection = isDaily ? getDailyChallengeSection(missionId) : null;
+  const isMarsLevel1 = (missionId || '').toLowerCase() === 'mars-1' || (missionId || '').toLowerCase() === 'html-1-mars';
+  const isMarsLevel2 = (missionId || '').toLowerCase() === 'mars-2';
+  const isMarsLevel3 = (missionId || '').toLowerCase() === 'mars-3' || (missionId || '').toLowerCase() === 'html-3-mars';
+  const isLevel2 = (missionId || '').toLowerCase() === 'moon-2' || (missionId || '').toLowerCase() === 'html-2' || (dailySection?.name === 'Master Sorting Gauntlet');
+  const isLevel3 = (missionId || '').toLowerCase() === 'moon-3' || (missionId || '').toLowerCase() === 'html-3' || (dailySection?.name === 'Fuel Synthesis Protocol');
+  const currentMissionSections = useMemo(() => getSectionsForMission(missionId), [missionId]);
   const planetIcon = getPlanetIconForMission(missionId);
 
   const missionTitleMap: Record<string, string> = {
@@ -996,69 +1223,119 @@ export default function BlocklyMaze() {
     'html-1': "Level 1: Stellar Beginnings",
     'html-2': "Level 2: Resource Classification",
     'html-3': "Level 3: The Starship Protocol",
-    'mars-1': "Mars Level 1: Semantic Habitat Tags",
-    'mars-2': "Mars Level 2: Environmental Forms & Telemetry",
-    'mars-3': "Mars Level 3: Mineral Data Tables",
+    'mars-1': "Level 1: The Blank Billboard",
+    'mars-2': "Level 2: Picture Perfect!",
+    'mars-3': "Level 3: The Big Space Message!",
     'venus-1': "Venus Level 1: Thermal Selectors & Cascades",
     'mercury-1': "Mercury Level 1: Variable Orbital Bindings",
   };
 
-  const [currentSection, setCurrentSection] = useState<number>(() => {
-    if (typeof window === 'undefined') return 0;
-    try {
-      const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get('mode') === 'replay') return 0;
-      const targetMid = (urlParams.get('missionId') || 'moon-1').toLowerCase();
-      const completedList: number[] = JSON.parse(localStorage.getItem(`netstart_completed_sections_${targetMid}`) || '[]');
-      
-      const rawSave = localStorage.getItem('netstart_active_saved_level');
-      if (rawSave) {
-        const parsed = JSON.parse(rawSave);
-        if (parsed.missionId && parsed.missionId.toLowerCase() === targetMid) {
-          if (typeof parsed.sectionIndex === 'number' && parsed.sectionIndex >= 0) {
-            // Verify that this section is actually unlocked
-            let isUnlocked = true;
-            for (let s = 0; s < parsed.sectionIndex; s++) {
-              if (!completedList.includes(s)) {
-                isUnlocked = false;
-                break;
-              }
-            }
-            if (isUnlocked) {
-              return parsed.sectionIndex;
-            }
-          }
-        }
-      }
-      if (completedList.length > 0) {
-        const sections = getSectionsForMission(targetMid);
-        for (let i = 0; i < sections.length; i++) {
-          if (!completedList.includes(i)) return i;
-        }
-      }
-    } catch (e) {}
-    return 0;
+  // Mars Level 1 HTML AST & NPC Dialogue State
+  const [marsParsedElements, setMarsParsedElements] = useState<ParsedHtmlElement[]>([]);
+  const [marsValidation, setMarsValidation] = useState<MarsValidationResult>({
+    isValid: false,
+    isInsideDiv: false,
+    h1Content: null,
+    h3Content: null,
+    pContent: null,
+    hasWelcomeInH1: false,
+    hasTitleInH1: false,
+    hasSubtitleInH3: false,
+    hasBodyInP: false,
+    hasModifier: false,
+    hasDividerOrBreak: false,
+    allNestedInDiv: false,
+    matchedCount: 0,
+    modifierCount: 0,
+    ratingScore: 0,
+    ratingRemarks: 'Assemble words that match your campaign theme!'
   });
-  const activeSection = currentMissionSections[currentSection] || currentMissionSections[0];
+  const [markDialogue, setMarkDialogue] = useState<{ isOpen: boolean; message: string; title?: string }>({
+    isOpen: false,
+    message: '',
+    title: 'Mark the Martian'
+  });
+  const [activeMarsCampaignId, setActiveMarsCampaignId] = useState<string>('welcome');
 
-  const isDaily = (missionId || '').toLowerCase().startsWith('daily') || (missionId || '').toLowerCase().includes('daily');
+  // Mars Level 2 Image Billboard State
+  const [mars2Validation, setMars2Validation] = useState<MarsLevel2Validation>({
+    totalContainers: 0,
+    totalImages: 0,
+    matchedCount: 0,
+    isAllMatched: false,
+    assignedImages: [null, null, null, null, null],
+    customizations: [{}, {}, {}, {}, {}],
+  });
+
+  // Mars Level 3 AstroLink State
+  const [mars3Validation, setMars3Validation] = useState<MarsLevel3Validation>({
+    hasContainer: false,
+    hasHeading: false,
+    headingText: '',
+    hasValidSeal: false,
+    imageSrc: null,
+    hasEarthLink: false,
+    hasVenusLink: false,
+    linkedDestinations: [],
+    hasDecoys: false,
+    isGoldenPath: false,
+    failErrorCode: null,
+    failErrorMessage: null,
+    completedObjectives: [false, false, false],
+  });
+
+  const handleMarsCampaignChange = (campaignId: string) => {
+    setActiveMarsCampaign(campaignId);
+    setActiveMarsCampaignId(campaignId);
+    if (workspace.current) {
+      workspace.current.updateToolbox(getMars1ToolboxForSection(currentSection, campaignId));
+      try {
+        const code = javascriptGenerator.workspaceToCode(workspace.current);
+        setJsCode(code);
+        setPlainEnglishCode(code);
+        const parseRes = parseWorkspaceHtml(workspace.current);
+        parseRes.validation.detectedCampaignId = campaignId as any;
+        setMarsParsedElements(parseRes.elements);
+        setMarsValidation(parseRes.validation);
+      } catch (e) { }
+    }
+  };
+
+  const [currentSection, setCurrentSection] = useState<number>(0);
+  const activeSection = currentMissionSections[currentSection] || currentMissionSections[0];
 
   const displayTitle = missionTitleMap[missionId] || (isDaily
     ? `Daily Challenge: ${activeSection?.name || 'Advanced Navigation'}`
     : missionId && !missionId.startsWith('moon') && !missionId.startsWith('html')
-    ? missionId.replace(/^daily-level-/, 'Daily ').replace(/^daily/, 'Daily Level ').replace(/-/g, ' ').toUpperCase()
-    : "Level 1: Stellar Beginnings");
+      ? missionId.replace(/^daily-level-/, 'Daily ').replace(/^daily/, 'Daily Level ').replace(/-/g, ' ').toUpperCase()
+      : "Level 1: Stellar Beginnings");
 
   const levelSubtitle = isDaily
     ? "Daily Challenge Mission"
     : missionId && missionId.startsWith('moon')
-    ? `Moon: Level ${missionId.split('-')[1] || '1'}`
-    : missionId 
-    ? missionId.toUpperCase().replace('-', ': Level ') 
-    : "Moon: Level 1";
+      ? `Moon: Level ${missionId.split('-')[1] || '1'}`
+      : missionId
+        ? missionId.toUpperCase().replace('-', ': Level ')
+        : "Moon: Level 1";
 
   const { data: session } = useSession();
   const user = session?.user as any;
+  const userId = user?.id as string | undefined;
+
+  const getNetstartItem = useCallback((k: string): string | null => {
+    if (!userId) return null;
+    return getUserStorageItem(k.replace(/^netstart_/, ''), userId);
+  }, [userId]);
+
+  const setNetstartItem = useCallback((k: string, v: string): void => {
+    if (!userId) return;
+    setUserStorageItem(k.replace(/^netstart_/, ''), v, userId);
+  }, [userId]);
+
+  const removeNetstartItem = useCallback((k: string): void => {
+    if (!userId) return;
+    removeUserStorageItem(k.replace(/^netstart_/, ''), userId);
+  }, [userId]);
   const { currentXp, addXp, removeXp, playerLevel } = useProgression();
 
   const { setIsInLevel, registerSaveHandler, unregisterSaveHandler, requestNavigation } = useNavigationGuard();
@@ -1070,7 +1347,12 @@ export default function BlocklyMaze() {
   const [inventory, setInventory] = useState<InventoryState>({ fuel: 0, oxygen: 0 });
 
   // Level 2 Conveyor Belt States
-  const [conveyorQueue, setConveyorQueue] = useState<ConveyorItem[]>(() => getSectionConveyorQueue(0));
+  const [conveyorQueue, setConveyorQueue] = useState<ConveyorItem[]>(() => {
+    if (dailySection?.name === 'Master Sorting Gauntlet') {
+      return getSectionConveyorQueue(3);
+    }
+    return getSectionConveyorQueue(0);
+  });
   const [conveyorInventory, setConveyorInventory] = useState<ConveyorInventory>({
     cargo: 0,
     trash: 0,
@@ -1096,13 +1378,15 @@ export default function BlocklyMaze() {
   // Level 2 Target Resource Manifest
   const levelManifest = useMemo(() => {
     if (!isLevel2) return { cargo: 0, trash: 0, fuel: 0, food: 0, total: 0 };
-    const initialItems = getSectionConveyorQueue(currentSection);
+    const initialItems = (dailySection?.name === 'Master Sorting Gauntlet')
+      ? getSectionConveyorQueue(3)
+      : getSectionConveyorQueue(currentSection);
     const cargo = initialItems.filter(i => i.type === 'cargo').length;
     const trash = initialItems.filter(i => i.type === 'trash').length;
     const fuel = initialItems.filter(i => i.type === 'fuel').length;
     const food = initialItems.filter(i => i.type === 'food').length;
     return { cargo, trash, fuel, food, total: initialItems.length };
-  }, [isLevel2, currentSection]);
+  }, [isLevel2, currentSection, dailySection?.name]);
 
   // Level 3 Starship Protocol States
   const [level3HazardStep, setLevel3HazardStep] = useState<number>(0);
@@ -1153,40 +1437,52 @@ export default function BlocklyMaze() {
   const [isPaused, setIsPaused] = useState(false);
   const [showRestartConfirm, setShowRestartConfirm] = useState(false);
   const [isObjectivesOpen, setIsObjectivesOpen] = useState(false);
+  const [isInstructionsOpen, setIsInstructionsOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'blocks' | 'syntax'>('blocks');
   const [plainEnglishCode, setPlainEnglishCode] = useState('');
   const [jsCode, setJsCode] = useState('');
 
-  // Drag-to-Select & Copy/Paste States
-  const [isSelectMode, setIsSelectMode] = useState(false);
+  // Copy/Paste & Clipboard States
   const [clipboardXml, setClipboardXml] = useState<string | null>(null);
-  const [selectionBox, setSelectionBox] = useState<{
-    startX: number;
-    startY: number;
-    currentX: number;
-    currentY: number;
-    isDragging: boolean;
-  } | null>(null);
   const [showClipboardToast, setShowClipboardToast] = useState(false);
   const [clipboardToastMessage, setClipboardToastMessage] = useState('');
+  const [toastUndoAction, setToastUndoAction] = useState<(() => void) | null>(null);
   const clipboardToastTimer = useRef<NodeJS.Timeout | null>(null);
   const flightSimRef = useRef<FlightSimulationRef | null>(null);
   const fuelSynthRef = useRef<FuelSynthesisRef | null>(null);
 
-  const showToast = useCallback((msg: string) => {
+  const showToast = useCallback((msg: string, options?: { onUndo?: () => void; duration?: number }) => {
     setClipboardToastMessage(msg);
+    setToastUndoAction(options?.onUndo ? () => options.onUndo! : null);
     setShowClipboardToast(true);
     if (clipboardToastTimer.current) clearTimeout(clipboardToastTimer.current);
-    clipboardToastTimer.current = setTimeout(() => setShowClipboardToast(false), 3500);
+    const duration = options?.duration ?? (options?.onUndo ? 7000 : 4000);
+    clipboardToastTimer.current = setTimeout(() => {
+      setShowClipboardToast(false);
+      setToastUndoAction(null);
+    }, duration);
   }, []);
 
-  // Hydrate Level 2 & Level 3 State & Toolbox on section change
+  // Hydrate Level 2, Level 3, and Mars Level 1 State & Toolbox on section change
   useEffect(() => {
     if (typeof window !== 'undefined') {
       (window as any).__NETSTART_CURRENT_SECTION__ = currentSection;
+      (window as any).__NETSTART_DAILY_SECTION_NAME__ = dailySection?.name;
+      (window as any).__NETSTART_MISSION_ID__ = missionId;
     }
-    if (isLevel2) {
-      setConveyorQueue(getSectionConveyorQueue(currentSection));
+    if (isMarsLevel1) {
+      if (workspace.current) {
+        (workspace.current as any).currentSectionIndex = currentSection;
+        (workspace.current as any).dailySectionName = dailySection?.name;
+        (workspace.current as any).missionId = missionId;
+        workspace.current.updateToolbox(getToolboxForMission(missionId, currentSection));
+      }
+    } else if (isLevel2) {
+      if (dailySection?.name === 'Master Sorting Gauntlet') {
+        setConveyorQueue(getSectionConveyorQueue(3));
+      } else {
+        setConveyorQueue(getSectionConveyorQueue(currentSection));
+      }
       setConveyorInventory({ cargo: 0, trash: 0, fuel: 0, food: 0, errors: 0 });
       setActiveAction('none');
       setIsBeltAdvancing(false);
@@ -1195,6 +1491,8 @@ export default function BlocklyMaze() {
       setAnimatingItem(null);
       if (workspace.current) {
         (workspace.current as any).currentSectionIndex = currentSection;
+        (workspace.current as any).dailySectionName = dailySection?.name;
+        (workspace.current as any).missionId = missionId;
         workspace.current.updateToolbox(getToolboxForMission(missionId, currentSection));
       }
     } else if (isLevel3) {
@@ -1209,15 +1507,16 @@ export default function BlocklyMaze() {
     } else {
       setActiveGrid(activeSection.maze);
     }
-  }, [currentSection, isLevel2, isLevel3, activeSection, missionId]);
+  }, [currentSection, isMarsLevel1, isLevel2, isLevel3, activeSection, missionId]);
 
   // Replay Mode and Claimed Objectives Tracking
   const [isReplayMode, setIsReplayMode] = useState(() => {
     if (typeof window === 'undefined') return false;
     try {
       const isReplayParam = new URLSearchParams(window.location.search).get('mode') === 'replay';
-      const completedList: number[] = JSON.parse(localStorage.getItem(`netstart_completed_sections_${missionId}`) || '[]');
-      return isReplayParam || completedList.length >= currentMissionSections.length;
+      const completedMissions: string[] = JSON.parse(getNetstartItem('netstart_completed_missions') || '[]');
+      const completedList: number[] = JSON.parse(getNetstartItem(`netstart_completed_sections_${missionId}`) || '[]');
+      return isReplayParam || completedMissions.includes(missionId) || completedList.length >= currentMissionSections.length;
     } catch {
       return false;
     }
@@ -1225,7 +1524,7 @@ export default function BlocklyMaze() {
   const [claimedDirectives, setClaimedDirectives] = useState<string[]>(() => {
     if (typeof window === 'undefined') return [];
     try {
-      return JSON.parse(localStorage.getItem('netstart_claimed_directives') || '[]');
+      return JSON.parse(getNetstartItem('netstart_claimed_directives') || '[]');
     } catch {
       return [];
     }
@@ -1233,9 +1532,9 @@ export default function BlocklyMaze() {
   const [objectives, setObjectives] = useState(() => {
     if (typeof window === 'undefined') return activeSection.objectives.map(o => ({ ...o, completed: false }));
     try {
-      const claimedList: string[] = JSON.parse(localStorage.getItem('netstart_claimed_directives') || '[]');
-      const completedGoalsList: string[] = JSON.parse(localStorage.getItem(`netstart_completed_goals_${missionId}`) || '[]');
-      const savedCompletedSections: number[] = JSON.parse(localStorage.getItem(`netstart_completed_sections_${missionId}`) || '[]');
+      const claimedList: string[] = JSON.parse(getNetstartItem('netstart_claimed_directives') || '[]');
+      const completedGoalsList: string[] = JSON.parse(getNetstartItem(`netstart_completed_goals_${missionId}`) || '[]');
+      const savedCompletedSections: number[] = JSON.parse(getNetstartItem(`netstart_completed_sections_${missionId}`) || '[]');
       const isSecDone = savedCompletedSections.includes(currentSection);
 
       return activeSection.objectives.map(obj => {
@@ -1256,33 +1555,30 @@ export default function BlocklyMaze() {
   const [buttonPulse, setButtonPulse] = useState(false);
 
   // Section Progression Locking State (Route Guards)
-  const [completedSections, setCompletedSections] = useState<number[]>(() => {
-    if (typeof window === 'undefined') return [];
-    try {
-      return JSON.parse(localStorage.getItem(`netstart_completed_sections_${missionId}`) || '[]');
-    } catch {
-      return [];
-    }
-  });
+  const [completedSections, setCompletedSections] = useState<number[]>([]);
 
-  // Re-sync completedSections if missionId changes
+  // Re-sync completedSections if missionId or userId changes
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || !userId) return;
     try {
-      const saved = localStorage.getItem(`netstart_completed_sections_${missionId}`);
-      if (saved) {
-        setCompletedSections(JSON.parse(saved));
+      const urlParams = new URLSearchParams(window.location.search);
+      const isReplayParam = urlParams.get('mode') === 'replay';
+      const completedList: number[] = JSON.parse(getNetstartItem(`netstart_completed_sections_${missionId}`) || '[]');
+      if (isReplayParam) {
+        setCompletedSections([]);
+      } else {
+        setCompletedSections(completedList);
       }
-    } catch (e) {}
-  }, [missionId]);
+    } catch (e) { }
+  }, [missionId, userId, getNetstartItem]);
 
   const recordSectionCompleted = useCallback((secIdx: number) => {
     setCompletedSections(prev => {
       if (!prev.includes(secIdx)) {
         const updated = [...prev, secIdx];
         try {
-          localStorage.setItem(`netstart_completed_sections_${missionId}`, JSON.stringify(updated));
-        } catch (e) {}
+          setNetstartItem(`netstart_completed_sections_${missionId}`, JSON.stringify(updated));
+        } catch (e) { }
         return updated;
       }
       return prev;
@@ -1293,9 +1589,9 @@ export default function BlocklyMaze() {
       try {
         let completedGoals: string[] = [];
         try {
-          completedGoals = JSON.parse(localStorage.getItem(`netstart_completed_goals_${missionId}`) || '[]');
-        } catch (e) {}
-        const nextXml = localStorage.getItem(`netstart_saved_workspace_${missionId}_${secIdx + 1}`) || '';
+          completedGoals = JSON.parse(getNetstartItem(`netstart_completed_goals_${missionId}`) || '[]');
+        } catch (e) { }
+        const nextXml = getNetstartItem(`netstart_saved_workspace_${missionId}_${secIdx + 1}`) || '';
         const saveState = {
           missionId,
           sectionIndex: secIdx + 1,
@@ -1304,8 +1600,8 @@ export default function BlocklyMaze() {
           completedGoals,
           timestamp: Date.now()
         };
-        localStorage.setItem('netstart_active_saved_level', JSON.stringify(saveState));
-        localStorage.setItem('netstart_active_level', JSON.stringify({
+        setNetstartItem('netstart_active_saved_level', JSON.stringify(saveState));
+        setNetstartItem('netstart_active_level', JSON.stringify({
           missionId,
           title: displayTitle,
           module: getMissionModuleForMission(missionId, isDaily),
@@ -1313,9 +1609,9 @@ export default function BlocklyMaze() {
           desc: getMissionDescForMission(missionId, isDaily),
           startedAt: new Date().toISOString()
         }));
-      } catch (e) {}
+      } catch (e) { }
     }
-  }, [missionId, displayTitle, currentMissionSections.length, isDaily, planetIcon]);
+  }, [missionId, displayTitle, currentMissionSections.length, isDaily, planetIcon, userId, getNetstartItem, setNetstartItem]);
 
   const isSectionLocked = useCallback((secIdx: number) => {
     if (secIdx === 0) return false;
@@ -1341,9 +1637,8 @@ export default function BlocklyMaze() {
   const [rewards, setRewards] = useState<{ xpEarned: number; gearsEarned: number } | null>(null);
   const [apiSaving, setApiSaving] = useState(false);
 
-  // 2-Pane Resizer Split State (Percentage - balanced 58% Blockly, 42% Simulation)
-  const [splitPercent, setSplitPercent] = useState<number>(58);
-  const isDragging = useRef<boolean>(false);
+  // 2-Pane Split Layout (Percentage - balanced 58% Blockly, 42% Simulation)
+  const [splitPercent] = useState<number>(58);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const blocklyDiv = useRef<HTMLDivElement>(null);
@@ -1354,21 +1649,24 @@ export default function BlocklyMaze() {
   const steppedOnBomb = useRef(false);
   const blockQueueRef = useRef<string[]>([]);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const instructionsDropdownRef = useRef<HTMLDivElement>(null);
   const executionIdRef = useRef<number>(0);
-  const hasHydratedSavedSection = useRef<boolean>(false);
+  const hasHydratedSavedSection = useRef<string | null>(null);
+  const isRestoringWorkspaceRef = useRef<boolean>(false);
 
-  // Check replay mode and restore saved state
+  // Check replay mode and restore saved state once userId is ready
   useEffect(() => {
+    if (!userId || hasHydratedSavedSection.current === `${userId}_${missionId}`) return;
     try {
-      let targetSec = currentSection;
+      let targetSec = 0;
       let hasExplicitSave = false;
       const isReplayParam = searchParams.get('mode') === 'replay';
-      const completedList: number[] = JSON.parse(localStorage.getItem(`netstart_completed_sections_${missionId}`) || '[]');
+      const completedList: number[] = JSON.parse(getNetstartItem(`netstart_completed_sections_${missionId}`) || '[]');
       const isLevelFullyDone = completedList.length >= currentMissionSections.length;
 
       // If NOT an explicit replay and NOT already completed level, restore saved section
       if (!isReplayParam && !isLevelFullyDone) {
-        const rawSave = localStorage.getItem('netstart_active_saved_level');
+        const rawSave = getNetstartItem('netstart_active_saved_level');
         if (rawSave) {
           const parsed = JSON.parse(rawSave);
           if (parsed.missionId && parsed.missionId.toLowerCase() === missionId.toLowerCase()) {
@@ -1409,44 +1707,44 @@ export default function BlocklyMaze() {
       execState.current = { ...targetSectionObj.initialState };
 
       // Sync claimed directives
-      const claimedList = JSON.parse(localStorage.getItem('netstart_claimed_directives') || '[]');
+      const claimedList = JSON.parse(getNetstartItem('netstart_claimed_directives') || '[]');
       setClaimedDirectives(claimedList);
       if (isLevelFullyDone || isReplayParam) {
         setIsReplayMode(true);
       }
-      hasHydratedSavedSection.current = true;
+      hasHydratedSavedSection.current = `${userId}_${missionId}`;
     } catch (e) {
       console.warn("Could not parse saved level state:", e);
-      hasHydratedSavedSection.current = true;
+      hasHydratedSavedSection.current = `${userId}_${missionId}`;
     }
-  }, [missionId, searchParams]);
+  }, [missionId, searchParams, userId, getNetstartItem, currentMissionSections]);
 
   // Immediately synchronize active ongoing mission in localStorage and backend database
   useEffect(() => {
-    if (!hasHydratedSavedSection.current) return;
+    if (!userId || !hasHydratedSavedSection.current) return;
     try {
       // Inform backend that this mission is active/in progress
       fetch('/api/missions/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ missionId }),
-      }).catch(() => {});
+      }).catch(() => { });
 
       let completedGoals: string[] = [];
       try {
-        completedGoals = JSON.parse(localStorage.getItem(`netstart_completed_goals_${missionId}`) || '[]');
-      } catch (e) {}
+        completedGoals = JSON.parse(getNetstartItem(`netstart_completed_goals_${missionId}`) || '[]');
+      } catch (e) { }
 
       const saveState = {
         missionId,
         sectionIndex: currentSection,
-        xmlText: localStorage.getItem(`netstart_saved_workspace_${missionId}_${currentSection}`) || '',
+        xmlText: getNetstartItem(`netstart_saved_workspace_${missionId}_${currentSection}`) || '',
         title: displayTitle,
         completedGoals,
         timestamp: Date.now()
       };
-      localStorage.setItem('netstart_active_saved_level', JSON.stringify(saveState));
-      localStorage.setItem('netstart_active_level', JSON.stringify({
+      setNetstartItem('netstart_active_saved_level', JSON.stringify(saveState));
+      setNetstartItem('netstart_active_level', JSON.stringify({
         missionId,
         title: displayTitle,
         module: getMissionModuleForMission(missionId, isDaily),
@@ -1457,16 +1755,18 @@ export default function BlocklyMaze() {
     } catch (e) {
       console.warn("Could not sync active level session:", e);
     }
-  }, [missionId, currentSection, displayTitle, isDaily, planetIcon]);
+  }, [missionId, currentSection, displayTitle, isDaily, planetIcon, userId, getNetstartItem, setNetstartItem]);
 
-  // Load objectives with isClaimed resolution (preserving completion for finished sections)
+  // Load objectives with isClaimed resolution (preserving completion for finished missions & sections)
   useEffect(() => {
     try {
-      const claimedList: string[] = JSON.parse(localStorage.getItem('netstart_claimed_directives') || '[]');
+      const claimedList: string[] = JSON.parse(getNetstartItem('netstart_claimed_directives') || '[]');
       setClaimedDirectives(claimedList);
-      const completedGoalsList: string[] = JSON.parse(localStorage.getItem(`netstart_completed_goals_${missionId}`) || '[]');
-      const savedCompletedSections: number[] = JSON.parse(localStorage.getItem(`netstart_completed_sections_${missionId}`) || '[]');
-      const isSecDone = savedCompletedSections.includes(currentSection);
+      const completedGoalsList: string[] = JSON.parse(getNetstartItem(`netstart_completed_goals_${missionId}`) || '[]');
+      const savedCompletedSections: number[] = JSON.parse(getNetstartItem(`netstart_completed_sections_${missionId}`) || '[]');
+      const completedMissions: string[] = JSON.parse(getNetstartItem('netstart_completed_missions') || '[]');
+      const isMissionDone = completedMissions.includes(missionId);
+      const isSecDone = isMissionDone || savedCompletedSections.includes(currentSection);
 
       const updated = activeSection.objectives.map(obj => {
         const key = `${missionId}_sec${currentSection}_goal${obj.id}`;
@@ -1482,19 +1782,19 @@ export default function BlocklyMaze() {
     } catch (e) {
       setObjectives(activeSection.objectives.map(o => ({ ...o, completed: false, isClaimed: false })));
     }
-  }, [currentSection, activeSection, missionId]);
+  }, [currentSection, activeSection, missionId, getNetstartItem]);
 
   // Save handler for NavigationGuard and level exit
   const saveLevelWorkspace = useCallback(async () => {
-    if (workspace.current) {
+    if (workspace.current && userId) {
       try {
         const xml = Blockly.Xml.workspaceToDom(workspace.current);
         const xmlText = Blockly.Xml.domToText(xml);
-        
+
         let completedGoals: string[] = [];
         try {
-          completedGoals = JSON.parse(localStorage.getItem(`netstart_completed_goals_${missionId}`) || '[]');
-        } catch (e) {}
+          completedGoals = JSON.parse(getNetstartItem(`netstart_completed_goals_${missionId}`) || '[]');
+        } catch (e) { }
 
         const saveState = {
           missionId,
@@ -1504,9 +1804,9 @@ export default function BlocklyMaze() {
           completedGoals,
           timestamp: Date.now()
         };
-        localStorage.setItem(`netstart_saved_workspace_${missionId}_${currentSection}`, xmlText);
-        localStorage.setItem('netstart_active_saved_level', JSON.stringify(saveState));
-        localStorage.setItem('netstart_active_level', JSON.stringify({
+        setNetstartItem(`netstart_saved_workspace_${missionId}_${currentSection}`, xmlText);
+        setNetstartItem('netstart_active_saved_level', JSON.stringify(saveState));
+        setNetstartItem('netstart_active_level', JSON.stringify({
           missionId,
           title: displayTitle,
           module: getMissionModuleForMission(missionId, isDaily),
@@ -1518,7 +1818,7 @@ export default function BlocklyMaze() {
         console.warn("Could not save workspace to localStorage:", e);
       }
     }
-  }, [missionId, currentSection, displayTitle, isDaily, planetIcon]);
+  }, [missionId, currentSection, displayTitle, isDaily, planetIcon, userId, getNetstartItem, setNetstartItem]);
 
   useEffect(() => {
     setIsInLevel(true);
@@ -1548,90 +1848,163 @@ export default function BlocklyMaze() {
     };
   }, [showPopup, showRestartConfirm, isPaused]);
 
-  // Click outside listener for Objectives Dropdown
+  // Click outside listener for Objectives & Instructions Dropdowns
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsObjectivesOpen(false);
+      }
+      if (instructionsDropdownRef.current && !instructionsDropdownRef.current.contains(event.target as Node)) {
+        setIsInstructionsOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Split resizer drag handling
-  const handleMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault();
-    isDragging.current = true;
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-  };
 
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (!isDragging.current || !containerRef.current) return;
-    const containerRect = containerRef.current.getBoundingClientRect();
-    if (!containerRect.width || containerRect.width <= 0) return;
-    const newLeftWidth = e.clientX - containerRect.left;
-    const rawPercent = (newLeftWidth / containerRect.width) * 100;
-    if (!isFinite(rawPercent)) return;
-    const clamped = Math.min(Math.max(rawPercent, 25), 75);
-    setSplitPercent(clamped);
 
-    if (workspace.current) {
-      Blockly.svgResize(workspace.current);
-    }
-  }, []);
-
-  const handleMouseUp = useCallback(() => {
-    isDragging.current = false;
-    document.removeEventListener('mousemove', handleMouseMove);
-    document.removeEventListener('mouseup', handleMouseUp);
-    if (workspace.current) {
-      Blockly.svgResize(workspace.current);
-    }
-  }, [handleMouseMove]);
-
-  // Helper to ensure the workspace always resets with the mandatory Start block
-  const resetWorkspaceToDefaultStart = useCallback((ws: Blockly.WorkspaceSvg) => {
+  // Helper to ensure the workspace restores saved workspace XML or resets with default Start block
+  const resetWorkspaceToDefaultStart = useCallback((ws: Blockly.WorkspaceSvg, forceDefault = false, sectionOverride?: number) => {
+    const activeSec = typeof sectionOverride === 'number' ? sectionOverride : currentSection;
     try {
+      isRestoringWorkspaceRef.current = true;
       ws.clear();
-      const xmlText = '<xml xmlns="https://developers.google.com/blockly/xml"><block type="event_start" id="start_block" x="40" y="40" deletable="true" movable="true"></block></xml>';
-      const dom = Blockly.utils.xml.textToDom(xmlText);
-      Blockly.Xml.domToWorkspace(dom, ws);
-      Blockly.svgResize(ws);
-    } catch (e) {
-      console.warn("Could not create default Start block:", e);
-    }
-  }, []);
 
-  // Copy selected block stack to clipboard
+      let shouldForceDefault = forceDefault;
+      if (!shouldForceDefault && typeof window !== 'undefined') {
+        const isUrlReplay = new URLSearchParams(window.location.search).get('mode') === 'replay';
+        if (isUrlReplay) {
+          shouldForceDefault = true;
+        }
+      }
+
+      if (shouldForceDefault) {
+        try {
+          removeNetstartItem(`netstart_saved_workspace_${missionId}_${activeSec}`);
+        } catch (e) { }
+      }
+
+      const savedXml = !shouldForceDefault ? (
+        getNetstartItem(`netstart_saved_workspace_${missionId}_${activeSec}`) || ''
+      ) : '';
+
+      let loaded = false;
+      if (
+        savedXml &&
+        savedXml.trim() &&
+        savedXml !== '<xml xmlns="https://developers.google.com/blockly/xml"></xml>' &&
+        savedXml !== '<xml xmlns="https://developers.google.com/blockly/xml"/>'
+      ) {
+        try {
+          const dom = Blockly.utils.xml.textToDom(savedXml);
+          Blockly.Xml.domToWorkspace(dom, ws);
+          Blockly.svgResize(ws);
+          loaded = true;
+        } catch (xmlErr) {
+          console.warn("Could not load saved workspace XML, falling back to default:", xmlErr);
+        }
+      }
+
+      if (!loaded) {
+        if (isMarsLevel1 || isMarsLevel2 || isMarsLevel3) {
+          Blockly.svgResize(ws);
+        } else {
+          const xmlText = '<xml xmlns="https://developers.google.com/blockly/xml"><block type="event_start" id="start_block" x="40" y="40" deletable="true" movable="true"></block></xml>';
+          const dom = Blockly.utils.xml.textToDom(xmlText);
+          Blockly.Xml.domToWorkspace(dom, ws);
+          Blockly.svgResize(ws);
+        }
+      }
+
+      // Code generator & syntax updates
+      if (isMarsLevel1) {
+        const parseRes = parseWorkspaceHtml(ws);
+        setMarsParsedElements(parseRes.elements);
+        setMarsValidation(parseRes.validation);
+        const code = javascriptGenerator.workspaceToCode(ws);
+        setPlainEnglishCode(code);
+        setJsCode(code);
+      } else if (isMarsLevel2) {
+        const parseRes = parseMarsLevel2Workspace(ws);
+        setMars2Validation(parseRes.validation);
+        setPlainEnglishCode(parseRes.htmlCode);
+        setJsCode(parseRes.htmlCode);
+
+        const isSecDone = completedSections.includes(activeSec);
+        if (!isSecDone) {
+          const captionCount = parseRes.validation.customizations?.filter(c => c.caption || c.headline)?.length || 0;
+          const allPopulated = parseRes.validation.totalContainers === 5 && parseRes.validation.assignedImages?.every(img => img !== null) && !parseRes.validation.hasErrors;
+          const obj1Met = captionCount >= 2;
+          const obj2Met = allPopulated;
+          const obj3Met = !!parseRes.validation.isAllMatched;
+
+          setObjectives(prev => prev.map(obj => {
+            if (obj.id === 1) return { ...obj, completed: obj1Met };
+            if (obj.id === 2) return { ...obj, completed: obj2Met };
+            if (obj.id === 3) return { ...obj, completed: obj3Met };
+            return obj;
+          }));
+        }
+      } else if (isMarsLevel3) {
+        const parseRes = parseMarsLevel3Workspace(ws);
+        setMars3Validation(parseRes.validation);
+        setPlainEnglishCode(parseRes.htmlCode);
+        setJsCode(parseRes.htmlCode);
+
+        const isSecDone = completedSections.includes(activeSec);
+        if (!isSecDone) {
+          const obj1Met = parseRes.validation.hasContainer;
+          const obj2Met = parseRes.validation.hasHeading && parseRes.validation.hasValidSeal;
+          const obj3Met = parseRes.validation.hasEarthLink && parseRes.validation.hasVenusLink && !parseRes.validation.hasDecoys;
+
+          setObjectives(prev => prev.map(obj => {
+            if (obj.id === 1) return { ...obj, completed: obj1Met };
+            if (obj.id === 2) return { ...obj, completed: obj2Met };
+            if (obj.id === 3) return { ...obj, completed: obj3Met };
+            return obj;
+          }));
+        }
+      } else {
+        const code = javascriptGenerator.workspaceToCode(ws);
+        setJsCode(code);
+        const english = generatePlainEnglishPseudocode(ws);
+        setPlainEnglishCode(english);
+      }
+    } catch (e) {
+      console.warn("Could not reset workspace:", e);
+    } finally {
+      isRestoringWorkspaceRef.current = false;
+    }
+  }, [isMarsLevel1, isMarsLevel2, isMarsLevel3, currentSection, missionId, userId, completedSections, getNetstartItem, removeNetstartItem]);
+
+  const hasRestoredWorkspace = useRef<string | null>(null);
+
+  // Re-hydrate workspace blocks once userId and section hydration complete (only once per section)
+  useEffect(() => {
+    const key = `${userId}_${missionId}_${currentSection}`;
+    if (workspace.current && userId && hasHydratedSavedSection.current && hasRestoredWorkspace.current !== key) {
+      hasRestoredWorkspace.current = key;
+      resetWorkspaceToDefaultStart(workspace.current);
+    }
+  }, [userId, missionId, currentSection, resetWorkspaceToDefaultStart]);
+
+  // Copy currently selected block stack
   const handleCopy = useCallback(() => {
     if (!workspace.current) return;
     const ws = workspace.current;
     if (ws.isFlyout) return;
 
-    // Check if multi-selected blocks exist
-    const multiselected = ws.getAllBlocks(false).filter(b => {
-      const svg = b.getSvgRoot();
-      return svg && svg.classList.contains('blockly-block-multiselected');
-    });
-
-    let selected: Blockly.BlockSvg | null = null;
-    if (multiselected.length > 0) {
-      for (const b of multiselected) {
-        const p = b.getParent();
-        if (!p || !multiselected.includes(p)) {
-          selected = b;
-          break;
-        }
+    let selected: Blockly.BlockSvg | null = (Blockly.common?.getSelected ? Blockly.common.getSelected() : (Blockly as any).selected) as Blockly.BlockSvg | null;
+    if (!selected) {
+      const topBlocks = ws.getTopBlocks(true) as Blockly.BlockSvg[];
+      if (topBlocks.length > 0) {
+        selected = topBlocks[0];
       }
     }
-    if (!selected) {
-      selected = (Blockly.common?.getSelected ? Blockly.common.getSelected() : (Blockly as any).selected) as Blockly.BlockSvg | null;
-    }
 
     if (!selected) {
-      showToast("No block selected to copy! Click or drag-select a block first.");
+      showToast("No block selected to copy! Click a block first.");
       return;
     }
 
@@ -1680,7 +2053,7 @@ export default function BlocklyMaze() {
         newBlock.initSvg();
         newBlock.render();
         if (newBlock.select) newBlock.select();
-        
+
         const blockName = newBlock.type.replace(/_/g, ' ').toUpperCase();
         showToast(`Pasted [${blockName}] stack into workspace!`);
       }
@@ -1710,7 +2083,7 @@ export default function BlocklyMaze() {
     }
 
     if (selected.isInFlyout || selected.workspace?.isFlyout) {
-      showToast("Blocks inside the toolbox cannot be duplicated directly! Drag into workspace first.");
+      showToast("Blocks inside the toolbox cannot be duplicated directly! Place into workspace first.");
       return;
     }
 
@@ -1970,7 +2343,12 @@ export default function BlocklyMaze() {
             if (block.isInFlyout || block.workspace?.isFlyout) return;
             const blockName = block.type.replace(/_/g, ' ').toUpperCase();
             block.dispose(true, true);
-            showToast(`Deleted [${blockName}]`);
+            showToast(`Deleted [${blockName}]`, {
+              onUndo: () => {
+                if (workspace.current) workspace.current.undo(false);
+              },
+              duration: 7000,
+            });
           }
         },
         scopeType: Blockly.ContextMenuRegistry.ScopeType.BLOCK,
@@ -2130,7 +2508,10 @@ export default function BlocklyMaze() {
         },
         callback: (scope) => {
           if (scope.workspace && !(scope.workspace as any).isFlyout) {
-            resetWorkspaceToDefaultStart(scope.workspace as Blockly.WorkspaceSvg);
+            try {
+              removeNetstartItem(`netstart_saved_workspace_${missionId}_${currentSection}`);
+            } catch (e) { }
+            resetWorkspaceToDefaultStart(scope.workspace as Blockly.WorkspaceSvg, true);
             showToast('Deleted all blocks');
           }
         },
@@ -2143,7 +2524,7 @@ export default function BlocklyMaze() {
     }
   }, [showToast, resetWorkspaceToDefaultStart]);
 
-  // Global Keyboard Shortcuts for Copy, Paste, Duplicate & Escape
+  // Global Keyboard Shortcuts for Copy, Paste, and Duplicate
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const activeTag = document.activeElement?.tagName?.toLowerCase();
@@ -2170,26 +2551,20 @@ export default function BlocklyMaze() {
         e.stopPropagation();
         e.stopImmediatePropagation();
         handleDuplicate();
-      } else if (e.key === 'Escape') {
-        if (isSelectMode) {
-          setIsSelectMode(false);
-          setSelectionBox(null);
-          showToast("Exited Drag & Select Mode");
-        }
       }
     };
 
     window.addEventListener('keydown', handleKeyDown, true);
     return () => window.removeEventListener('keydown', handleKeyDown, true);
-  }, [handleCopy, handlePaste, handleDuplicate, isSelectMode, showToast]);
+  }, [handleCopy, handlePaste, handleDuplicate]);
 
   // XP Guardrail: Only awards XP if !objective.isClaimed
   const awardDirectiveXp = useCallback((goalId: number) => {
     const key = `${missionId}_sec${currentSection}_goal${goalId}`;
     let claimedList: string[] = [];
     try {
-      claimedList = JSON.parse(localStorage.getItem('netstart_claimed_directives') || '[]');
-    } catch (e) {}
+      claimedList = JSON.parse(getNetstartItem('netstart_claimed_directives') || '[]');
+    } catch (e) { }
 
     if (claimedList.includes(key)) {
       return false; // Explicitly bypass XP payout
@@ -2198,10 +2573,10 @@ export default function BlocklyMaze() {
     addXp(XP_REWARDS.CAMPAIGN_GOAL, `Directive ${goalId}`);
     claimedList.push(key);
     try {
-      localStorage.setItem('netstart_claimed_directives', JSON.stringify(claimedList));
-    } catch (e) {}
+      setNetstartItem('netstart_claimed_directives', JSON.stringify(claimedList));
+    } catch (e) { }
     return true;
-  }, [addXp, missionId, currentSection]);
+  }, [addXp, missionId, currentSection, getNetstartItem, setNetstartItem, userId]);
 
   const markObjectiveComplete = useCallback((id: number) => {
     let shouldAward = false;
@@ -2209,12 +2584,12 @@ export default function BlocklyMaze() {
 
     // Immediately persist completion to localStorage
     try {
-      const completedGoals: string[] = JSON.parse(localStorage.getItem(`netstart_completed_goals_${missionId}`) || '[]');
+      const completedGoals: string[] = JSON.parse(getNetstartItem(`netstart_completed_goals_${missionId}`) || '[]');
       if (!completedGoals.includes(goalKey)) {
         completedGoals.push(goalKey);
-        localStorage.setItem(`netstart_completed_goals_${missionId}`, JSON.stringify(completedGoals));
+        setNetstartItem(`netstart_completed_goals_${missionId}`, JSON.stringify(completedGoals));
       }
-    } catch (e) {}
+    } catch (e) { }
 
     setObjectives(prev => {
       const target = prev.find(o => o.id === id);
@@ -2235,7 +2610,7 @@ export default function BlocklyMaze() {
     if (shouldAward) {
       awardDirectiveXp(id);
     }
-  }, [awardDirectiveXp, missionId, currentSection]);
+  }, [awardDirectiveXp, missionId, currentSection, getNetstartItem, setNetstartItem, userId]);
 
   const triggerMissionCompletion = async (codeSnippet: string) => {
     if (!missionId) return;
@@ -2258,32 +2633,32 @@ export default function BlocklyMaze() {
           gearsEarned: data.gearsEarned || 20,
         });
         try {
-          localStorage.removeItem('netstart_active_saved_level');
-        } catch (e) {}
+          removeNetstartItem('netstart_active_saved_level');
+        } catch (e) { }
 
         // Persist completed missionId to localStorage so ModulesClient detects
         // planet unlock immediately and plays the travel animation
         try {
           const key = 'netstart_completed_missions';
-          const existing: string[] = JSON.parse(localStorage.getItem(key) || '[]');
+          const existing: string[] = JSON.parse(getNetstartItem(key) || '[]');
           if (missionId && !existing.includes(missionId)) {
             existing.push(missionId);
-            localStorage.setItem(key, JSON.stringify(existing));
+            setNetstartItem(key, JSON.stringify(existing));
           }
 
           // Signal ModulesClient to play the travel animation when the user arrives.
           // We preserve the current "from" index so the animation starts from the right planet.
           // ModulesClient will detect storedIdx < realUnlockedIndex and fire startTravelAnimation.
-          const currentAnimIdx = localStorage.getItem('netstart_last_animated_planet_idx');
-          localStorage.setItem('netstart_planet_unlock_pending', 'true');
+          const currentAnimIdx = getNetstartItem('netstart_last_animated_planet_idx');
+          setNetstartItem('netstart_planet_unlock_pending', 'true');
           // Only clear if there is an existing value to preserve the from-index logic
           if (currentAnimIdx !== null) {
             // Keep it as-is; ModulesClient compares it to the new realUnlockedIndex
           } else {
             // No stored index yet — default to 0 as from
-            localStorage.setItem('netstart_last_animated_planet_idx', '0');
+            setNetstartItem('netstart_last_animated_planet_idx', '0');
           }
-        } catch (e) {}
+        } catch (e) { }
       }
     } catch (err) {
       console.error("Failed to submit mission completion:", err);
@@ -2292,104 +2667,181 @@ export default function BlocklyMaze() {
     }
   };
 
+  const handleMars1Success = useCallback((htmlCode: string) => {
+    let parseRes = marsValidation;
+    if (workspace.current) {
+      parseRes = parseWorkspaceHtml(workspace.current).validation;
+    }
+    if (parseRes.matchedCount === 3) markObjectiveComplete(1);
+    if (parseRes.hasModifier) markObjectiveComplete(2);
+    if (parseRes.ratingScore === 5) markObjectiveComplete(3);
+    recordSectionCompleted(0);
+    setShowPopup(true);
+
+    const bonusKey = `${missionId}_sec0_bonus`;
+    let claimedList: string[] = [];
+    try {
+      claimedList = JSON.parse(getNetstartItem('netstart_claimed_directives') || '[]');
+    } catch (e) { }
+
+    if (!isReplayMode && !claimedList.includes(bonusKey)) {
+      addXp(XP_REWARDS.SECTION_COMPLETION_BONUS, "Level 1 Cleared");
+      claimedList.push(bonusKey);
+      try {
+        setNetstartItem('netstart_claimed_directives', JSON.stringify(claimedList));
+      } catch (e) { }
+    }
+
+    try {
+      removeNetstartItem('netstart_active_saved_level');
+      removeNetstartItem('netstart_active_level');
+      removeNetstartItem(`netstart_saved_workspace_${missionId}_0`);
+      removeNetstartItem(`netstart_saved_workspace_${missionId}_${currentSection}`);
+      if (missionId) {
+        const compKey = 'netstart_completed_missions';
+        const existing: string[] = JSON.parse(getNetstartItem(compKey) || '[]');
+        if (!existing.includes(missionId)) {
+          existing.push(missionId);
+          setNetstartItem(compKey, JSON.stringify(existing));
+        }
+        if (!getNetstartItem('netstart_last_animated_planet_idx')) {
+          setNetstartItem('netstart_last_animated_planet_idx', '1');
+        }
+        setNetstartItem('netstart_planet_unlock_pending', 'true');
+      }
+    } catch (e) { }
+    triggerMissionCompletion(htmlCode);
+  }, [marsValidation.hasModifier, markObjectiveComplete, recordSectionCompleted, setShowPopup, missionId, isReplayMode, addXp, triggerMissionCompletion, currentSection]);
+
+  const handleMars2Success = useCallback((htmlCode: string) => {
+    let parseRes = mars2Validation;
+    if (workspace.current) {
+      parseRes = parseMarsLevel2Workspace(workspace.current).validation;
+    }
+    const captionCount = parseRes.customizations?.filter(c => c.caption || c.headline)?.length || 0;
+    if (captionCount >= 2) markObjectiveComplete(1);
+    const allContainersPopulated = parseRes.totalContainers === 5 && parseRes.assignedImages?.every(img => img !== null) && !parseRes.hasErrors;
+    if (allContainersPopulated) markObjectiveComplete(2);
+    if (parseRes.isAllMatched) markObjectiveComplete(3);
+    recordSectionCompleted(0);
+    setShowPopup(true);
+
+    const bonusKey = `${missionId}_sec0_bonus`;
+    let claimedList: string[] = [];
+    try {
+      claimedList = JSON.parse(getNetstartItem('netstart_claimed_directives') || '[]');
+    } catch (e) { }
+
+    if (!isReplayMode && !claimedList.includes(bonusKey)) {
+      addXp(XP_REWARDS.SECTION_COMPLETION_BONUS, "Level 2 Cleared");
+      claimedList.push(bonusKey);
+      try {
+        setNetstartItem('netstart_claimed_directives', JSON.stringify(claimedList));
+      } catch (e) { }
+    }
+
+    try {
+      removeNetstartItem('netstart_active_saved_level');
+      removeNetstartItem('netstart_active_level');
+      removeNetstartItem(`netstart_saved_workspace_${missionId}_0`);
+      removeNetstartItem(`netstart_saved_workspace_${missionId}_${currentSection}`);
+      if (missionId) {
+        const compKey = 'netstart_completed_missions';
+        const existing: string[] = JSON.parse(getNetstartItem(compKey) || '[]');
+        if (!existing.includes(missionId)) {
+          existing.push(missionId);
+          setNetstartItem(compKey, JSON.stringify(existing));
+        }
+        if (!getNetstartItem('netstart_last_animated_planet_idx')) {
+          setNetstartItem('netstart_last_animated_planet_idx', '1');
+        }
+        setNetstartItem('netstart_planet_unlock_pending', 'true');
+      }
+    } catch (e) { }
+    triggerMissionCompletion(htmlCode);
+  }, [mars2Validation, markObjectiveComplete, recordSectionCompleted, setShowPopup, missionId, isReplayMode, addXp, triggerMissionCompletion, currentSection]);
+
+  const handleMars2SimulationComplete = useCallback((success: boolean, failureReason?: string) => {
+    setIsRunning(false);
+    if (success) {
+      let code = '';
+      if (workspace.current) {
+        code = javascriptGenerator.workspaceToCode(workspace.current);
+      }
+      handleMars2Success(code);
+    } else if (failureReason) {
+      setErrorToastMessage(failureReason);
+      setShowErrorToast(true);
+      if (errorToastTimer.current) clearTimeout(errorToastTimer.current);
+      errorToastTimer.current = setTimeout(() => setShowErrorToast(false), 5000);
+    }
+  }, [handleMars2Success]);
+
+  const handleMars3Success = useCallback((htmlCode: string) => {
+    let parseRes = mars3Validation;
+    if (workspace.current) {
+      parseRes = parseMarsLevel3Workspace(workspace.current).validation;
+    }
+    if (parseRes.hasContainer) markObjectiveComplete(1);
+    if (parseRes.hasHeading && parseRes.hasValidSeal) markObjectiveComplete(2);
+    if (parseRes.hasEarthLink && parseRes.hasVenusLink && !parseRes.hasDecoys) markObjectiveComplete(3);
+    recordSectionCompleted(0);
+    setShowPopup(true);
+
+    const bonusKey = `${missionId}_sec0_bonus`;
+    let claimedList: string[] = [];
+    try {
+      claimedList = JSON.parse(getNetstartItem('netstart_claimed_directives') || '[]');
+    } catch (e) { }
+
+    if (!isReplayMode && !claimedList.includes(bonusKey)) {
+      addXp(XP_REWARDS.SECTION_COMPLETION_BONUS, "Level 3 Cleared");
+      claimedList.push(bonusKey);
+      try {
+        setNetstartItem('netstart_claimed_directives', JSON.stringify(claimedList));
+      } catch (e) { }
+    }
+
+    try {
+      removeNetstartItem('netstart_active_saved_level');
+      removeNetstartItem('netstart_active_level');
+      removeNetstartItem(`netstart_saved_workspace_${missionId}_0`);
+      removeNetstartItem(`netstart_saved_workspace_${missionId}_${currentSection}`);
+      if (missionId) {
+        const compKey = 'netstart_completed_missions';
+        const existing: string[] = JSON.parse(getNetstartItem(compKey) || '[]');
+        if (!existing.includes(missionId)) {
+          existing.push(missionId);
+          setNetstartItem(compKey, JSON.stringify(existing));
+        }
+        if (!getNetstartItem('netstart_last_animated_planet_idx')) {
+          setNetstartItem('netstart_last_animated_planet_idx', '1');
+        }
+        setNetstartItem('netstart_planet_unlock_pending', 'true');
+      }
+    } catch (e) { }
+    triggerMissionCompletion(htmlCode);
+  }, [mars3Validation, markObjectiveComplete, recordSectionCompleted, setShowPopup, missionId, isReplayMode, addXp, triggerMissionCompletion, currentSection]);
+
+  const handleMars3SimulationComplete = useCallback((success: boolean, failureReason?: string) => {
+    setIsRunning(false);
+    if (success) {
+      let code = '';
+      if (workspace.current) {
+        code = javascriptGenerator.workspaceToCode(workspace.current);
+      }
+      handleMars3Success(code);
+    } else if (failureReason) {
+      setErrorToastMessage(failureReason);
+      setShowErrorToast(true);
+      if (errorToastTimer.current) clearTimeout(errorToastTimer.current);
+      errorToastTimer.current = setTimeout(() => setShowErrorToast(false), 5000);
+    }
+  }, [handleMars3Success]);
+
   // Inject Blockly
   useEffect(() => {
     if (blocklyDiv.current && !workspace.current) {
-      // Helper to cleanly extract and unplug unselected downstream blocks so they are not moved with the drag
-      const isolateChildBlock = (child: any) => {
-        if (!child || child.isShadow() || child.isInsertionMarker()) return;
-        try {
-          const pos = child.getRelativeToSurfaceXY();
-          child.unplug(false);
-          child.moveTo(pos);
-          child.render();
-        } catch (err) {
-          console.warn("Could not isolate child block:", err);
-        }
-      };
-
-      const prepareMultiSelectDrag = (block: any) => {
-        if (!block || typeof block.getSvgRoot !== 'function') return;
-        const isMulti = block.getSvgRoot()?.classList.contains('blockly-block-multiselected');
-        if (!isMulti) return;
-        const ws = block.workspace as Blockly.WorkspaceSvg;
-        if (!ws) return;
-
-        const multiselected = ws.getAllBlocks(false).filter(b => {
-          const svg = b.getSvgRoot();
-          return svg && svg.classList.contains('blockly-block-multiselected');
-        });
-        const multiselectedIds = new Set(multiselected.map(b => b.id));
-
-        multiselected.forEach(b => {
-          // If parent is not in multi-selection, unplug b from parent so it moves independently
-          const parent = b.getParent ? b.getParent() : null;
-          if (parent && !multiselectedIds.has(parent.id)) {
-            b.unplug(false);
-          }
-          // If nextConnection target is not in multi-selection, isolate it so it stays stationary
-          if (b.nextConnection && b.nextConnection.isConnected()) {
-            const target = b.nextConnection.targetBlock();
-            if (target && !multiselectedIds.has(target.id)) {
-              isolateChildBlock(target);
-            }
-          }
-          // If statement input targets are not in multi-selection, isolate them
-          if (b.inputList) {
-            b.inputList.forEach((input: any) => {
-              if (input.connection && input.connection.isConnected()) {
-                const target = input.connection.targetBlock();
-                if (target && !target.isShadow() && !multiselectedIds.has(target.id)) {
-                  isolateChildBlock(target);
-                }
-              }
-            });
-          }
-        });
-      };
-
-      // Ensure Gesture starts drag from the topmost block of the selected group
-      if (Blockly.Gesture && !(Blockly.Gesture as any).__netstart_multiselect_patched__) {
-        (Blockly.Gesture as any).__netstart_multiselect_patched__ = true;
-        
-        const origSetStartBlock = Blockly.Gesture.prototype.setStartBlock;
-        Blockly.Gesture.prototype.setStartBlock = function(block: Blockly.BlockSvg) {
-          let target = block;
-          if (target && typeof target.getSvgRoot === 'function' && target.getSvgRoot()?.classList.contains('blockly-block-multiselected')) {
-            // Climb up only as long as the parent is ALSO in the multi-selected group
-            while (
-              target.getParent && 
-              target.getParent() && 
-              target.getParent()?.getSvgRoot()?.classList.contains('blockly-block-multiselected')
-            ) {
-              target = target.getParent() as Blockly.BlockSvg;
-            }
-          }
-          origSetStartBlock.call(this, target);
-        };
-      }
-
-      // Hook BlockSvg.prototype.startDrag for Blockly 13
-      if (Blockly.BlockSvg && !(Blockly.BlockSvg.prototype as any).__netstart_drag_patched__) {
-        (Blockly.BlockSvg.prototype as any).__netstart_drag_patched__ = true;
-        const origBlockSvgStartDrag = Blockly.BlockSvg.prototype.startDrag;
-        Blockly.BlockSvg.prototype.startDrag = function(e?: any) {
-          prepareMultiSelectDrag(this);
-          return origBlockSvgStartDrag.call(this, e);
-        };
-      }
-
-      // Hook BlockDragStrategy if available
-      const BlockDragStrategyClass = (Blockly as any).dragging?.BlockDragStrategy;
-      if (BlockDragStrategyClass && !BlockDragStrategyClass.prototype.__netstart_strat_patched__) {
-        BlockDragStrategyClass.prototype.__netstart_strat_patched__ = true;
-        const origStratStartDrag = BlockDragStrategyClass.prototype.startDrag;
-        BlockDragStrategyClass.prototype.startDrag = function(e?: any) {
-          prepareMultiSelectDrag(this.block || (this as any).getTargetBlock?.());
-          return origStratStartDrag.call(this, e);
-        };
-      }
-
       const netStartTheme = Blockly.Theme.defineTheme('netstart_space', {
         name: 'netstart_space',
         base: Blockly.Themes.Classic,
@@ -2415,6 +2867,10 @@ export default function BlocklyMaze() {
           cursorColour: '#ff912d',
         }
       });
+
+      registerHtmlBlocks();
+      registerMarsLevel2Blocks();
+      registerMarsLevel3Blocks();
 
       const ws = Blockly.inject(blocklyDiv.current, {
         toolbox: getToolboxForMission(missionId, currentSection),
@@ -2447,16 +2903,20 @@ export default function BlocklyMaze() {
       });
 
       (ws as any).currentSectionIndex = currentSection;
+      (ws as any).dailySectionName = dailySection?.name;
+      (ws as any).missionId = missionId;
       if (typeof window !== 'undefined') {
         (window as any).__NETSTART_CURRENT_SECTION__ = currentSection;
+        (window as any).__NETSTART_DAILY_SECTION_NAME__ = dailySection?.name;
+        (window as any).__NETSTART_MISSION_ID__ = missionId;
       }
       workspace.current = ws;
 
       const origIsDeleteArea = (ws as any).isDeleteArea ? (ws as any).isDeleteArea.bind(ws) : () => false;
-      (ws as any).isDeleteArea = function(e: any) {
+      (ws as any).isDeleteArea = function (e: any) {
         if (origIsDeleteArea(e)) return true;
         if (!e) return false;
-        
+
         // 1. Check if cursor is over the left toolbox category sidebar
         const toolboxDiv = blocklyDiv.current?.querySelector('.blocklyToolboxDiv');
         if (toolboxDiv) {
@@ -2492,39 +2952,172 @@ export default function BlocklyMaze() {
       setupCustomContextMenu();
 
       const updateCodeLive = () => {
-        if (!workspace.current) return;
+        if (!workspace.current || isRestoringWorkspaceRef.current) return;
         try {
           clearAllBlockHighlights(workspace.current);
           const code = javascriptGenerator.workspaceToCode(workspace.current);
           setJsCode(code);
-          const english = generatePlainEnglishPseudocode(workspace.current);
-          setPlainEnglishCode(english);
+          if (isMarsLevel1) {
+            setPlainEnglishCode(code);
+            const parseRes = parseWorkspaceHtml(workspace.current);
+            setMarsParsedElements(parseRes.elements);
+            setMarsValidation(parseRes.validation);
+
+            // Live objective checks for Mars Level 1
+            if (parseRes.validation.matchedCount === 3) {
+              markObjectiveComplete(1);
+            }
+            if (parseRes.validation.hasModifier) {
+              markObjectiveComplete(2);
+            }
+            if (parseRes.validation.ratingScore === 5) {
+              markObjectiveComplete(3);
+            }
+          } else if (isMarsLevel2) {
+            const parseRes = parseMarsLevel2Workspace(workspace.current);
+            setPlainEnglishCode(parseRes.htmlCode);
+            setJsCode(parseRes.htmlCode);
+            setMars2Validation(parseRes.validation);
+            const isSecDone = completedSections.includes(currentSection);
+            const captionCount = parseRes.validation.customizations?.filter(c => c.caption || c.headline)?.length || 0;
+            const allContainersPopulated = parseRes.validation.totalContainers === 5 && parseRes.validation.assignedImages?.every(img => img !== null) && !parseRes.validation.hasErrors;
+            const obj1Met = captionCount >= 2;
+            const obj2Met = allContainersPopulated;
+            const obj3Met = !!parseRes.validation.isAllMatched;
+
+            if (!isSecDone) {
+              setObjectives(prev => prev.map(obj => {
+                if (obj.id === 1) return { ...obj, completed: obj1Met };
+                if (obj.id === 2) return { ...obj, completed: obj2Met };
+                if (obj.id === 3) return { ...obj, completed: obj3Met };
+                return obj;
+              }));
+
+              const goalKey1 = `${missionId}_sec${currentSection}_goal1`;
+              const goalKey2 = `${missionId}_sec${currentSection}_goal2`;
+              const goalKey3 = `${missionId}_sec${currentSection}_goal3`;
+
+              try {
+                let completedGoals: string[] = JSON.parse(getNetstartItem(`netstart_completed_goals_${missionId}`) || '[]');
+                if (obj1Met) {
+                  if (!completedGoals.includes(goalKey1)) completedGoals.push(goalKey1);
+                } else {
+                  completedGoals = completedGoals.filter(k => k !== goalKey1);
+                }
+                if (obj2Met) {
+                  if (!completedGoals.includes(goalKey2)) completedGoals.push(goalKey2);
+                } else {
+                  completedGoals = completedGoals.filter(k => k !== goalKey2);
+                }
+                if (obj3Met) {
+                  if (!completedGoals.includes(goalKey3)) completedGoals.push(goalKey3);
+                } else {
+                  completedGoals = completedGoals.filter(k => k !== goalKey3);
+                }
+                setNetstartItem(`netstart_completed_goals_${missionId}`, JSON.stringify(completedGoals));
+              } catch (e) { }
+            }
+          } else if (isMarsLevel3) {
+            const parseRes = parseMarsLevel3Workspace(workspace.current);
+            setPlainEnglishCode(parseRes.htmlCode);
+            setJsCode(parseRes.htmlCode);
+            setMars3Validation(parseRes.validation);
+            const isSecDone = completedSections.includes(currentSection);
+            const obj1Met = parseRes.validation.hasContainer;
+            const obj2Met = parseRes.validation.hasHeading && parseRes.validation.hasValidSeal;
+            const obj3Met = parseRes.validation.hasEarthLink && parseRes.validation.hasVenusLink && !parseRes.validation.hasDecoys;
+
+            if (!isSecDone) {
+              setObjectives(prev => prev.map(obj => {
+                if (obj.id === 1) return { ...obj, completed: obj1Met };
+                if (obj.id === 2) return { ...obj, completed: obj2Met };
+                if (obj.id === 3) return { ...obj, completed: obj3Met };
+                return obj;
+              }));
+
+              const goalKey1 = `${missionId}_sec${currentSection}_goal1`;
+              const goalKey2 = `${missionId}_sec${currentSection}_goal2`;
+              const goalKey3 = `${missionId}_sec${currentSection}_goal3`;
+
+              try {
+                let completedGoals: string[] = JSON.parse(getNetstartItem(`netstart_completed_goals_${missionId}`) || '[]');
+                if (obj1Met) {
+                  if (!completedGoals.includes(goalKey1)) completedGoals.push(goalKey1);
+                } else {
+                  completedGoals = completedGoals.filter(k => k !== goalKey1);
+                }
+                if (obj2Met) {
+                  if (!completedGoals.includes(goalKey2)) completedGoals.push(goalKey2);
+                } else {
+                  completedGoals = completedGoals.filter(k => k !== goalKey2);
+                }
+                if (obj3Met) {
+                  if (!completedGoals.includes(goalKey3)) completedGoals.push(goalKey3);
+                } else {
+                  completedGoals = completedGoals.filter(k => k !== goalKey3);
+                }
+                setNetstartItem(`netstart_completed_goals_${missionId}`, JSON.stringify(completedGoals));
+              } catch (e) { }
+            }
+          } else {
+            const english = generatePlainEnglishPseudocode(workspace.current);
+            setPlainEnglishCode(english);
+          }
+
+          // Auto-save workspace XML state (blocks, coordinates, field options) to localStorage
+          try {
+            const xmlDom = Blockly.Xml.workspaceToDom(workspace.current);
+            const xmlText = Blockly.Xml.domToText(xmlDom);
+            const blockCount = workspace.current.getAllBlocks(false).length;
+            if (
+              userId &&
+              hasHydratedSavedSection.current &&
+              !isRestoringWorkspaceRef.current &&
+              blockCount > 0 &&
+              xmlText &&
+              xmlText !== '<xml xmlns="https://developers.google.com/blockly/xml"></xml>' &&
+              xmlText !== '<xml xmlns="https://developers.google.com/blockly/xml"/>'
+            ) {
+              setNetstartItem(`netstart_saved_workspace_${missionId}_${currentSection}`, xmlText);
+              let completedGoals: string[] = [];
+              try {
+                completedGoals = JSON.parse(getNetstartItem(`netstart_completed_goals_${missionId}`) || '[]');
+              } catch (e) { }
+
+              const saveState = {
+                missionId,
+                sectionIndex: currentSection,
+                xmlText,
+                title: displayTitle,
+                completedGoals,
+                timestamp: Date.now()
+              };
+              setNetstartItem('netstart_active_saved_level', JSON.stringify(saveState));
+              setNetstartItem('netstart_active_level', JSON.stringify({
+                missionId,
+                title: displayTitle,
+                module: getMissionModuleForMission(missionId, isDaily),
+                icon: planetIcon,
+                desc: getMissionDescForMission(missionId, isDaily),
+                startedAt: new Date().toISOString()
+              }));
+            }
+          } catch (saveErr) {
+            console.warn("Could not auto-save workspace state:", saveErr);
+          }
         } catch (e) {
           console.warn("Live code generation warning:", e);
         }
       };
 
       const onWorkspaceChange = (e: any) => {
-        if (e && e.type === Blockly.Events.SELECTED) {
-          const selectedId = e.newElementId;
-          if (!selectedId && workspace.current) {
-            const blocks = workspace.current.getAllBlocks(false);
-            blocks.forEach(b => {
-              const svg = b.getSvgRoot();
-              if (svg) svg.classList.remove('blockly-block-multiselected');
-            });
-          }
-        }
         if (e && (e.type === Blockly.Events.BLOCK_DELETE || e.type === (Blockly.Events as any).DELETE)) {
-          if (workspace.current) {
-            const multiselected = workspace.current.getAllBlocks(false).filter(b => {
-              const svg = b.getSvgRoot();
-              return svg && svg.classList.contains('blockly-block-multiselected');
-            });
-            multiselected.forEach(b => {
-              if (b.type !== 'event_start' && b.isDeletable()) {
-                b.dispose(true);
-              }
+          if (e && !(e as any).isUiEvent && ((e as any).blockId || (e as any).ids)) {
+            showToast("Block deleted", {
+              onUndo: () => {
+                if (workspace.current) workspace.current.undo(false);
+              },
+              duration: 7000,
             });
           }
         }
@@ -2541,36 +3134,24 @@ export default function BlocklyMaze() {
             return;
           }
           if (workspace.current) {
-            const multiselected = workspace.current.getAllBlocks(false).filter(b => {
-              const svg = b.getSvgRoot();
-              return svg && svg.classList.contains('blockly-block-multiselected');
-            });
-            if (multiselected.length > 0) {
-              e.preventDefault();
-              let count = 0;
-              multiselected.forEach(b => {
-                if (b.type !== 'event_start' && b.isDeletable()) {
-                  b.dispose(true);
-                  count++;
-                }
+            const selected = Blockly.getSelected();
+            if (selected && typeof (selected as any).dispose === 'function' && (selected as any).type !== 'event_start' && (selected as any).isDeletable?.()) {
+              (selected as any).dispose(true);
+              showToast("Block deleted", {
+                onUndo: () => {
+                  if (workspace.current) workspace.current.undo(false);
+                },
+                duration: 7000,
               });
-              if (count > 0) {
-                showToast(`Deleted ${count} block${count > 1 ? 's' : ''}`);
-              }
             }
           }
         }
       };
       window.addEventListener('keydown', handleKeyDown);
 
-      // Left-clicking on empty workspace background clears multi-selection
-      const handleBgClick = (e: Event) => {
+      // Left-clicking on empty workspace background unselects active block
+      const handleBgClick = () => {
         if (workspace.current) {
-          const blocks = workspace.current.getAllBlocks(false);
-          blocks.forEach(b => {
-            const svg = b.getSvgRoot();
-            if (svg) svg.classList.remove('blockly-block-multiselected');
-          });
           const sel = Blockly.common?.getSelected ? (Blockly.common.getSelected() as any) : null;
           if (sel && typeof sel.unselect === 'function') {
             sel.unselect();
@@ -2603,7 +3184,7 @@ export default function BlocklyMaze() {
         }
       };
     }
-  }, [missionId, currentSection, resetWorkspaceToDefaultStart, setupCustomContextMenu, showToast]);
+  }, [missionId, resetWorkspaceToDefaultStart, setupCustomContextMenu, showToast]);
 
   // Block highlighting & error visual indicators
   const clearAllBlockHighlights = useCallback((ws: Blockly.WorkspaceSvg | null) => {
@@ -2618,7 +3199,7 @@ export default function BlocklyMaze() {
           svg.classList.remove('blockly-block-warning');
         }
       });
-    } catch (e) {}
+    } catch (e) { }
   }, []);
 
   const markBlockError = useCallback((ws: Blockly.WorkspaceSvg | null, blockId: string | null) => {
@@ -2632,7 +3213,7 @@ export default function BlocklyMaze() {
           svg.classList.add('blockly-block-error');
         }
       }
-    } catch (e) {}
+    } catch (e) { }
   }, []);
 
   const markDisconnectedBlocks = useCallback((ws: Blockly.WorkspaceSvg | null, startBlock?: Blockly.BlockSvg | null) => {
@@ -2657,7 +3238,7 @@ export default function BlocklyMaze() {
           }
         }
       }
-    } catch (e) {}
+    } catch (e) { }
   }, []);
 
   const loadSection = (sectionIndex: number) => {
@@ -2675,11 +3256,29 @@ export default function BlocklyMaze() {
     }
     if (workspace.current) {
       clearAllBlockHighlights(workspace.current);
+      // Auto-save the previous section workspace before leaving it
+      if (userId && hasHydratedSavedSection.current && !isRestoringWorkspaceRef.current) {
+        try {
+          const xmlDom = Blockly.Xml.workspaceToDom(workspace.current);
+          const xmlText = Blockly.Xml.domToText(xmlDom);
+          const blockCount = workspace.current.getAllBlocks(false).length;
+          if (
+            blockCount > 0 &&
+            xmlText &&
+            xmlText !== '<xml xmlns="https://developers.google.com/blockly/xml"></xml>' &&
+            xmlText !== '<xml xmlns="https://developers.google.com/blockly/xml"/>'
+          ) {
+            setNetstartItem(`netstart_saved_workspace_${missionId}_${currentSection}`, xmlText);
+          }
+        } catch (e) { }
+      }
     }
     setCurrentSection(sectionIndex);
     setShowErrorToast(false);
 
-    if (isLevel2) {
+    if (isMarsLevel1) {
+      // Mars 1 specific setup if any
+    } else if (isLevel2) {
       setConveyorQueue(getSectionConveyorQueue(sectionIndex));
       setConveyorInventory({ cargo: 0, trash: 0, fuel: 0, food: 0, errors: 0 });
       setActiveAction('none');
@@ -2687,15 +3286,8 @@ export default function BlocklyMaze() {
       setIsScanning(false);
       setIsCurrentItemScanned(false);
       setAnimatingItem(null);
-      if (workspace.current) {
-        (workspace.current as any).currentSectionIndex = sectionIndex;
-        workspace.current.updateToolbox(getToolboxForMission(missionId, sectionIndex));
-      }
     } else if (isLevel3) {
-      if (workspace.current) {
-        (workspace.current as any).currentSectionIndex = sectionIndex;
-        workspace.current.updateToolbox(getToolboxForMission(missionId, sectionIndex));
-      }
+      // Level 3 specific setup
     } else {
       const targetSection = currentMissionSections[sectionIndex] || currentMissionSections[0];
       setActiveGrid(targetSection.maze);
@@ -2705,18 +3297,19 @@ export default function BlocklyMaze() {
     try {
       let completedGoals: string[] = [];
       try {
-        completedGoals = JSON.parse(localStorage.getItem(`netstart_completed_goals_${missionId}`) || '[]');
-      } catch (e) {}
+        completedGoals = JSON.parse(getNetstartItem(`netstart_completed_goals_${missionId}`) || '[]');
+      } catch (e) { }
+      const targetSavedXml = getNetstartItem(`netstart_saved_workspace_${missionId}_${sectionIndex}`) || '';
       const saveState = {
         missionId,
         sectionIndex,
-        xmlText: '',
+        xmlText: targetSavedXml,
         title: displayTitle,
         completedGoals,
         timestamp: Date.now()
       };
-      localStorage.setItem('netstart_active_saved_level', JSON.stringify(saveState));
-    } catch (e) {}
+      setNetstartItem('netstart_active_saved_level', JSON.stringify(saveState));
+    } catch (e) { }
 
     const targetSection = currentMissionSections[sectionIndex] || currentMissionSections[0];
     setCharState(targetSection.initialState);
@@ -2736,7 +3329,10 @@ export default function BlocklyMaze() {
     setJsCode('');
     setPlainEnglishCode('');
     if (workspace.current) {
-      resetWorkspaceToDefaultStart(workspace.current);
+      (workspace.current as any).currentSectionIndex = sectionIndex;
+      workspace.current.updateToolbox(getToolboxForMission(missionId, sectionIndex));
+      hasRestoredWorkspace.current = `${userId}_${missionId}_${sectionIndex}`;
+      resetWorkspaceToDefaultStart(workspace.current, false, sectionIndex);
     }
   };
 
@@ -2747,41 +3343,61 @@ export default function BlocklyMaze() {
       bombDamageTimerRef.current = null;
     }
 
-    // 1. Revert any XP gained during this mission session
+    let isAlreadyCompletedMission = false;
     try {
-      const claimedList: string[] = JSON.parse(localStorage.getItem('netstart_claimed_directives') || '[]');
-      const missionClaimed = claimedList.filter(k => k.startsWith(`${missionId}_`));
-      if (missionClaimed.length > 0) {
-        const xpToDeduct = missionClaimed.reduce((total, key) => {
-          if (key.includes('_bonus')) return total + XP_REWARDS.SECTION_COMPLETION_BONUS;
-          return total + XP_REWARDS.CAMPAIGN_GOAL;
-        }, 0);
-        removeXp(xpToDeduct);
+      const completedMissions: string[] = JSON.parse(getNetstartItem('netstart_completed_missions') || '[]');
+      isAlreadyCompletedMission = completedMissions.includes(missionId);
+    } catch (e) { }
 
-        const remainingClaimed = claimedList.filter(k => !k.startsWith(`${missionId}_`));
-        localStorage.setItem('netstart_claimed_directives', JSON.stringify(remainingClaimed));
-        setClaimedDirectives(remainingClaimed);
+    // 1. Only revert XP and clear progress if the level was NOT already completed previously
+    if (!isAlreadyCompletedMission) {
+      try {
+        const claimedList: string[] = JSON.parse(getNetstartItem('netstart_claimed_directives') || '[]');
+        const missionClaimed = claimedList.filter(k => k.startsWith(`${missionId}_`));
+        if (missionClaimed.length > 0) {
+          const xpToDeduct = missionClaimed.reduce((total, key) => {
+            if (key.includes('_bonus')) return total + XP_REWARDS.SECTION_COMPLETION_BONUS;
+            return total + XP_REWARDS.CAMPAIGN_GOAL;
+          }, 0);
+          removeXp(xpToDeduct);
+
+          const remainingClaimed = claimedList.filter(k => !k.startsWith(`${missionId}_`));
+          setNetstartItem('netstart_claimed_directives', JSON.stringify(remainingClaimed));
+          setClaimedDirectives(remainingClaimed);
+        }
+      } catch (e) {
+        console.warn("Failed to reset session XP:", e);
       }
-    } catch (e) {
-      console.warn("Failed to reset session XP:", e);
+
+      setCompletedSections([]);
+      setIsReplayMode(false);
+      try {
+        removeNetstartItem(`netstart_completed_sections_${missionId}`);
+        removeNetstartItem(`netstart_completed_goals_${missionId}`);
+      } catch (e) { }
     }
 
-    // 2. Unconditionally clear section completion & storage for this mission
-    setCompletedSections([]);
-    setIsReplayMode(false);
     try {
-      localStorage.removeItem(`netstart_completed_sections_${missionId}`);
-      localStorage.removeItem(`netstart_completed_goals_${missionId}`);
-      localStorage.removeItem('netstart_active_saved_level');
+      removeNetstartItem('netstart_active_saved_level');
       for (let i = 0; i < currentMissionSections.length; i++) {
-        localStorage.removeItem(`netstart_saved_workspace_${missionId}_${i}`);
+        removeNetstartItem(`netstart_saved_workspace_${missionId}_${i}`);
       }
-    } catch (e) {}
+    } catch (e) { }
 
     // 3. Reset to Section 1 (index 0)
     setCurrentSection(0);
-    if (isLevel2) {
-      setConveyorQueue(getSectionConveyorQueue(0));
+    if (isMarsLevel1) {
+      if (workspace.current) {
+        (workspace.current as any).currentSectionIndex = 0;
+        workspace.current.updateToolbox(getToolboxForMission(missionId, 0));
+        resetWorkspaceToDefaultStart(workspace.current);
+      }
+    } else if (isLevel2) {
+      if (dailySection?.name === 'Master Sorting Gauntlet') {
+        setConveyorQueue(getSectionConveyorQueue(3));
+      } else {
+        setConveyorQueue(getSectionConveyorQueue(0));
+      }
       setConveyorInventory({ cargo: 0, trash: 0, fuel: 0, food: 0, errors: 0 });
       setActiveAction('none');
       setIsBeltAdvancing(false);
@@ -2795,15 +3411,23 @@ export default function BlocklyMaze() {
     } else if (isLevel3) {
       setLevel3HazardStep(0);
       setLevel3HazardState({ asteroidShielded: false, fuelRefueled: false, oxygenPumped: false, status: 'idle' });
+      setLevel3ReactorState({ allocatedOxygen: 0, allocatedShields: 0, allocatedThrusters: 0, remainingPower: 100, isBalanced: false });
+      setLevel3WarpState({ boostActive: false, shieldsActive: false, warpActive: false, isWarping: false });
       if (fuelSynthRef.current) {
         fuelSynthRef.current.resetSimulation();
-      }
-      if (flightSimRef.current) {
-        flightSimRef.current.resetSimulation();
       }
       if (workspace.current) {
         (workspace.current as any).currentSectionIndex = 0;
         workspace.current.updateToolbox(getToolboxForMission(missionId, 0));
+        resetWorkspaceToDefaultStart(workspace.current);
+      }
+    } else {
+      setActiveGrid(currentMissionSections[0]?.maze || [[1]]);
+      setCharState({ ...(currentMissionSections[0]?.initialState || { x: 0, y: 0, direction: 0 }) });
+      if (workspace.current) {
+        (workspace.current as any).currentSectionIndex = 0;
+        workspace.current.updateToolbox(getToolboxForMission(missionId, 0));
+        resetWorkspaceToDefaultStart(workspace.current);
       }
     }
 
@@ -2839,7 +3463,7 @@ export default function BlocklyMaze() {
     }
 
     setIsPaused(false);
-  }, [missionId, removeXp, resetWorkspaceToDefaultStart, isLevel2, isLevel3, currentMissionSections]);
+  }, [missionId, isMarsLevel1, removeXp, resetWorkspaceToDefaultStart, isLevel2, isLevel3, currentMissionSections, dailySection?.name]);
 
   const resetGame = () => {
     executionIdRef.current++;
@@ -2867,11 +3491,23 @@ export default function BlocklyMaze() {
     setShowOverloadToast(false);
     setShowErrorToast(false);
     setShowPopup(false);
-    const isSecDoneOnReset = completedSections.includes(currentSection);
+    let isAlreadyDone = false;
+    try {
+      const completedMissions: string[] = JSON.parse(getNetstartItem('netstart_completed_missions') || '[]');
+      if (completedMissions.includes(missionId)) isAlreadyDone = true;
+    } catch (e) { }
+    const isSecDoneOnReset = isAlreadyDone || completedSections.includes(currentSection);
     setObjectives(prev => prev.map(o => ({ ...o, completed: isSecDoneOnReset || o.isClaimed || false })));
 
-    if (isLevel2) {
-      setConveyorQueue(getSectionConveyorQueue(currentSection));
+    if (isMarsLevel1) {
+      // In Mars Level 1, resetGame stops running simulation and resets view state while preserving workspace blocks
+      setIsRunning(false);
+    } else if (isLevel2) {
+      if (dailySection?.name === 'Master Sorting Gauntlet') {
+        setConveyorQueue(getSectionConveyorQueue(3));
+      } else {
+        setConveyorQueue(getSectionConveyorQueue(currentSection));
+      }
       setConveyorInventory({ cargo: 0, trash: 0, fuel: 0, food: 0, errors: 0 });
       setActiveAction('none');
       setIsBeltAdvancing(false);
@@ -2907,8 +3543,13 @@ export default function BlocklyMaze() {
     executionIdRef.current++;
     const thisExecId = executionIdRef.current;
 
-    // Reset state and evaluate objectives fresh for this execution run (preserving already completed sections)
-    const isSecDoneOnRun = completedSections.includes(currentSection);
+    // Reset state and evaluate objectives fresh for this execution run (preserving already completed sections and completed missions)
+    let isAlreadyDoneRun = false;
+    try {
+      const completedMissions: string[] = JSON.parse(getNetstartItem('netstart_completed_missions') || '[]');
+      if (completedMissions.includes(missionId)) isAlreadyDoneRun = true;
+    } catch (e) { }
+    const isSecDoneOnRun = isAlreadyDoneRun || completedSections.includes(currentSection);
     setObjectives(prev => prev.map(o => ({ ...o, completed: isSecDoneOnRun || o.isClaimed || false })));
     const startState = activeSection.initialState;
     setCharState(startState);
@@ -2925,6 +3566,146 @@ export default function BlocklyMaze() {
     setShowOverloadToast(false);
 
     if (!workspace.current) {
+      return;
+    }
+
+    // =========================================================================
+    // MARS LEVEL 1: THE BLANK BILLBOARD SIMULATION HANDLER
+    // =========================================================================
+    if (isMarsLevel1) {
+      clearAllBlockHighlights(workspace.current);
+      const allBlocks = workspace.current.getAllBlocks(false);
+      const parseRes = parseWorkspaceHtml(workspace.current);
+      const validation = parseRes.validation;
+
+      // Check if sandbox has content blocks placed
+      const hasContentBlocks = allBlocks.some(b => b.type === 'html_h1' || b.type === 'html_h3' || b.type === 'html_p');
+      if (allBlocks.length === 0 || !hasContentBlocks) {
+        setIsBumping(true);
+        setIsStartError(true);
+        setTimeout(() => {
+          setIsBumping(false);
+          setIsStartError(false);
+        }, 800);
+
+        setErrorToastMessage("Your billboard is empty! Place Title, Subtitle, and Text blocks into the sandbox to start building.");
+        setShowErrorToast(true);
+        if (errorToastTimer.current) clearTimeout(errorToastTimer.current);
+        errorToastTimer.current = setTimeout(() => setShowErrorToast(false), 5000);
+        return;
+      }
+
+      setIsRunning(true);
+      setMarsParsedElements(parseRes.elements);
+      setMarsValidation(validation);
+
+      // Objective checks for Mars Level 1
+      if (validation.matchedCount === 3) {
+        markObjectiveComplete(1);
+      }
+      if (validation.hasModifier) {
+        markObjectiveComplete(2);
+      }
+      if (validation.ratingScore === 5) {
+        markObjectiveComplete(3);
+      }
+
+      const htmlCode = javascriptGenerator.workspaceToCode(workspace.current);
+      setJsCode(htmlCode);
+      setPlainEnglishCode(htmlCode);
+
+      // Reset isRunning after the 20-second cutscene finishes so the user can easily re-run.
+      setTimeout(() => {
+        setIsRunning(false);
+      }, 20000);
+      return;
+    }
+
+    // =========================================================================
+    // MARS LEVEL 2: FIX IMAGES BILLBOARD SIMULATION HANDLER
+    // =========================================================================
+    if (isMarsLevel2) {
+      clearAllBlockHighlights(workspace.current);
+      const allBlocks = workspace.current.getAllBlocks(false);
+      const parseRes = parseMarsLevel2Workspace(workspace.current);
+      const validation = parseRes.validation;
+
+      const hasContainers = allBlocks.some(b => b.type.startsWith('html_billboard') || b.type === 'html_div');
+      const hasImgs = allBlocks.some(b => b.type === 'html_img');
+      if (allBlocks.length === 0 || (!hasContainers && !hasImgs)) {
+        setIsBumping(true);
+        setIsStartError(true);
+        setTimeout(() => {
+          setIsBumping(false);
+          setIsStartError(false);
+        }, 800);
+
+        setErrorToastMessage("Your workspace is empty! Connect <img> blocks inside Billboard containers to populate billboard images.");
+        setShowErrorToast(true);
+        if (errorToastTimer.current) clearTimeout(errorToastTimer.current);
+        errorToastTimer.current = setTimeout(() => setShowErrorToast(false), 5000);
+        return;
+      }
+
+      setIsRunning(true);
+      setMars2Validation(validation);
+
+      const captionCount = validation.customizations?.filter(c => c.caption || c.headline)?.length || 0;
+      if (captionCount >= 2) {
+        markObjectiveComplete(1);
+      }
+      const allContainersPopulated = validation.totalContainers === 5 && validation.assignedImages?.every(img => img !== null) && !validation.hasErrors;
+      if (allContainersPopulated) {
+        markObjectiveComplete(2);
+      }
+      if (validation.isAllMatched) {
+        markObjectiveComplete(3);
+      }
+
+      const htmlCode = javascriptGenerator.workspaceToCode(workspace.current);
+      setJsCode(htmlCode);
+      setPlainEnglishCode(htmlCode);
+      return;
+    }
+
+    // =========================================================================
+    // MARS LEVEL 3: ASTROLINK HYPERLINK PROTOCOL SIMULATION HANDLER
+    // =========================================================================
+    if (isMarsLevel3) {
+      clearAllBlockHighlights(workspace.current);
+      const allBlocks = workspace.current.getAllBlocks(false);
+      const parseRes = parseMarsLevel3Workspace(workspace.current);
+      const validation = parseRes.validation;
+
+      if (allBlocks.length === 0) {
+        setIsBumping(true);
+        setIsStartError(true);
+        setTimeout(() => {
+          setIsBumping(false);
+          setIsStartError(false);
+        }, 800);
+
+        setErrorToastMessage("Your workspace is empty! Put your message pieces safely inside a Container block.");
+        setShowErrorToast(true);
+        if (errorToastTimer.current) clearTimeout(errorToastTimer.current);
+        errorToastTimer.current = setTimeout(() => setShowErrorToast(false), 5000);
+        return;
+      }
+
+      setIsRunning(true);
+      setMars3Validation(validation);
+
+      const obj1Met = validation.hasContainer;
+      const obj2Met = validation.hasHeading && validation.hasValidSeal;
+      const obj3Met = validation.hasEarthLink && validation.hasVenusLink && !validation.hasDecoys;
+
+      if (obj1Met) markObjectiveComplete(1);
+      if (obj2Met) markObjectiveComplete(2);
+      if (obj3Met) markObjectiveComplete(3);
+
+      const htmlCode = javascriptGenerator.workspaceToCode(workspace.current);
+      setJsCode(htmlCode);
+      setPlainEnglishCode(htmlCode);
       return;
     }
 
@@ -2956,7 +3737,9 @@ export default function BlocklyMaze() {
       const hasEndBlock = connectedBlocks.some(b => b.type === 'event_end');
 
       setIsRunning(true);
-      let runtimeQueue = [...getSectionConveyorQueue(currentSection)];
+      let runtimeQueue = (dailySection?.name === 'Master Sorting Gauntlet')
+        ? [...getSectionConveyorQueue(3)]
+        : [...getSectionConveyorQueue(currentSection)];
       setConveyorQueue(runtimeQueue);
       setConveyorInventory({ cargo: 0, trash: 0, fuel: 0, food: 0, errors: 0 });
       setActiveAction('none');
@@ -3208,7 +3991,7 @@ export default function BlocklyMaze() {
 
       try {
         if (instrumentedCode && instrumentedCode.trim()) {
-          const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
+          const AsyncFunction = Object.getPrototypeOf(async function () { }).constructor;
           const executeFn = new AsyncFunction(
             'packCargo',
             'discardTrash',
@@ -3236,13 +4019,19 @@ export default function BlocklyMaze() {
           );
         }
 
-        const result = validateConveyorVictory(currentSection, runtimeInventory, runtimeQueue.length);
+        const isSortingGauntlet = dailySection?.name === 'Master Sorting Gauntlet';
+        const effectiveSection = isSortingGauntlet ? 3 : currentSection;
+        const result = validateConveyorVictory(effectiveSection, runtimeInventory, runtimeQueue.length);
         if (result.success) {
           if (hasEndBlock) {
             recordSectionCompleted(currentSection);
             markObjectiveComplete(3);
 
-            if (currentSection === 0) {
+            if (isSortingGauntlet) {
+              if (runtimeInventory.fuel >= 6 && runtimeInventory.food >= 6) markObjectiveComplete(1);
+              if (runtimeInventory.cargo >= 7 && runtimeInventory.trash >= 6) markObjectiveComplete(2);
+              if (runtimeInventory.errors === 0 && (runtimeInventory.cargo + runtimeInventory.trash + runtimeInventory.fuel + runtimeInventory.food === 25)) markObjectiveComplete(3);
+            } else if (currentSection === 0) {
               if (hasEndBlock) markObjectiveComplete(1);
               if (xml.includes('repeat_x_times') && (xml.includes('scan_current_item') || xml.includes('scan_item'))) markObjectiveComplete(2);
               if (runtimeInventory.cargo >= 10) markObjectiveComplete(3);
@@ -3254,10 +4043,6 @@ export default function BlocklyMaze() {
               if (runtimeInventory.fuel >= 6) markObjectiveComplete(1);
               if (runtimeInventory.cargo >= 7) markObjectiveComplete(2);
               if (runtimeInventory.trash >= 7) markObjectiveComplete(3);
-            } else if (currentSection === 3) {
-              if (runtimeInventory.fuel >= 6 && runtimeInventory.food >= 6) markObjectiveComplete(1);
-              if (runtimeInventory.cargo >= 7 && runtimeInventory.trash >= 6) markObjectiveComplete(2);
-              markObjectiveComplete(3);
             }
 
             setShowPopup(true);
@@ -3265,15 +4050,15 @@ export default function BlocklyMaze() {
             const bonusKey = `${missionId}_sec${currentSection}_bonus`;
             let claimedList: string[] = [];
             try {
-              claimedList = JSON.parse(localStorage.getItem('netstart_claimed_directives') || '[]');
-            } catch (e) {}
+              claimedList = JSON.parse(getNetstartItem('netstart_claimed_directives') || '[]');
+            } catch (e) { }
 
             if (!isReplayMode && !claimedList.includes(bonusKey)) {
               addXp(XP_REWARDS.SECTION_COMPLETION_BONUS, `Section ${currentSection + 1} Cleared`);
               claimedList.push(bonusKey);
               try {
-                localStorage.setItem('netstart_claimed_directives', JSON.stringify(claimedList));
-              } catch (e) {}
+                setNetstartItem('netstart_claimed_directives', JSON.stringify(claimedList));
+              } catch (e) { }
             }
 
             if (currentSection === currentMissionSections.length - 1) {
@@ -3281,24 +4066,24 @@ export default function BlocklyMaze() {
               // so ModuleDetailsClient shows Replay and ModulesClient triggers the animation
               try {
                 // Clear the active save so the card shows Replay not Resume
-                localStorage.removeItem('netstart_active_saved_level');
-                localStorage.removeItem('netstart_active_level');
+                removeNetstartItem('netstart_active_saved_level');
+                removeNetstartItem('netstart_active_level');
 
                 // Add to completed missions list for instant ModulesClient detection
                 if (missionId) {
                   const compKey = 'netstart_completed_missions';
-                  const existing: string[] = JSON.parse(localStorage.getItem(compKey) || '[]');
+                  const existing: string[] = JSON.parse(getNetstartItem(compKey) || '[]');
                   if (!existing.includes(missionId)) {
                     existing.push(missionId);
-                    localStorage.setItem(compKey, JSON.stringify(existing));
+                    setNetstartItem(compKey, JSON.stringify(existing));
                   }
                   // Preserve the current from-index so animation starts at right planet
-                  if (!localStorage.getItem('netstart_last_animated_planet_idx')) {
-                    localStorage.setItem('netstart_last_animated_planet_idx', '0');
+                  if (!getNetstartItem('netstart_last_animated_planet_idx')) {
+                    setNetstartItem('netstart_last_animated_planet_idx', '0');
                   }
-                  localStorage.setItem('netstart_planet_unlock_pending', 'true');
+                  setNetstartItem('netstart_planet_unlock_pending', 'true');
                 }
-              } catch (e) {}
+              } catch (e) { }
 
               triggerMissionCompletion(code);
             }
@@ -3412,8 +4197,8 @@ export default function BlocklyMaze() {
 
       let isSectionCompleted = false;
 
-      // Section 2: Fuel Synthesis (Nested Loops & Shifting Color Logic)
-      if (currentSection === 1) {
+      // Section 2: Fuel Synthesis (5-Step Chemical Synthesis Protocol)
+      if (currentSection === 1 || dailySection?.name === 'Fuel Synthesis Protocol') {
         if (!fuelSynthRef.current) {
           setIsRunning(false);
           return;
@@ -3423,7 +4208,7 @@ export default function BlocklyMaze() {
           markObjectiveComplete(1);
         }
         const xml = workspace.current ? Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(workspace.current)) : '';
-        if ((xml.includes('color_blue') || xml.includes('action_increase_heat')) && (xml.includes('color_green') || xml.includes('action_mix'))) {
+        if (xml.includes('controls_if') || xml.includes('color_green') || xml.includes('color_is') || xml.includes('action_add_solution')) {
           markObjectiveComplete(2);
         }
 
@@ -3458,7 +4243,7 @@ export default function BlocklyMaze() {
           };
 
           try {
-            const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
+            const AsyncFunction = Object.getPrototypeOf(async function () { }).constructor;
             const executeFn = new AsyncFunction(
               'Increase_Heat',
               'Add_Solution',
@@ -3573,7 +4358,7 @@ export default function BlocklyMaze() {
           const Fire_Tractor_Beam = Greet_UFO;
 
           try {
-            const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
+            const AsyncFunction = Object.getPrototypeOf(async function () { }).constructor;
             const executeFn = new AsyncFunction(
               'isFuelLow',
               'isSmallAsteroid',
@@ -3755,7 +4540,7 @@ export default function BlocklyMaze() {
         };
 
         try {
-          const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
+          const AsyncFunction = Object.getPrototypeOf(async function () { }).constructor;
           const executeFn = new AsyncFunction(
             'funcBoostSystems',
             'funcEvasiveShields',
@@ -3793,30 +4578,30 @@ export default function BlocklyMaze() {
           const bonusKey = `${missionId}_sec${currentSection}_bonus`;
           let claimedList: string[] = [];
           try {
-            claimedList = JSON.parse(localStorage.getItem('netstart_claimed_directives') || '[]');
-          } catch (e) {}
+            claimedList = JSON.parse(getNetstartItem('netstart_claimed_directives') || '[]');
+          } catch (e) { }
 
           if (!claimedList.includes(bonusKey)) {
             addXp(XP_REWARDS.SECTION_COMPLETION_BONUS, `Section ${currentSection + 1} Cleared`);
             claimedList.push(bonusKey);
             try {
-              localStorage.setItem('netstart_claimed_directives', JSON.stringify(claimedList));
-            } catch (e) {}
+              setNetstartItem('netstart_claimed_directives', JSON.stringify(claimedList));
+            } catch (e) { }
           }
 
           if (currentSection === currentMissionSections.length - 1) {
             // Write completion to localStorage IMMEDIATELY so UI updates before API responds
             try {
-              localStorage.removeItem('netstart_active_saved_level');
-              localStorage.removeItem('netstart_active_level');
+              removeNetstartItem('netstart_active_saved_level');
+              removeNetstartItem('netstart_active_level');
               if (missionId) {
                 const compKey = 'netstart_completed_missions';
-                const existing: string[] = JSON.parse(localStorage.getItem(compKey) || '[]');
-                if (!existing.includes(missionId)) { existing.push(missionId); localStorage.setItem(compKey, JSON.stringify(existing)); }
-                if (!localStorage.getItem('netstart_last_animated_planet_idx')) localStorage.setItem('netstart_last_animated_planet_idx', '0');
-                localStorage.setItem('netstart_planet_unlock_pending', 'true');
+                const existing: string[] = JSON.parse(getNetstartItem(compKey) || '[]');
+                if (!existing.includes(missionId)) { existing.push(missionId); setNetstartItem(compKey, JSON.stringify(existing)); }
+                if (!getNetstartItem('netstart_last_animated_planet_idx')) setNetstartItem('netstart_last_animated_planet_idx', '0');
+                setNetstartItem('netstart_planet_unlock_pending', 'true');
               }
-            } catch (e) {}
+            } catch (e) { }
             triggerMissionCompletion(code);
           }
         } else {
@@ -3911,10 +4696,11 @@ export default function BlocklyMaze() {
       // Level 1 Directives
       const xml = workspace.current ? Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(workspace.current)) : '';
       const uniqueDirections = new Set([
-        xml.includes('move_up') && 'up',
-        xml.includes('move_down') && 'down',
-        xml.includes('move_left') && 'left',
-        xml.includes('move_right') && 'right'
+        (xml.includes('move_up') || (xml.includes('action_move') && xml.includes('UP'))) && 'up',
+        (xml.includes('move_down') || (xml.includes('action_move') && xml.includes('DOWN'))) && 'down',
+        (xml.includes('move_left') || (xml.includes('action_move') && xml.includes('LEFT'))) && 'left',
+        (xml.includes('move_right') || (xml.includes('action_move') && xml.includes('RIGHT'))) && 'right',
+        (xml.includes('move_forward') || (xml.includes('action_move') && xml.includes('FORWARD'))) && 'forward',
       ].filter(Boolean));
 
       if (currentSection === 0) {
@@ -4034,10 +4820,10 @@ export default function BlocklyMaze() {
       execState.current.direction = newDir;
 
       // Strict Boundary & Out of Bounds Check: prevents escaping the grid perimeter
-      const isOutOfBounds = 
-        targetY < 0 || 
-        targetY >= maze.length || 
-        targetX < 0 || 
+      const isOutOfBounds =
+        targetY < 0 ||
+        targetY >= maze.length ||
+        targetX < 0 ||
         targetX >= (maze[targetY]?.length ?? 0);
 
       if (isOutOfBounds) {
@@ -4494,19 +5280,19 @@ export default function BlocklyMaze() {
     };
 
     try {
-      const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
+      const AsyncFunction = Object.getPrototypeOf(async function () { }).constructor;
       const executeFn = new AsyncFunction(
-        'moveForward', 
+        'moveForward',
         'moveBackward',
-        'moveUp', 
-        'moveDown', 
-        'moveLeft', 
-        'moveRight', 
-        'turnLeft', 
-        'turnRight', 
-        'isPathAhead', 
-        'isPathLeft', 
-        'isPathRight', 
+        'moveUp',
+        'moveDown',
+        'moveLeft',
+        'moveRight',
+        'turnLeft',
+        'turnRight',
+        'isPathAhead',
+        'isPathLeft',
+        'isPathRight',
         'isHazardAhead',
         'isHazardLeft',
         'isHazardRight',
@@ -4517,29 +5303,29 @@ export default function BlocklyMaze() {
         'isPathClearRight',
         'isPathBlockedRight',
         'isAtDeadEnd',
-        'isAtGoal', 
+        'isAtGoal',
         'scanItem',
         'pickupItem',
         'trashItem',
         'queueOverride',
         'lockSelection',
-        'checkGameStatus', 
+        'checkGameStatus',
         'highlightBlock',
         instrumentedCode
       );
-      
+
       await executeFn(
-        moveForward, 
-        moveBackward, 
-        moveUp, 
-        moveDown, 
-        moveLeft, 
-        moveRight, 
-        turnLeft, 
-        turnRight, 
-        isPathAhead, 
-        isPathLeft, 
-        isPathRight, 
+        moveForward,
+        moveBackward,
+        moveUp,
+        moveDown,
+        moveLeft,
+        moveRight,
+        turnLeft,
+        turnRight,
+        isPathAhead,
+        isPathLeft,
+        isPathRight,
         isHazardAhead,
         isHazardLeft,
         isHazardRight,
@@ -4550,78 +5336,78 @@ export default function BlocklyMaze() {
         isPathClearRight,
         isPathBlockedRight,
         isAtDeadEnd,
-        isAtGoal, 
-        scanItem, 
-        pickupItem, 
-        trashItem, 
-        queueOverride, 
+        isAtGoal,
+        scanItem,
+        pickupItem,
+        trashItem,
+        queueOverride,
         lockSelection,
         checkGameStatus,
         highlightBlock
       );
-      
+
       // Standard Maze Win Check
       const reachedGoal = isGoal.current || (maze[execState.current.y] && maze[execState.current.y][execState.current.x] === 4);
-        
-        if (reachedGoal) {
-          if (hasEndBlock) {
-            recordSectionCompleted(currentSection);
-            markObjectiveComplete(3);
 
-            if (isLevel3) {
-              if (currentSection === 2 && !steppedOnBomb.current) {
-                markObjectiveComplete(2);
-              }
-              if (currentSection === 3 && !steppedOnBomb.current) {
-                markObjectiveComplete(2);
-              }
+      if (reachedGoal) {
+        if (hasEndBlock) {
+          recordSectionCompleted(currentSection);
+          markObjectiveComplete(3);
+
+          if (isLevel3) {
+            if (currentSection === 2 && !steppedOnBomb.current) {
+              markObjectiveComplete(2);
             }
-
-            setShowPopup(true);
-
-            const bonusKey = `${missionId}_sec${currentSection}_bonus`;
-            let claimedList: string[] = [];
-            try {
-              claimedList = JSON.parse(localStorage.getItem('netstart_claimed_directives') || '[]');
-            } catch (e) {}
-
-            if (!claimedList.includes(bonusKey)) {
-              addXp(XP_REWARDS.SECTION_COMPLETION_BONUS, `Section ${currentSection + 1} Cleared`);
-              claimedList.push(bonusKey);
-              try {
-                localStorage.setItem('netstart_claimed_directives', JSON.stringify(claimedList));
-              } catch (e) {}
+            if (currentSection === 3 && !steppedOnBomb.current) {
+              markObjectiveComplete(2);
             }
-
-            if (currentSection === currentMissionSections.length - 1) {
-              // Write completion to localStorage IMMEDIATELY so UI updates before API responds
-              try {
-                localStorage.removeItem('netstart_active_saved_level');
-                localStorage.removeItem('netstart_active_level');
-                if (missionId) {
-                  const compKey = 'netstart_completed_missions';
-                  const existing: string[] = JSON.parse(localStorage.getItem(compKey) || '[]');
-                  if (!existing.includes(missionId)) { existing.push(missionId); localStorage.setItem(compKey, JSON.stringify(existing)); }
-                  if (!localStorage.getItem('netstart_last_animated_planet_idx')) localStorage.setItem('netstart_last_animated_planet_idx', '0');
-                  localStorage.setItem('netstart_planet_unlock_pending', 'true');
-                }
-              } catch (e) {}
-              triggerMissionCompletion(code);
-            }
-          } else {
-            setIsWarningPulse(true);
-            if (endToastTimer.current) clearTimeout(endToastTimer.current);
-            setShowEndToast(true);
-            endToastTimer.current = setTimeout(() => setShowEndToast(false), 5500);
           }
+
+          setShowPopup(true);
+
+          const bonusKey = `${missionId}_sec${currentSection}_bonus`;
+          let claimedList: string[] = [];
+          try {
+            claimedList = JSON.parse(getNetstartItem('netstart_claimed_directives') || '[]');
+          } catch (e) { }
+
+          if (!claimedList.includes(bonusKey)) {
+            addXp(XP_REWARDS.SECTION_COMPLETION_BONUS, `Section ${currentSection + 1} Cleared`);
+            claimedList.push(bonusKey);
+            try {
+              setNetstartItem('netstart_claimed_directives', JSON.stringify(claimedList));
+            } catch (e) { }
+          }
+
+          if (currentSection === currentMissionSections.length - 1) {
+            // Write completion to localStorage IMMEDIATELY so UI updates before API responds
+            try {
+              removeNetstartItem('netstart_active_saved_level');
+              removeNetstartItem('netstart_active_level');
+              if (missionId) {
+                const compKey = 'netstart_completed_missions';
+                const existing: string[] = JSON.parse(getNetstartItem(compKey) || '[]');
+                if (!existing.includes(missionId)) { existing.push(missionId); setNetstartItem(compKey, JSON.stringify(existing)); }
+                if (!getNetstartItem('netstart_last_animated_planet_idx')) setNetstartItem('netstart_last_animated_planet_idx', '0');
+                setNetstartItem('netstart_planet_unlock_pending', 'true');
+              }
+            } catch (e) { }
+            triggerMissionCompletion(code);
+          }
+        } else {
+          setIsWarningPulse(true);
+          if (endToastTimer.current) clearTimeout(endToastTimer.current);
+          setShowEndToast(true);
+          endToastTimer.current = setTimeout(() => setShowEndToast(false), 5500);
         }
-      } catch (e: any) {
+      }
+    } catch (e: any) {
       if (currentExecutingBlockId && workspace.current && e?.message !== 'SIMULATION_CANCELLED') {
         markBlockError(workspace.current, currentExecutingBlockId);
       }
       if (
-        e.message !== "System Overload" && 
-        e.message !== "BOMB_EXPLODED" && 
+        e.message !== "System Overload" &&
+        e.message !== "BOMB_EXPLODED" &&
         e.message !== "SIMULATION_CANCELLED" &&
         e.message !== "CANNOT_PACK_JUNK" &&
         e.message !== "CANNOT_TRASH_RESOURCES" &&
@@ -4637,7 +5423,7 @@ export default function BlocklyMaze() {
   };
 
   const isSectionBonusClaimed = claimedDirectives.includes(`${missionId}_sec${currentSection}_bonus`);
-  const allLevelGoalsClaimed = currentMissionSections.every(sec => 
+  const allLevelGoalsClaimed = currentMissionSections.every(sec =>
     sec.objectives.every(obj => claimedDirectives.includes(`${missionId}_sec${sec.sectionIndex}_goal${obj.id}`)) &&
     claimedDirectives.includes(`${missionId}_sec${sec.sectionIndex}_bonus`)
   );
@@ -4650,7 +5436,7 @@ export default function BlocklyMaze() {
 
   return (
     <div className="w-full h-full flex flex-col bg-[#0d0418] text-white overflow-hidden select-none font-sans min-h-0">
-      
+
       {/* ========================================================================= */}
       {/* GLOBAL TOP NAVIGATION HEADER (Sections Moved to the Left) */}
       {/* ========================================================================= */}
@@ -4668,55 +5454,64 @@ export default function BlocklyMaze() {
 
           {/* Planet / Moon Icon with Level Title & Section */}
           <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
-            <img 
-              src={planetIcon} 
-              alt="Planet Icon" 
-              className="w-8 h-8 sm:w-9 sm:h-9 object-contain drop-shadow-[0_0_8px_rgba(255,145,45,0.4)] shrink-0" 
+            <img
+              src={planetIcon}
+              alt="Planet Icon"
+              className="w-10 h-10 sm:w-11 sm:h-11 object-contain drop-shadow-[0_0_10px_rgba(255,145,45,0.45)] shrink-0"
             />
             <div className="shrink-0">
               <h1 className="font-display font-black text-sm sm:text-base text-white tracking-wide uppercase leading-tight">
                 {displayTitle}
               </h1>
-              <p className="text-[10px] font-mono text-gray-400 leading-tight mt-0.5">Section {currentSection + 1} of {currentMissionSections.length}</p>
+              {currentMissionSections.length > 1 && !isDaily ? (
+                <p className="text-[10px] font-mono text-gray-400 leading-tight mt-0.5">Section {currentSection + 1} of {currentMissionSections.length}</p>
+              ) : isDaily ? (
+                <p className="text-[10px] font-mono text-gray-400 leading-tight mt-0.5">Daily Challenge</p>
+              ) : (
+                <p className="text-[10px] font-mono text-gray-400 leading-tight mt-0.5">Mars (HTML)</p>
+              )}
             </div>
           </div>
 
-          <div className="h-6 w-px bg-white/10 hidden lg:block" />
+          {currentMissionSections.length > 1 && !isDaily && (
+            <>
+              <div className="h-6 w-px bg-white/10 hidden lg:block" />
 
-          {/* 4-Section Stepper Tracker with Prerequisite Route Locking */}
-          <div className="hidden md:flex items-center gap-2 bg-[#10031e] border border-white/10 px-3 py-1.5 rounded-full shadow-inner">
-            {currentMissionSections.map((sec, idx) => {
-              const isPast = completedSections.includes(idx);
-              const isCur = idx === currentSection;
-              const isLocked = isSectionLocked(idx);
+              {/* Multi-Section Stepper Tracker with Prerequisite Route Locking */}
+              <div className="hidden md:flex items-center gap-2 bg-[#10031e] border border-white/10 px-3 py-1.5 rounded-full shadow-inner">
+                {currentMissionSections.map((sec, idx) => {
+                  const isPast = completedSections.includes(idx);
+                  const isCur = idx === currentSection;
+                  const isLocked = isSectionLocked(idx);
 
-              return (
-                <button
-                  key={sec.sectionIndex}
-                  disabled={isLocked}
-                  onClick={isLocked ? undefined : () => loadSection(idx)}
-                  className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-semibold transition-all ${
-                    isLocked
-                      ? 'opacity-40 cursor-not-allowed bg-white/5 text-gray-500 border border-white/5'
-                      : isCur 
-                      ? 'bg-[#ff912d]/15 text-[#ff912d] border border-[#ff912d]/35 shadow-[0_0_8px_rgba(255,145,45,0.3)] cursor-pointer' 
-                      : isPast 
-                      ? isLevelCompleted
-                        ? 'bg-purple-950/20 text-purple-300/60 border border-purple-500/20 hover:bg-purple-900/30 hover:text-purple-200/80 cursor-pointer'
-                        : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 cursor-pointer hover:bg-emerald-500/30' 
-                      : 'bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10 cursor-pointer'
-                  }`}
-                >
-                  {isLocked ? (
-                    <Lock size={12} className="shrink-0 text-gray-500" />
-                  ) : isPast ? (
-                    <Check size={12} className={`stroke-[2.5] ${isCur ? 'text-[#ff912d]' : isLevelCompleted ? 'text-purple-400/50' : 'text-emerald-400'}`} />
-                  ) : null}
-                  <span>{`Section ${idx + 1}`}</span>
-                </button>
-              );
-            })}
-          </div>
+                  return (
+                    <button
+                      key={sec.sectionIndex}
+                      disabled={isLocked}
+                      onClick={isLocked ? undefined : () => loadSection(idx)}
+                      className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-semibold transition-all ${isLocked
+                          ? 'opacity-40 cursor-not-allowed bg-white/5 text-gray-500 border border-white/5'
+                          : isCur
+                            ? 'bg-[#ff912d]/15 text-[#ff912d] border border-[#ff912d]/35 shadow-[0_0_8px_rgba(255,145,45,0.3)] cursor-pointer'
+                            : isPast
+                              ? isLevelCompleted
+                                ? 'bg-purple-950/20 text-purple-300/60 border border-purple-500/20 hover:bg-purple-900/30 hover:text-purple-200/80 cursor-pointer'
+                                : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 cursor-pointer hover:bg-emerald-500/30'
+                              : 'bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10 cursor-pointer'
+                        }`}
+                    >
+                      {isLocked ? (
+                        <Lock size={12} className="shrink-0 text-gray-500" />
+                      ) : isPast ? (
+                        <Check size={12} className={`stroke-[2.5] ${isCur ? 'text-[#ff912d]' : isLevelCompleted ? 'text-purple-400/50' : 'text-emerald-400'}`} />
+                      ) : null}
+                      <span>{`Section ${idx + 1}`}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          )}
         </div>
 
         {/* Right: Mission Goals Dropdown & AI Assist Button */}
@@ -4725,32 +5520,30 @@ export default function BlocklyMaze() {
           <div className="relative z-[1001]" ref={dropdownRef}>
             <button
               onClick={() => setIsObjectivesOpen(prev => !prev)}
-              className={`flex items-center gap-2.5 px-3.5 sm:px-4 py-2 rounded-xl border transition-all cursor-pointer text-xs sm:text-sm font-mono font-bold shadow-md ${
-                buttonPulse 
-                  ? 'bg-[#ff912d]/30 border-[#ff912d] text-[#ff912d] animate-pulse shadow-[0_0_20px_rgba(255,145,45,0.7)]' 
-                  : isObjectivesOpen 
-                    ? 'bg-[#1a082c] border-[#ff912d] text-white' 
+              className={`flex items-center gap-2.5 px-3.5 sm:px-4 py-2 rounded-xl border transition-all cursor-pointer text-xs sm:text-sm font-mono font-bold shadow-md ${buttonPulse
+                  ? 'bg-[#ff912d]/30 border-[#ff912d] text-[#ff912d] animate-pulse shadow-[0_0_20px_rgba(255,145,45,0.7)]'
+                  : isObjectivesOpen
+                    ? 'bg-[#1a082c] border-[#ff912d] text-white'
                     : 'bg-white/5 hover:bg-white/10 border-white/15 text-gray-200 hover:text-white'
-              }`}
+                }`}
               aria-expanded={isObjectivesOpen}
             >
               <Target size={16} className="text-[#ff912d] shrink-0" />
               <span className="font-display uppercase tracking-wider">Mission Goals</span>
-              
+
               {/* Progress Badge */}
-              <span className={`px-2 py-0.5 rounded-md text-xs font-mono font-semibold ${
-                isLevelCompleted
+              <span className={`px-2 py-0.5 rounded-md text-xs font-mono font-semibold ${isLevelCompleted
                   ? 'bg-purple-950/30 text-purple-300/70 border border-purple-500/25'
                   : completedCount === totalCount && totalCount > 0
-                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-                  : 'bg-[#ff912d]/20 text-[#ff912d] border border-[#ff912d]/30'
-              }`}>
+                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                    : 'bg-[#ff912d]/20 text-[#ff912d] border border-[#ff912d]/30'
+                }`}>
                 {completedCount}/{totalCount}
               </span>
 
-              <ChevronDown 
-                size={15} 
-                className={`transition-transform duration-200 text-gray-400 ${isObjectivesOpen ? 'rotate-180' : ''}`} 
+              <ChevronDown
+                size={15}
+                className={`transition-transform duration-200 text-gray-400 ${isObjectivesOpen ? 'rotate-180' : ''}`}
               />
             </button>
 
@@ -4767,33 +5560,31 @@ export default function BlocklyMaze() {
                     </div>
                     <span className="text-xs font-mono text-gray-400 font-semibold whitespace-nowrap shrink-0">{activeSection.subtag}</span>
                   </div>
-                  
+
                   <p className="text-xs sm:text-sm text-gray-200 leading-relaxed font-sans mb-3">
                     {activeSection.desc}
                   </p>
 
                   {/* Goal Rewards (+50 XP / +20 XP) Box with Replay / Claimed State */}
-                  <div className={`rounded-lg p-2.5 flex items-center justify-between relative group/bonus transition-all ${
-                    isLevelCompleted
+                  <div className={`rounded-lg p-2.5 flex items-center justify-between relative group/bonus transition-all ${isLevelCompleted
                       ? 'bg-purple-950/20 border border-purple-500/20 opacity-70 cursor-default'
                       : (completedSections.includes(currentSection) || (completedCount === totalCount && totalCount > 0))
-                      ? 'bg-emerald-950/30 border border-emerald-500/40 text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.15)]'
-                      : 'bg-[#0e0419] border border-white/10'
-                  }`}>
+                        ? 'bg-emerald-950/30 border border-emerald-500/40 text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.15)]'
+                        : 'bg-[#0e0419] border border-white/10'
+                    }`}>
                     <span className="text-xs font-mono text-gray-400 uppercase tracking-wider font-bold">Goal Rewards</span>
-                    <span className={`flex items-center gap-1 text-xs sm:text-sm font-mono font-bold ${
-                      isLevelCompleted
+                    <span className={`flex items-center gap-1 text-xs sm:text-sm font-mono font-bold ${isLevelCompleted
                         ? 'text-purple-400/40 line-through'
                         : (completedSections.includes(currentSection) || (completedCount === totalCount && totalCount > 0))
-                        ? 'text-emerald-400'
-                        : 'text-yellow-400'
-                    }`}>
+                          ? 'text-emerald-400'
+                          : 'text-yellow-400'
+                      }`}>
                       <Zap size={14} className={
-                        isLevelCompleted 
-                          ? "text-purple-400/40" 
+                        isLevelCompleted
+                          ? "text-purple-400/40"
                           : (completedSections.includes(currentSection) || (completedCount === totalCount && totalCount > 0))
-                          ? "fill-emerald-400 text-emerald-400"
-                          : "fill-yellow-400 text-yellow-400"
+                            ? "fill-emerald-400 text-emerald-400"
+                            : "fill-yellow-400 text-yellow-400"
                       } />
                       <span>+{XP_REWARDS.SECTION_COMPLETION_BONUS} XP</span>
                       {isLevelCompleted ? (
@@ -4808,8 +5599,8 @@ export default function BlocklyMaze() {
                       <div className="absolute -top-11 left-1/2 -translate-x-1/2 hidden group-hover/bonus:flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#120520]/95 border border-purple-500/40 text-xs text-purple-200 font-sans shadow-[0_0_20px_rgba(168,85,247,0.3)] backdrop-blur-md whitespace-nowrap z-[100] pointer-events-none">
                         <Sparkles size={13} className="text-amber-400 shrink-0" />
                         <span>
-                          {allLevelGoalsClaimed 
-                            ? "You already claimed the rewards for this level" 
+                          {allLevelGoalsClaimed
+                            ? "You already claimed the rewards for this level"
                             : "You already claimed the completion bonus for this section"}
                         </span>
                       </div>
@@ -4831,17 +5622,17 @@ export default function BlocklyMaze() {
                     // CASE 1: ALREADY COMPLETED LEVEL (REPLAY) -> MUTED PURPLE & CROSSED OUT
                     if (isLevelCompleted) {
                       return (
-                        <div 
+                        <div
                           key={obj.id}
-                          className="flex items-center justify-between p-2.5 rounded-xl border border-purple-500/20 bg-purple-950/20 opacity-70 transition-all duration-300"
+                          className="flex items-start justify-between gap-2 p-2.5 rounded-xl border border-purple-500/20 bg-purple-950/20 opacity-70 transition-all duration-300"
                         >
-                          <div className="flex items-center gap-2.5 min-w-0 pr-2">
-                            <CheckCircle2 size={16} className="shrink-0 text-purple-400/50" />
-                            <span className="text-xs sm:text-sm font-sans text-purple-300/60 line-through truncate">
+                          <div className="flex items-start gap-2.5 min-w-0 flex-1">
+                            <CheckCircle2 size={16} className="shrink-0 mt-0.5 text-purple-400/50" />
+                            <span className="text-xs sm:text-sm font-sans text-purple-300/60 line-through leading-snug break-words">
                               {obj.text}
                             </span>
                           </div>
-                          <div className="flex items-center gap-1 shrink-0">
+                          <div className="flex items-center gap-1 shrink-0 pt-0.5">
                             <span className="text-xs font-mono line-through text-purple-400/40 bg-transparent border-none px-1.5 py-0.5">
                               +{XP_REWARDS.CAMPAIGN_GOAL} XP
                             </span>
@@ -4856,19 +5647,18 @@ export default function BlocklyMaze() {
                     // CASE 2: IN-PROGRESS LEVEL -> ACCOMPLISHED OBJECTIVES TURN VIBRANT GREEN
                     if (obj.completed) {
                       return (
-                        <div 
+                        <div
                           key={obj.id}
-                          className={`flex items-center justify-between p-2.5 rounded-xl border bg-emerald-500/10 border-emerald-500/30 text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.15)] transition-all duration-300 ${
-                            isRecentlyCompleted ? 'animate-pulse ring-1 ring-emerald-400' : ''
-                          }`}
+                          className={`flex items-start justify-between gap-2 p-2.5 rounded-xl border bg-emerald-500/10 border-emerald-500/30 text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.15)] transition-all duration-300 ${isRecentlyCompleted ? 'animate-pulse ring-1 ring-emerald-400' : ''
+                            }`}
                         >
-                          <div className="flex items-center gap-2.5 min-w-0 pr-2">
-                            <CheckCircle2 size={16} className="shrink-0 text-emerald-400 drop-shadow-[0_0_6px_#10b981]" />
-                            <span className="text-xs sm:text-sm font-medium text-emerald-300 font-sans truncate">
+                          <div className="flex items-start gap-2.5 min-w-0 flex-1">
+                            <CheckCircle2 size={16} className="shrink-0 mt-0.5 text-emerald-400 drop-shadow-[0_0_6px_#10b981]" />
+                            <span className="text-xs sm:text-sm font-medium text-emerald-300 font-sans leading-snug break-words">
                               {obj.text}
                             </span>
                           </div>
-                          <span className="text-xs font-mono text-emerald-400 bg-emerald-900/40 border border-emerald-500/50 px-2 py-1 rounded shadow-[0_0_8px_rgba(52,211,153,0.4)] shrink-0">
+                          <span className="text-xs font-mono text-emerald-400 bg-emerald-900/40 border border-emerald-500/50 px-2 py-0.5 rounded shadow-[0_0_8px_rgba(52,211,153,0.4)] shrink-0 mt-0.5">
                             +{XP_REWARDS.CAMPAIGN_GOAL} XP
                           </span>
                         </div>
@@ -4877,17 +5667,17 @@ export default function BlocklyMaze() {
 
                     // CASE 3: IN-PROGRESS LEVEL -> INCOMPLETE OBJECTIVES (OPEN CIRCLES)
                     return (
-                      <div 
+                      <div
                         key={obj.id}
-                        className="flex items-center justify-between p-2.5 rounded-xl border bg-black/20 border-white/5 text-gray-300 transition-all duration-300"
+                        className="flex items-start justify-between gap-2 p-2.5 rounded-xl border bg-black/20 border-white/5 text-gray-300 transition-all duration-300"
                       >
-                        <div className="flex items-center gap-2.5 min-w-0 pr-2">
-                          <Circle size={16} className="text-gray-500 shrink-0" />
-                          <span className="text-xs sm:text-sm text-gray-300 font-sans truncate">
+                        <div className="flex items-start gap-2.5 min-w-0 flex-1">
+                          <Circle size={16} className="text-gray-500 shrink-0 mt-0.5" />
+                          <span className="text-xs sm:text-sm text-gray-300 font-sans leading-snug break-words">
                             {obj.text}
                           </span>
                         </div>
-                        <span className="text-xs font-mono text-gray-400 bg-gray-800/50 px-2 py-1 rounded shrink-0">
+                        <span className="text-xs font-mono text-gray-400 bg-gray-800/50 px-2 py-0.5 rounded shrink-0 mt-0.5">
                           +{XP_REWARDS.CAMPAIGN_GOAL} XP
                         </span>
                       </div>
@@ -4899,7 +5689,7 @@ export default function BlocklyMaze() {
           </div>
 
           {/* AI Assist Button */}
-          <button 
+          <button
             className="p-2.5 bg-purple-900/50 hover:bg-purple-600/60 border border-purple-500/50 rounded-xl transition-all group cursor-pointer shadow-lg active:scale-95 flex items-center justify-center"
             title="Gemini AI Assist - Offline"
             aria-label="Gemini AI Assist - Offline"
@@ -4912,194 +5702,92 @@ export default function BlocklyMaze() {
       {/* ========================================================================= */}
       {/* 2-PANE ADJUSTABLE RESIZABLE LAYOUT (100% Height Fill) */}
       {/* ========================================================================= */}
-      <div 
+      <div
         ref={containerRef}
         className="flex-1 flex flex-row min-h-0 w-full overflow-hidden relative"
       >
         {/* LEFT PANE: Blockly Workspace / Syntax View */}
-        <div 
+        <div
           className="h-full flex flex-col min-w-[300px] relative bg-[#130927]"
           style={{ width: `${splitPercent}%` }}
         >
           {/* Top Control Ribbon */}
-          <div className="h-12 px-4 bg-[#1a082c] border-b border-white/10 flex items-center justify-start shrink-0 z-10">
+          <div className="h-12 px-4 bg-[#1a082c] border-b border-white/10 flex items-center justify-between shrink-0 z-10">
             {/* View Toggle */}
             <div className="flex items-center bg-black/40 border border-white/10 p-1 rounded-xl">
               <button
                 onClick={() => setViewMode('blocks')}
-                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  viewMode === 'blocks'
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${viewMode === 'blocks'
                     ? 'bg-[#ff912d] text-black shadow-md'
                     : 'text-gray-400 hover:text-white'
-                }`}
+                  }`}
               >
-                Visual Layout
+                Workspace
               </button>
               <button
                 onClick={() => setViewMode('syntax')}
-                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  viewMode === 'syntax'
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${viewMode === 'syntax'
                     ? 'bg-[#ff912d] text-black shadow-md'
                     : 'text-gray-400 hover:text-white'
-                }`}
+                  }`}
               >
-                Context
+                Code Syntax
               </button>
             </div>
           </div>
 
           {/* Blockly SVG Canvas View */}
-          <div 
+          <div
             className={`flex-1 min-h-0 w-full relative ${viewMode === 'blocks' ? 'block' : 'hidden'}`}
           >
             <div ref={blocklyDiv} className="w-full h-full" />
 
-            {/* Drag & Select Overlay Layer */}
-            {isSelectMode && (
-              <div 
-                className="absolute inset-0 z-10 cursor-crosshair select-none"
-                onMouseDown={(e) => {
-                  if (e.button !== 0) return;
-                  const rect = e.currentTarget.getBoundingClientRect();
-                  const x = e.clientX - rect.left;
-                  const y = e.clientY - rect.top;
-                  setSelectionBox({
-                    startX: x,
-                    startY: y,
-                    currentX: x,
-                    currentY: y,
-                    isDragging: true,
-                  });
-                }}
-                onMouseMove={(e) => {
-                  if (!selectionBox?.isDragging) return;
-                  const rect = e.currentTarget.getBoundingClientRect();
-                  setSelectionBox(prev => prev ? {
-                    ...prev,
-                    currentX: e.clientX - rect.left,
-                    currentY: e.clientY - rect.top,
-                  } : null);
-                }}
-                onMouseUp={(e) => {
-                  if (!selectionBox?.isDragging || !workspace.current) {
-                    setSelectionBox(null);
-                    setIsSelectMode(false);
-                    return;
-                  }
-                  const rect = e.currentTarget.getBoundingClientRect();
-                  const x1 = Math.min(selectionBox.startX, selectionBox.currentX);
-                  const x2 = Math.max(selectionBox.startX, selectionBox.currentX);
-                  const y1 = Math.min(selectionBox.startY, selectionBox.currentY);
-                  const y2 = Math.max(selectionBox.startY, selectionBox.currentY);
-
-                  const dragDistance = Math.hypot(x2 - x1, y2 - y1);
-                  const selScreenLeft = rect.left + x1;
-                  const selScreenRight = rect.left + x2;
-                  const selScreenTop = rect.top + y1;
-                  const selScreenBottom = rect.top + y2;
-
-                  setSelectionBox(null);
-                  setIsSelectMode(false); // Automatically toggle off drag select mode so user can freely drag/move the selected blocks
-
-                  const ws = workspace.current;
-                  const allBlocks = ws.getAllBlocks(false) as Blockly.BlockSvg[];
-                  const matchingBlocksSet = new Set<Blockly.BlockSvg>();
-
-                  // Clear any previous multi-select highlights
-                  allBlocks.forEach(b => {
-                    const svg = b.getSvgRoot();
-                    if (svg) svg.classList.remove('blockly-block-multiselected');
-                  });
-
-                  if (dragDistance <= 5) {
-                    // Precise Single-Point Click Selection
-                    const elements = document.elementsFromPoint(e.clientX, e.clientY);
-                    for (const el of elements) {
-                      const blockG = el.closest('.blocklyDraggable') as SVGGElement | null;
-                      if (blockG) {
-                        const clickedBlock = allBlocks.find(b => b.getSvgRoot() === blockG && !b.isShadow() && !b.isInsertionMarker());
-                        if (clickedBlock) {
-                          matchingBlocksSet.add(clickedBlock);
-                          break;
-                        }
-                      }
-                    }
-                  } else {
-                    // Drag Selection Box: Evaluate top-level user blocks (excluding internal shadow value blocks)
-                    for (const b of allBlocks) {
-                      if (b.isShadow() || b.isInsertionMarker()) continue;
-                      const svg = b.getSvgRoot();
-                      if (!svg) continue;
-                      
-                      const directPath = svg.querySelector(':scope > path.blocklyPath') || svg.querySelector('path.blocklyPath');
-                      const pRect = directPath ? directPath.getBoundingClientRect() : svg.getBoundingClientRect();
-
-                      // Calculate rectangular intersection
-                      const interLeft = Math.max(selScreenLeft, pRect.left);
-                      const interRight = Math.min(selScreenRight, pRect.right);
-                      const interTop = Math.max(selScreenTop, pRect.top);
-                      const interBottom = Math.min(selScreenBottom, pRect.bottom);
-
-                      if (interRight > interLeft && interBottom > interTop) {
-                        const interWidth = interRight - interLeft;
-                        const interHeight = interBottom - interTop;
-                        // Require at least 12px height and 20px width of overlap to avoid grazing adjacent blocks
-                        if (interHeight >= 12 && interWidth >= 20) {
-                          matchingBlocksSet.add(b);
-                        }
-                      }
-                    }
-                  }
-
-                  const matchingBlocks = Array.from(matchingBlocksSet);
-
-                  if (matchingBlocks.length > 0) {
-                    // Highlight the explicitly selected user blocks
-                    matchingBlocks.forEach(b => {
-                      const svg = b.getSvgRoot();
-                      if (svg) svg.classList.add('blockly-block-multiselected');
-                    });
-
-                    // Clear native single-selection so it does not conflict with multi-selection glow
-                    const sel = Blockly.common?.getSelected ? (Blockly.common.getSelected() as any) : null;
-                    if (sel && typeof sel.unselect === 'function') {
-                      sel.unselect();
-                    }
-
-                    showToast(`Selected ${matchingBlocks.length} block${matchingBlocks.length > 1 ? 's' : ''}`);
-                  } else {
-                    // Left clicked or boxed empty space: clear everything!
-                    const sel = Blockly.common?.getSelected ? (Blockly.common.getSelected() as any) : null;
-                    if (sel && typeof sel.unselect === 'function') {
-                      sel.unselect();
-                    }
-                    setShowClipboardToast(false);
-                  }
-                }}
-              >
-                {/* Visual Drag Selection Box */}
-                {selectionBox?.isDragging && (
-                  <div 
-                    className="absolute border-2 border-yellow-400 bg-yellow-400/20 backdrop-blur-[1px] rounded-md pointer-events-none shadow-[0_0_15px_rgba(250,204,21,0.4)] transition-none"
-                    style={{
-                      left: Math.min(selectionBox.startX, selectionBox.currentX),
-                      top: Math.min(selectionBox.startY, selectionBox.currentY),
-                      width: Math.abs(selectionBox.currentX - selectionBox.startX),
-                      height: Math.abs(selectionBox.currentY - selectionBox.startY),
-                    }}
-                  />
-                )}
+            {/* Mars Level 1 Floating Theme Dropdown in Sandbox Canvas */}
+            {isMarsLevel1 && (
+              <div className="absolute top-4 right-4 z-20 flex items-center gap-2.5 bg-[#17072c]/90 border border-[#ff912d]/60 hover:border-[#ff912d] rounded-2xl px-4 py-2 shadow-[0_4px_25px_rgba(0,0,0,0.6),0_0_20px_rgba(255,145,45,0.25)] backdrop-blur-md transition-all">
+                <span className="text-xs sm:text-sm font-display font-black text-[#ff912d] uppercase tracking-wider shrink-0">
+                  Theme:
+                </span>
+                <select
+                  value={activeMarsCampaignId}
+                  onChange={(e) => handleMarsCampaignChange(e.target.value)}
+                  className="bg-[#0e031a] hover:bg-[#1a082c] border border-[#ff912d]/50 hover:border-[#ff912d] text-white font-bold rounded-xl px-3.5 py-1.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#ff912d] cursor-pointer shadow-inner transition-all"
+                  title="Select Billboard Theme"
+                  aria-label="Select Billboard Theme"
+                >
+                  {MARS_CAMPAIGN_PRESETS.map((c) => (
+                    <option key={c.id} value={c.id} className="bg-[#180718] text-white py-2 font-medium">
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
               </div>
             )}
 
             {/* Custom Floating Toast Notification */}
             {showClipboardToast && (
-              <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-30 px-4 py-2 bg-[#1e0a2d]/95 border border-[#ff912d]/60 text-white rounded-xl shadow-2xl backdrop-blur-md flex items-center gap-2.5 animate-in fade-in slide-in-from-bottom-2">
+              <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-30 px-4 py-2.5 bg-[#1e0a2d]/95 border border-[#ff912d]/60 text-white rounded-xl shadow-2xl backdrop-blur-md flex items-center gap-3 animate-in fade-in slide-in-from-bottom-2">
                 <Sparkles size={16} className="text-[#ff912d] shrink-0" />
                 <span className="text-xs sm:text-sm font-semibold">{clipboardToastMessage}</span>
+                {toastUndoAction && (
+                  <button
+                    onClick={() => {
+                      toastUndoAction();
+                      setShowClipboardToast(false);
+                      setToastUndoAction(null);
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 hover:text-amber-100 border border-amber-500/50 rounded-lg text-xs font-bold transition-all active:scale-95 cursor-pointer shadow-sm ml-1"
+                  >
+                    <Undo2 size={13} />
+                    <span>Undo</span>
+                  </button>
+                )}
                 <button
-                  onClick={() => setShowClipboardToast(false)}
-                  className="p-1 text-gray-400 hover:text-white rounded transition-colors ml-1 shrink-0"
+                  onClick={() => {
+                    setShowClipboardToast(false);
+                    setToastUndoAction(null);
+                  }}
+                  className="p-1 text-gray-400 hover:text-white rounded transition-colors ml-1 shrink-0 cursor-pointer"
                 >
                   <X size={14} />
                 </button>
@@ -5108,585 +5796,612 @@ export default function BlocklyMaze() {
 
             {/* Workspace Utility Controls (Bottom Right Floating Palette) */}
             <div className="absolute bottom-6 right-6 z-20 flex flex-col items-center gap-2.5">
-              {/* Drag & Select Mode Toggle */}
-              <button
-                onClick={() => {
-                  setIsSelectMode(prev => !prev);
-                  setSelectionBox(null);
-                  if (!isSelectMode) {
-                    showToast("Drag & Select Active: Drag mouse across blocks to select a stack.");
-                  }
-                }}
-                className={`w-10 h-10 rounded-xl border flex items-center justify-center transition-all shadow-xl backdrop-blur-md cursor-pointer active:scale-95 ${
-                  isSelectMode
-                    ? 'bg-yellow-500/30 text-yellow-300 border-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.4)]'
-                    : 'bg-[#1e0a2d]/90 hover:bg-white/10 border-white/15 text-gray-300 hover:text-white'
-                }`}
-                title={isSelectMode ? "Drag & Select Mode Active (Click to Exit)" : "Drag & Select Blocks"}
-                aria-label="Drag and Select Blocks"
-              >
-                <BoxSelect size={18} />
-              </button>
-
               {/* Reset View & Center */}
               <button
                 onClick={() => {
                   if (workspace.current) {
-                    const ws = workspace.current;
-                    ws.setScale(1.0);
-                    ws.scrollCenter();
+                    Blockly.svgResize(workspace.current);
+                    workspace.current.scrollCenter();
                   }
                 }}
                 className="w-10 h-10 rounded-xl bg-[#1e0a2d]/90 hover:bg-white/10 border border-white/15 text-gray-300 hover:text-white flex items-center justify-center transition-all shadow-xl backdrop-blur-md cursor-pointer active:scale-95"
-                title="Reset View & Center"
-                aria-label="Reset View & Center"
+                title="Center Workspace View"
+                aria-label="Center Workspace View"
               >
                 <Crosshair size={18} />
               </button>
 
-              {/* Conjoined Zoom In & Zoom Out */}
-              <div className="flex flex-col rounded-xl bg-[#1e0a2d]/90 border border-white/15 shadow-xl backdrop-blur-md overflow-hidden">
-                <button
-                  onClick={() => {
-                    if (workspace.current) {
-                      workspace.current.zoomCenter(1);
-                    }
-                  }}
-                  className="w-10 h-10 flex items-center justify-center text-gray-300 hover:text-white hover:bg-white/10 transition-all cursor-pointer active:scale-95"
-                  title="Zoom In"
-                  aria-label="Zoom In"
-                >
-                  <Plus size={18} />
-                </button>
-                <div className="w-full h-px bg-white/15" />
-                <button
-                  onClick={() => {
-                    if (workspace.current) {
-                      workspace.current.zoomCenter(-1);
-                    }
-                  }}
-                  className="w-10 h-10 flex items-center justify-center text-gray-300 hover:text-white hover:bg-white/10 transition-all cursor-pointer active:scale-95"
-                  title="Zoom Out"
-                  aria-label="Zoom Out"
-                >
-                  <Minus size={18} />
-                </button>
-              </div>
-
-              {/* Clear / Reset Workspace or Delete Selected */}
+              {/* Zoom In */}
               <button
                 onClick={() => {
                   if (workspace.current) {
-                    const multiselected = workspace.current.getAllBlocks(false).filter(b => {
-                      const svg = b.getSvgRoot();
-                      return svg && svg.classList.contains('blockly-block-multiselected');
-                    });
-                    const selected = Blockly.common?.getSelected ? (Blockly.common.getSelected() as any) : null;
-                    
-                    if (multiselected.length > 0) {
-                      let count = 0;
-                      multiselected.forEach(b => {
-                        if (b.type !== 'event_start' && b.isDeletable()) {
-                          b.dispose(true);
-                          count++;
-                        }
+                    workspace.current.zoomCenter(1);
+                  }
+                }}
+                className="w-10 h-10 rounded-xl bg-[#1e0a2d]/90 hover:bg-white/10 border border-white/15 text-gray-300 hover:text-white flex items-center justify-center transition-all shadow-xl backdrop-blur-md cursor-pointer active:scale-95"
+                title="Zoom In"
+                aria-label="Zoom In"
+              >
+                <Plus size={18} />
+              </button>
+
+              {/* Zoom Out */}
+              <button
+                onClick={() => {
+                  if (workspace.current) {
+                    workspace.current.zoomCenter(-1);
+                  }
+                }}
+                className="w-10 h-10 rounded-xl bg-[#1e0a2d]/90 hover:bg-white/10 border border-white/15 text-gray-300 hover:text-white flex items-center justify-center transition-all shadow-xl backdrop-blur-md cursor-pointer active:scale-95"
+                title="Zoom Out"
+                aria-label="Zoom Out"
+              >
+                <Minus size={18} />
+              </button>
+
+              {/* Delete Selected Block / Workspace */}
+              <button
+                onClick={() => {
+                  if (workspace.current) {
+                    const selected = Blockly.getSelected();
+                    if (selected && typeof (selected as any).dispose === 'function' && (selected as any).type !== 'event_start' && (selected as any).isDeletable?.()) {
+                      (selected as any).dispose(true);
+                      showToast("Deleted selected block", {
+                        onUndo: () => {
+                          if (workspace.current) workspace.current.undo(false);
+                        },
+                        duration: 7000,
                       });
-                      showToast(`Deleted ${count} selected block${count > 1 ? 's' : ''}`);
-                    } else if (selected && typeof selected.dispose === 'function' && selected.type !== 'event_start' && selected.isDeletable()) {
-                      selected.dispose(true);
-                      showToast("Deleted selected block");
                     } else {
                       resetWorkspaceToDefaultStart(workspace.current);
                       setJsCode('');
                       setPlainEnglishCode('');
-                      showToast("Reset workspace blocks");
+                      showToast("Reset workspace blocks", {
+                        onUndo: () => {
+                          if (workspace.current) workspace.current.undo(false);
+                        },
+                        duration: 7000,
+                      });
                     }
                   }
                 }}
                 className="w-10 h-10 rounded-xl bg-[#1e0a2d]/90 hover:bg-red-500/20 border border-white/15 hover:border-red-500/40 text-gray-400 hover:text-red-400 flex items-center justify-center transition-all shadow-xl backdrop-blur-md cursor-pointer active:scale-95"
-                title="Delete Selected Blocks or Reset Workspace"
-                aria-label="Delete Selected Blocks or Reset Workspace"
+                title="Delete Selected Block or Reset Workspace"
+                aria-label="Delete Selected Block or Reset Workspace"
               >
                 <Trash2 size={18} />
               </button>
             </div>
           </div>
 
-          {/* Context / Plain English Explanation View */}
+          {/* Global Interactive Syntax & Code Inspector View */}
           {viewMode === 'syntax' && (
             <div className="flex-1 min-h-0 w-full overflow-hidden bg-[#0e031a]">
-              <PlainEnglishCodeViewer code={plainEnglishCode || jsCode} />
+              {isMarsLevel1 || isMarsLevel2 || isMarsLevel3 ? (
+                <MarsSyntaxTab code={plainEnglishCode || jsCode} />
+              ) : (
+                <PlainEnglishCodeViewer code={plainEnglishCode || jsCode} />
+              )}
             </div>
           )}
         </div>
 
-        {/* DRAGGABLE RESIZER HANDLE */}
-        <div 
-          onMouseDown={handleMouseDown}
-          className="w-2.5 hover:w-3 bg-[#1e0a2d] hover:bg-[#ff912d] cursor-col-resize flex items-center justify-center transition-all z-20 shrink-0 border-x border-white/5 group shadow-xl"
-          title="Drag to resize split panes"
-        >
-          <div className="w-1 h-8 rounded-full bg-white/20 group-hover:bg-black transition-colors" />
-        </div>
+        {/* Static Pane Divider */}
+        <div className="w-1 bg-[#1e0a2d] border-x border-white/5 shrink-0" />
 
         {/* RIGHT PANE: Grid Canvas Simulation View */}
-        <div 
+        <div
           className="h-full flex flex-col min-w-[300px] relative bg-[#0e0419] overflow-hidden"
           style={{ width: `${100 - splitPercent}%` }}
         >
           {/* Header Banner */}
-          <div className="h-12 px-4 bg-[#160628] border-b border-white/10 flex items-center justify-start shrink-0">
+          <div className="min-h-[52px] h-13 sm:h-14 px-4 bg-[#160628] border-b border-white/10 flex items-center justify-between shrink-0">
             <div className="flex items-center gap-2.5">
-              <Radio size={16} className="text-[#ff912d] animate-pulse" />
-              <span className="font-mono text-sm sm:text-base font-bold text-white uppercase tracking-wider">
+              <Radio size={18} className="text-[#ff912d] animate-pulse" />
+              <span className="font-mono text-sm sm:text-base font-black text-white uppercase tracking-wider">
                 SIMULATION
               </span>
             </div>
+            {isMarsLevel1 && (
+              <div className="relative" ref={instructionsDropdownRef}>
+                <button
+                  onClick={() => setIsInstructionsOpen(prev => !prev)}
+                  className="flex items-center gap-2 px-3 sm:px-3.5 py-1.5 rounded-lg bg-purple-600/30 hover:bg-purple-600/50 border border-purple-400/60 text-purple-100 hover:text-white font-mono text-xs font-bold transition-all shadow-[0_0_12px_rgba(168,85,247,0.35)] active:scale-95 cursor-pointer ring-1 ring-purple-400/30"
+                  title="How to Build Billboard"
+                >
+                  <HelpCircle size={15} className="text-purple-300" />
+                  <span>Instructions</span>
+                  {isInstructionsOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                </button>
+
+                {isInstructionsOpen && (
+                  <div className="absolute top-11 right-0 z-[60] w-[min(22rem,calc(100vw-3rem))] bg-[#160a2c]/98 border-2 border-purple-500/50 rounded-xl p-3.5 shadow-2xl backdrop-blur-md animate-in fade-in slide-in-from-top-2 duration-200 text-left">
+                    <div className="flex items-center justify-between border-b border-white/10 pb-2 mb-2.5">
+                      <span className="font-mono text-xs font-black uppercase tracking-wider text-amber-400">
+                        HOW TO BUILD YOUR BILLBOARD
+                      </span>
+                      <button
+                        onClick={() => setIsInstructionsOpen(false)}
+                        className="text-gray-400 hover:text-white p-1 rounded hover:bg-white/10 transition-colors cursor-pointer"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+
+                    <div className="space-y-2.5 text-xs text-gray-200 leading-relaxed font-sans">
+                      <p className="text-purple-300 font-semibold text-xs">
+                        Creative tips for your billboard:
+                      </p>
+
+                      <ul className="space-y-2">
+                        <li className="flex items-start gap-2">
+                          <span className="text-orange-400 font-mono font-bold shrink-0">•</span>
+                          <span><strong>Hierarchy:</strong> Connect a <strong className="text-orange-400">Large Title</strong>, <strong className="text-amber-300">Subtitle</strong>, and <strong className="text-sky-300">Paragraph Text</strong> block.</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-cyan-400 font-mono font-bold shrink-0">•</span>
+                          <span><strong>Theme:</strong> Pick words that match your active <strong className="text-cyan-300">Theme</strong>.</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-yellow-400 font-mono font-bold shrink-0">•</span>
+                          <span><strong>Styling:</strong> Try wrapping words with <strong className="text-pink-400">Bold</strong>, <strong className="text-yellow-300">Highlight</strong>, or <strong className="text-cyan-300">Underline</strong>.</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-emerald-400 font-mono font-bold shrink-0">•</span>
+                          <span><strong>Broadcast:</strong> Click <strong className="text-emerald-400">Run Simulation</strong> to light up your sign!</span>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
-          {/* Viewport: 2D Conveyor Belt Sorting (Level 2) or 2D Matrix Grid (Level 1 & 3) */}
-          {isLevel2 ? (
+          {/* Viewport: Mars Billboard (Mars 1), Mars Image Billboards (Mars 2), 2D Conveyor Belt Sorting (Level 2), or 2D Matrix Grid (Level 1 & 3) */}
+          {isMarsLevel1 ? (
+            <div className="flex-1 min-h-0 min-w-0 w-full h-full flex flex-col items-center justify-end overflow-hidden relative">
+              <MartianBillboard
+                parsedElements={marsParsedElements}
+                validation={marsValidation}
+                sectionIndex={currentSection}
+                campaignId={activeMarsCampaignId}
+                isRunning={isRunning}
+                onSimulationComplete={(success, failureReason) => {
+                  if (success) {
+                    const htmlCode = workspace.current ? javascriptGenerator.workspaceToCode(workspace.current) : '';
+                    handleMars1Success(htmlCode);
+                  } else {
+                    setErrorToastMessage(failureReason || "Make sure your words match the chosen theme and try again!");
+                    setShowErrorToast(true);
+                    if (errorToastTimer.current) clearTimeout(errorToastTimer.current);
+                    errorToastTimer.current = setTimeout(() => setShowErrorToast(false), 6500);
+                  }
+                }}
+              />
+            </div>
+          ) : isMarsLevel2 ? (
+            <div className="flex-1 min-h-0 min-w-0 w-full h-full flex flex-col items-center justify-end overflow-hidden relative">
+              <MarsImageBillboards
+                validation={mars2Validation}
+                isRunning={isRunning}
+                onSimulationComplete={handleMars2SimulationComplete}
+              />
+            </div>
+          ) : isMarsLevel3 ? (
+            <div className="flex-1 min-h-0 min-w-0 w-full h-full flex flex-col items-center justify-center overflow-hidden relative">
+              <MarsLevel3
+                validation={mars3Validation}
+                isRunning={isRunning}
+                onSimulationComplete={handleMars3SimulationComplete}
+              />
+            </div>
+          ) : isLevel2 ? (
             <div className="flex-1 min-h-0 min-w-0 w-full h-full flex flex-col items-center justify-between p-4 sm:p-6 overflow-hidden relative bg-[#0c0419] select-none">
               {/* Clean Dark Space Backdrop */}
               <div className="absolute inset-0 pointer-events-none overflow-hidden">
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(88,28,135,0.15),_transparent_70%)]" />
               </div>
 
-              {/* Top Minimal HUD: Level Target Manifest */}
+              {/* Top Minimal HUD: Level Target Manifest & Live Sorted Counter */}
               <div className="w-full flex items-start justify-start gap-3 z-20 shrink-0">
-                {/* Section Level Manifest (Item icons alongside amounts, Total Items below) */}
-                <div className="flex flex-col gap-1 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 font-mono shadow-md backdrop-blur-sm">
-                  <div className="flex items-center gap-2.5 text-xs">
+                {/* Section Level Manifest (Live sorted items count starting from 0 up to total) */}
+                <div className="flex flex-col gap-1 px-3.5 py-2 rounded-xl bg-white/10 border border-white/20 font-mono shadow-xl backdrop-blur-md">
+                  <div className="flex items-center gap-2.5 sm:gap-3 text-xs sm:text-sm">
                     {levelManifest.cargo > 0 && (
-                      <div className="flex items-center gap-1.5 text-blue-300" title="Total Cargo in Level">
-                        <Package size={13} className="text-blue-400" />
-                        <span className="font-bold text-white">{levelManifest.cargo}</span>
+                      <div className="flex items-center gap-1.5 text-blue-300" title="Cargo Sorted">
+                        <Package size={15} className="text-blue-400 shrink-0" />
+                        <span className="font-extrabold text-white text-sm sm:text-base">{conveyorInventory.cargo}</span>
                       </div>
                     )}
                     {levelManifest.trash > 0 && (
                       <>
-                        {levelManifest.cargo > 0 && <span className="text-white/20">|</span>}
-                        <div className="flex items-center gap-1.5 text-rose-300" title="Total Space Junk in Level">
-                          <Trash2 size={13} className="text-rose-400" />
-                          <span className="font-bold text-white">{levelManifest.trash}</span>
+                        {levelManifest.cargo > 0 && <span className="text-white/30 font-bold">|</span>}
+                        <div className="flex items-center gap-1.5 text-rose-300" title="Trash Discarded">
+                          <Trash2 size={15} className="text-rose-400 shrink-0" />
+                          <span className="font-extrabold text-white text-sm sm:text-base">{conveyorInventory.trash}</span>
                         </div>
                       </>
                     )}
                     {levelManifest.fuel > 0 && (
                       <>
-                        <span className="text-white/20">|</span>
-                        <div className="flex items-center gap-1.5 text-amber-300" title="Total Fuel in Level">
-                          <Zap size={13} className="text-amber-400 fill-amber-400" />
-                          <span className="font-bold text-white">{levelManifest.fuel}</span>
+                        <span className="text-white/30 font-bold">|</span>
+                        <div className="flex items-center gap-1.5 text-amber-300" title="Fuel Routed">
+                          <Zap size={15} className="text-amber-400 fill-amber-400 shrink-0" />
+                          <span className="font-extrabold text-white text-sm sm:text-base">{conveyorInventory.fuel}</span>
                         </div>
                       </>
                     )}
                     {levelManifest.food > 0 && (
                       <>
-                        <span className="text-white/20">|</span>
-                        <div className="flex items-center gap-1.5 text-emerald-300" title="Total Food in Level">
-                          <Apple size={13} className="text-emerald-400" />
-                          <span className="font-bold text-white">{levelManifest.food}</span>
+                        <span className="text-white/30 font-bold">|</span>
+                        <div className="flex items-center gap-1.5 text-emerald-300" title="Food Routed">
+                          <Apple size={15} className="text-emerald-400 shrink-0" />
+                          <span className="font-extrabold text-white text-sm sm:text-base">{conveyorInventory.food}</span>
+                        </div>
+                      </>
+                    )}
+                    {conveyorInventory.errors > 0 && (
+                      <>
+                        <span className="text-white/30 font-bold">|</span>
+                        <div className="flex items-center gap-1 text-rose-400 font-bold" title="Errors">
+                          <AlertTriangle size={15} className="shrink-0" />
+                          <span className="font-extrabold text-rose-300 text-sm sm:text-base">{conveyorInventory.errors}</span>
                         </div>
                       </>
                     )}
                   </div>
-                  <div className="text-[10px] text-gray-400 font-medium">
-                    Total Items: <span className="font-bold text-purple-300">{levelManifest.total}</span>
+                  <div className="text-xs text-gray-300 font-medium flex items-center gap-1.5">
+                    Total Items: <span className="font-bold text-purple-300 text-xs sm:text-sm">{levelManifest.total}</span>
                   </div>
                 </div>
               </div>
 
               {/* Simulation Workspace Wrapper */}
-              <div className="w-full max-w-[620px] flex-1 flex flex-col items-center justify-center my-auto relative z-10">
-                {/* Top Drop Zones (Cargo [Blue] in all sections, Fuel [Yellow] added in Section 3 & 4) */}
-                <div className="z-20 mb-6 sm:mb-8 flex items-center justify-center gap-4 sm:gap-6 self-center mx-auto">
-                  {/* Cargo Zone (Blue) */}
-                  <div className={`w-40 sm:w-48 h-16 sm:h-18 rounded-2xl border-2 border-dashed transition-all duration-300 flex items-center justify-center gap-2.5 relative overflow-hidden select-none ${
-                    activeAction === 'pack_cargo' || activeAction === 'pack'
-                      ? 'bg-blue-500/25 border-blue-400 shadow-[0_0_25px_rgba(59,130,246,0.6)] scale-105'
-                      : 'bg-blue-950/20 border-blue-500/40 hover:border-blue-500/60'
-                  }`}>
-                    <div className="absolute top-1.5 left-1.5 w-2 h-2 border-t-2 border-l-2 border-blue-400/60" />
-                    <div className="absolute top-1.5 right-1.5 w-2 h-2 border-t-2 border-r-2 border-blue-400/60" />
-                    <div className="absolute bottom-1.5 left-1.5 w-2 h-2 border-b-2 border-l-2 border-blue-400/60" />
-                    <div className="absolute bottom-1.5 right-1.5 w-2 h-2 border-b-2 border-r-2 border-blue-400/60" />
+              {(() => {
+                const isSortingGauntlet = dailySection?.name === 'Master Sorting Gauntlet';
+                const showFuelBay = isSortingGauntlet || currentSection >= 2;
+                const showTrashZone = isSortingGauntlet || currentSection >= 1;
+                const showFoodZone = isSortingGauntlet;
 
-                    <Package className={`w-7 h-7 sm:w-8 sm:h-8 shrink-0 ${activeAction === 'pack_cargo' || activeAction === 'pack' ? 'text-blue-300 animate-bounce' : 'text-blue-400'}`} />
-                    <span className="font-mono font-black text-lg sm:text-xl tracking-wider uppercase text-blue-400 drop-shadow-sm">
-                      CARGO BAY
-                    </span>
-                  </div>
-
-                  {/* Rocket Ship Zone (Yellow) - Added in Section 3 & Section 4 */}
-                  {currentSection >= 2 && (
-                    <div className={`w-40 sm:w-48 h-16 sm:h-18 rounded-2xl border-2 border-dashed transition-all duration-300 flex items-center justify-center gap-2.5 relative overflow-hidden select-none ${
-                      activeAction === 'route_fuel'
-                        ? 'bg-amber-500/25 border-amber-400 shadow-[0_0_25px_rgba(245,158,11,0.6)] scale-105'
-                        : 'bg-amber-950/20 border-amber-500/40 hover:border-amber-500/60'
-                    }`}>
-                      <div className="absolute top-1.5 left-1.5 w-2 h-2 border-t-2 border-l-2 border-amber-400/60" />
-                      <div className="absolute top-1.5 right-1.5 w-2 h-2 border-t-2 border-r-2 border-amber-400/60" />
-                      <div className="absolute bottom-1.5 left-1.5 w-2 h-2 border-b-2 border-l-2 border-amber-400/60" />
-                      <div className="absolute bottom-1.5 right-1.5 w-2 h-2 border-b-2 border-r-2 border-amber-400/60" />
-
-                      <Zap className={`w-7 h-7 sm:w-8 sm:h-8 shrink-0 ${activeAction === 'route_fuel' ? 'text-amber-300 animate-bounce' : 'text-amber-400 fill-amber-400'}`} />
-                      <span className="font-mono font-black text-lg sm:text-xl tracking-wider uppercase text-amber-400 drop-shadow-sm">
-                        FUEL BAY
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Central Conveyor Track */}
-                <div className="relative w-full h-32 sm:h-36 bg-[#130722] border-y-2 border-purple-500/40 rounded-xl flex items-center justify-center px-6 overflow-visible shadow-[inset_0_0_20px_rgba(0,0,0,0.8),0_4px_25px_rgba(168,85,247,0.15)]">
-                  {/* Embedded Keyframes for Idle Float, Rolling Treads & Laser Scan */}
-                  <style>{`
-                    @keyframes idleConveyorBob {
-                      0%, 100% { transform: translateY(0px); }
-                      50% { transform: translateY(-6px); }
-                    }
-                    @keyframes rollingTreads {
-                      0% { background-position: 0px 0; }
-                      100% { background-position: -22px 0; }
-                    }
-                    @keyframes scanLaserSweep {
-                      0% { top: 0%; opacity: 0.9; }
-                      50% { top: 85%; opacity: 1; }
-                      100% { top: 0%; opacity: 0.9; }
-                    }
-                    @keyframes scanPulseGlow {
-                      0%, 100% { box-shadow: 0 0 10px rgba(6, 182, 212, 0.4), inset 0 0 8px rgba(6, 182, 212, 0.2); }
-                      50% { box-shadow: 0 0 25px rgba(6, 182, 212, 0.9), inset 0 0 16px rgba(6, 182, 212, 0.5); }
-                    }
-                    .animate-idle-float {
-                      animation: idleConveyorBob 2.5s ease-in-out infinite;
-                    }
-                    .animate-treads-running {
-                      animation: rollingTreads 0.7s linear infinite;
-                    }
-                    .animate-treads-advancing {
-                      animation: rollingTreads 0.25s linear infinite;
-                    }
-                    .animate-scan-glow {
-                      animation: scanPulseGlow 0.8s ease-in-out infinite;
-                    }
-                  `}</style>
-
-                  {/* Conveyor Tread Roller Lines */}
-                  <div 
-                    className={`absolute inset-x-0 inset-y-1.5 opacity-25 pointer-events-none overflow-hidden rounded-lg ${
-                      isBeltAdvancing ? 'animate-treads-advancing' : isRunning ? 'animate-treads-running' : ''
-                    }`}
-                    style={{
-                      backgroundImage: `repeating-linear-gradient(90deg, #c084fc 0, #c084fc 6px, transparent 6px, transparent 22px)`,
-                      backgroundSize: '22px 100%'
-                    }}
-                  />
-
-                  {/* Top & Bottom Industrial Hazard Rail Accents */}
-                  <div 
-                    className="absolute top-0 inset-x-0 h-1 opacity-70 pointer-events-none rounded-t-xl"
-                    style={{
-                      backgroundImage: `repeating-linear-gradient(45deg, #eab308, #eab308 6px, #18181b 6px, #18181b 12px)`
-                    }}
-                  />
-                  <div 
-                    className="absolute bottom-0 inset-x-0 h-1 opacity-70 pointer-events-none rounded-b-xl"
-                    style={{
-                      backgroundImage: `repeating-linear-gradient(45deg, #eab308, #eab308 6px, #18181b 6px, #18181b 12px)`
-                    }}
-                  />
-
-                  {/* End Roller Caps */}
-                  <div className="absolute left-1 inset-y-2 w-2 rounded-sm bg-purple-900/60 border border-purple-500/30 pointer-events-none" />
-                  <div className="absolute right-1 inset-y-2 w-2 rounded-sm bg-purple-900/60 border border-purple-500/30 pointer-events-none" />
-
-                  {/* Items Lined Up On Belt */}
-                  {conveyorQueue.length > 0 ? (
-                    <div className="relative z-20 flex items-center justify-center gap-3 sm:gap-4 w-full py-2 overflow-visible">
-                      {/* Current / Front Item in Scanner Center */}
-                      <div className="relative flex flex-col items-center shrink-0 w-15 sm:w-16">
-                        {/* Scanner Reticle Frame Over Front Item */}
-                        <div className={`absolute -inset-2.5 rounded-xl border pointer-events-none transition-all duration-300 overflow-hidden ${
-                          isScanning || activeAction === 'scan' ? 'border-cyan-400 shadow-[0_0_20px_#06b6d4] bg-cyan-500/20 animate-scan-glow' :
-                          activeAction === 'pack_cargo' || activeAction === 'pack' ? 'border-blue-400 shadow-[0_0_15px_#3b82f6]' :
-                          activeAction === 'discard_trash' || activeAction === 'discard' ? 'border-rose-400 shadow-[0_0_15px_#f43f5e]' :
-                          activeAction === 'route_fuel' ? 'border-amber-400 shadow-[0_0_15px_#f59e0b]' :
-                          activeAction === 'route_food' ? 'border-emerald-400 shadow-[0_0_15px_#10b981]' :
-                          'border-cyan-400/40 bg-cyan-950/20'
+                return (
+                  <div className="w-full max-w-[620px] flex-1 flex flex-col items-center justify-center my-auto relative z-10">
+                    {/* Top Drop Zones (Cargo [Blue] in all sections, Fuel [Yellow] in Section 3 & Challenge Level) */}
+                    <div className="z-20 mb-6 sm:mb-8 flex items-center justify-center gap-4 sm:gap-6 self-center mx-auto">
+                      {/* Cargo Zone (Blue) */}
+                      <div className={`w-40 sm:w-48 h-16 sm:h-18 rounded-2xl border-2 border-dashed transition-all duration-300 flex items-center justify-center gap-2.5 relative overflow-hidden select-none ${activeAction === 'pack_cargo' || activeAction === 'pack'
+                          ? 'bg-blue-500/25 border-blue-400 shadow-[0_0_25px_rgba(59,130,246,0.6)] scale-105'
+                          : 'bg-blue-950/20 border-blue-500/40 hover:border-blue-500/60'
                         }`}>
-                          {/* Corner Brackets */}
-                          <div className="absolute -top-0.5 -left-0.5 w-2.5 h-2.5 border-t-2 border-l-2 border-cyan-400" />
-                          <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 border-t-2 border-r-2 border-cyan-400" />
-                          <div className="absolute -bottom-0.5 -left-0.5 w-2.5 h-2.5 border-b-2 border-l-2 border-cyan-400" />
-                          <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 border-b-2 border-r-2 border-cyan-400" />
+                        <div className="absolute top-1.5 left-1.5 w-2 h-2 border-t-2 border-l-2 border-blue-400/60" />
+                        <div className="absolute top-1.5 right-1.5 w-2 h-2 border-t-2 border-r-2 border-blue-400/60" />
+                        <div className="absolute bottom-1.5 left-1.5 w-2 h-2 border-b-2 border-l-2 border-blue-400/60" />
+                        <div className="absolute bottom-1.5 right-1.5 w-2 h-2 border-b-2 border-r-2 border-blue-400/60" />
 
-                          {/* Laser Scanline Beam when Scanning */}
-                          {(isScanning || activeAction === 'scan') && (
-                            <div 
-                              className="absolute inset-x-0 h-1 bg-gradient-to-r from-transparent via-cyan-300 to-transparent shadow-[0_0_12px_#22d3ee] pointer-events-none z-20"
-                              style={{
-                                animation: 'scanLaserSweep 0.5s ease-in-out infinite'
-                              }}
-                            />
-                          )}
-                        </div>
-
-                        {/* Floating Scanning Badge */}
-                        {(isScanning || activeAction === 'scan') && (
-                          <div className="absolute -top-7 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded bg-cyan-950/90 border border-cyan-400 text-cyan-300 text-[8px] font-mono font-bold uppercase tracking-wider shadow-[0_0_10px_rgba(6,182,212,0.8)] whitespace-nowrap animate-pulse z-30 flex items-center gap-1">
-                            <Scan size={10} className="text-cyan-400 animate-spin" />
-                            <span>SCANNING...</span>
-                          </div>
-                        )}
-
-                        {/* Floating Identified Confirmation Badge (Sections 2..4 after scanning) */}
-                        {isCurrentItemScanned && currentSection > 0 && !animatingItem && (
-                          <div className="absolute -top-7 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded bg-emerald-950/90 border border-emerald-400 text-emerald-300 text-[8px] font-mono font-bold uppercase tracking-wider shadow-[0_0_10px_rgba(16,185,129,0.8)] whitespace-nowrap animate-pulse z-30 flex items-center gap-1">
-                            <Sparkles size={10} className="text-emerald-400" />
-                            <span>IDENTIFIED</span>
-                          </div>
-                        )}
-
-                        {/* Phase 2: Independent Floating Animating Item Overlay (Overlaps Scanner Node) */}
-                        {animatingItem && (
-                          <div 
-                            key={`animating-${animatingItem.item.id}`}
-                            className={`absolute inset-0 z-40 flex flex-col items-center justify-center pointer-events-none transition-all duration-600 ease-out ${
-                              animatingItem.isFlying
-                                ? animatingItem.destination === 'cargo'
-                                  ? currentSection >= 2
-                                    ? '-translate-y-28 scale-75 opacity-0'
-                                    : 'translate-x-24 -translate-y-28 scale-75 opacity-0'
-                                  : animatingItem.destination === 'fuel'
-                                  ? 'translate-x-44 -translate-y-28 scale-75 opacity-0'
-                                  : animatingItem.destination === 'trash'
-                                  ? currentSection === 3
-                                    ? 'translate-y-28 scale-75 opacity-0'
-                                    : 'translate-x-24 translate-y-28 scale-75 opacity-0'
-                                  : 'translate-x-44 translate-y-28 scale-75 opacity-0' // cafeteria / food
-                                : 'translate-x-0 translate-y-0 scale-100 opacity-100'
-                            }`}
-                          >
-                            <div 
-                              className={`w-15 h-15 sm:w-16 sm:h-16 rounded-xl flex flex-col items-center justify-center shadow-2xl border-2 relative overflow-hidden ${
-                                animatingItem.item.type === 'cargo'
-                                  ? 'bg-gradient-to-br from-blue-500 to-blue-700 border-blue-200 text-white shadow-[0_0_20px_rgba(37,99,235,0.9)]'
-                                  : animatingItem.item.type === 'trash'
-                                  ? 'bg-gradient-to-br from-rose-700 via-rose-800 to-zinc-900 border-rose-300 text-white shadow-[0_0_18px_rgba(244,63,94,0.9)]'
-                                  : animatingItem.item.type === 'fuel'
-                                  ? 'bg-gradient-to-br from-amber-500 to-amber-700 border-amber-200 text-white shadow-[0_0_20px_rgba(217,119,6,0.9)]'
-                                  : 'bg-gradient-to-br from-emerald-500 to-emerald-700 border-emerald-200 text-white shadow-[0_0_20px_rgba(16,185,129,0.9)]'
-                              }`}
-                            >
-                              {animatingItem.item.type === 'cargo' && <Package className="w-7 h-7 sm:w-8 sm:h-8 text-blue-100 drop-shadow-md" />}
-                              {animatingItem.item.type === 'trash' && <Trash2 className="w-7 h-7 sm:w-8 sm:h-8 text-rose-100 drop-shadow-md" />}
-                              {animatingItem.item.type === 'fuel' && <Rocket className="w-7 h-7 sm:w-8 sm:h-8 text-amber-100 drop-shadow-md" />}
-                              {animatingItem.item.type === 'food' && <Apple className="w-7 h-7 sm:w-8 sm:h-8 text-emerald-100 drop-shadow-md" />}
-                              <span className="text-[9px] font-mono font-bold text-white uppercase mt-0.5 tracking-wider">
-                                {animatingItem.item.type}
-                              </span>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Phase 1: Front Item Card with Unique Key Stability */}
-                        <div 
-                          key={`conveyor-front-${conveyorQueue[0]?.id}`}
-                          className={`w-15 h-15 sm:w-16 sm:h-16 rounded-xl flex flex-col items-center justify-center transition-all duration-300 z-10 relative overflow-hidden ${
-                            animatingItem ? 'opacity-0 scale-75 pointer-events-none' : 'opacity-100 scale-100'
-                          } ${
-                            !isRunning && !animatingItem ? 'animate-idle-float' : ''
-                          } ${
-                            !isCurrentItemScanned
-                              ? 'bg-[#1a0b2e] border-2 border-purple-400/50 text-purple-300 shadow-[0_0_14px_rgba(168,85,247,0.35)]'
-                              : conveyorQueue[0].type === 'cargo' 
-                              ? 'bg-gradient-to-br from-blue-500 to-blue-700 border-2 border-blue-300 text-white shadow-[0_0_18px_rgba(37,99,235,0.85)]' 
-                              : conveyorQueue[0].type === 'trash' 
-                              ? 'bg-gradient-to-br from-rose-700 via-rose-800 to-zinc-900 border-2 border-rose-300 text-white shadow-[0_0_16px_rgba(244,63,94,0.85)]' 
-                              : conveyorQueue[0].type === 'fuel' 
-                              ? 'bg-gradient-to-br from-amber-500 to-amber-700 border-2 border-amber-300 text-white shadow-[0_0_18px_rgba(217,119,6,0.85)]' 
-                              : 'bg-gradient-to-br from-emerald-500 to-emerald-700 border-2 border-emerald-300 text-white shadow-[0_0_18px_rgba(16,185,129,0.85)]'
-                          }`}
-                        >
-                          {!isCurrentItemScanned ? (
-                            <>
-                              <HelpCircle className="w-7 h-7 sm:w-8 sm:h-8 text-purple-300 animate-pulse" />
-                              <span className="text-[9px] font-mono font-bold text-purple-300 uppercase mt-0.5 tracking-wider">UNKNOWN</span>
-                            </>
-                          ) : conveyorQueue[0].type === 'cargo' ? (
-                            <>
-                              <Package className="w-7 h-7 sm:w-8 sm:h-8 text-blue-100 drop-shadow" />
-                              <span className="text-[9px] font-mono font-bold text-white uppercase mt-0.5 tracking-wider">CARGO</span>
-                            </>
-                          ) : conveyorQueue[0].type === 'trash' ? (
-                            <>
-                              <Trash2 className="w-7 h-7 sm:w-8 sm:h-8 text-rose-100 drop-shadow" />
-                              <span className="text-[9px] font-mono font-bold text-rose-100 uppercase mt-0.5 tracking-wider">TRASH</span>
-                            </>
-                          ) : conveyorQueue[0].type === 'fuel' ? (
-                            <>
-                              <Zap className="w-7 h-7 sm:w-8 sm:h-8 text-amber-100 fill-amber-300 drop-shadow" />
-                              <span className="text-[9px] font-mono font-bold text-white uppercase mt-0.5 tracking-wider">FUEL</span>
-                            </>
-                          ) : (
-                            <>
-                              <Apple className="w-7 h-7 sm:w-8 sm:h-8 text-emerald-100 drop-shadow" />
-                              <span className="text-[9px] font-mono font-bold text-white uppercase mt-0.5 tracking-wider">FOOD</span>
-                            </>
-                          )}
-                        </div>
+                        <Package className={`w-7 h-7 sm:w-8 sm:h-8 shrink-0 ${activeAction === 'pack_cargo' || activeAction === 'pack' ? 'text-blue-300 animate-bounce' : 'text-blue-400'}`} />
+                        <span className="font-mono font-black text-lg sm:text-xl tracking-wider uppercase text-blue-400 drop-shadow-sm">
+                          CARGO BAY
+                        </span>
                       </div>
 
-                      {/* Queue Items Sliding Track */}
-                      <div 
-                        className="flex items-center gap-2.5 sm:gap-3 overflow-visible py-2"
-                        style={{
-                          transform: isBeltAdvancing ? 'translateX(-64px)' : 'translateX(0px)',
-                          transition: isBeltAdvancing ? 'transform 600ms cubic-bezier(0.25, 1, 0.5, 1)' : 'none'
-                        }}
-                      >
-                        {conveyorQueue.slice(1, 5).map((item, idx) => (
-                          <div 
-                            key={`conveyor-queue-${item.id}`} 
-                            style={{ animationDelay: `${(idx + 1) * 200}ms` }}
-                            className={`w-12 h-12 sm:w-13 sm:h-13 rounded-lg flex flex-col items-center justify-center shrink-0 border-2 ${
-                              !isRunning ? 'animate-idle-float' : ''
-                            } bg-[#18092c]/90 border-purple-500/40 text-purple-300/80 shadow-[0_0_8px_rgba(168,85,247,0.2)]`}
-                          >
-                            <HelpCircle size={17} className="text-purple-300/70" />
-                            <span className="text-[8px] font-mono font-bold text-purple-300/80 uppercase mt-0.5 tracking-wider">
-                              UNKNOWN
-                            </span>
-                          </div>
-                        ))}
+                      {/* Rocket Ship / Fuel Zone (Yellow) - Moon Sec 3 & Challenge Level */}
+                      {showFuelBay && (
+                        <div className={`w-40 sm:w-48 h-16 sm:h-18 rounded-2xl border-2 border-dashed transition-all duration-300 flex items-center justify-center gap-2.5 relative overflow-hidden select-none ${activeAction === 'route_fuel'
+                            ? 'bg-amber-500/25 border-amber-400 shadow-[0_0_25px_rgba(245,158,11,0.6)] scale-105'
+                            : 'bg-amber-950/20 border-amber-500/40 hover:border-amber-500/60'
+                          }`}>
+                          <div className="absolute top-1.5 left-1.5 w-2 h-2 border-t-2 border-l-2 border-amber-400/60" />
+                          <div className="absolute top-1.5 right-1.5 w-2 h-2 border-t-2 border-r-2 border-amber-400/60" />
+                          <div className="absolute bottom-1.5 left-1.5 w-2 h-2 border-b-2 border-l-2 border-amber-400/60" />
+                          <div className="absolute bottom-1.5 right-1.5 w-2 h-2 border-b-2 border-r-2 border-amber-400/60" />
 
-                        {/* Incoming item fading and sliding into the rightmost visible queue slot */}
-                        {isBeltAdvancing && conveyorQueue[5] && (
-                          <div 
-                            key={`conveyor-incoming-${conveyorQueue[5].id}`}
-                            className="w-12 h-12 sm:w-13 sm:h-13 rounded-lg flex flex-col items-center justify-center shrink-0 border-2 bg-[#18092c]/90 border-purple-500/40 text-purple-300/80 shadow-[0_0_8px_rgba(168,85,247,0.2)] transition-all duration-500 opacity-100 scale-100"
-                          >
-                            <HelpCircle size={17} className="text-purple-300/70" />
-                            <span className="text-[8px] font-mono font-bold text-purple-300/80 uppercase mt-0.5 tracking-wider">
-                              UNKNOWN
-                            </span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Fixed Stationary +N Overflow Badge (Only active when items exceed visible 5 slots) */}
-                      {conveyorQueue.length > 5 && (
-                        <div className="flex items-center shrink-0 ml-1">
-                          <div className="px-2.5 py-1.5 rounded-lg border font-mono text-xs font-bold shrink-0 shadow-md flex items-center gap-1.5 bg-purple-950/90 border-purple-400/50 text-purple-200 shadow-[0_0_10px_rgba(168,85,247,0.3)]">
-                            <ChevronLeft size={12} className={`text-purple-400 shrink-0 ${isBeltAdvancing ? 'animate-ping' : 'animate-pulse'}`} />
-                            <span>+{conveyorQueue.length - 5}</span>
-                          </div>
+                          <Zap className={`w-7 h-7 sm:w-8 sm:h-8 shrink-0 ${activeAction === 'route_fuel' ? 'text-amber-300 animate-bounce' : 'text-amber-400 fill-amber-400'}`} />
+                          <span className="font-mono font-black text-lg sm:text-xl tracking-wider uppercase text-amber-400 drop-shadow-sm">
+                            FUEL BAY
+                          </span>
                         </div>
                       )}
                     </div>
-                  ) : (
-                    /* Prominent "ALL CLEAR" Sign */
-                    <div className="z-20 flex flex-col items-center justify-center px-6 py-3 rounded-2xl bg-emerald-950/90 border-2 border-emerald-400 shadow-[0_0_30px_rgba(52,211,153,0.6)] animate-pulse mx-auto">
-                      <div className="flex items-center gap-2 text-emerald-300 font-mono text-sm sm:text-base font-black tracking-wider uppercase">
-                        <CheckCircle2 size={22} className="text-emerald-400" />
-                        <span>ALL CLEAR!</span>
-                      </div>
-                      <span className="text-[10px] sm:text-xs font-mono text-emerald-200/90 mt-0.5 font-semibold">
-                        All items unloaded & sorted
-                      </span>
+
+                    {/* Central Conveyor Track */}
+                    <div className="relative w-full h-32 sm:h-36 bg-[#130722] border-y-2 border-purple-500/40 rounded-xl flex items-center justify-center px-6 overflow-visible shadow-[inset_0_0_20px_rgba(0,0,0,0.8),0_4px_25px_rgba(168,85,247,0.15)]">
+                      {/* Embedded Keyframes for Idle Float, Rolling Treads & Laser Scan */}
+                      <style>{`
+                        @keyframes idleConveyorBob {
+                          0%, 100% { transform: translateY(0px); }
+                          50% { transform: translateY(-6px); }
+                        }
+                        @keyframes rollingTreads {
+                          0% { background-position: 0px 0; }
+                          100% { background-position: -22px 0; }
+                        }
+                        @keyframes scanLaserSweep {
+                          0% { top: 0%; opacity: 0.9; }
+                          50% { top: 85%; opacity: 1; }
+                          100% { top: 0%; opacity: 0.9; }
+                        }
+                        @keyframes scanPulseGlow {
+                          0%, 100% { box-shadow: 0 0 10px rgba(6, 182, 212, 0.4), inset 0 0 8px rgba(6, 182, 212, 0.2); }
+                          50% { box-shadow: 0 0 25px rgba(6, 182, 212, 0.9), inset 0 0 16px rgba(6, 182, 212, 0.5); }
+                        }
+                        .animate-idle-float {
+                          animation: idleConveyorBob 2.5s ease-in-out infinite;
+                        }
+                        .animate-treads-running {
+                          animation: rollingTreads 0.7s linear infinite;
+                        }
+                        .animate-treads-advancing {
+                          animation: rollingTreads 0.25s linear infinite;
+                        }
+                        .animate-scan-glow {
+                          animation: scanPulseGlow 0.8s ease-in-out infinite;
+                        }
+                      `}</style>
+
+                      {/* Conveyor Tread Roller Lines */}
+                      <div
+                        className={`absolute inset-x-0 inset-y-1.5 opacity-25 pointer-events-none overflow-hidden rounded-lg ${isBeltAdvancing ? 'animate-treads-advancing' : isRunning ? 'animate-treads-running' : ''
+                          }`}
+                        style={{
+                          backgroundImage: `repeating-linear-gradient(90deg, #c084fc 0, #c084fc 6px, transparent 6px, transparent 22px)`,
+                          backgroundSize: '22px 100%'
+                        }}
+                      />
+
+                      {/* Top & Bottom Industrial Hazard Rail Accents */}
+                      <div
+                        className="absolute top-0 inset-x-0 h-1 opacity-70 pointer-events-none rounded-t-xl"
+                        style={{
+                          backgroundImage: `repeating-linear-gradient(45deg, #eab308, #eab308 6px, #18181b 6px, #18181b 12px)`
+                        }}
+                      />
+                      <div
+                        className="absolute bottom-0 inset-x-0 h-1 opacity-70 pointer-events-none rounded-b-xl"
+                        style={{
+                          backgroundImage: `repeating-linear-gradient(45deg, #eab308, #eab308 6px, #18181b 6px, #18181b 12px)`
+                        }}
+                      />
+
+                      {/* End Roller Caps */}
+                      <div className="absolute left-1 inset-y-2 w-2 rounded-sm bg-purple-900/60 border border-purple-500/30 pointer-events-none" />
+                      <div className="absolute right-1 inset-y-2 w-2 rounded-sm bg-purple-900/60 border border-purple-500/30 pointer-events-none" />
+
+                      {/* Items Lined Up On Belt */}
+                      {conveyorQueue.length > 0 ? (
+                        <div className="relative z-20 flex items-center justify-center gap-3 sm:gap-4 w-full py-2 overflow-visible">
+                          {/* Current / Front Item in Scanner Center */}
+                          <div className="relative flex flex-col items-center shrink-0 w-15 sm:w-16">
+                            {/* Scanner Reticle Frame Over Front Item */}
+                            <div className={`absolute -inset-2.5 rounded-xl border pointer-events-none transition-all duration-300 overflow-hidden ${isScanning || activeAction === 'scan' ? 'border-cyan-400 shadow-[0_0_20px_#06b6d4] bg-cyan-500/20 animate-scan-glow' :
+                                activeAction === 'pack_cargo' || activeAction === 'pack' ? 'border-blue-400 shadow-[0_0_15px_#3b82f6]' :
+                                  activeAction === 'discard_trash' || activeAction === 'discard' ? 'border-rose-400 shadow-[0_0_15px_#f43f5e]' :
+                                    activeAction === 'route_fuel' ? 'border-amber-400 shadow-[0_0_15px_#f59e0b]' :
+                                      activeAction === 'route_food' ? 'border-emerald-400 shadow-[0_0_15px_#10b981]' :
+                                        'border-cyan-400/40 bg-cyan-950/20'
+                              }`}>
+                              {/* Corner Brackets */}
+                              <div className="absolute -top-0.5 -left-0.5 w-2.5 h-2.5 border-t-2 border-l-2 border-cyan-400" />
+                              <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 border-t-2 border-r-2 border-cyan-400" />
+                              <div className="absolute -bottom-0.5 -left-0.5 w-2.5 h-2.5 border-b-2 border-l-2 border-cyan-400" />
+                              <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 border-b-2 border-r-2 border-cyan-400" />
+
+                              {/* Laser Scanline Beam when Scanning */}
+                              {(isScanning || activeAction === 'scan') && (
+                                <div
+                                  className="absolute inset-x-0 h-1 bg-gradient-to-r from-transparent via-cyan-300 to-transparent shadow-[0_0_12px_#22d3ee] pointer-events-none z-20"
+                                  style={{
+                                    animation: 'scanLaserSweep 0.5s ease-in-out infinite'
+                                  }}
+                                />
+                              )}
+                            </div>
+
+                            {/* Floating Scanning Badge */}
+                            {(isScanning || activeAction === 'scan') && (
+                              <div className="absolute -top-7 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded bg-cyan-950/90 border border-cyan-400 text-cyan-300 text-[8px] font-mono font-bold uppercase tracking-wider shadow-[0_0_10px_rgba(6,182,212,0.8)] whitespace-nowrap animate-pulse z-30 flex items-center gap-1">
+                                <Scan size={10} className="text-cyan-400 animate-spin" />
+                                <span>SCANNING...</span>
+                              </div>
+                            )}
+
+                            {/* Floating Identified Confirmation Badge (Sections 2..3 or challenge after scanning) */}
+                            {isCurrentItemScanned && (currentSection > 0 || isSortingGauntlet) && !animatingItem && (
+                              <div className="absolute -top-7 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded bg-emerald-950/90 border border-emerald-400 text-emerald-300 text-[8px] font-mono font-bold uppercase tracking-wider shadow-[0_0_10px_rgba(16,185,129,0.8)] whitespace-nowrap animate-pulse z-30 flex items-center gap-1">
+                                <Sparkles size={10} className="text-emerald-400" />
+                                <span>IDENTIFIED</span>
+                              </div>
+                            )}
+
+                            {/* Phase 2: Independent Floating Animating Item Overlay (Overlaps Scanner Node) */}
+                            {animatingItem && (
+                              <div
+                                key={`animating-${animatingItem.item.id}`}
+                                className={`absolute inset-0 z-40 flex flex-col items-center justify-center pointer-events-none transition-all duration-600 ease-out ${animatingItem.isFlying
+                                    ? animatingItem.destination === 'cargo'
+                                      ? showFuelBay
+                                        ? '-translate-y-28 scale-75 opacity-0'
+                                        : 'translate-x-24 -translate-y-28 scale-75 opacity-0'
+                                      : animatingItem.destination === 'fuel'
+                                        ? 'translate-x-44 -translate-y-28 scale-75 opacity-0'
+                                        : animatingItem.destination === 'trash'
+                                          ? showFoodZone
+                                            ? 'translate-y-28 scale-75 opacity-0'
+                                            : 'translate-x-24 translate-y-28 scale-75 opacity-0'
+                                          : 'translate-x-44 translate-y-28 scale-75 opacity-0' // cafeteria / food
+                                    : 'translate-x-0 translate-y-0 scale-100 opacity-100'
+                                  }`}
+                              >
+                                <div
+                                  className={`w-15 h-15 sm:w-16 sm:h-16 rounded-xl flex flex-col items-center justify-center shadow-2xl border-2 relative overflow-hidden ${animatingItem.item.type === 'cargo'
+                                      ? 'bg-gradient-to-br from-blue-500 to-blue-700 border-blue-200 text-white shadow-[0_0_20px_rgba(37,99,235,0.9)]'
+                                      : animatingItem.item.type === 'trash'
+                                        ? 'bg-gradient-to-br from-rose-700 via-rose-800 to-zinc-900 border-rose-300 text-white shadow-[0_0_18px_rgba(244,63,94,0.9)]'
+                                        : animatingItem.item.type === 'fuel'
+                                          ? 'bg-gradient-to-br from-amber-500 to-amber-700 border-amber-200 text-white shadow-[0_0_20px_rgba(217,119,6,0.9)]'
+                                          : 'bg-gradient-to-br from-emerald-500 to-emerald-700 border-emerald-200 text-white shadow-[0_0_20px_rgba(16,185,129,0.9)]'
+                                    }`}
+                                >
+                                  {animatingItem.item.type === 'cargo' && <Package className="w-7 h-7 sm:w-8 sm:h-8 text-blue-100 drop-shadow-md" />}
+                                  {animatingItem.item.type === 'trash' && <Trash2 className="w-7 h-7 sm:w-8 sm:h-8 text-rose-100 drop-shadow-md" />}
+                                  {animatingItem.item.type === 'fuel' && <Rocket className="w-7 h-7 sm:w-8 sm:h-8 text-amber-100 drop-shadow-md" />}
+                                  {animatingItem.item.type === 'food' && <Apple className="w-7 h-7 sm:w-8 sm:h-8 text-emerald-100 drop-shadow-md" />}
+                                  <span className="text-[9px] font-mono font-bold text-white uppercase mt-0.5 tracking-wider">
+                                    {animatingItem.item.type}
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Phase 1: Front Item Card with Unique Key Stability */}
+                            <div
+                              key={`conveyor-front-${conveyorQueue[0]?.id}`}
+                              className={`w-15 h-15 sm:w-16 sm:h-16 rounded-xl flex flex-col items-center justify-center transition-all duration-300 z-10 relative overflow-hidden ${animatingItem ? 'opacity-0 scale-75 pointer-events-none' : 'opacity-100 scale-100'
+                                } ${!isRunning && !animatingItem ? 'animate-idle-float' : ''
+                                } ${!isCurrentItemScanned
+                                  ? 'bg-[#1a0b2e] border-2 border-purple-400/50 text-purple-300 shadow-[0_0_14px_rgba(168,85,247,0.35)]'
+                                  : conveyorQueue[0].type === 'cargo'
+                                    ? 'bg-gradient-to-br from-blue-500 to-blue-700 border-2 border-blue-300 text-white shadow-[0_0_18px_rgba(37,99,235,0.85)]'
+                                    : conveyorQueue[0].type === 'trash'
+                                      ? 'bg-gradient-to-br from-rose-700 via-rose-800 to-zinc-900 border-2 border-rose-300 text-white shadow-[0_0_16px_rgba(244,63,94,0.85)]'
+                                      : conveyorQueue[0].type === 'fuel'
+                                        ? 'bg-gradient-to-br from-amber-500 to-amber-700 border-2 border-amber-300 text-white shadow-[0_0_18px_rgba(217,119,6,0.85)]'
+                                        : 'bg-gradient-to-br from-emerald-500 to-emerald-700 border-2 border-emerald-300 text-white shadow-[0_0_18px_rgba(16,185,129,0.85)]'
+                                }`}
+                            >
+                              {!isCurrentItemScanned ? (
+                                <>
+                                  <HelpCircle className="w-7 h-7 sm:w-8 sm:h-8 text-purple-300 animate-pulse" />
+                                  <span className="text-[9px] font-mono font-bold text-purple-300 uppercase mt-0.5 tracking-wider">UNKNOWN</span>
+                                </>
+                              ) : conveyorQueue[0].type === 'cargo' ? (
+                                <>
+                                  <Package className="w-7 h-7 sm:w-8 sm:h-8 text-blue-100 drop-shadow" />
+                                  <span className="text-[9px] font-mono font-bold text-white uppercase mt-0.5 tracking-wider">CARGO</span>
+                                </>
+                              ) : conveyorQueue[0].type === 'trash' ? (
+                                <>
+                                  <Trash2 className="w-7 h-7 sm:w-8 sm:h-8 text-rose-100 drop-shadow" />
+                                  <span className="text-[9px] font-mono font-bold text-rose-100 uppercase mt-0.5 tracking-wider">TRASH</span>
+                                </>
+                              ) : conveyorQueue[0].type === 'fuel' ? (
+                                <>
+                                  <Zap className="w-7 h-7 sm:w-8 sm:h-8 text-amber-100 fill-amber-300 drop-shadow" />
+                                  <span className="text-[9px] font-mono font-bold text-white uppercase mt-0.5 tracking-wider">FUEL</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Apple className="w-7 h-7 sm:w-8 sm:h-8 text-emerald-100 drop-shadow" />
+                                  <span className="text-[9px] font-mono font-bold text-white uppercase mt-0.5 tracking-wider">FOOD</span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Queue Items Sliding Track */}
+                          <div
+                            className="flex items-center gap-2.5 sm:gap-3 overflow-visible py-2"
+                            style={{
+                              transform: isBeltAdvancing ? 'translateX(-64px)' : 'translateX(0px)',
+                              transition: isBeltAdvancing ? 'transform 600ms cubic-bezier(0.25, 1, 0.5, 1)' : 'none'
+                            }}
+                          >
+                            {conveyorQueue.slice(1, 5).map((item, idx) => (
+                              <div
+                                key={`conveyor-queue-${item.id}`}
+                                style={{ animationDelay: `${(idx + 1) * 200}ms` }}
+                                className={`w-12 h-12 sm:w-13 sm:h-13 rounded-lg flex flex-col items-center justify-center shrink-0 border-2 ${!isRunning ? 'animate-idle-float' : ''
+                                  } bg-[#18092c]/90 border-purple-500/40 text-purple-300/80 shadow-[0_0_8px_rgba(168,85,247,0.2)]`}
+                              >
+                                <HelpCircle size={17} className="text-purple-300/70" />
+                                <span className="text-[8px] font-mono font-bold text-purple-300/80 uppercase mt-0.5 tracking-wider">
+                                  UNKNOWN
+                                </span>
+                              </div>
+                            ))}
+
+                            {/* Incoming item fading and sliding into the rightmost visible queue slot */}
+                            {isBeltAdvancing && conveyorQueue[5] && (
+                              <div
+                                key={`conveyor-incoming-${conveyorQueue[5].id}`}
+                                className="w-12 h-12 sm:w-13 sm:h-13 rounded-lg flex flex-col items-center justify-center shrink-0 border-2 bg-[#18092c]/90 border-purple-500/40 text-purple-300/80 shadow-[0_0_8px_rgba(168,85,247,0.2)] transition-all duration-500 opacity-100 scale-100"
+                              >
+                                <HelpCircle size={17} className="text-purple-300/70" />
+                                <span className="text-[8px] font-mono font-bold text-purple-300/80 uppercase mt-0.5 tracking-wider">
+                                  UNKNOWN
+                                </span>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Fixed Stationary +N Overflow Badge (Only active when items exceed visible 5 slots) */}
+                          {conveyorQueue.length > 5 && (
+                            <div className="flex items-center shrink-0 ml-1">
+                              <div className="px-2.5 py-1.5 rounded-lg border font-mono text-xs font-bold shrink-0 shadow-md flex items-center gap-1.5 bg-purple-950/90 border-purple-400/50 text-purple-200 shadow-[0_0_10px_rgba(168,85,247,0.3)]">
+                                <ChevronLeft size={12} className={`text-purple-400 shrink-0 ${isBeltAdvancing ? 'animate-ping' : 'animate-pulse'}`} />
+                                <span>+{conveyorQueue.length - 5}</span>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        /* Prominent "ALL CLEAR" Sign */
+                        <div className="z-20 flex flex-col items-center justify-center px-6 py-3 rounded-2xl bg-emerald-950/90 border-2 border-emerald-400 shadow-[0_0_30px_rgba(52,211,153,0.6)] animate-pulse mx-auto">
+                          <div className="flex items-center gap-2 text-emerald-300 font-mono text-sm sm:text-base font-black tracking-wider uppercase">
+                            <CheckCircle2 size={22} className="text-emerald-400" />
+                            <span>ALL CLEAR!</span>
+                          </div>
+                          <span className="text-[10px] sm:text-xs font-mono text-emerald-200/90 mt-0.5 font-semibold">
+                            All items unloaded & sorted
+                          </span>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
 
-                {/* Bottom Drop Zones (Trash [Red] added in Section 2, Food [Green] added in Section 4) */}
-                {currentSection >= 1 && (
-                  <div className="z-20 mt-6 sm:mt-8 flex items-center justify-center gap-4 sm:gap-6 self-center mx-auto">
-                    {/* Trash Zone (Red) */}
-                    <div className={`w-40 sm:w-48 h-16 sm:h-18 rounded-2xl border-2 border-dashed transition-all duration-300 flex items-center justify-center gap-2.5 relative overflow-hidden select-none ${
-                      activeAction === 'discard_trash' || activeAction === 'discard'
-                        ? 'bg-rose-500/25 border-rose-400 shadow-[0_0_25px_rgba(244,63,94,0.6)] scale-105'
-                        : 'bg-rose-950/20 border-rose-500/40 hover:border-rose-500/60'
-                    }`}>
-                      <div className="absolute top-1.5 left-1.5 w-2 h-2 border-t-2 border-l-2 border-rose-400/60" />
-                      <div className="absolute top-1.5 right-1.5 w-2 h-2 border-t-2 border-r-2 border-rose-400/60" />
-                      <div className="absolute bottom-1.5 left-1.5 w-2 h-2 border-b-2 border-l-2 border-rose-400/60" />
-                      <div className="absolute bottom-1.5 right-1.5 w-2 h-2 border-b-2 border-r-2 border-rose-400/60" />
+                    {/* Bottom Drop Zones (Trash [Red] in Section 2..3 & Challenge, Cafeteria [Green] in Challenge Level) */}
+                    {(showTrashZone || showFoodZone) && (
+                      <div className="z-20 mt-6 sm:mt-8 flex items-center justify-center gap-4 sm:gap-6 self-center mx-auto">
+                        {/* Trash Zone (Red) */}
+                        {showTrashZone && (
+                          <div className={`w-40 sm:w-48 h-16 sm:h-18 rounded-2xl border-2 border-dashed transition-all duration-300 flex items-center justify-center gap-2.5 relative overflow-hidden select-none ${activeAction === 'discard_trash' || activeAction === 'discard'
+                              ? 'bg-rose-500/25 border-rose-400 shadow-[0_0_25px_rgba(244,63,94,0.6)] scale-105'
+                              : 'bg-rose-950/20 border-rose-500/40 hover:border-rose-500/60'
+                            }`}>
+                            <div className="absolute top-1.5 left-1.5 w-2 h-2 border-t-2 border-l-2 border-rose-400/60" />
+                            <div className="absolute top-1.5 right-1.5 w-2 h-2 border-t-2 border-r-2 border-rose-400/60" />
+                            <div className="absolute bottom-1.5 left-1.5 w-2 h-2 border-b-2 border-l-2 border-rose-400/60" />
+                            <div className="absolute bottom-1.5 right-1.5 w-2 h-2 border-b-2 border-r-2 border-rose-400/60" />
 
-                      <Trash2 className={`w-7 h-7 sm:w-8 sm:h-8 shrink-0 ${activeAction === 'discard_trash' || activeAction === 'discard' ? 'text-rose-300 animate-bounce' : 'text-rose-400'}`} />
-                      <span className="font-mono font-black text-xl sm:text-2xl tracking-wider uppercase text-rose-400 drop-shadow-sm">
-                        TRASH
-                      </span>
-                    </div>
+                            <Trash2 className={`w-7 h-7 sm:w-8 sm:h-8 shrink-0 ${activeAction === 'discard_trash' || activeAction === 'discard' ? 'text-rose-300 animate-bounce' : 'text-rose-400'}`} />
+                            <span className="font-mono font-black text-xl sm:text-2xl tracking-wider uppercase text-rose-400 drop-shadow-sm">
+                              TRASH
+                            </span>
+                          </div>
+                        )}
 
-                    {/* Food Zone (Green) - Added in Section 4 */}
-                    {currentSection >= 3 && (
-                      <div className={`w-40 sm:w-48 h-16 sm:h-18 rounded-2xl border-2 border-dashed transition-all duration-300 flex items-center justify-center gap-2.5 relative overflow-hidden select-none ${
-                        activeAction === 'route_food'
-                          ? 'bg-emerald-500/25 border-emerald-400 shadow-[0_0_25px_rgba(16,185,129,0.6)] scale-105'
-                          : 'bg-emerald-950/20 border-emerald-500/40 hover:border-emerald-500/60'
-                      }`}>
-                        <div className="absolute top-1.5 left-1.5 w-2 h-2 border-t-2 border-l-2 border-emerald-400/60" />
-                        <div className="absolute top-1.5 right-1.5 w-2 h-2 border-t-2 border-r-2 border-emerald-400/60" />
-                        <div className="absolute bottom-1.5 left-1.5 w-2 h-2 border-b-2 border-l-2 border-emerald-400/60" />
-                        <div className="absolute bottom-1.5 right-1.5 w-2 h-2 border-b-2 border-r-2 border-emerald-400/60" />
+                        {/* Cafeteria / Food Zone (Green) - Challenge Level */}
+                        {showFoodZone && (
+                          <div className={`w-40 sm:w-48 h-16 sm:h-18 rounded-2xl border-2 border-dashed transition-all duration-300 flex items-center justify-center gap-2.5 relative overflow-hidden select-none ${activeAction === 'route_food'
+                              ? 'bg-emerald-500/25 border-emerald-400 shadow-[0_0_25px_rgba(16,185,129,0.6)] scale-105'
+                              : 'bg-emerald-950/20 border-emerald-500/40 hover:border-emerald-500/60'
+                            }`}>
+                            <div className="absolute top-1.5 left-1.5 w-2 h-2 border-t-2 border-l-2 border-emerald-400/60" />
+                            <div className="absolute top-1.5 right-1.5 w-2 h-2 border-t-2 border-r-2 border-emerald-400/60" />
+                            <div className="absolute bottom-1.5 left-1.5 w-2 h-2 border-b-2 border-l-2 border-emerald-400/60" />
+                            <div className="absolute bottom-1.5 right-1.5 w-2 h-2 border-b-2 border-r-2 border-emerald-400/60" />
 
-                        <Apple className={`w-7 h-7 sm:w-8 sm:h-8 shrink-0 ${activeAction === 'route_food' ? 'text-emerald-300 animate-bounce' : 'text-emerald-400'}`} />
-                        <span className="font-mono font-black text-lg sm:text-xl tracking-wider uppercase text-emerald-400 drop-shadow-sm">
-                          CAFETERIA
-                        </span>
+                            <Apple className={`w-7 h-7 sm:w-8 sm:h-8 shrink-0 ${activeAction === 'route_food' ? 'text-emerald-300 animate-bounce' : 'text-emerald-400'}`} />
+                            <span className="font-mono font-black text-lg sm:text-xl tracking-wider uppercase text-emerald-400 drop-shadow-sm">
+                              CAFETERIA
+                            </span>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
-                )}
-              </div>
-
-              {/* Stored Cargo / Items Tally (Bottom-Left of Simulation) */}
-              <div className="absolute bottom-4 left-4 sm:bottom-6 sm:left-6 z-30 flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-xs font-mono shadow-md backdrop-blur-sm pointer-events-none">
-                <div className="flex items-center gap-1.5 text-blue-300" title="Cargo Packed">
-                  <Package size={13} className="text-blue-400" />
-                  <span className="font-bold text-white">{conveyorInventory.cargo}</span>
-                </div>
-                {currentSection >= 1 && (
-                  <>
-                    <span className="text-white/20">|</span>
-                    <div className="flex items-center gap-1.5 text-rose-300" title="Trash Discarded">
-                      <Trash2 size={13} className="text-rose-400" />
-                      <span className="font-bold text-white">{conveyorInventory.trash}</span>
-                    </div>
-                  </>
-                )}
-                {currentSection >= 2 && (
-                  <>
-                    <span className="text-white/20">|</span>
-                    <div className="flex items-center gap-1.5 text-amber-300" title="Fuel Routed">
-                      <Zap size={13} className="text-amber-400 fill-amber-400" />
-                      <span className="font-bold text-white">{conveyorInventory.fuel}</span>
-                    </div>
-                  </>
-                )}
-                {currentSection >= 3 && (
-                  <>
-                    <span className="text-white/20">|</span>
-                    <div className="flex items-center gap-1.5 text-emerald-300" title="Food Routed">
-                      <Apple size={13} className="text-emerald-400" />
-                      <span className="font-bold text-white">{conveyorInventory.food}</span>
-                    </div>
-                  </>
-                )}
-                {conveyorInventory.errors > 0 && (
-                  <>
-                    <span className="text-white/20">|</span>
-                    <div className="flex items-center gap-1 text-rose-400 font-bold" title="Errors">
-                      <AlertTriangle size={13} />
-                      <span>{conveyorInventory.errors}</span>
-                    </div>
-                  </>
-                )}
-              </div>
+                );
+              })()}
             </div>
-          ) : isLevel3 && currentSection === 0 ? (
+          ) : isLevel3 && currentSection === 0 && dailySection?.name !== 'Fuel Synthesis Protocol' ? (
             <div className="flex-1 min-h-0 min-w-0 w-full h-full flex items-center justify-center p-1 sm:p-2 overflow-hidden relative">
               <OxygenMaze
                 grid={activeGrid}
@@ -5697,7 +6412,7 @@ export default function BlocklyMaze() {
                 failCoords={failCoords}
               />
             </div>
-          ) : isLevel3 && currentSection === 1 ? (
+          ) : (isLevel3 && currentSection === 1) || dailySection?.name === 'Fuel Synthesis Protocol' ? (
             <div className="flex-1 min-h-0 min-w-0 w-full h-full flex flex-col items-center justify-center p-1 sm:p-2 overflow-hidden relative">
               <FuelSynthesis
                 ref={fuelSynthRef}
@@ -5721,34 +6436,34 @@ export default function BlocklyMaze() {
                       const bonusKey = `${missionId}_sec${currentSection}_bonus`;
                       let claimedList: string[] = [];
                       try {
-                        claimedList = JSON.parse(localStorage.getItem('netstart_claimed_directives') || '[]');
-                      } catch (e) {}
+                        claimedList = JSON.parse(getNetstartItem('netstart_claimed_directives') || '[]');
+                      } catch (e) { }
 
                       if (!isReplayMode && !claimedList.includes(bonusKey)) {
                         addXp(XP_REWARDS.SECTION_COMPLETION_BONUS, `Section ${currentSection + 1} Cleared`);
                         claimedList.push(bonusKey);
                         try {
-                          localStorage.setItem('netstart_claimed_directives', JSON.stringify(claimedList));
-                        } catch (e) {}
+                          setNetstartItem('netstart_claimed_directives', JSON.stringify(claimedList));
+                        } catch (e) { }
                       }
 
                       if (currentSection === currentMissionSections.length - 1) {
                         try {
-                          localStorage.removeItem('netstart_active_saved_level');
-                          localStorage.removeItem('netstart_active_level');
+                          removeNetstartItem('netstart_active_saved_level');
+                          removeNetstartItem('netstart_active_level');
                           if (missionId) {
                             const compKey = 'netstart_completed_missions';
-                            const existing: string[] = JSON.parse(localStorage.getItem(compKey) || '[]');
+                            const existing: string[] = JSON.parse(getNetstartItem(compKey) || '[]');
                             if (!existing.includes(missionId)) {
                               existing.push(missionId);
-                              localStorage.setItem(compKey, JSON.stringify(existing));
+                              setNetstartItem(compKey, JSON.stringify(existing));
                             }
-                            if (!localStorage.getItem('netstart_last_animated_planet_idx')) {
-                              localStorage.setItem('netstart_last_animated_planet_idx', '0');
+                            if (!getNetstartItem('netstart_last_animated_planet_idx')) {
+                              setNetstartItem('netstart_last_animated_planet_idx', '0');
                             }
-                            localStorage.setItem('netstart_planet_unlock_pending', 'true');
+                            setNetstartItem('netstart_planet_unlock_pending', 'true');
                           }
-                        } catch (e) {}
+                        } catch (e) { }
                         const code = workspace.current ? javascriptGenerator.workspaceToCode(workspace.current) : '';
                         triggerMissionCompletion(code);
                       }
@@ -5771,7 +6486,7 @@ export default function BlocklyMaze() {
             <div className="flex-1 min-h-0 min-w-0 w-full h-full flex flex-col items-center justify-center p-1 sm:p-2 overflow-hidden relative">
               <FlightSimulation
                 ref={flightSimRef}
-                destinationPlanet="/Planets/Mars.svg"
+                destinationPlanet="/assets/planets/celestial/Mars.svg"
                 isExternalRunning={isRunning}
                 onComplete={(success, stats) => {
                   setIsRunning(false);
@@ -5796,34 +6511,34 @@ export default function BlocklyMaze() {
                       const bonusKey = `${missionId}_sec${currentSection}_bonus`;
                       let claimedList: string[] = [];
                       try {
-                        claimedList = JSON.parse(localStorage.getItem('netstart_claimed_directives') || '[]');
-                      } catch (e) {}
+                        claimedList = JSON.parse(getNetstartItem('netstart_claimed_directives') || '[]');
+                      } catch (e) { }
 
                       if (!isReplayMode && !claimedList.includes(bonusKey)) {
                         addXp(XP_REWARDS.SECTION_COMPLETION_BONUS, `Section ${currentSection + 1} Cleared`);
                         claimedList.push(bonusKey);
                         try {
-                          localStorage.setItem('netstart_claimed_directives', JSON.stringify(claimedList));
-                        } catch (e) {}
+                          setNetstartItem('netstart_claimed_directives', JSON.stringify(claimedList));
+                        } catch (e) { }
                       }
 
                       if (currentSection === currentMissionSections.length - 1) {
                         try {
-                          localStorage.removeItem('netstart_active_saved_level');
-                          localStorage.removeItem('netstart_active_level');
+                          removeNetstartItem('netstart_active_saved_level');
+                          removeNetstartItem('netstart_active_level');
                           if (missionId) {
                             const compKey = 'netstart_completed_missions';
-                            const existing: string[] = JSON.parse(localStorage.getItem(compKey) || '[]');
+                            const existing: string[] = JSON.parse(getNetstartItem(compKey) || '[]');
                             if (!existing.includes(missionId)) {
                               existing.push(missionId);
-                              localStorage.setItem(compKey, JSON.stringify(existing));
+                              setNetstartItem(compKey, JSON.stringify(existing));
                             }
-                            if (!localStorage.getItem('netstart_last_animated_planet_idx')) {
-                              localStorage.setItem('netstart_last_animated_planet_idx', '0');
+                            if (!getNetstartItem('netstart_last_animated_planet_idx')) {
+                              setNetstartItem('netstart_last_animated_planet_idx', '0');
                             }
-                            localStorage.setItem('netstart_planet_unlock_pending', 'true');
+                            setNetstartItem('netstart_planet_unlock_pending', 'true');
                           }
-                        } catch (e) {}
+                        } catch (e) { }
                         const code = workspace.current ? javascriptGenerator.workspaceToCode(workspace.current) : '';
                         triggerMissionCompletion(code);
                       }
@@ -5844,12 +6559,12 @@ export default function BlocklyMaze() {
             </div>
           ) : (
             <div className="flex-1 min-h-0 min-w-0 w-full h-full flex items-center justify-center p-4 sm:p-6 overflow-hidden relative">
-              <div 
+              <div
                 className="relative bg-[#1e0a2d] border-[3px] border-[#361d57] rounded-2xl overflow-hidden shadow-2xl shrink-0"
-                style={{ 
-                  display: 'grid', 
-                  gridTemplateColumns: `repeat(${activeGrid[0]?.length || 8}, minmax(0, 1fr))`, 
-                  gridTemplateRows: `repeat(${activeGrid.length || 8}, minmax(0, 1fr))`, 
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: `repeat(${activeGrid[0]?.length || 8}, minmax(0, 1fr))`,
+                  gridTemplateRows: `repeat(${activeGrid.length || 8}, minmax(0, 1fr))`,
                   gap: '3px',
                   padding: '6px',
                   backgroundColor: '#150524',
@@ -5864,13 +6579,13 @@ export default function BlocklyMaze() {
                     // Phase 1: 0 = Faint Wireframe Blueprint Void Tile
                     if (cell === 0) {
                       return (
-                        <div 
-                          key={`${x}-${y}`} 
+                        <div
+                          key={`${x}-${y}`}
                           className="w-full h-full border border-white/5 bg-transparent pointer-events-none rounded-md aspect-square"
-                          style={{ 
+                          style={{
                             gridColumn: `${x + 1} / span 1`,
                             gridRow: `${y + 1} / span 1`,
-                          }} 
+                          }}
                         />
                       );
                     }
@@ -5912,14 +6627,14 @@ export default function BlocklyMaze() {
                     }
 
                     return (
-                      <div 
-                        key={`${x}-${y}`} 
+                      <div
+                        key={`${x}-${y}`}
                         className={`relative rounded-md flex items-center justify-center aspect-square ${borderStyle}`}
-                        style={{ 
+                        style={{
                           backgroundColor: cellColor,
                           gridColumn: `${x + 1} / span 1`,
                           gridRow: `${y + 1} / span 1`,
-                        }} 
+                        }}
                       >
                         {/* 2 = Bomb obstacle */}
                         {cell === 2 && (
@@ -6033,33 +6748,31 @@ export default function BlocklyMaze() {
                 ))}
 
                 {/* Directional Rover Probe (with Soft-Collision Bump & Consequence animation) */}
-                <div 
-                  className={`z-10 flex items-center justify-center pointer-events-none transition-all duration-400 ease-in-out ${
-                    isBumping ? 'animate-rover-bump' : ''
-                  } ${isStartError ? 'ring-2 ring-red-500 rounded-full shadow-[0_0_20px_#ef4444]' : ''} ${
-                    isWarningPulse ? 'ring-4 ring-yellow-400 rounded-full animate-pulse shadow-[0_0_25px_#facc15]' : ''
-                  }`}
+                <div
+                  className={`z-10 flex items-center justify-center pointer-events-none transition-all duration-400 ease-in-out ${isBumping ? 'animate-rover-bump' : ''
+                    } ${isStartError ? 'ring-2 ring-red-500 rounded-full shadow-[0_0_20px_#ef4444]' : ''} ${isWarningPulse ? 'ring-4 ring-yellow-400 rounded-full animate-pulse shadow-[0_0_25px_#facc15]' : ''
+                    }`}
                   style={{
                     gridColumn: `${charState.x + 1} / span 1`,
                     gridRow: `${charState.y + 1} / span 1`,
                   }}
                 >
-                  <div 
+                  <div
                     className="w-[78%] h-[78%] flex items-center justify-center transition-transform duration-400 ease-in-out drop-shadow-[0_0_10px_rgba(255,145,45,0.85)]"
                     style={{ transform: `rotate(${charState.direction * 90}deg)` }}
                   >
                     <svg viewBox="0 0 40 40" className="w-full h-full">
                       <polygon points="20,9 32,16 32,30 20,37 8,30 8,16"
-                               fill="#ff912d" stroke="rgba(255,255,255,0.45)" strokeWidth="1.5" />
+                        fill="#ff912d" stroke="rgba(255,255,255,0.45)" strokeWidth="1.5" />
                       <polygon points="20,1 27,12 13,12"
-                               fill="#fbbf24" stroke="rgba(255,255,255,0.7)" strokeWidth="1" />
+                        fill="#fbbf24" stroke="rgba(255,255,255,0.7)" strokeWidth="1" />
                       <circle cx="20" cy="7.5" r="2.5" fill="white" />
                       <rect x="1" y="19" width="7" height="8" rx="1.5"
-                            fill="#3b82f6" stroke="rgba(255,255,255,0.25)" strokeWidth="0.8" />
+                        fill="#3b82f6" stroke="rgba(255,255,255,0.25)" strokeWidth="0.8" />
                       <rect x="32" y="19" width="7" height="8" rx="1.5"
-                            fill="#3b82f6" stroke="rgba(255,255,255,0.25)" strokeWidth="0.8" />
+                        fill="#3b82f6" stroke="rgba(255,255,255,0.25)" strokeWidth="0.8" />
                       <circle cx="20" cy="24" r="5"
-                              fill="rgba(0,0,0,0.5)" stroke="rgba(255,255,255,0.2)" strokeWidth="1" />
+                        fill="rgba(0,0,0,0.5)" stroke="rgba(255,255,255,0.2)" strokeWidth="1" />
                       <circle cx="20" cy="24" r="2.5" fill="rgba(120,210,255,0.75)" />
                     </svg>
                   </div>
@@ -6075,15 +6788,17 @@ export default function BlocklyMaze() {
                 <AlertTriangle size={24} className="text-red-400 shrink-0" />
                 <div className="text-left">
                   <p className="text-xs sm:text-sm font-black text-red-300 font-sans leading-tight">
-                    {isLevel3
-                      ? currentSection === 2
-                        ? "Flight Simulation Alert"
-                        : currentSection === 1
-                        ? "Fuel Synthesis Alert"
-                        : "Life Support Alert"
-                      : isLevel2
-                      ? "Cargo Bay Alert"
-                      : "Navigation Alert"}
+                    {isMarsLevel1
+                      ? "Broadcast Alert"
+                      : isLevel3
+                        ? currentSection === 2
+                          ? "Flight Alert"
+                          : currentSection === 1
+                            ? "Fuel Alert"
+                            : "Life Support Alert"
+                        : isLevel2
+                          ? "Cargo Bay Alert"
+                          : "Navigation Alert"}
                   </p>
                   <p className="text-xs text-gray-300 font-sans mt-0.5 leading-snug">
                     {errorToastMessage}
@@ -6106,11 +6821,11 @@ export default function BlocklyMaze() {
               <div className="flex items-center gap-3.5">
                 <AlertCircle size={28} className="text-yellow-400 shrink-0" />
                 <div className="text-left">
-                  <p className="text-base sm:text-lg font-black text-yellow-400 font-sans leading-tight">Wait a second!</p>
+                  <p className="text-base sm:text-lg font-black text-yellow-400 font-sans leading-tight">Almost there!</p>
                   <p className="text-sm text-gray-200 font-sans mt-1 leading-snug">
                     {isLevel2
-                      ? "You sorted all items, but forgot to attach the End block to complete your sequence."
-                      : "You reached the goal, but forgot to end the sequence."}
+                      ? "You sorted all items! Connect an End block to complete your code."
+                      : "You reached the goal! Connect an End block to complete your code."}
                   </p>
                 </div>
               </div>
@@ -6129,9 +6844,9 @@ export default function BlocklyMaze() {
               <div className="flex items-center gap-3">
                 <AlertCircle size={24} className="text-yellow-400 shrink-0" />
                 <div className="text-left">
-                  <p className="text-xs sm:text-sm font-black text-yellow-300 font-sans leading-tight">Start Block Required</p>
+                  <p className="text-xs sm:text-sm font-black text-yellow-300 font-sans leading-tight">Start Block Needed</p>
                   <p className="text-xs text-gray-300 font-sans mt-0.5 leading-snug">
-                    Attach a Start block at the beginning of your sequence to initialize simulation.
+                    Put a Start block at the top of your code to begin.
                   </p>
                 </div>
               </div>
@@ -6150,9 +6865,9 @@ export default function BlocklyMaze() {
               <div className="flex items-center gap-3">
                 <AlertTriangle size={24} className="text-amber-400 shrink-0" />
                 <div className="text-left">
-                  <p className="text-xs sm:text-sm font-black text-amber-300 font-sans leading-tight">System Overload</p>
+                  <p className="text-xs sm:text-sm font-black text-amber-300 font-sans leading-tight">Loop Limit Reached</p>
                   <p className="text-xs text-gray-300 font-sans mt-0.5 leading-snug">
-                    The sequence ran too long. Try optimizing your logic with loops.
+                    Your code ran for too long. Check your repeat blocks!
                   </p>
                 </div>
               </div>
@@ -6170,11 +6885,10 @@ export default function BlocklyMaze() {
           <div className="p-4 bg-[#140624] border-t border-white/10 flex items-center justify-start gap-3 shrink-0">
             <button
               onClick={runCode}
-              className={`flex items-center gap-2 px-6 py-3 rounded-xl font-display font-black text-xs uppercase tracking-wider transition-all shadow-lg active:scale-95 cursor-pointer ${
-                isRunning
+              className={`flex items-center gap-2 px-6 py-3 rounded-xl font-display font-black text-xs uppercase tracking-wider transition-all shadow-lg active:scale-95 cursor-pointer ${isRunning
                   ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-rose-600/30 hover:scale-105 animate-pulse'
                   : 'bg-gradient-to-r from-[#ff912d] to-amber-500 hover:from-amber-500 hover:to-[#ff912d] text-black shadow-[#ff912d]/25 hover:scale-105'
-              }`}
+                }`}
             >
               {isRunning ? (
                 <>
@@ -6210,7 +6924,7 @@ export default function BlocklyMaze() {
       {showPopup && (
         <div className="fixed inset-0 z-[9999] bg-black/85 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
           <div className="bg-[#19082a] border border-[#ff912d]/40 rounded-[28px] p-6 sm:p-7 max-w-4xl w-full shadow-2xl relative flex flex-col gap-5 text-center">
-            
+
             {/* Top Header Bar */}
             <div className="flex items-center justify-between gap-4 border-b border-white/10 pb-3.5 text-left">
               <div className="flex items-center gap-3">
@@ -6236,7 +6950,7 @@ export default function BlocklyMaze() {
 
             {/* 2-Section Split Grid Layout */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-left items-stretch">
-              
+
               {/* Left Column: Directives Breakdown & Total XP */}
               <div className="flex flex-col gap-3.5 justify-between">
                 {/* Individual Section Goals Breakdown */}
@@ -6245,7 +6959,7 @@ export default function BlocklyMaze() {
                     <span className="text-[11px] sm:text-xs font-mono font-bold text-gray-400 uppercase tracking-wider">
                       Goal Directives
                     </span>
-                    <span className="text-[11px] sm:text-xs font-mono font-bold text-emerald-400">
+                    <span className={`text-[11px] sm:text-xs font-mono font-bold ${isReplayMode ? 'text-purple-300/70' : 'text-emerald-400'}`}>
                       {completedCount}/{totalCount} Achieved
                     </span>
                   </div>
@@ -6256,15 +6970,21 @@ export default function BlocklyMaze() {
                       <div key={obj.id} className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-2.5 min-w-0">
                           {obj.completed ? (
-                            <CheckCircle2 size={16} className="text-emerald-400 shrink-0" />
+                            <CheckCircle2 size={16} className={`${isReplayMode ? 'text-purple-400/60' : 'text-emerald-400'} shrink-0`} />
                           ) : (
                             <Circle size={16} className="text-gray-500 shrink-0" />
                           )}
-                          <span className={`text-xs font-sans truncate ${obj.completed ? 'text-gray-200 font-medium' : 'text-gray-400'}`}>
+                          <span className={`text-xs font-sans truncate ${obj.completed
+                              ? (isReplayMode ? 'text-purple-200/50 font-normal line-through' : 'text-gray-200 font-medium')
+                              : 'text-gray-400'
+                            }`}>
                             {obj.text}
                           </span>
                         </div>
-                        <span className={`text-xs font-mono font-bold shrink-0 whitespace-nowrap ${obj.completed ? 'text-emerald-400' : 'text-gray-500'}`}>
+                        <span className={`text-xs font-mono font-bold shrink-0 whitespace-nowrap ${obj.completed
+                            ? (isReplayMode ? 'text-purple-400/60 line-through' : 'text-emerald-400')
+                            : 'text-gray-500'
+                          }`}>
                           {obj.completed ? `+${XP_REWARDS.CAMPAIGN_GOAL} XP` : '+0 XP'}
                         </span>
                       </div>
@@ -6273,12 +6993,14 @@ export default function BlocklyMaze() {
                     {/* Section Clear Bonus Item */}
                     <div className="flex items-center justify-between gap-3 pt-2 border-t border-white/5">
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <Zap size={16} className="text-amber-400 shrink-0" />
-                        <span className="text-xs font-sans text-gray-200 font-medium truncate">
+                        <Zap size={16} className={`${isReplayMode ? 'text-purple-400/60' : 'text-amber-400'} shrink-0`} />
+                        <span className={`text-xs font-sans truncate ${isReplayMode ? 'text-purple-200/50 font-normal line-through' : 'text-gray-200 font-medium'
+                          }`}>
                           Section Clear Bonus
                         </span>
                       </div>
-                      <span className="text-xs font-mono font-bold text-amber-400 shrink-0 whitespace-nowrap">
+                      <span className={`text-xs font-mono font-bold shrink-0 whitespace-nowrap ${isReplayMode ? 'text-purple-400/60 line-through' : 'text-amber-400'
+                        }`}>
                         +{XP_REWARDS.SECTION_COMPLETION_BONUS} XP
                       </span>
                     </div>
@@ -6287,35 +7009,51 @@ export default function BlocklyMaze() {
 
                 {/* Dedicated Purple Tab for Mission Gears Reward (Final Section) */}
                 {currentSection === currentMissionSections.length - 1 && (
-                  <div className="bg-gradient-to-r from-purple-950/60 via-purple-900/40 to-purple-950/60 border border-purple-500/40 rounded-2xl p-3.5 flex items-center justify-between shadow-[0_0_20px_rgba(168,85,247,0.2)]">
+                  <div className={`rounded-2xl p-3.5 flex items-center justify-between transition-all ${isReplayMode
+                      ? 'bg-gradient-to-r from-purple-950/40 via-purple-900/20 to-purple-950/40 border border-purple-500/25 opacity-80'
+                      : 'bg-gradient-to-r from-purple-950/60 via-purple-900/40 to-purple-950/60 border border-purple-500/40 shadow-[0_0_20px_rgba(168,85,247,0.2)]'
+                    }`}>
                     <div className="flex items-center gap-2.5 min-w-0">
                       <div className="w-8 h-8 rounded-xl bg-purple-500/20 border border-purple-400/30 flex items-center justify-center shrink-0 shadow-inner">
-                        <Settings size={16} className="text-purple-300" />
+                        <Settings size={16} className={isReplayMode ? 'text-purple-400/70' : 'text-purple-300'} />
                       </div>
                       <div className="flex flex-col gap-0.5">
-                        <span className="text-[11px] font-mono font-bold text-purple-300 uppercase tracking-widest whitespace-nowrap">
+                        <span className={`text-[11px] font-mono font-bold uppercase tracking-widest whitespace-nowrap ${isReplayMode ? 'text-purple-300/70 line-through' : 'text-purple-300'
+                          }`}>
                           Mission Gear Reward
                         </span>
-                        <span className="text-xs text-gray-400 font-sans whitespace-nowrap">Campaign Bonus</span>
+                        <span className="text-xs text-gray-400 font-sans whitespace-nowrap">
+                          {isReplayMode ? 'Already Claimed' : 'Campaign Bonus'}
+                        </span>
                       </div>
                     </div>
-                    <div className="text-xl sm:text-2xl font-display font-black text-purple-300 tracking-tight drop-shadow-[0_0_12px_rgba(192,132,252,0.6)] flex items-center gap-1.5 shrink-0 whitespace-nowrap">
+                    <div className={`text-xl sm:text-2xl font-display font-black tracking-tight flex items-center gap-1.5 shrink-0 whitespace-nowrap ${isReplayMode ? 'text-purple-300/70 line-through' : 'text-purple-300 drop-shadow-[0_0_12px_rgba(192,132,252,0.6)]'
+                      }`}>
                       <span>+20 Gears</span>
                     </div>
                   </div>
                 )}
 
                 {/* Glowing Large Total XP Display */}
-                <div className="bg-gradient-to-r from-emerald-950/60 via-emerald-900/40 to-emerald-950/60 border border-emerald-500/40 rounded-2xl p-4 flex items-center justify-between shadow-[0_0_24px_rgba(16,185,129,0.2)]">
+                <div className={`border rounded-2xl p-4 flex items-center justify-between transition-all ${isReplayMode
+                    ? 'bg-gradient-to-r from-purple-950/40 via-purple-900/25 to-purple-950/40 border-purple-500/30 shadow-[0_0_16px_rgba(168,85,247,0.1)]'
+                    : 'bg-gradient-to-r from-emerald-950/60 via-emerald-900/40 to-emerald-950/60 border-emerald-500/40 shadow-[0_0_24px_rgba(16,185,129,0.2)]'
+                  }`}>
                   <div className="flex flex-col gap-0.5">
-                    <span className="text-[11px] font-mono font-bold text-emerald-400 uppercase tracking-widest whitespace-nowrap">
+                    <span className={`text-[11px] font-mono font-bold uppercase tracking-widest whitespace-nowrap ${isReplayMode ? 'text-purple-300/70' : 'text-emerald-400'
+                      }`}>
                       Total Earned XP
                     </span>
-                    <span className="text-xs text-gray-400 font-sans whitespace-nowrap">Progression Reward</span>
+                    <span className="text-xs text-gray-400 font-sans whitespace-nowrap">
+                      {isReplayMode ? 'Replay Completion' : 'Progression Reward'}
+                    </span>
                   </div>
 
-                  <div className="text-2xl sm:text-3xl font-display font-black text-emerald-400 tracking-tight drop-shadow-[0_0_16px_rgba(52,211,153,0.7)] animate-pulse flex items-center gap-1.5 whitespace-nowrap">
-                    <Zap size={22} className="fill-emerald-400 text-emerald-400 shrink-0" />
+                  <div className={`text-2xl sm:text-3xl font-display font-black tracking-tight flex items-center gap-1.5 whitespace-nowrap ${isReplayMode
+                      ? 'text-purple-300/80 drop-shadow-[0_0_10px_rgba(192,132,252,0.35)]'
+                      : 'text-emerald-400 drop-shadow-[0_0_16px_rgba(52,211,153,0.7)] animate-pulse'
+                    }`}>
+                    <Zap size={22} className={`shrink-0 ${isReplayMode ? 'fill-purple-300/70 text-purple-300/70' : 'fill-emerald-400 text-emerald-400'}`} />
                     <span>+{currentSectionXp} XP</span>
                   </div>
                 </div>
@@ -6341,7 +7079,7 @@ export default function BlocklyMaze() {
                 {/* Actions */}
                 <div>
                   {currentSection < currentMissionSections.length - 1 ? (
-                    <button 
+                    <button
                       onClick={() => {
                         loadSection(currentSection + 1);
                       }}
@@ -6350,14 +7088,15 @@ export default function BlocklyMaze() {
                       Next Section <ChevronRight size={16} />
                     </button>
                   ) : (
-                    <button 
+                    <button
                       onClick={() => {
                         setShowPopup(false);
-                        router.push('/modules');
+                        const returnPath = isDaily ? '/dashboard' : `/modules/${getMissionPlanetSlug(missionId, isDaily)}`;
+                        router.push(returnPath);
                       }}
                       className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#ff912d] to-amber-500 hover:from-amber-500 hover:to-[#ff912d] text-black font-sans font-black py-3.5 px-5 rounded-xl shadow-lg shadow-[#ff912d]/20 active:scale-95 transition-all cursor-pointer text-xs uppercase tracking-wider"
                     >
-                      Continue to Missions Page <ChevronRight size={16} />
+                      Continue <ChevronRight size={16} />
                     </button>
                   )}
                 </div>
@@ -6409,7 +7148,8 @@ export default function BlocklyMaze() {
               <button
                 onClick={() => {
                   setIsPaused(false);
-                  requestNavigation('/modules');
+                  const returnPath = isDaily ? '/dashboard' : `/modules/${getMissionPlanetSlug(missionId, isDaily)}`;
+                  requestNavigation(returnPath);
                 }}
                 className="w-full py-3.5 px-4 rounded-xl bg-[#24133b] hover:bg-[#2e194c] border border-purple-500/30 text-white font-sans font-bold text-xs uppercase tracking-wider transition-all active:scale-95 cursor-pointer shadow-sm flex items-center justify-center gap-2"
               >
@@ -6463,6 +7203,14 @@ export default function BlocklyMaze() {
           </div>
         </div>
       )}
+
+      {/* Mars NPC Mark Dialogue Popup */}
+      <MarkDialogueModal
+        isOpen={markDialogue.isOpen}
+        title={markDialogue.title}
+        message={markDialogue.message}
+        onClose={() => setMarkDialogue(prev => ({ ...prev, isOpen: false }))}
+      />
 
     </div>
   );

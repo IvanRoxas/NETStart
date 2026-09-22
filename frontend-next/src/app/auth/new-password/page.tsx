@@ -89,7 +89,7 @@ function NewPasswordContent() {
       <div className="w-full max-w-[420px] bg-[#150a21]/60 backdrop-blur-xl border border-white/10 p-8 rounded-3xl relative shadow-2xl flex flex-col gap-6 items-center">
         {/* Brand Logo/Header */}
         <div className="flex items-center gap-2 mb-2">
-          <Image src="/NETStartIcon.png" alt="NETStart Logo" width={40} height={40} className="object-contain" />
+          <Image src="/assets/global/badges/NETStartIcon.png" alt="NETStart Logo" width={40} height={40} className="object-contain" />
           <span className="font-display font-bold text-2xl tracking-wide text-white leading-none pt-1">
             NET<span className="text-[#ff912d]">Start</span>
           </span>

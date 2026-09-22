@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { resetPasswordRequest } from '../actions/reset-password';
+import { clearLegacyUnscopedData } from '@/lib/userStorage';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -29,6 +30,7 @@ export default function LoginPage() {
   };
 
   useEffect(() => {
+    clearLegacyUnscopedData();
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       if (params.get('deleted') === 'true') {
@@ -128,7 +130,7 @@ export default function LoginPage() {
       {/* Left Side: Illustration / Background */}
       <div className="relative hidden md:flex md:w-[60%] lg:w-[65%] bg-subs border-r border-white/5 overflow-hidden group">
         <Image 
-          src="/login-bg-hq.jpg" 
+          src="/assets/global/ui/login-bg-hq.jpg" 
           alt="Login Background" 
           fill
           className="object-cover group-hover:scale-105 transition-transform duration-1000 brightness-125" 
@@ -168,7 +170,7 @@ export default function LoginPage() {
               <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-tr from-[#361d57] to-[#ff912d] p-[2px] shadow-lg mb-2">
                 <div className="w-full h-full bg-[#1e0a2d] rounded-full overflow-hidden flex items-center justify-center">
                   {session.user.image ? (
-                    <Image src={session.user.image === '/Planet 1.svg' ? '/Profile.svg' : session.user.image} alt="User Avatar" width={64} height={64} className="object-cover" />
+                    <Image src={session.user.image === '/assets/planets/celestial/Planet 1.svg' ? '/assets/global/badges/Profile.svg' : session.user.image} alt="User Avatar" width={64} height={64} className="object-cover" />
                   ) : (
                     <span className="font-bold text-[#ff912d] text-xl uppercase">{session.user.name?.charAt(0) || 'U'}</span>
                   )}
