@@ -30,7 +30,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${poppins.variable} ${montserrat.variable} font-sans min-h-screen flex flex-col text-white antialiased overflow-x-hidden bg-[#270d3c]`}>
+      <body className={`${poppins.variable} ${montserrat.variable} font-sans min-h-screen w-full flex flex-col text-white antialiased bg-[#270d3c]`}>
         <ConditionalLayout>
           {children}
         </ConditionalLayout>

@@ -35,6 +35,7 @@ import {
 } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useProgression } from '@/context/ProgressionContext';
+import { useNavigationGuard } from '@/context/NavigationGuardContext';
 import { XP_REWARDS } from '@/lib/leveling';
 
 Blockly.setLocale(En as any);
@@ -45,6 +46,7 @@ export default function LevelThree() {
   const missionId = searchParams.get('missionId') || 'moon-3';
 
   const { addXp } = useProgression();
+  const { requestNavigation } = useNavigationGuard();
 
   const {
     activeTab,
@@ -226,7 +228,7 @@ export default function LevelThree() {
 
         <div className="flex items-center gap-3">
           <button
-            onClick={() => router.push('/modules/moon')}
+            onClick={() => requestNavigation('/modules/moon')}
             className="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 hover:border-slate-500 text-xs font-semibold text-slate-300 hover:text-white flex items-center gap-1.5 transition cursor-pointer"
           >
             <LogOut className="w-3.5 h-3.5" />
@@ -394,7 +396,7 @@ export default function LevelThree() {
               {activeTab === 4 ? "COCKPIT WORKSPACE // MAIN SEQUENCE" : "COMPONENT WORKSPACE // FUNCTION BUILDER"}
             </span>
             <span className="text-[10px] font-mono text-slate-400">
-              Drag blocks and click &quot;{activeTab === 4 ? 'Initiate Launch' : 'Test Component'}&quot;
+              Assemble blocks and click &quot;{activeTab === 4 ? 'Initiate Launch' : 'Test Component'}&quot;
             </span>
           </div>
 

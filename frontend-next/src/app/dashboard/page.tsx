@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import TopHeader from "@/components/TopHeader";
 import DailyCommissionClaimButton from "@/components/DailyCommissionClaimButton";
+import DailyChallengeTimer from "@/components/DailyChallengeTimer";
 import { getXPDetails } from "@/lib/leveling";
 import { XP_REWARDS } from "@/lib/xpEconomy";
 import { Zap, Settings, Rocket, Award, ShieldCheck, Compass, ArrowRight, Lock, CheckCircle2, Circle, Sparkles, Play, Gift, Clock, Flame, Brain } from "lucide-react";
@@ -184,68 +185,45 @@ export default async function DashboardPage() {
 
   const hasCampaignCompletedToday = campaignCompletedMissions.some(m => isCompletedTodayPHT(m.completedAt));
 
-  // Daily Rotating Challenge Pool (7 Unique Practice Mission Options)
+  // Daily Rotating Challenge Pool (5 Playable Challenges with Custom Vector Icons)
   const DAILY_LEVEL_POOL = [
     {
-      title: "Space Station Cafeteria Menu",
-      sector: "HTML Sector",
-      difficulty: "Beginner",
-      desc: "Write headings, paragraphs, and lists to create a clean astronaut meal menu.",
-      planetIcon: "/Planet 7.svg",
+      title: "Weave Trap",
+      tag: "Syntax",
+      desc: "Watch out for red bomb traps! Steer your space rover around the danger and take the safe road to reach the finish line.",
+      customIcon: "/assets/global/daily/weave-trap.svg",
       xpReward: 100,
       gearsReward: 25,
     },
     {
-      title: "Cosmic Neon Color Palette",
-      sector: "CSS Sector",
-      difficulty: "Intermediate",
-      desc: "Style colorful glowing cards, rounded borders, and custom background colors.",
-      planetIcon: "/Planet 4.svg",
+      title: "Lane Changer",
+      tag: "Syntax",
+      desc: "Switch lanes to avoid road blocks! Pick the best turns and drive your rover safely all the way to the goal.",
+      customIcon: "/assets/global/daily/lane-changer.svg",
       xpReward: 100,
       gearsReward: 25,
     },
     {
-      title: "Rocket Launch Fuel Check",
-      sector: "JavaScript Sector",
-      difficulty: "Intermediate",
-      desc: "Use variables and simple math logic to check if a rocket has enough fuel to launch.",
-      planetIcon: "/Planet 1.svg",
+      title: "Hazard Labyrinth",
+      tag: "Syntax",
+      desc: "Find your way out of the space maze! Use repeat loops and look out for walls to reach the golden star.",
+      customIcon: "/assets/global/daily/hazard-labyrinth.svg",
       xpReward: 100,
       gearsReward: 25,
     },
     {
-      title: "Space Rover Flexbox Parking",
-      sector: "CSS Sector",
-      difficulty: "Intermediate",
-      desc: "Align and center rovers in their parking bays using Flexbox row and column layouts.",
-      planetIcon: "/Planet 2.svg",
+      title: "Master Sorting Gauntlet",
+      tag: "Syntax",
+      desc: "The robot belt is rolling fast! Sort 25 space items into Food, Fuel, Cargo, and Trash boxes without any mistakes.",
+      customIcon: "/assets/global/daily/sorting-gauntlet.svg",
       xpReward: 100,
       gearsReward: 25,
     },
     {
-      title: "Spaceship Defense Shield Switch",
-      sector: "JavaScript Sector",
-      difficulty: "Intermediate",
-      desc: "Write a button click event that turns a spaceship shield on and updates status text.",
-      planetIcon: "/Planet 3.svg",
-      xpReward: 100,
-      gearsReward: 25,
-    },
-    {
-      title: "Astronaut Cadet Sign-Up Form",
-      sector: "HTML Sector",
-      difficulty: "Beginner",
-      desc: "Create text boxes, checkboxes, and a submit button for new cadet registration.",
-      planetIcon: "/Planet 5.svg",
-      xpReward: 100,
-      gearsReward: 25,
-    },
-    {
-      title: "Solar System Planet Scanner",
-      sector: "JavaScript Sector",
-      difficulty: "Advanced",
-      desc: "Loop through a list of discovered planets and display each planet name on the screen.",
-      planetIcon: "/Planet 6.svg",
+      title: "Fuel Synthesis Protocol",
+      tag: "Syntax",
+      desc: "Make fuel for the rocket ship! Add drops, turn up the heat, and mix it well until the fuel turns orange.",
+      customIcon: "/assets/global/daily/fuel-synthesis.svg",
       xpReward: 100,
       gearsReward: 25,
     },
@@ -666,58 +644,52 @@ export default async function DashboardPage() {
                 <div className="absolute inset-0 bg-[#090311]/75 rounded-3xl translate-x-2 translate-y-2 z-0 transition-all duration-300 group-hover/daily-level-card:translate-x-3 group-hover/daily-level-card:translate-y-3" />
                 <div className="relative z-10 bg-[#361d57] border-2 border-[#ff912d]/50 rounded-3xl p-5 md:p-6 transition-all duration-300 shadow-xl group-hover/daily-level-card:-translate-x-1 group-hover/daily-level-card:-translate-y-1 flex flex-col justify-between gap-4 h-full">
                   
-                  {/* Top Header Row: Sector & Category Badges + Time Remaining */}
-                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
-                    <div className="flex items-center gap-2">
-                      <span className={`font-sans font-black text-xs uppercase tracking-wider px-3 py-1 rounded-full flex items-center gap-1.5 shadow-sm ${
+                  {/* Top Header Row: Category Badges + Dynamic Real-Time Countdown */}
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-4">
+                    <div className="flex flex-wrap items-center gap-2.5">
+                      <span className={`font-sans font-black text-xs sm:text-sm uppercase tracking-wider px-4 py-2 rounded-full flex items-center gap-2 shadow-md ${
                         isDailyLevelCompleted 
                           ? "bg-emerald-500 text-black" 
                           : isDailyLevelStarted 
                           ? "bg-amber-500 text-black" 
                           : "bg-[#ff912d] text-black"
                       }`}>
-                        {isDailyLevelCompleted ? <CheckCircle2 size={13} /> : <Flame size={13} className="fill-black" />} 
+                        {isDailyLevelCompleted ? <CheckCircle2 size={16} /> : <Flame size={16} className="fill-black" />} 
                         {isDailyLevelCompleted ? "Daily Challenge Complete" : isDailyLevelStarted ? "Daily Challenge In Progress" : "Daily Challenge"}
                       </span>
-                      <span className="bg-white/10 text-white font-mono text-xs uppercase tracking-wider px-2.5 py-1 rounded-full border border-white/10">
-                        {dailyGeneratedLevel.sector}
-                      </span>
-                      <span className="hidden sm:inline-block bg-white/5 text-white/70 font-mono text-xs px-2.5 py-1 rounded-full border border-white/10">
-                        {dailyGeneratedLevel.difficulty}
+                      <span className="bg-white/10 text-white font-mono text-xs sm:text-sm font-bold uppercase tracking-wider px-3.5 py-2 rounded-full border border-white/15 shadow-sm">
+                        {dailyGeneratedLevel.tag}
                       </span>
                     </div>
 
-                    {/* Clean Timer Label (Dynamic PHT 12:00 AM Countdown) */}
-                    <div className="flex items-center gap-1.5 text-[#ff912d] text-xs sm:text-sm font-bold font-mono">
-                      <Clock size={15} />
-                      <span>{phtTimeLeftDisplay}</span>
-                    </div>
+                    {/* Dynamic Real-Time Countdown with Seconds */}
+                    <DailyChallengeTimer />
                   </div>
 
-                  {/* Main Content Area: Planet Graphic + Mission Description & Launch Action */}
+                  {/* Main Content Area: Custom Icon Graphic + Mission Description & Launch Action */}
                   <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 flex-1 justify-center">
                     
-                    {/* Planet Thumbnail Container (Enlarged while preserving 1:1 square proportions) */}
+                    {/* Custom Challenge Icon Thumbnail Container */}
                     <div className="w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 rounded-3xl bg-gradient-to-b from-[#1a082c] to-[#130927] border border-white/10 flex items-center justify-center relative overflow-hidden flex-shrink-0 shadow-inner p-3">
                       <img 
-                        src="/Landing Page BG.png" 
+                        src="/assets/global/ui/Landing Page BG.png" 
                         alt="Starfield"
                         className="absolute inset-0 w-full h-full object-cover opacity-40 pointer-events-none"
                       />
                       <img 
-                        src={dailyGeneratedLevel.planetIcon} 
-                        alt="Planet" 
-                        className="w-full h-full object-contain relative z-10 drop-shadow-[0_0_20px_rgba(255,145,45,0.45)] transition-transform duration-500 group-hover/daily-level-card:scale-110" 
+                        src={dailyGeneratedLevel.customIcon} 
+                        alt={dailyGeneratedLevel.title} 
+                        className="w-full h-full object-contain relative z-10 drop-shadow-[0_0_25px_rgba(255,145,45,0.45)] transition-transform duration-500 group-hover/daily-level-card:scale-110" 
                       />
                     </div>
 
                     {/* Mission Details & Action Button */}
-                    <div className="flex-1 min-w-0 flex flex-col justify-between gap-3.5 text-center sm:text-left w-full h-full">
-                      <div className="space-y-1.5">
-                        <h3 className="text-white font-display font-black text-lg sm:text-xl tracking-tight">
+                    <div className="flex-1 min-w-0 flex flex-col justify-between gap-4 text-center sm:text-left w-full h-full">
+                      <div className="space-y-2">
+                        <h3 className="text-white font-display font-black text-2xl sm:text-3xl tracking-tight leading-tight">
                           {dailyGeneratedLevel.title}
                         </h3>
-                        <p className="text-white/80 text-sm font-medium leading-relaxed">
+                        <p className="text-white/90 text-sm sm:text-base font-medium leading-relaxed">
                           {dailyGeneratedLevel.desc}
                         </p>
                       </div>
@@ -775,7 +747,7 @@ export default async function DashboardPage() {
                   
                   {/* Cosmic Backdrop Ambient Effects */}
                   <img 
-                    src="/Landing Page BG.png" 
+                    src="/assets/global/ui/Landing Page BG.png" 
                     alt="Stars" 
                     className="absolute inset-0 w-full h-full object-cover opacity-30 pointer-events-none" 
                   />

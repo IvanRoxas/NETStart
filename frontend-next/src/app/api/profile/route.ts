@@ -49,7 +49,7 @@ export async function GET(req: Request) {
           data: {
             userId: user.id,
             notificationType: 'achievement_unlocked',
-            data: { badgeId: 'b_create_account', badgeName: 'Ready for Blast Off!', badgeImage: '/Planet 1.svg' }
+            data: { badgeId: 'b_create_account', badgeName: 'Ready for Blast Off!', badgeImage: '/assets/planets/celestial/Planet 1.svg' }
           }
         });
       }
@@ -106,11 +106,36 @@ export async function PUT(req: Request) {
 
     const userId = (session.user as any).id;
 
+    const cleanName = name !== undefined ? (typeof name === 'string' ? name.trim() : name) : undefined;
+    const cleanDisplayName = displayName !== undefined ? (typeof displayName === 'string' ? displayName.trim() : displayName) : undefined;
+
+    // Validate username uniqueness (Usernames are unique, Display names allow duplicates)
+    if (cleanName !== undefined && cleanName !== '') {
+      const existingUser = await prisma.user.findFirst({
+        where: {
+          name: {
+            equals: cleanName,
+            mode: 'insensitive'
+          },
+          id: {
+            not: userId
+          }
+        }
+      });
+
+      if (existingUser) {
+        return NextResponse.json(
+          { error: 'This username is already taken. Please choose another.' },
+          { status: 409 }
+        );
+      }
+    }
+
     await prisma.user.update({
       where: { id: userId },
       data: {
-        ...(name !== undefined && { name }),
-        ...(displayName !== undefined && { displayName }),
+        ...(cleanName !== undefined && { name: cleanName }),
+        ...(cleanDisplayName !== undefined && { displayName: cleanDisplayName }),
         ...(status !== undefined && { status }),
         ...(bio !== undefined && { bio }),
         ...(image !== undefined && { image }),
@@ -137,7 +162,7 @@ export async function PUT(req: Request) {
             data: {
               userId,
               notificationType: 'achievement_unlocked',
-              data: { badgeId: 'b_change_pfp', badgeName: 'A New Look', badgeImage: changePfpAch.iconUrl || '/Planet 3.svg' }
+              data: { badgeId: 'b_change_pfp', badgeName: 'A New Look', badgeImage: changePfpAch.iconUrl || '/assets/planets/celestial/Planet 3.svg' }
             }
           });
 
@@ -170,7 +195,7 @@ export async function PUT(req: Request) {
             data: {
               userId,
               notificationType: 'achievement_unlocked',
-              data: { badgeId: 'b_change_bg', badgeName: 'Interior Designer', badgeImage: changeBgAch.iconUrl || '/Planet 8.svg' }
+              data: { badgeId: 'b_change_bg', badgeName: 'Interior Designer', badgeImage: changeBgAch.iconUrl || '/assets/planets/celestial/Planet 8.svg' }
             }
           });
 
@@ -213,8 +238,11 @@ export async function PUT(req: Request) {
     });
 
     return NextResponse.json({ user: finalUser });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error updating profile:', error);
+    if (error?.code === 'P2002') {
+      return NextResponse.json({ error: 'This display name is already taken. Please choose another.' }, { status: 409 });
+    }
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

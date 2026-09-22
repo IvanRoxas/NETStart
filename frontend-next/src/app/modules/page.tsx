@@ -76,9 +76,10 @@ export default async function ModulesPage() {
   return (
     <main className="flex-1 flex flex-col z-10 w-full h-full overflow-hidden bg-[#180729]">
       <DailyTaskTracker taskIds={["task-explore-2"]} />
-      <TopHeader title="Modules" />
-      <div className="flex-1 overflow-y-auto relative w-full h-full">
+      <TopHeader title="Missions Page" />
+      <div id="modules-scroll-container" className="flex-1 overflow-y-auto overflow-x-hidden relative w-full h-full bg-[#180729]">
         <ModulesClient 
+          userId={activeUserId}
           isVerified={isVerified} 
           hasTakenAptitudeTest={hasTakenAptitudeTest}
           liveStats={liveStats} 

@@ -55,7 +55,7 @@ export const sendVerificationEmail = async (toEmail: string, code: string, name?
     `,
     attachments: [{
       filename: 'NETStartIcon.png',
-      path: path.join(process.cwd(), 'public', 'NETStartIcon.png'),
+      path: path.join(process.cwd(), 'public', 'assets', 'global', 'badges', 'NETStartIcon.png'),
       cid: 'netstarticon'
     }]
   };

@@ -5,22 +5,22 @@ import Link from 'next/link';
 import { Lock, Zap, Settings, X } from 'lucide-react';
 
 const PLANET_IMAGES: Record<string, string> = {
-  moon: "/MainMoon.svg",
-  mars: "/Planets/Mars.svg",
-  venus: "/Planets/Venus.svg",
-  mercury: "/Planets/Mercury.svg",
-  jupiter: "/Planets/Jupiter.svg",
-  saturn: "/Planets/Saturn.svg",
-  earth: "/Planets/Earth.svg",
-  html: "/Planets/Mars.svg",
-  css: "/Planets/Venus.svg",
-  javascript: "/Planets/Mercury.svg",
-  js: "/Planets/Mercury.svg",
-  java: "/Planets/Jupiter.svg",
-  cpp: "/Planets/Saturn.svg",
-  python: "/Planets/Earth.svg",
-  react: "/Planets/Earth.svg",
-  node: "/Planets/Jupiter.svg",
+  moon: "/assets/planets/00_moon/environment/MainMoon.svg",
+  mars: "/assets/planets/celestial/Mars.svg",
+  venus: "/assets/planets/celestial/Venus.svg",
+  mercury: "/assets/planets/celestial/Mercury.svg",
+  jupiter: "/assets/planets/celestial/Jupiter.svg",
+  saturn: "/assets/planets/celestial/Saturn.svg",
+  earth: "/assets/planets/celestial/Earth.svg",
+  html: "/assets/planets/celestial/Mars.svg",
+  css: "/assets/planets/celestial/Venus.svg",
+  javascript: "/assets/planets/celestial/Mercury.svg",
+  js: "/assets/planets/celestial/Mercury.svg",
+  java: "/assets/planets/celestial/Jupiter.svg",
+  cpp: "/assets/planets/celestial/Saturn.svg",
+  python: "/assets/planets/celestial/Earth.svg",
+  react: "/assets/planets/celestial/Earth.svg",
+  node: "/assets/planets/celestial/Jupiter.svg",
 };
 
 const MODULE_DISPLAY_NAMES: Record<string, string> = {
@@ -43,16 +43,16 @@ const MODULE_DISPLAY_NAMES: Record<string, string> = {
 };
 
 const LEVEL_ILLUSTRATIONS = [
-  "/Spaceship.svg",
-  "/UFO.svg",
-  "/Planet 1.svg",
-  "/Meteor.svg",
-  "/Planet 5.svg",
-  "/Planet 6.svg",
-  "/Planet 8.svg",
-  "/Debris.svg",
-  "/Planet 3.svg",
-  "/Planet 2.svg",
+  "/assets/planets/00_moon/level_1/Spaceship.svg",
+  "/assets/planets/00_moon/level_1/UFO.svg",
+  "/assets/planets/celestial/Planet 1.svg",
+  "/assets/planets/00_moon/environment/Meteor.svg",
+  "/assets/planets/celestial/Planet 5.svg",
+  "/assets/planets/celestial/Planet 6.svg",
+  "/assets/planets/celestial/Planet 8.svg",
+  "/assets/planets/00_moon/environment/Debris.svg",
+  "/assets/planets/celestial/Planet 3.svg",
+  "/assets/planets/celestial/Planet 2.svg",
 ];
 
 interface Mission {
@@ -78,6 +78,9 @@ interface ModuleMissionsClientProps {
   onClose?: () => void;
 }
 
+import { useSession } from 'next-auth/react';
+import { getUserStorageItem } from '@/lib/userStorage';
+
 export default function ModuleMissionsClient({
   moduleId,
   missions,
@@ -86,13 +89,16 @@ export default function ModuleMissionsClient({
   isLocked,
   onClose
 }: ModuleMissionsClientProps) {
+  const { data: session } = useSession();
+  const userId = (session?.user as any)?.id;
   const [activeMissionModal, setActiveMissionModal] = React.useState<Mission | null>(null);
   const [savedMissionId, setSavedMissionId] = React.useState<string | null>(null);
   const displayLangName = MODULE_DISPLAY_NAMES[moduleId] || moduleId.toUpperCase();
 
   React.useEffect(() => {
+    if (!userId) return;
     try {
-      const raw = localStorage.getItem('netstart_active_saved_level');
+      const raw = getUserStorageItem('active_saved_level', userId);
       if (raw) {
         const parsed = JSON.parse(raw);
         if (parsed.missionId) {
@@ -100,7 +106,7 @@ export default function ModuleMissionsClient({
         }
       }
     } catch (e) {}
-  }, []);
+  }, [userId]);
 
   const handleClose = (e: React.MouseEvent) => {
     if (onClose) {
@@ -193,7 +199,7 @@ export default function ModuleMissionsClient({
                 <div className="relative w-full h-36 bg-gradient-to-b from-[#1a082c]/80 to-[#130927]/90 overflow-hidden flex items-center justify-center border-b border-white/5 flex-shrink-0">
                   {/* Stars overlay */}
                   <img
-                    src="/Landing Page BG.png"
+                    src="/assets/global/ui/Landing Page BG.png"
                     alt="Stars"
                     className="absolute inset-0 w-full h-full object-cover opacity-45 group-hover:scale-110 transition-transform duration-500"
                   />
@@ -307,12 +313,12 @@ export default function ModuleMissionsClient({
             {/* Mission Illustration & Description */}
             <div className="bg-[#130927] border border-white/10 rounded-2xl p-5 flex flex-col items-center gap-3 relative overflow-hidden">
               <img 
-                src="/Landing Page BG.png" 
+                src="/assets/global/ui/Landing Page BG.png" 
                 alt="Space" 
                 className="absolute inset-0 w-full h-full object-cover opacity-30 pointer-events-none" 
               />
               <img 
-                src={PLANET_IMAGES[moduleId] || "/Planet 1.svg"} 
+                src={PLANET_IMAGES[moduleId] || "/assets/planets/celestial/Planet 1.svg"} 
                 alt="Planet" 
                 className="w-16 h-16 object-contain relative z-10 drop-shadow-[0_0_15px_rgba(255,145,45,0.4)] animate-pulse" 
               />

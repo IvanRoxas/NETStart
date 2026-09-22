@@ -189,7 +189,7 @@ export const oxygenMazeToolbox = {
       name: 'Movement',
       colour: '#EAB308',
       contents: [
-        { kind: 'block', type: 'move_forward' },
+        { kind: 'block', type: 'action_move_forward' },
         { kind: 'block', type: 'turn_left' },
         { kind: 'block', type: 'turn_right' },
       ],

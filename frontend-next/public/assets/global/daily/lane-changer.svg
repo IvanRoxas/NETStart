@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="100%" height="100%">
+  <defs>
+    <radialGradient id="bgGlowLane" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#00d2d3" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#18072c" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="laneNeon1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00d2d3"/>
+      <stop offset="100%" stop-color="#54a0ff"/>
+    </linearGradient>
+    <linearGradient id="laneNeon2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff9f43"/>
+      <stop offset="100%" stop-color="#ee5253"/>
+    </linearGradient>
+    <filter id="laneGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3.5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Outer Ambient Glow & Ring -->
+  <circle cx="100" cy="100" r="90" fill="url(#bgGlowLane)"/>
+  <circle cx="100" cy="100" r="86" fill="#100624" stroke="#00d2d3" stroke-width="2.5" stroke-dasharray="8 4" opacity="0.85"/>
+  <circle cx="100" cy="100" r="76" fill="#170933" stroke="#ffffff" stroke-width="1" stroke-opacity="0.15"/>
+
+  <!-- Orbital Crossing Tracks -->
+  <g stroke="#ffffff" stroke-width="2" stroke-opacity="0.2" stroke-dasharray="4 4">
+    <line x1="60" y1="35" x2="60" y2="165"/>
+    <line x1="100" y1="35" x2="100" y2="165"/>
+    <line x1="140" y1="35" x2="140" y2="165"/>
+    <line x1="35" y1="100" x2="165" y2="100"/>
+  </g>
+
+  <!-- Lane Changer Trajectory Curves -->
+  <path d="M 60 40 L 60 80 Q 60 100 100 100 T 140 120 L 140 160" 
+        fill="none" 
+        stroke="url(#laneNeon1)" 
+        stroke-width="5" 
+        stroke-linecap="round" 
+        filter="url(#laneGlow)"
+  />
+
+  <path d="M 140 40 L 140 70 Q 140 100 100 100 T 60 130 L 60 160" 
+        fill="none" 
+        stroke="url(#laneNeon2)" 
+        stroke-width="3.5" 
+        stroke-linecap="round" 
+        stroke-dasharray="5 3"
+        filter="url(#laneGlow)"
+  />
+
+  <!-- Center Dynamic Switching Node Hub -->
+  <g transform="translate(100, 100)" filter="url(#laneGlow)">
+    <circle cx="0" cy="0" r="14" fill="#00d2d3" fill-opacity="0.2" stroke="#00d2d3" stroke-width="2"/>
+    <circle cx="0" cy="0" r="7" fill="#ff9f43" stroke="#ffffff" stroke-width="1.5"/>
+  </g>
+
+  <!-- Lane Directional Chevron Indicators -->
+  <g fill="#00d2d3" filter="url(#laneGlow)">
+    <polygon points="56,50 64,50 60,40"/>
+    <polygon points="136,150 144,150 140,160"/>
+  </g>
+
+  <!-- Caution Node Barriers -->
+  <circle cx="60" cy="115" r="5" fill="#ee5253" stroke="#ffffff" stroke-width="1.5" filter="url(#laneGlow)"/>
+  <circle cx="140" cy="85" r="5" fill="#ee5253" stroke="#ffffff" stroke-width="1.5" filter="url(#laneGlow)"/>
+</svg>

@@ -114,12 +114,13 @@ export const authOptions: NextAuthOptions = {
         try {
           const dbU = await prisma.user.findUnique({
             where: { id: token.id as string },
-            select: { hasTakenAptitudeTest: true, isVerified: true, isBanned: true }
+            select: { hasTakenAptitudeTest: true, isVerified: true, isBanned: true, xp: true, gears: true }
           });
           if (dbU) {
             token.hasTakenAptitudeTest = dbU.hasTakenAptitudeTest;
             token.isVerified = dbU.isVerified;
             token.isBanned = dbU.isBanned;
+            if (typeof dbU.xp === 'number') token.xp = dbU.xp;
           }
         } catch (e) {}
       }
@@ -214,7 +215,7 @@ export const authOptions: NextAuthOptions = {
                 data: {
                   badgeId: 'b_create_account',
                   badgeName: 'Ready for Blast Off!',
-                  badgeImage: '/Planet 1.svg'
+                  badgeImage: '/assets/planets/celestial/Planet 1.svg'
                 }
               }
             });

@@ -57,6 +57,37 @@
   animation: fadeIn 1.2s ease-out 0.8s forwards;
 }
 
+@keyframes sunburstSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { transform: scale(1); opacity: 0.85; }
+  50% { transform: scale(1.08); opacity: 1; }
+}
+
+@keyframes floatReward {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+.animate-sunburst {
+  animation: sunburstSpin 18s linear infinite !important;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 2.5s ease-in-out infinite;
+}
+
+.animate-float-reward {
+  animation: floatReward 3s ease-in-out infinite;
+}
+
 :root {
   --background: transparent;
   --foreground: #ffffff;
@@ -125,6 +156,31 @@ svg > .blocklyScrollbarHorizontal {
   fill: #ff912d !important;
   opacity: 0.85 !important;
   visibility: visible !important;
+}
+
+/* Classic Yellow styling for Blockly Tooltip Div */
+.blocklyTooltipDiv {
+  background-color: #ffffc7 !important;
+  border: 1px solid #d4b106 !important;
+  border-radius: 4px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+  color: #111827 !important;
+  font-family: system-ui, -apple-system, sans-serif !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  padding: 5px 9px !important;
+  max-width: 280px !important;
+  line-height: 1.35 !important;
+  z-index: 99999 !important;
+  pointer-events: none !important;
+}
+
+.blocklyTooltipDiv:has(.image-preview-card) {
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  transform: translate(30px, -50%) !important;
 }
 
 /* Custom sleek scrollbar for Raw Syntax editor */
@@ -234,17 +290,41 @@ svg > .blocklyScrollbarHorizontal {
   opacity: 0.92 !important;
 }
 
-/* Blockly Drag-to-Select Multi-Selection Glow - Strictly ONLY direct path of the selected block */
-g.blockly-block-multiselected > path.blocklyPath {
+/* Blockly Single-Selected Block Glow (When clicked / selected) */
+g.blocklySelected > path.blocklyPath,
+.blocklySelected > .blocklyPath {
   stroke: #facc15 !important;
   stroke-width: 3px !important;
   filter: drop-shadow(0 0 10px rgba(250, 204, 21, 0.95)) !important;
 }
 
-/* Ensure no child block inherits or renders this stroke unless it is also explicitly multi-selected */
-g.blocklyDraggable:not(.blockly-block-multiselected) > path.blocklyPath {
-  stroke: none !important;
-  filter: none !important;
+/* Ensure unselected blocks have default stroke behavior */
+g.blocklyDraggable:not(.blocklySelected):not(.blockly-block-error):not(.blockly-block-warning) > path.blocklyPath {
+  stroke: none;
+  filter: none;
+}
+
+/* ========================================================================= */
+/* Blockly Dropdown Indicator Triangles - Solid Black for Colorblind Visibility */
+/* ========================================================================= */
+.blocklyDropdownIcon,
+image.blocklyDropdownIcon,
+path.blocklyDropdownIcon,
+polygon.blocklyDropdownIcon,
+svg .blocklyDropdownIcon,
+.blocklyFieldDropdown image,
+.blocklyFieldDropdown path,
+.blocklyFieldDropdown polygon,
+.blocklyFieldDropdown svg path,
+.blocklyFieldDropdown svg polygon,
+.blocklyFieldDropdown > image,
+.blocklyFieldDropdown > path,
+.blocklyFieldDropdown > polygon {
+  fill: #000000 !important;
+  stroke: #000000 !important;
+  filter: brightness(0) saturate(100%) !important;
+  color: #000000 !important;
+  opacity: 1 !important;
 }
 
 @keyframes rover-bump {
@@ -331,3 +411,48 @@ g.blocklyDraggable:not(.blockly-block-multiselected) > path.blocklyPath {
   visibility: hidden !important;
   opacity: 0 !important;
 }
+
+/* Martian Billboard HTML Text Modifiers */
+mark {
+  background-color: #fde047;
+  color: #0f172a;
+  padding: 0.1em 0.35em;
+  border-radius: 0.25rem;
+  box-shadow: 0 0 10px rgba(253, 224, 71, 0.7);
+  font-weight: 700;
+}
+
+u {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-thickness: 2.5px;
+}
+
+del {
+  text-decoration: line-through;
+  text-decoration-thickness: 2.5px;
+  opacity: 0.85;
+}
+
+/* =========================================================================
+   BLOCKLY DROPDOWN INDICATOR ACCESSIBILITY (SOLID BLACK FOR COLORBLIND)
+   ========================================================================= */
+.blocklyDropdownIcon,
+image.blocklyDropdownIcon,
+path.blocklyDropdownIcon,
+polygon.blocklyDropdownIcon,
+.blocklyFieldDropdown image,
+.blocklyFieldDropdown path,
+.blocklyFieldDropdown polygon,
+.blocklyFieldDropdown text.blocklyDropdownIcon,
+.blocklyFieldDropdown .blocklyDropdownIcon,
+.blocklyFieldDropdown > image,
+.blocklyFieldDropdown > path,
+.blocklyFieldDropdown > polygon {
+  fill: #000000 !important;
+  stroke: #000000 !important;
+  color: #000000 !important;
+  filter: brightness(0) saturate(100%) !important;
+  opacity: 1 !important;
+}
+

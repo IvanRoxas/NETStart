@@ -1,9 +1,11 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Check, Lock, Rocket, Zap, HelpCircle, AlertTriangle, X, Play, RotateCcw } from 'lucide-react';
+
+import { getUserStorageItem, setUserStorageItem, removeUserStorageItem } from '@/lib/userStorage';
 
 interface Mission {
   id: string;
@@ -28,6 +30,7 @@ interface ModuleDetailsClientProps {
   meta: ModuleMeta;
   completedMissions: CompletedMission[];
   sessionUser: {
+    id?: string | null;
     name?: string | null;
     image?: string | null;
   };
@@ -44,8 +47,8 @@ const getMissionHint = (missionId: string) => {
     "html-4": "Hint: Use semantic tags (header, nav, main, section, footer) for document outline.",
     "html-5": "Hint: Configure src, width, height, and controls for video/audio embeds.",
     "mars-1": "Hint: Use semantic tags (header, nav, main, section, article, footer) to construct habitat layout.",
-    "mars-2": "Hint: Pair form inputs with <label for=\"...\"> and include required submit triggers.",
-    "mars-3": "Hint: Organize minerals using <table>, <thead>, <tbody>, <tr>, <th>, and <td>.",
+    "mars-2": "Hint: Read Emma & Penny's clues on the screens and connect matching <img src=\"...\"> inside <div> containers to fix their pictures.",
+    "mars-3": "Hint: Put all your blocks inside a Container <div> with a Heading <h1>, the Mars Seal <img>, and Links <a> targeting Earth and Venus!",
     "mars-4": "Hint: Embed media using <video controls> and <audio autoplay loop> tags.",
     "mars-5": "Hint: Link telemetry stations with <a href=\"...\"> using relative paths.",
     "venus-1": "Hint: Master targeting classes (.thermal), IDs (#core), and attribute selectors.",
@@ -78,20 +81,20 @@ const getMissionHint = (missionId: string) => {
 };
 
 const MODULE_PLANET_ICON: Record<string, string> = {
-  moon: '/MainMoon.svg',
-  mars: '/Planets/Mars.svg',
-  html: '/Planets/Mars.svg',
-  venus: '/Planets/Venus.svg',
-  css: '/Planets/Venus.svg',
-  mercury: '/Planets/Mercury.svg',
-  javascript: '/Planets/Mercury.svg',
-  js: '/Planets/Mercury.svg',
-  jupiter: '/Planets/Jupiter.svg',
-  java: '/Planets/Jupiter.svg',
-  saturn: '/Planets/Saturn.svg',
-  cpp: '/Planets/Saturn.svg',
-  earth: '/Planets/Earth.svg',
-  python: '/Planets/Earth.svg',
+  moon: '/assets/planets/00_moon/environment/MainMoon.svg',
+  mars: '/assets/planets/celestial/Mars.svg',
+  html: '/assets/planets/celestial/Mars.svg',
+  venus: '/assets/planets/celestial/Venus.svg',
+  css: '/assets/planets/celestial/Venus.svg',
+  mercury: '/assets/planets/celestial/Mercury.svg',
+  javascript: '/assets/planets/celestial/Mercury.svg',
+  js: '/assets/planets/celestial/Mercury.svg',
+  jupiter: '/assets/planets/celestial/Jupiter.svg',
+  java: '/assets/planets/celestial/Jupiter.svg',
+  saturn: '/assets/planets/celestial/Saturn.svg',
+  cpp: '/assets/planets/celestial/Saturn.svg',
+  earth: '/assets/planets/celestial/Earth.svg',
+  python: '/assets/planets/celestial/Earth.svg',
 };
 
 export default function ModuleDetailsClient({
@@ -102,58 +105,79 @@ export default function ModuleDetailsClient({
   sessionUser,
 }: ModuleDetailsClientProps) {
   const router = useRouter();
+  const userId = sessionUser?.id;
   const [pendingMission, setPendingMission] = useState<Mission | null>(null);
   const [existingSaveInfo, setExistingSaveInfo] = useState<{ title: string; sectionIndex: number; missionId: string } | null>(null);
   const [showOverrideModal, setShowOverrideModal] = useState(false);
   const [hoveredCardId, setHoveredCardId] = useState<string | null>(null);
   const [savedMissionId, setSavedMissionId] = useState<string | null>(null);
-  const [localCompletedIds, setLocalCompletedIds] = useState<string[]>([]);
+
+  // Server completion set is authoritative
+  const serverCompletedSet = useMemo(() => new Set(completedMissions.map(m => m.missionId.toLowerCase())), [completedMissions]);
 
   useEffect(() => {
     let activeId: string | null = null;
-    try {
-      const rawSave = localStorage.getItem('netstart_active_saved_level') || localStorage.getItem('netstart_active_level');
-      if (rawSave) {
-        const parsed = JSON.parse(rawSave);
-        if (parsed.missionId) {
-          activeId = parsed.missionId.toLowerCase();
+    if (userId) {
+      try {
+        const rawSave = getUserStorageItem('active_saved_level', userId) || getUserStorageItem('active_level', userId);
+        if (rawSave) {
+          const parsed = JSON.parse(rawSave);
+          if (parsed.missionId) {
+            activeId = parsed.missionId.toLowerCase();
+          }
         }
+      } catch (e) {
+        console.warn("Could not retrieve active mission ID:", e);
       }
-    } catch (e) {
-      console.warn("Could not retrieve active mission ID:", e);
+
+      // Synchronize localStorage with server completed missions
+      try {
+        const currentModuleMissionIds = new Set(missions.map(m => m.id.toLowerCase()));
+        const cached: string[] = JSON.parse(getUserStorageItem('completed_missions', userId) || '[]');
+        
+        // Filter out completed status for this module if server says it is not completed (e.g. after a reset)
+        const syncedCached = cached.filter(id => {
+          const lower = id.toLowerCase();
+          if (currentModuleMissionIds.has(lower)) {
+            return serverCompletedSet.has(lower);
+          }
+          return true;
+        });
+
+        // Add any server completions
+        completedMissions.forEach(m => {
+          if (!syncedCached.some(c => c.toLowerCase() === m.missionId.toLowerCase())) {
+            syncedCached.push(m.missionId);
+          }
+        });
+
+        setUserStorageItem('completed_missions', JSON.stringify(syncedCached), userId);
+      } catch (e) {}
     }
 
-    // Also read locally-cached completions for instant UI feedback
-    let cachedList: string[] = [];
-    try {
-      const cached: string[] = JSON.parse(localStorage.getItem('netstart_completed_missions') || '[]');
-      cachedList = cached.map(id => id.toLowerCase());
-      setLocalCompletedIds(cachedList);
-    } catch (e) {}
+    // Check if active save is valid and unlocked (replay sessions of completed levels are valid active sessions)
+    const firstUncompletedIndex = missions.findIndex(m => !serverCompletedSet.has(m.id.toLowerCase()));
+    const allowedActiveIndex = firstUncompletedIndex === -1 ? missions.length - 1 : firstUncompletedIndex;
+    const activeIndex = activeId ? missions.findIndex(m => m.id.toLowerCase() === activeId) : -1;
+    const isLockedMission = activeId && activeIndex !== -1 && activeIndex > allowedActiveIndex && !serverCompletedSet.has(activeId);
 
-    // If the active save is already completed, clear it from localStorage so it never lingers
-    const completedSet = new Set([
-      ...completedMissions.map(m => m.missionId.toLowerCase()),
-      ...cachedList,
-    ]);
-    if (activeId && completedSet.has(activeId)) {
+    if (isLockedMission) {
       try {
-        localStorage.removeItem('netstart_active_saved_level');
-        localStorage.removeItem('netstart_active_level');
+        if (userId) {
+          removeUserStorageItem('active_saved_level', userId);
+          removeUserStorageItem('active_level', userId);
+        }
       } catch (e) {}
       setSavedMissionId(null);
     } else {
       setSavedMissionId(activeId);
     }
-  }, [completedMissions]);
+  }, [completedMissions, missions, serverCompletedSet, userId]);
 
-  // Merge server completions with localStorage cache
-  const allCompletedIds = new Set([
-    ...completedMissions.map(m => m.missionId.toLowerCase()),
-    ...localCompletedIds,
-  ]);
+  // Use authoritative completed IDs from server
+  const allCompletedIds = serverCompletedSet;
 
-  const planetIcon = MODULE_PLANET_ICON[moduleId.toLowerCase()] || '/MainMoon.svg';
+  const planetIcon = MODULE_PLANET_ICON[moduleId.toLowerCase()] || '/assets/planets/00_moon/environment/MainMoon.svg';
 
   const getCompletedCount = (modId: string) => {
     return missions.filter(mission =>
@@ -166,18 +190,20 @@ export default function ModuleDetailsClient({
 
   const handleStartMission = (mission: Mission) => {
     try {
-      const rawSave = localStorage.getItem('netstart_active_saved_level');
-      if (rawSave) {
-        const parsed = JSON.parse(rawSave);
-        if (parsed.missionId && parsed.missionId.toLowerCase() !== mission.id.toLowerCase()) {
-          setExistingSaveInfo({
-            title: parsed.title || parsed.missionId,
-            sectionIndex: parsed.sectionIndex || 0,
-            missionId: parsed.missionId,
-          });
-          setPendingMission(mission);
-          setShowOverrideModal(true);
-          return;
+      if (userId) {
+        const rawSave = getUserStorageItem('active_saved_level', userId);
+        if (rawSave) {
+          const parsed = JSON.parse(rawSave);
+          if (parsed.missionId && parsed.missionId.toLowerCase() !== mission.id.toLowerCase()) {
+            setExistingSaveInfo({
+              title: parsed.title || parsed.missionId,
+              sectionIndex: parsed.sectionIndex || 0,
+              missionId: parsed.missionId,
+            });
+            setPendingMission(mission);
+            setShowOverrideModal(true);
+            return;
+          }
         }
       }
     } catch (e) {
@@ -190,16 +216,18 @@ export default function ModuleDetailsClient({
 
   const launchLevel = (mission: Mission) => {
     try {
-      // Set active mission info in localStorage for profile ongoing mission card
-      localStorage.setItem('netstart_active_level', JSON.stringify({
-        missionId: mission.id,
-        title: mission.title,
-        module: meta.title,
-        icon: planetIcon,
-        desc: mission.desc,
-        tag: mission.tag || 'Basic Syntax',
-        startedAt: new Date().toISOString()
-      }));
+      // Set active mission info in user-scoped storage for profile ongoing mission card
+      if (userId) {
+        setUserStorageItem('active_level', JSON.stringify({
+          missionId: mission.id,
+          title: mission.title,
+          module: meta.title,
+          icon: planetIcon,
+          desc: mission.desc,
+          tag: mission.tag || 'Basic Syntax',
+          startedAt: new Date().toISOString()
+        }), userId);
+      }
     } catch (e) {
       console.warn("Could not save active level metadata:", e);
     }
@@ -212,7 +240,9 @@ export default function ModuleDetailsClient({
   const handleConfirmOverride = () => {
     if (!pendingMission) return;
     try {
-      localStorage.removeItem('netstart_active_saved_level');
+      if (userId) {
+        removeUserStorageItem('active_saved_level', userId);
+      }
       setSavedMissionId(pendingMission.id.toLowerCase());
     } catch (e) {
       console.warn(e);
@@ -229,7 +259,7 @@ export default function ModuleDetailsClient({
       <div 
         className="fixed inset-0 z-0 pointer-events-none" 
         style={{ 
-          backgroundImage: "url('/Landing Page BG.png')", 
+          backgroundImage: "url('/assets/global/ui/Landing Page BG.png')", 
           backgroundSize: 'cover', 
           backgroundPosition: 'center', 
           opacity: 0.15 
@@ -267,15 +297,15 @@ export default function ModuleDetailsClient({
             // If completed or it is the first uncompleted mission, it is unlocked/colored.
             const isUnlocked = index <= (firstUncompletedIndex === -1 ? missions.length : firstUncompletedIndex);
             
-            // Is this level currently saved / active in progress? (Completed missions are never active in progress)
-            const hasActiveProgress = !isCompleted && Boolean(savedMissionId && savedMissionId === mission.id.toLowerCase());
+            // Is this level currently saved / active in progress? (Supports both first-time and replay sessions)
+            const hasActiveProgress = Boolean(savedMissionId && savedMissionId === mission.id.toLowerCase());
             
             // Current active card: matches the saved in-progress level, or falls back to first uncompleted level if no active save exists
             const isCurrentActive = savedMissionId 
               ? hasActiveProgress 
               : (!isCompleted && index === firstUncompletedIndex);
 
-            const imageUrl = "/login-bg.jpg";
+            const imageUrl = "/assets/global/ui/login-bg.jpg";
             const isHovered = hoveredCardId === mission.id;
 
             return (

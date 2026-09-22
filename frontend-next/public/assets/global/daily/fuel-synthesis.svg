@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="100%" height="100%">
+  <defs>
+    <radialGradient id="bgGlowFuel" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#9b59b6" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#18072c" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="flaskFluid" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#00d2d3"/>
+      <stop offset="60%" stop-color="#1dd1a1"/>
+      <stop offset="100%" stop-color="#ff9f43"/>
+    </linearGradient>
+    <linearGradient id="flameGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#ff4757"/>
+      <stop offset="50%" stop-color="#ff9f43"/>
+      <stop offset="100%" stop-color="#feca57"/>
+    </linearGradient>
+    <filter id="fuelGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3.5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Outer Ambient Glow & Shield Ring -->
+  <circle cx="100" cy="100" r="90" fill="url(#bgGlowFuel)"/>
+  <circle cx="100" cy="100" r="86" fill="#130626" stroke="#9b59b6" stroke-width="2.5" stroke-dasharray="8 4" opacity="0.85"/>
+  <circle cx="100" cy="100" r="76" fill="#190933" stroke="#ffffff" stroke-width="1" stroke-opacity="0.15"/>
+
+  <!-- Synthesis Reactor Flask Structure -->
+  <g transform="translate(100, 95)" filter="url(#fuelGlow)">
+    <!-- Flask Outline & Plasma Fluid Fill -->
+    <path d="M -12 -55 L 12 -55 L 12 -28 L 38 28 C 42 36 36 45 28 45 L -28 45 C -36 45 -42 36 -38 28 L -12 -28 Z" 
+          fill="#0c0417" 
+          stroke="#00d2d3" 
+          stroke-width="3" 
+          stroke-linejoin="round"
+    />
+
+    <!-- Glowing Fluid inside Flask -->
+    <path d="M -32 20 L 32 20 C 38 28 36 42 26 42 L -26 42 C -36 42 -38 28 -32 20 Z" 
+          fill="url(#flaskFluid)"
+          stroke="#ffffff"
+          stroke-width="1"
+          stroke-opacity="0.5"
+    />
+
+    <!-- Flask Neck Lip -->
+    <rect x="-16" y="-58" width="32" height="6" rx="3" fill="#00d2d3"/>
+
+    <!-- Bubbling Synthesis Particle Sparks -->
+    <circle cx="-10" cy="28" r="3" fill="#ffffff"/>
+    <circle cx="12" cy="22" r="4" fill="#ffffff" fill-opacity="0.8"/>
+    <circle cx="2" cy="8" r="2.5" fill="#00d2d3"/>
+    <circle cx="-5" cy="-8" r="3" fill="#ff9f43"/>
+    <circle cx="6" cy="-25" r="2" fill="#1dd1a1"/>
+  </g>
+
+  <!-- Heat Reactor Base / Thermal Ring -->
+  <g transform="translate(100, 150)" filter="url(#fuelGlow)">
+    <path d="M -25 0 Q 0 -15 25 0 Q 0 8 -25 0 Z" fill="url(#flameGrad)"/>
+    <circle cx="-10" cy="-2" r="3" fill="#feca57"/>
+    <circle cx="10" cy="-2" r="3" fill="#feca57"/>
+  </g>
+
+  <!-- Orbiting Molecular Catalyst Ring -->
+  <ellipse cx="100" cy="95" rx="55" ry="18" fill="none" stroke="#feca57" stroke-width="1.5" stroke-dasharray="4 4" transform="rotate(-25, 100, 95)" filter="url(#fuelGlow)"/>
+  <circle cx="50" cy="118" r="4.5" fill="#feca57" stroke="#ffffff" stroke-width="1" filter="url(#fuelGlow)"/>
+  <circle cx="150" cy="72" r="4.5" fill="#ff9f43" stroke="#ffffff" stroke-width="1" filter="url(#fuelGlow)"/>
+</svg>

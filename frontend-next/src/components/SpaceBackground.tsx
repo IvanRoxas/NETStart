@@ -12,24 +12,24 @@ const PATH_TO_INDEX: Record<string, number> = {
 
 const planets = [
   // Slide 1 (Home)
-  { src: '/Spaceship.svg', left: '2%', top: '25%', width: '150px' },
-  { src: '/Planet 8.svg', left: '17%', top: '6%', width: '220px' },
+  { src: '/assets/planets/00_moon/level_1/Spaceship.svg', left: '2%', top: '25%', width: '150px' },
+  { src: '/assets/planets/celestial/Planet 8.svg', left: '17%', top: '6%', width: '220px' },
   
   // Slide 2 (Features)
-  { src: '/Debris.svg', left: '26%', top: '35%', width: '40px' },
-  { src: '/UFO.svg', left: '25%', top: '41%', width: '90px' },
-  { src: '/Planet 3.svg', left: '33%', top: '-5%', width: '600px' },
-  { src: '/Meteor.svg', left: '47%', top: '42%', width: '120px' },
+  { src: '/assets/planets/00_moon/environment/Debris.svg', left: '26%', top: '35%', width: '40px' },
+  { src: '/assets/planets/00_moon/level_1/UFO.svg', left: '25%', top: '41%', width: '90px' },
+  { src: '/assets/planets/celestial/Planet 3.svg', left: '33%', top: '-5%', width: '600px' },
+  { src: '/assets/planets/00_moon/environment/Meteor.svg', left: '47%', top: '42%', width: '120px' },
   
   // Slide 3 (About Us)
-  { src: '/Planet 4.svg', left: '55%', top: '30%', width: '180px' }, 
-  { src: '/Planet 6.svg', left: '70%', top: '-2%', width: '450px' },
-  { src: '/Debris.svg', left: '63%', top: '18%', width: '30px' },
+  { src: '/assets/planets/celestial/Planet 4.svg', left: '55%', top: '30%', width: '180px' }, 
+  { src: '/assets/planets/celestial/Planet 6.svg', left: '70%', top: '-2%', width: '450px' },
+  { src: '/assets/planets/00_moon/environment/Debris.svg', left: '63%', top: '18%', width: '30px' },
   
   // Slide 4 (Our Team)
-  { src: '/Planet 7.svg', left: '92%', top: '25%', width: '250px' },
-  { src: '/Planet 1.svg', left: '98%', top: '10%', width: '90px' },
-  { src: '/Debris.svg', left: '82%', top: '45%', width: '50px' },
+  { src: '/assets/planets/celestial/Planet 7.svg', left: '92%', top: '25%', width: '250px' },
+  { src: '/assets/planets/celestial/Planet 1.svg', left: '98%', top: '10%', width: '90px' },
+  { src: '/assets/planets/00_moon/environment/Debris.svg', left: '82%', top: '45%', width: '50px' },
 ];
 
 export default function SpaceBackground() {
@@ -52,7 +52,7 @@ export default function SpaceBackground() {
       <div 
         className="absolute inset-0 w-full h-full transition-all duration-1000 ease-[cubic-bezier(0.645,0.045,0.355,1)]"
         style={{ 
-          backgroundImage: "url('/Landing Page BG.png')",
+          backgroundImage: "url('/assets/global/ui/Landing Page BG.png')",
           backgroundPositionX: bgPosition,
           backgroundSize: 'auto 100%'
         }}
@@ -87,7 +87,7 @@ export default function SpaceBackground() {
       {/* Rotating Moon */}
       <div className="absolute bottom-[-1500px] left-1/2 -translate-x-1/2 z-[1] pointer-events-none">
         <img 
-          src="/cc.svg" 
+          src="/assets/global/ui/cc.svg" 
           alt="Moon" 
           className="w-[1700px] h-[1700px] max-w-none transition-transform duration-1000 ease-[cubic-bezier(0.645,0.045,0.355,1)]"
           style={{ transform: moonRotation }}

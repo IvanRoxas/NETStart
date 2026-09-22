@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import TopHeader from '@/components/TopHeader';
-import ImageCropModal from '@/components/ImageCropModal';
 import { createPortal } from 'react-dom';
 import SpaceLoader from '@/components/SpaceLoader';
 
@@ -16,13 +15,7 @@ export default function SettingsPage() {
 
   const [activeTab, setActiveTab] = useState('General');
   const [username, setUsername] = useState('');
-  const [avatarUrl, setAvatarUrl] = useState('');
   const [showToast, setShowToast] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Cropping State
-  const [cropModalOpen, setCropModalOpen] = useState(false);
-  const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
 
   // Local Auth State
   const [email, setEmail] = useState('');
@@ -80,13 +73,10 @@ export default function SettingsPage() {
         .then(data => {
           if (data.user) {
             setUsername(data.user.name || session.user?.name || '');
-            // Always use the API route because it handles SVG initial generation if image is null
-            setAvatarUrl(`/api/profile/avatar?id=${(session.user as any).id}&t=${Date.now()}`);
           }
         })
         .catch(err => {
           setUsername(session?.user?.name || '');
-          setAvatarUrl(`/api/profile/avatar?id=${(session.user as any).id}&t=${Date.now()}`);
         });
     }
   }, [status, session, router]);
@@ -97,46 +87,6 @@ export default function SettingsPage() {
     }
   }, [session?.user?.name]);
 
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        if (event.target?.result) {
-          setCropImageSrc(event.target.result as string);
-          setCropModalOpen(true);
-        }
-      };
-      reader.readAsDataURL(file);
-      e.target.value = '';
-    }
-  };
-
-  const handleCropSave = async (base64String: string) => {
-    setAvatarUrl(base64String);
-    setCropModalOpen(false);
-
-    // Automatically save profile after cropping
-    setLoading(true);
-    try {
-      const payload: any = { image: base64String };
-      await fetch('/api/profile', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      const nextAuthImageUrl = `/api/profile/avatar?id=${(session?.user as any)?.id}&t=${Date.now()}`;
-      await update({ image: nextAuthImageUrl });
-
-      setShowToast(true);
-      setTimeout(() => setShowToast(false), 3000);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleProfileUpdate = async (e?: React.FormEvent | React.FocusEvent) => {
     if (e) e.preventDefault();
     if (!username.trim()) return; // Don't save empty usernames
@@ -144,18 +94,13 @@ export default function SettingsPage() {
 
     try {
       const payload: any = { name: username };
-      if (avatarUrl && avatarUrl.startsWith('data:')) {
-        payload.image = avatarUrl;
-      }
 
       await fetch('/api/profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
-      // Update next-auth session with dynamic URL to avoid cookie size limit
-      const nextAuthImageUrl = `/api/profile/avatar?id=${(session?.user as any)?.id}&t=${Date.now()}`;
-      await update({ name: username, image: nextAuthImageUrl });
+      await update({ name: username });
 
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
@@ -410,50 +355,7 @@ export default function SettingsPage() {
                 <div>
                   <h2 className="font-display text-2xl font-bold text-[#ff912d] mb-6">Account Details</h2>
 
-                  {/* Crop Modal */}
-                  <ImageCropModal
-                    isOpen={cropModalOpen}
-                    onClose={() => setCropModalOpen(false)}
-                    imageSrc={cropImageSrc}
-                    aspect={1}
-                    title="Crop your Avatar"
-                    onSave={handleCropSave}
-                  />
-
                   <form onSubmit={handleProfileUpdate} className="flex flex-col gap-8">
-                    {/* Avatar Component */}
-                    <div className="flex items-end gap-6">
-                      <div className="relative">
-                        <div className="w-24 h-24 bg-[#2a133d] rounded-full flex items-center justify-center overflow-hidden">
-                          {avatarUrl ? (
-                            <Image src={avatarUrl} alt="Profile Picture" width={96} height={96} className="object-cover w-full h-full" />
-                          ) : (
-                            <Image src="/Profile.svg" alt="Default Profile" width={96} height={96} className="object-cover w-full h-full" />
-                          )}
-                        </div>
-                        <input
-                          type="file"
-                          ref={fileInputRef}
-                          onChange={handleAvatarChange}
-                          accept="image/*"
-                          className="hidden"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => fileInputRef.current?.click()}
-                          className="absolute bottom-0 right-0 bg-[#ff912d] w-7 h-7 rounded-full flex items-center justify-center text-white border-2 border-[#1e0a2d] hover:bg-orange-500 transition-colors cursor-pointer"
-                          title="Edit Profile Picture"
-                        >
-                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                          </svg>
-                        </button>
-                      </div>
-                      <div className="flex flex-col">
-                        <p className="text-white/70 text-sm font-medium">Profile Picture</p>
-                        <p className="text-white/40 text-xs mt-1">JPG, GIF or PNG. Max size of 800K</p>
-                      </div>
-                    </div>
 
                     <div className="flex flex-col gap-2 max-w-md">
                       <label className="text-white/70 text-[13px] font-medium">Username</label>

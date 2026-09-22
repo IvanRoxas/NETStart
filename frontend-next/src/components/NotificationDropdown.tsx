@@ -76,7 +76,7 @@ export default function NotificationDropdown({
   };
 
   const portalContent = (
-    <div 
+    <div
       id="notif-portal-content"
       className="fixed z-[99999] w-[420px] bg-[#1e0a2d] border border-white/10 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.5)] overflow-hidden"
       style={{ top: pos.top, right: pos.right }}
@@ -87,8 +87,8 @@ export default function NotificationDropdown({
       <div className="max-h-[400px] overflow-y-auto">
         {loadingNotifs ? (
           <div className="p-4 flex flex-col gap-3">
-             <div className="h-12 bg-white/5 animate-pulse rounded-xl"></div>
-             <div className="h-12 bg-white/5 animate-pulse rounded-xl"></div>
+            <div className="h-12 bg-white/5 animate-pulse rounded-xl"></div>
+            <div className="h-12 bg-white/5 animate-pulse rounded-xl"></div>
           </div>
         ) : displayedNotifs.length === 0 ? (
           <div className="p-8 flex flex-col items-center justify-center text-white/40 text-center gap-2">
@@ -103,39 +103,60 @@ export default function NotificationDropdown({
               const notifData = typeof notif.data === 'string' ? JSON.parse(notif.data) : (notif.data || {});
               const badgeImg = notifData?.badgeImage || notifData?.badgeIcon || notifData?.iconUrl || notifData?.image;
               const isBadgeImage = badgeImg && (badgeImg.startsWith('/') || badgeImg.startsWith('http') || badgeImg.startsWith('data:'));
-              
+
+              const getPlanetImageSrc = (data: any) => {
+                const name = String(data?.planetName || data?.planetId || '').toLowerCase();
+                const rawSrc = String(data?.planetSrc || data?.planetImage || data?.iconUrl || data?.image || '');
+                if (name.includes('mars')) return '/assets/planets/celestial/Mars.svg';
+                if (name.includes('moon')) return '/assets/planets/celestial/Planet 7.svg';
+                if (name.includes('venus')) return '/assets/planets/celestial/Venus.svg';
+                if (name.includes('mercury')) return '/assets/planets/celestial/Mercury.svg';
+                if (name.includes('jupiter')) return '/assets/planets/celestial/Jupiter.svg';
+                if (name.includes('saturn')) return '/assets/planets/celestial/Saturn.svg';
+                if (name.includes('earth')) return '/assets/planets/celestial/Earth.svg';
+                if (rawSrc && (rawSrc.startsWith('/') || rawSrc.startsWith('http'))) {
+                  if (rawSrc.startsWith('/assets/planets/') && !rawSrc.includes('/celestial/')) {
+                    const filename = rawSrc.split('/').pop();
+                    return `/assets/planets/celestial/${filename}`;
+                  }
+                  return rawSrc;
+                }
+                return '/assets/planets/celestial/Mars.svg';
+              };
+
               return (
                 <div key={notif.id} className={`p-4 border-b border-white/5 flex gap-3 hover:bg-white/5 transition-colors ${isUnread ? 'bg-[#ff912d]/5' : ''}`}>
                   <div className="w-10 h-10 rounded-full bg-[#361d57] flex-shrink-0 flex items-center justify-center overflow-hidden border border-[#ff912d]/40 p-1">
                     {(notif.type === 'planet_unlocked' || notif.notification_type === 'planet_unlocked') ? (
-                      notifData?.planetSrc ? (
-                        <img src={notifData.planetSrc} alt={notifData.planetName || 'Planet'} className="w-full h-full object-contain" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-[#ff912d]/20 rounded-full text-[#ff912d]">
-                          <Rocket size={16} />
-                        </div>
-                      )
+                      <img
+                        src={getPlanetImageSrc(notifData)}
+                        alt={notifData?.planetName || 'Planet'}
+                        className="w-full h-full object-contain"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = '/assets/planets/celestial/Mars.svg';
+                        }}
+                      />
                     ) : (notif.type === 'system_verify_reward' || notif.notification_type === 'system_verify_reward') ? (
                       <div className="w-full h-full flex items-center justify-center bg-[#ff912d]/20 rounded-full shadow-inner text-[#ff912d]">
                         <Settings size={18} />
                       </div>
                     ) : (notif.type === 'achievement_unlocked' || notif.notification_type === 'achievement_unlocked' || notif.type === 'level_up' || notif.notification_type === 'level_up') ? (
-                       isBadgeImage ? (
-                         <img src={badgeImg} alt={notifData?.badgeName || "Badge"} className="w-full h-full object-contain drop-shadow" />
-                       ) : (notif.type === 'level_up' || notif.notification_type === 'level_up') ? (
-                         <div className="w-full h-full flex items-center justify-center bg-[#ffb703] rounded-full shadow-inner">
-                           <span className="text-black font-black text-sm">{notifData?.level || notifData?.badgeName?.replace(/\D/g, '') || 'LVL'}</span>
-                         </div>
-                       ) : (
-                         <span className="text-[#ff912d] font-bold text-base">{badgeImg || '🏆'}</span>
-                       )
+                      isBadgeImage ? (
+                        <img src={badgeImg} alt={notifData?.badgeName || "Badge"} className="w-full h-full object-contain drop-shadow" />
+                      ) : (notif.type === 'level_up' || notif.notification_type === 'level_up') ? (
+                        <div className="w-full h-full flex items-center justify-center bg-[#ffb703] rounded-full shadow-inner">
+                          <span className="text-black font-black text-sm">{notifData?.level || notifData?.badgeName?.replace(/\D/g, '') || 'LVL'}</span>
+                        </div>
+                      ) : (
+                        <span className="text-[#ff912d] font-bold text-base">{badgeImg || '🏆'}</span>
+                      )
                     ) : notif.sender?.avatar_url ? (
                       <Image src={notif.sender.avatar_url} alt="" width={40} height={40} className="w-full h-full object-cover rounded-full" />
                     ) : (
                       <span className="text-[#ff912d] font-bold text-base">{(notif.sender?.displayName || notif.sender?.name)?.charAt(0) || '?'}</span>
                     )}
                   </div>
-                  
+
                   <div className="flex-1 flex flex-col gap-1 pr-24 relative">
                     <p className="text-sm text-white/90 leading-tight">
                       {(notif.type === 'planet_unlocked' || notif.notification_type === 'planet_unlocked') ? (
@@ -166,25 +187,25 @@ export default function NotificationDropdown({
                       )}
                     </p>
                     <span className="text-xs text-white/40">{timeAgo(notif.created_at)}</span>
-                    
-                  {isUnread && <div className="absolute top-4 right-4 w-2 h-2 rounded-full bg-[#ff912d]"></div>}
-                  
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                       <button 
-                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDismiss?.(notif); }}
-                         disabled={isProcessing}
-                         className="w-7 h-7 rounded-full border border-white/10 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-50 cursor-pointer"
-                       >
-                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                       </button>
+
+                    {isUnread && <div className="absolute top-4 right-4 w-2 h-2 rounded-full bg-[#ff912d]"></div>}
+
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                      <button
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDismiss?.(notif); }}
+                        disabled={isProcessing}
+                        className="w-7 h-7 rounded-full border border-white/10 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-50 cursor-pointer"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                      </button>
                     </div>
-                </div>
+                  </div>
                 </div>
               );
             })}
           </div>
         )}
-        
+
         <Link href="/notifications" onClick={onClose} className="block w-full py-3 border-t border-white/5 text-center text-xs text-[#ff912d] font-bold hover:bg-[#ff912d]/10 transition-colors">
           View All Notifications
         </Link>

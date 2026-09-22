@@ -120,7 +120,7 @@ const playExplosionSound = () => {
 };
 
 export const FlightSimulation = forwardRef<FlightSimulationRef, FlightSimulationProps>(({
-  destinationPlanet = "/Planets/Mars.svg",
+  destinationPlanet = "/assets/planets/celestial/Mars.svg",
   onComplete,
   onEventTrigger,
   isExternalRunning = false
@@ -1331,7 +1331,7 @@ export const FlightSimulation = forwardRef<FlightSimulationRef, FlightSimulation
           ref={bgElementRef}
           className="absolute inset-0 z-0 pointer-events-none"
           style={{
-            backgroundImage: "url('/Landing Page BG.png')",
+            backgroundImage: "url('/assets/global/ui/Landing Page BG.png')",
             backgroundSize: 'auto 100%',
             backgroundRepeat: 'repeat-x',
             backgroundPosition: '0px 0',
@@ -1439,7 +1439,7 @@ export const FlightSimulation = forwardRef<FlightSimulationRef, FlightSimulation
             {/* Spaceship Body Graphic */}
             <div className={`relative transition-all duration-150 ${isShipHit ? 'opacity-0 scale-50' : 'opacity-100 scale-100'} ${isLaunching ? 'scale-110 duration-300' : ''}`}>
               <img
-                src="/Spaceship Section 3.svg"
+                src="/assets/planets/00_moon/level_1/Spaceship Section 3.svg"
                 alt="Player Spaceship"
                 className="w-18 h-18 sm:w-22 sm:h-22 object-contain drop-shadow-[0_0_18px_rgba(255,145,45,0.75)]"
               />
@@ -1449,7 +1449,7 @@ export const FlightSimulation = forwardRef<FlightSimulationRef, FlightSimulation
             {isShipHit && (
               <div className="absolute -inset-10 z-40 flex items-center justify-center pointer-events-none animate-in fade-in zoom-in duration-75">
                 <img
-                  src="/Explosion.svg"
+                  src="/assets/planets/00_moon/environment/Explosion.svg"
                   alt="Explosion"
                   className="w-36 h-36 sm:w-44 sm:h-44 object-contain animate-single-explosion opacity-100 drop-shadow-[0_0_35px_rgba(239,68,68,0.95)]"
                 />
@@ -1524,7 +1524,7 @@ export const FlightSimulation = forwardRef<FlightSimulationRef, FlightSimulation
               <div className="absolute -inset-4 rounded-full bg-emerald-400/25 blur-md animate-ping" />
 
               <img
-                src="/UFO.svg"
+                src="/assets/planets/00_moon/level_1/UFO.svg"
                 alt="Friendly UFO"
                 className="w-16 h-16 sm:w-20 sm:h-20 object-contain drop-shadow-[0_0_25px_rgba(34,197,94,0.95)] animate-bob"
               />
@@ -1576,14 +1576,14 @@ export const FlightSimulation = forwardRef<FlightSimulationRef, FlightSimulation
                       {isDestroyed ? (
                         <img
                           key={`exp-${ast.id}`}
-                          src="/Explosion.svg"
+                          src="/assets/planets/00_moon/environment/Explosion.svg"
                           alt="Destroyed Asteroid"
                           className="w-28 h-28 sm:w-36 sm:h-36 object-contain animate-single-explosion drop-shadow-[0_0_35px_rgba(251,191,36,0.95)] pointer-events-none"
                         />
                       ) : (
                         <img
                           key={`meteor-${ast.id}`}
-                          src="/Meteor Small.svg"
+                          src="/assets/planets/00_moon/environment/Meteor Small.svg"
                           alt="Small Asteroid"
                           className="w-18 h-18 sm:w-22 sm:h-22 object-contain drop-shadow-[0_0_20px_rgba(249,115,22,0.95)] animate-spin-steady"
                         />
@@ -1612,7 +1612,7 @@ export const FlightSimulation = forwardRef<FlightSimulationRef, FlightSimulation
               <div className="absolute -right-10 top-1/2 -translate-y-1/2 w-36 h-10 bg-gradient-to-r from-yellow-200 via-amber-400 to-transparent rounded-full blur-xs opacity-95 pointer-events-none" />
 
               <img
-                src="/Meteor Big.svg"
+                src="/assets/planets/00_moon/environment/Meteor Big.svg"
                 alt="Massive Asteroid"
                 className="w-48 h-48 sm:w-60 sm:h-60 object-contain drop-shadow-[0_0_50px_rgba(244,63,94,0.95)] animate-spin-steady-slow relative z-10"
               />
@@ -1632,7 +1632,7 @@ export const FlightSimulation = forwardRef<FlightSimulationRef, FlightSimulation
           >
             <div className="relative flex items-center justify-center">
               <img
-                src="/Explosion.svg"
+                src="/assets/planets/00_moon/environment/Explosion.svg"
                 alt="Asteroid Destroyed"
                 className="w-48 h-48 sm:w-60 sm:h-60 object-contain animate-single-explosion drop-shadow-[0_0_35px_rgba(251,191,36,0.95)]"
               />

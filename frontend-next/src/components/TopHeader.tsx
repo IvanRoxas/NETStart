@@ -34,7 +34,7 @@ export default function TopHeader({ title }: TopHeaderProps) {
     if (typeof window !== 'undefined') {
       const audio = new Audio();
       const canPlayMp3 = audio.canPlayType && audio.canPlayType('audio/mpeg') !== '';
-      audio.src = canPlayMp3 ? '/notification.mp3' : '/Notification.ogg';
+      audio.src = canPlayMp3 ? '/assets/global/ui/notification.mp3' : '/assets/global/ui/Notification.ogg';
       audio.volume = 0.2;
       audio.preload = 'auto';
       audioRef.current = audio;

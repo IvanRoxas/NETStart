@@ -27,9 +27,24 @@ const MODULE_MISSIONS: Record<string, { id: string; title: string; desc: string;
     },
   ],
   mars: [
-    { id: "mars-1", title: "Mars Level 1: Semantic Habitat Tags", desc: "Construct semantic habitat components using header, main, section, and article tags.", tag: "Semantic Tags" },
-    { id: "mars-2", title: "Mars Level 2: Environmental Forms & Telemetry", desc: "Build input fields, select elements, textareas, and master telemetry form attributes.", tag: "Forms" },
-    { id: "mars-3", title: "Mars Level 3: Mineral Data Tables", desc: "Master the structure of rows, headers, cells, and embed framing details for Martian geology.", tag: "Tables" },
+    { 
+      id: "mars-1", 
+      title: "Level 1: The Blank Billboard", 
+      desc: "Mark's giant space sign is completely broken! Snap your blocks together to fix the big, bold letters, and pack all the text neatly into a single box so everyone on Mars can read it.", 
+      tag: "Text Hierarchy, Structure" 
+    },
+    { 
+      id: "mars-2", 
+      title: "Level 2: Picture Perfect!", 
+      desc: "Emma and Penny's screens are stuck on default placeholder images! Read the clues and pick the correct pictures from your toolbox to fix them.", 
+      tag: "Images, File Links" 
+    },
+    { 
+      id: "mars-3", 
+      title: "Level 3: The Big Space Message!", 
+      desc: "The AstroLink is turned on, but Earth and Venus don't recognize us! Put all your HTML blocks together to build a friendly message that proves who we are so they will answer our call.", 
+      tag: "Hyperlinks, Grouping" 
+    },
   ],
   venus: [
     { id: "venus-1", title: "Venus Level 1: Thermal Selectors & Cascades", desc: "Master targeting classes, ids, pseudo-selectors, and the CSS cascade tree.", tag: "Selectors" },
@@ -155,7 +170,7 @@ export default async function ModuleMissionsPage({ params }: { params: Promise<P
   if (isModuleLocked()) {
     return (
       <div className="min-h-screen w-full bg-[#1e0a2d] flex items-center justify-center relative overflow-hidden px-6">
-        <div className="absolute inset-0 z-0 pointer-events-none" style={{ backgroundImage: "url('/Landing Page BG.png')", backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.3 }} />
+        <div className="absolute inset-0 z-0 pointer-events-none" style={{ backgroundImage: "url('/assets/global/ui/Landing Page BG.png')", backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.3 }} />
         <div className="absolute inset-0 bg-black/60 z-0" />
         
         <div className="bg-[#1e0a2d]/90 backdrop-blur-xl border border-[#ff912d]/30 p-10 rounded-3xl max-w-md w-full text-center shadow-2xl relative z-10 flex flex-col items-center gap-6">
@@ -189,6 +204,7 @@ export default async function ModuleMissionsPage({ params }: { params: Promise<P
       meta={meta}
       completedMissions={completedMissions}
       sessionUser={{
+        id: userId,
         name: session.user.name,
         image: session.user.image,
       }}

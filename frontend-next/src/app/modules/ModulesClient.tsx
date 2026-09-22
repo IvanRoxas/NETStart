@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { Lock, Rocket, Award, Settings, Zap, Brain, X } from 'lucide-react';
 import PlanetNode from '@/components/PlanetNode';
 
+import { getUserStorageItem, setUserStorageItem, removeUserStorageItem } from '@/lib/userStorage';
+
 interface LiveStats {
   level: number;
   progress: number;
@@ -21,6 +23,7 @@ interface CompletedMission {
 }
 
 interface ModulesClientProps {
+  userId?: string;
   isVerified: boolean;
   hasTakenAptitudeTest?: boolean;
   liveStats: LiveStats;
@@ -37,13 +40,17 @@ const pathSegments = [
   { from: 5, to: 6, x1: 76, y1: 74, x2: 26, y2: 86 },
 ];
 
-export default function ModulesClient({ isVerified, hasTakenAptitudeTest = false, liveStats, completedMissions }: ModulesClientProps) {
+export default function ModulesClient({ userId, isVerified, hasTakenAptitudeTest = false, liveStats, completedMissions }: ModulesClientProps) {
   const [activePlanetId, setActivePlanetId] = useState<string | null>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.scrollTo(0, 0);
+    }
+    if (!userId) return;
     try {
-      const rawSave = localStorage.getItem('netstart_active_saved_level') || localStorage.getItem('netstart_active_level');
+      const rawSave = getUserStorageItem('active_saved_level', userId) || getUserStorageItem('active_level', userId);
       if (rawSave) {
         const parsed = JSON.parse(rawSave);
         if (parsed.missionId) {
@@ -60,7 +67,7 @@ export default function ModulesClient({ isVerified, hasTakenAptitudeTest = false
     } catch (e) {
       console.warn("Could not retrieve active mission ID in ModulesClient:", e);
     }
-  }, []);
+  }, [userId]);
 
   // Container logic for blurring unverified/untested users
   const containerClass = `absolute inset-0 w-full h-full transition-all duration-500 overflow-x-hidden overflow-y-visible ${
@@ -77,7 +84,7 @@ export default function ModulesClient({ isVerified, hasTakenAptitudeTest = false
       top: "14%", 
       left: "26%", 
       sizeClass: "w-40 h-40 sm:w-48 sm:h-48", 
-      src: "/MainMoon.svg", 
+      src: "/assets/planets/00_moon/environment/MainMoon.svg", 
       imgScale: 0.85, 
       rotationSpeed: 30, 
       reverse: true, 
@@ -92,7 +99,7 @@ export default function ModulesClient({ isVerified, hasTakenAptitudeTest = false
       top: "26%", 
       left: "74%", 
       sizeClass: "w-56 h-56 sm:w-64 sm:h-64", 
-      src: "/Planets/Mars.svg", 
+      src: "/assets/planets/celestial/Mars.svg", 
       imgScale: 0.86, 
       rotationSpeed: 20, 
       reverse: false, 
@@ -107,7 +114,7 @@ export default function ModulesClient({ isVerified, hasTakenAptitudeTest = false
       top: "38%", 
       left: "25%", 
       sizeClass: "w-56 h-56 sm:w-64 sm:h-64", 
-      src: "/Planets/Venus.svg", 
+      src: "/assets/planets/celestial/Venus.svg", 
       imgScale: 0.86, 
       rotationSpeed: 25, 
       reverse: true, 
@@ -122,7 +129,7 @@ export default function ModulesClient({ isVerified, hasTakenAptitudeTest = false
       top: "50%", 
       left: "75%", 
       sizeClass: "w-48 h-48 sm:w-56 sm:h-56", 
-      src: "/Planets/Mercury.svg", 
+      src: "/assets/planets/celestial/Mercury.svg", 
       imgScale: 0.86, 
       rotationSpeed: 35, 
       reverse: false, 
@@ -137,7 +144,7 @@ export default function ModulesClient({ isVerified, hasTakenAptitudeTest = false
       top: "62%", 
       left: "24%", 
       sizeClass: "w-76 h-76 sm:w-92 sm:h-92", 
-      src: "/Planets/Jupiter.svg", 
+      src: "/assets/planets/celestial/Jupiter.svg", 
       imgScale: 0.90, 
       rotationSpeed: 45, 
       reverse: false, 
@@ -152,7 +159,7 @@ export default function ModulesClient({ isVerified, hasTakenAptitudeTest = false
       top: "74%", 
       left: "76%", 
       sizeClass: "w-68 h-68 sm:w-80 sm:h-80", 
-      src: "/Planets/Saturn.svg", 
+      src: "/assets/planets/celestial/Saturn.svg", 
       imgScale: 0.88, 
       rotationSpeed: 22, 
       reverse: true, 
@@ -167,21 +174,21 @@ export default function ModulesClient({ isVerified, hasTakenAptitudeTest = false
       top: "86%", 
       left: "26%", 
       sizeClass: "w-56 h-56 sm:w-64 sm:h-64", 
-      src: "/Planets/Earth.svg", 
+      src: "/assets/planets/celestial/Earth.svg", 
       imgScale: 0.86, 
       rotationSpeed: 30, 
       reverse: false, 
       totalMissions: 3,
-      languageBadge: { iconUrl: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/python/python-original.svg", label: "Python", color: "#3776AB" }
+      languageBadge: { iconUrl: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/python/python-original.svg", label: "Python", color: "#22c55e", iconBg: "rgba(34, 197, 94, 0.22)" }
     }
   ];
 
-  // Combine server completed missions with client-side localStorage fallback for instantaneous detection
+  // Combine server completed missions with user-scoped storage
   const allCompletedMissions = useMemo(() => {
-    const list = [...completedMissions].filter(m => !m.missionId.startsWith('daily-'));
-    if (typeof window !== 'undefined') {
+    const list: { missionId: string }[] = completedMissions.filter(m => !m.missionId.startsWith('daily-'));
+    if (typeof window !== 'undefined' && userId) {
       try {
-        const localList: string[] = JSON.parse(localStorage.getItem('netstart_completed_missions') || '[]');
+        const localList: string[] = JSON.parse(getUserStorageItem('completed_missions', userId) || '[]');
         localList.forEach(id => {
           if (!id.startsWith('daily-') && !list.some(m => m.missionId.toLowerCase() === id.toLowerCase())) {
             list.push({ missionId: id });
@@ -190,7 +197,7 @@ export default function ModulesClient({ isVerified, hasTakenAptitudeTest = false
       } catch (e) {}
     }
     return list;
-  }, [completedMissions]);
+  }, [completedMissions, userId]);
 
   // Map user completed count per module
   const getCompletedMissionsCount = (moduleId: string) => {
@@ -285,15 +292,16 @@ export default function ModulesClient({ isVerified, hasTakenAptitudeTest = false
         progress: eased,
       }));
 
-      // Smooth scroll following the rocket
+      // Smooth scroll following the rocket in the container
       const fromTopPercent = parseFloat(pathNodes[fromIdx].top);
       const toTopPercent = parseFloat(pathNodes[toIdx].top);
       const currentTopPercent = fromTopPercent + (toTopPercent - fromTopPercent) * eased;
 
-      if (typeof window !== 'undefined' && containerRef.current) {
-        const containerHeight = containerRef.current.scrollHeight;
-        const targetScrollY = (currentTopPercent / 100) * containerHeight - window.innerHeight * 0.4;
-        window.scrollTo({
+      const scrollContainer = document.getElementById('modules-scroll-container');
+      if (scrollContainer) {
+        const containerHeight = scrollContainer.scrollHeight;
+        const targetScrollY = (currentTopPercent / 100) * containerHeight - (scrollContainer.clientHeight * 0.60);
+        scrollContainer.scrollTo({
           top: Math.max(0, targetScrollY),
           behavior: 'auto'
         });
@@ -312,8 +320,10 @@ export default function ModulesClient({ isVerified, hasTakenAptitudeTest = false
         });
 
         try {
-          localStorage.setItem('netstart_last_animated_planet_idx', toIdx.toString());
-          localStorage.setItem('netstart_last_animated_planet', pathNodes[toIdx].id);
+          if (userId) {
+            setUserStorageItem('last_animated_planet_idx', toIdx.toString(), userId);
+            setUserStorageItem('last_animated_planet', pathNodes[toIdx].id, userId);
+          }
         } catch (e) {}
 
         // Trigger clean sliding toast notification upon arrival
@@ -337,52 +347,75 @@ export default function ModulesClient({ isVerified, hasTakenAptitudeTest = false
     requestAnimationFrame(animate);
   };
 
-  // Detect if an unlock animation needs to play (plays only once per unlock)
+  // Smoothly travel camera focus to the current unlocked planet on page arrival
   useEffect(() => {
-    try {
-      const storedIdxStr = localStorage.getItem('netstart_last_animated_planet_idx');
-      const unlockPending = localStorage.getItem('netstart_planet_unlock_pending') === 'true';
+    if (typeof window === 'undefined') return;
 
-      if (storedIdxStr === null) {
-        if (realUnlockedIndex === 0) {
-          // True first-visit with no progress: set checkpoint silently, no animation
-          localStorage.setItem('netstart_last_animated_planet_idx', '0');
-          localStorage.setItem('netstart_last_animated_planet', pathNodes[0].id);
-          setAnimState(prev => ({ ...prev, unlockedIndex: 0 }));
-        } else {
-          // No stored index but we have progress — animate from 0
-          localStorage.removeItem('netstart_planet_unlock_pending');
-          const timer = setTimeout(() => {
-            startTravelAnimation(0, realUnlockedIndex);
-          }, 600);
-          return () => clearTimeout(timer);
-        }
-      } else {
+    // Determine target index: active ongoing planet or currently unlocked planet
+    const targetIdx = activePlanetId
+      ? Math.max(0, pathNodes.findIndex(n => n.id === activePlanetId))
+      : realUnlockedIndex;
+
+    const targetNode = pathNodes[targetIdx] || pathNodes[0];
+
+    // Wait a brief tick for DOM and canvas layout to mount, then center the camera lower on the planet
+    const timer = setTimeout(() => {
+      const scrollContainer = document.getElementById('modules-scroll-container');
+      const planetEl = document.getElementById(`planet-node-${targetNode.id}`);
+
+      if (scrollContainer && planetEl) {
+        const elRect = planetEl.getBoundingClientRect();
+        const containerRect = scrollContainer.getBoundingClientRect();
+        // Position planet center at ~60% down the viewport
+        const targetScrollTop = scrollContainer.scrollTop + (elRect.top - containerRect.top) - (containerRect.height * 0.60) + (elRect.height / 2);
+        
+        scrollContainer.scrollTo({
+          top: Math.max(0, targetScrollTop),
+          behavior: 'smooth'
+        });
+      }
+    }, 450);
+
+    return () => clearTimeout(timer);
+  }, [realUnlockedIndex, activePlanetId]);
+
+  // Detect if an unlock animation needs to play (plays strictly once upon completing a planet)
+  useEffect(() => {
+    if (!userId) return;
+    try {
+      const storedIdxStr = getUserStorageItem('last_animated_planet_idx', userId);
+      const unlockPending = getUserStorageItem('planet_unlock_pending', userId) === 'true';
+
+      // If no unlock is pending from completing a planet's missions, do not animate
+      if (!unlockPending) {
+        setUserStorageItem('last_animated_planet_idx', realUnlockedIndex.toString(), userId);
+        setAnimState(prev => ({ ...prev, unlockedIndex: realUnlockedIndex }));
+        return;
+      }
+
+      // If an unlock IS pending, clear the flag immediately so it never plays again
+      removeUserStorageItem('planet_unlock_pending', userId);
+
+      let fromIdx = 0;
+      if (storedIdxStr !== null) {
         const storedIdx = parseInt(storedIdxStr, 10);
         if (!isNaN(storedIdx) && storedIdx < realUnlockedIndex) {
-          // New planet completed & unlocked: trigger unskippable travel sequence!
-          localStorage.removeItem('netstart_planet_unlock_pending');
-          const timer = setTimeout(() => {
-            startTravelAnimation(storedIdx, realUnlockedIndex);
-          }, 600);
-          return () => clearTimeout(timer);
-        } else if (unlockPending && realUnlockedIndex > 0) {
-          // Pending flag was set by BlocklyMaze but storedIdx already equals realUnlockedIndex
-          // (race condition: both already in sync). Just clear the flag and animate if needed.
-          localStorage.removeItem('netstart_planet_unlock_pending');
-          const fromIdx = Math.max(0, realUnlockedIndex - 1);
-          const timer = setTimeout(() => {
-            startTravelAnimation(fromIdx, realUnlockedIndex);
-          }, 600);
-          return () => clearTimeout(timer);
+          fromIdx = storedIdx;
         } else {
-          setAnimState(prev => ({ ...prev, unlockedIndex: realUnlockedIndex }));
+          fromIdx = Math.max(0, realUnlockedIndex - 1);
         }
+      } else {
+        fromIdx = Math.max(0, realUnlockedIndex - 1);
       }
+
+      const timer = setTimeout(() => {
+        startTravelAnimation(fromIdx, realUnlockedIndex);
+      }, 600);
+      return () => clearTimeout(timer);
     } catch (e) {
       console.warn("Error reading progression animation state:", e);
     }
-  }, [realUnlockedIndex]);
+  }, [realUnlockedIndex, userId]);
 
   const getStatusForModule = (id: string) => {
     const nodeIndex = pathNodes.findIndex(n => n.id === id);
@@ -393,18 +426,17 @@ export default function ModulesClient({ isVerified, hasTakenAptitudeTest = false
     return 'LOCKED';
   };
 
-  const curriculumNodes = pathNodes.filter(n => n.id !== 'moon');
-  const totalCurriculumMissions = curriculumNodes.reduce((acc, n) => acc + n.totalMissions, 0);
-  const completedCurriculumCount = curriculumNodes.reduce((sum, node) => sum + getCompletedMissionsCount(node.id), 0);
+  const totalCurriculumMissions = pathNodes.reduce((acc, n) => acc + n.totalMissions, 0);
+  const completedCurriculumCount = pathNodes.reduce((sum, node) => sum + getCompletedMissionsCount(node.id), 0);
 
   // Active track node
   const currentTrackNode = pathNodes[animState.unlockedIndex] || pathNodes[0];
 
   return (
-    <div ref={containerRef} className="relative w-full h-full min-h-[370vh] pb-96 mb-20 bg-[#180729] overflow-y-auto px-4">
+    <div ref={containerRef} className="relative w-full h-[370vh] min-h-[370vh] pb-96 mb-20 px-4">
       
       {/* Top Floating Pill-Shaped Telemetry Bar */}
-      <div className="sticky top-4 z-20 w-full max-w-[98%] sm:max-w-[96%] mx-auto my-3 bg-[#130927]/95 backdrop-blur-xl border border-[#ff912d]/40 rounded-full px-6 sm:px-8 py-3 shadow-[0_0_35px_rgba(0,0,0,0.6),0_0_20px_rgba(255,145,45,0.2)] flex flex-wrap items-center justify-between gap-4">
+      <div className="sticky top-4 z-40 w-full max-w-[98%] sm:max-w-[96%] mx-auto my-3 bg-[#130927]/95 backdrop-blur-xl border border-[#ff912d]/40 rounded-full px-6 sm:px-8 py-3 shadow-[0_0_35px_rgba(0,0,0,0.7),0_0_20px_rgba(255,145,45,0.25)] flex flex-wrap items-center justify-between gap-4 transition-all">
         
         {/* Left: Current Active Unlocked Node Info */}
         <div className="flex items-center gap-3.5">
@@ -425,23 +457,23 @@ export default function ModulesClient({ isVerified, hasTakenAptitudeTest = false
         <div className="flex items-center gap-3 flex-wrap">
           
           {/* Level & EXP Threshold Progress Bar Pill */}
-          <div className="flex items-center gap-3 bg-black/60 border border-white/15 px-4 py-2 rounded-full shadow-inner">
-            <div className="flex items-center gap-1.5 text-amber-400 font-mono font-bold text-xs shrink-0">
-              <Zap size={14} className="fill-amber-400" />
+          <div className="flex items-center gap-3.5 bg-black/60 border border-white/15 px-4 py-1.5 rounded-full shadow-inner">
+            <div className="flex items-center gap-2.5 text-amber-400 font-mono font-extrabold text-sm sm:text-[15px] shrink-0 pl-1">
+              <Zap size={16} className="fill-amber-400" />
               <span>LVL {liveStats.level}</span>
             </div>
 
             {/* EXP Threshold Visual Progress Fill */}
             <div className="flex flex-col gap-1 w-28 sm:w-36">
-              <div className="flex justify-between items-center text-[10px] font-mono text-gray-300 font-bold leading-none">
+              <div className="flex justify-between items-center text-xs font-mono text-gray-300 font-bold leading-none">
                 <span className="text-amber-400 font-black">
                   {liveStats.isMaxLevel ? `${liveStats.xp} XP` : `${(liveStats as any).levelCurrentXp ?? 0} XP`}
                 </span>
-                <span className="text-gray-400 font-normal">
+                <span className="text-gray-400 font-medium">
                   {liveStats.isMaxLevel ? "MAX" : `${(liveStats as any).levelRequiredXp ?? 500} XP`}
                 </span>
               </div>
-              <div className="w-full h-2 bg-black/80 rounded-full overflow-hidden border border-white/10 p-0.5">
+              <div className="w-full h-2.5 bg-black/80 rounded-full overflow-hidden border border-white/10 p-0.5">
                 <div 
                   className="h-full bg-gradient-to-r from-amber-500 via-[#ff912d] to-amber-300 rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(255,145,45,0.7)]"
                   style={{ width: `${Math.min(100, Math.max(0, liveStats.progress))}%` }}
@@ -451,17 +483,17 @@ export default function ModulesClient({ isVerified, hasTakenAptitudeTest = false
           </div>
 
           {/* Gears Currency Badge Pill */}
-          <div className="flex items-center gap-2 bg-[#ff912d]/15 border border-[#ff912d]/40 px-4 py-2 rounded-full shadow-[0_0_12px_rgba(255,145,45,0.15)]">
-            <Settings size={15} className="text-[#ff912d]" />
-            <span className="font-mono text-xs text-[#ff912d] font-bold">
+          <div className="flex items-center gap-2 bg-[#ff912d]/15 border border-[#ff912d]/40 px-4 py-1.5 rounded-full shadow-[0_0_12px_rgba(255,145,45,0.15)]">
+            <Settings size={17} className="text-[#ff912d]" />
+            <span className="font-mono text-sm sm:text-[15px] text-[#ff912d] font-extrabold tracking-wide">
               {liveStats.gears} GEARS
             </span>
           </div>
 
           {/* Completed Missions Counter Badge Pill */}
-          <div className="flex items-center gap-2 bg-purple-500/15 border border-purple-500/40 px-4 py-2 rounded-full shadow-[0_0_12px_rgba(168,85,247,0.15)]">
-            <Award size={15} className="text-purple-400" />
-            <span className="font-mono text-xs text-purple-300 font-bold">
+          <div className="flex items-center gap-2 bg-purple-500/15 border border-purple-500/40 px-4 py-1.5 rounded-full shadow-[0_0_12px_rgba(168,85,247,0.15)]">
+            <Award size={17} className="text-purple-400" />
+            <span className="font-mono text-sm sm:text-[15px] text-purple-300 font-extrabold tracking-wide">
               {completedCurriculumCount} / {totalCurriculumMissions} MISSIONS
             </span>
           </div>
@@ -519,7 +551,7 @@ export default function ModulesClient({ isVerified, hasTakenAptitudeTest = false
         {/* Ambient Space Starfield Background Image & Nebula Layer */}
         <div 
           className="absolute inset-0 z-0 pointer-events-none opacity-45 bg-cover bg-center" 
-          style={{ backgroundImage: "url('/Landing Page BG.png')" }} 
+          style={{ backgroundImage: "url('/assets/global/ui/Landing Page BG.png')" }} 
         />
         <div className="absolute inset-0 bg-gradient-to-b from-[#180729]/60 via-transparent to-[#180729]/80 pointer-events-none z-0" />
 
@@ -659,7 +691,7 @@ export default function ModulesClient({ isVerified, hasTakenAptitudeTest = false
                 )}
 
                 <img
-                  src="/Checkpoint.svg?v=rocket-v3"
+                  src="/assets/global/ui/Checkpoint.svg?v=rocket-v3"
                   alt="Traveling Checkpoint Rocket"
                   className="w-16 h-16 sm:w-20 sm:h-20 object-contain drop-shadow-[0_0_25px_rgba(255,145,45,0.95)] drop-shadow-[0_8px_16px_rgba(0,0,0,0.9)]"
                 />

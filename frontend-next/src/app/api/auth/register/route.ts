@@ -55,7 +55,7 @@ export async function POST(req: Request) {
         name: username, // Assign provided username
         displayName: defaultDisplayName,
         showcasedBadges: ['b_create_account'],
-        image: '/Profile.svg',
+        image: '/assets/global/badges/Profile.svg',
         activeTitle: 'Novice Explorer',
       },
     });
@@ -84,7 +84,7 @@ export async function POST(req: Request) {
         data: {
           badgeId: 'b_create_account',
           badgeName: 'Ready for Blast Off!',
-          badgeImage: '/Planet 1.svg'
+          badgeImage: '/assets/planets/celestial/Planet 1.svg'
         }
       }
     });

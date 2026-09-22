@@ -57,7 +57,7 @@ Blockly.Blocks['move_forward'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#EAB308');
-    this.setTooltip("Move forward 1 space.");
+    this.setTooltip("Move forward 1 step.");
   }
 };
 
@@ -68,26 +68,39 @@ Blockly.Blocks['move_backward'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#EAB308');
-    this.setTooltip("Move backward 1 space.");
+    this.setTooltip("Move back 1 step.");
   }
 };
 
 Blockly.Blocks['action_move'] = {
   init: function() {
     this.appendDummyInput()
-        .appendField("move")
+        .appendField("Move")
         .appendField(new Blockly.FieldDropdown([
-          ["forward", "FORWARD"],
-          ["backward", "BACKWARD"],
-          ["up", "UP"],
-          ["down", "DOWN"],
-          ["left", "LEFT"],
-          ["right", "RIGHT"]
+          ["Up", "UP"],
+          ["Down", "DOWN"],
+          ["Left", "LEFT"],
+          ["Right", "RIGHT"]
         ]), "DIR");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#EAB308');
-    this.setTooltip("Move 1 space in the selected direction.");
+    this.setTooltip("Move 1 step in the chosen direction.");
+  }
+};
+
+Blockly.Blocks['action_move_forward'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("Move")
+        .appendField(new Blockly.FieldDropdown([
+          ["Forward", "FORWARD"],
+          ["Backward", "BACKWARD"]
+        ]), "DIR");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour('#EAB308');
+    this.setTooltip("Move 1 step forward or backward.");
   }
 };
 
@@ -115,7 +128,7 @@ Blockly.Blocks['turn_direction'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#EAB308');
-    this.setTooltip("Turn left or right.");
+    this.setTooltip("Turn towards the chosen side.");
   }
 };
 
@@ -126,7 +139,7 @@ Blockly.Blocks['turn_left'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#EAB308');
-    this.setTooltip("Turn 90 degrees counter-clockwise (Left).");
+    this.setTooltip("Turn to the left.");
   }
 };
 
@@ -137,7 +150,7 @@ Blockly.Blocks['turn_right'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#EAB308');
-    this.setTooltip("Turn 90 degrees clockwise (Right).");
+    this.setTooltip("Turn to the right.");
   }
 };
 
@@ -154,7 +167,7 @@ Blockly.Blocks['event_start'] = {
     this.setPreviousStatement(false); // Cap block (nothing can snap above it)
     this.setNextStatement(true, null);
     this.setColour('#EF4444');
-    this.setTooltip("Start of the program.");
+    this.setTooltip("Start your code here.");
   }
 };
 
@@ -165,7 +178,7 @@ Blockly.Blocks['event_end'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(false); // Shoe block (nothing can snap below it)
     this.setColour('#EF4444');
-    this.setTooltip("End of the program.");
+    this.setTooltip("End of your code.");
   }
 };
 
@@ -176,7 +189,7 @@ Blockly.Blocks['on_start'] = {
     this.appendStatementInput('DO')
         .setCheck(null);
     this.setColour('#EF4444');
-    this.setTooltip("Start of the program.");
+    this.setTooltip("Runs your code when you press Play.");
   }
 };
 
@@ -207,7 +220,7 @@ Blockly.Blocks['repeat_simple'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#8B5CF6');
-    this.setTooltip("Repeat the action continuously.");
+    this.setTooltip("Keep repeating the blocks inside.");
   }
 };
 
@@ -220,7 +233,7 @@ Blockly.Blocks['repeat_until_goal'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#8B5CF6');
-    this.setTooltip("Repeat actions continuously until the goal is reached.");
+    this.setTooltip("Keep repeating until you reach the goal flag.");
   }
 };
 
@@ -237,7 +250,7 @@ Blockly.Blocks['repeat_x_times'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#F97316');
-    this.setTooltip("Repeat a number of times.");
+    this.setTooltip("Repeat the blocks inside this many times.");
   }
 };
 
@@ -255,7 +268,7 @@ Blockly.Blocks['controls_if'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#3B82F6');
-    this.setTooltip('If condition is true, execute the enclosed actions.');
+    this.setTooltip("If this is true, do the blocks inside.");
     this.setHelpUrl('');
   }
 };
@@ -273,7 +286,7 @@ Blockly.Blocks['controls_ifelse'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#3B82F6');
-    this.setTooltip('If condition is true, execute the first block. Otherwise, execute the second block.');
+    this.setTooltip("If this is true, do the first part. Otherwise, do the second part.");
     this.setHelpUrl('');
   }
 };
@@ -289,7 +302,7 @@ Blockly.Blocks['if_path_is'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#38BDF8');
-    this.setTooltip("Run if condition is true.");
+    this.setTooltip("Do the blocks inside if this condition is true.");
   }
 };
 
@@ -303,7 +316,7 @@ Blockly.Blocks['logic_and'] = {
     this.setInputsInline(true);
     this.setOutput(true, "Condition");
     this.setColour('#38BDF8');
-    this.setTooltip("Both conditions must be true.");
+    this.setTooltip("True only if both things are true.");
   }
 };
 
@@ -317,7 +330,7 @@ Blockly.Blocks['logic_or'] = {
     this.setInputsInline(true);
     this.setOutput(true, "Condition");
     this.setColour('#38BDF8');
-    this.setTooltip("At least one condition must be true.");
+    this.setTooltip("True if at least one thing is true.");
   }
 };
 
@@ -330,7 +343,7 @@ Blockly.Blocks['if_path_blocked'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#38BDF8');
-    this.setTooltip("Run if path is blocked.");
+    this.setTooltip("Do this if a wall is in front of you.");
   }
 };
 
@@ -343,7 +356,7 @@ Blockly.Blocks['if_path_ahead'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#38BDF8');
-    this.setTooltip("Run if path ahead is clear.");
+    this.setTooltip("Do this if the path ahead is open.");
   }
 };
 
@@ -353,7 +366,7 @@ Blockly.Blocks['is_hazard_ahead'] = {
         .appendField("Hazard Ahead");
     this.setOutput(true, "Boolean");
     this.setColour('#10B981');
-    this.setTooltip("Checks if there is a hazard directly ahead.");
+    this.setTooltip("Checks if there is danger in front of you.");
   }
 };
 
@@ -363,7 +376,7 @@ Blockly.Blocks['is_path_clear_forward'] = {
         .appendField("Path Clear Ahead");
     this.setOutput(true, "Boolean");
     this.setColour('#10B981');
-    this.setTooltip("Checks if the path directly ahead is clear.");
+    this.setTooltip("Checks if the path ahead is open to walk.");
   }
 };
 
@@ -373,7 +386,7 @@ Blockly.Blocks['is_path_blocked_forward'] = {
         .appendField("Path Ahead is Blocked");
     this.setOutput(true, "Boolean");
     this.setColour('#10B981');
-    this.setTooltip("Checks if the path directly ahead is blocked or a wall.");
+    this.setTooltip("Checks if a wall is blocking your way forward.");
   }
 };
 
@@ -383,7 +396,7 @@ Blockly.Blocks['is_path_clear_right'] = {
         .appendField("Path Clear Right");
     this.setOutput(true, "Boolean");
     this.setColour('#10B981');
-    this.setTooltip("Checks if the relative right is an open path.");
+    this.setTooltip("Checks if the right side is open.");
   }
 };
 
@@ -393,7 +406,7 @@ Blockly.Blocks['is_path_clear_left'] = {
         .appendField("Path Clear Left");
     this.setOutput(true, "Boolean");
     this.setColour('#10B981');
-    this.setTooltip("Checks if the relative left is an open path.");
+    this.setTooltip("Checks if the left side is open.");
   }
 };
 
@@ -408,7 +421,7 @@ Blockly.Blocks['sensor_hazard_detected'] = {
         ]), "DIR");
     this.setOutput(true, "Boolean");
     this.setColour('#10B981');
-    this.setTooltip("Checks if a hazard is detected in the specified relative direction.");
+    this.setTooltip("Checks for danger in the chosen direction.");
   }
 };
 
@@ -423,7 +436,7 @@ Blockly.Blocks['sensor_path_clear'] = {
         ]), "DIR");
     this.setOutput(true, "Boolean");
     this.setColour('#10B981');
-    this.setTooltip("Checks if the path is open and clear in the specified relative direction.");
+    this.setTooltip("Checks if the way is clear in the chosen direction.");
   }
 };
 
@@ -433,7 +446,7 @@ Blockly.Blocks['sensor_at_dead_end'] = {
         .appendField("At Dead End");
     this.setOutput(true, "Boolean");
     this.setColour('#10B981');
-    this.setTooltip("Checks if Ahead, Left, and Right are all blocked.");
+    this.setTooltip("Checks if all sides around you are blocked.");
   }
 };
 
@@ -448,7 +461,7 @@ Blockly.Blocks['if_path_left'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#38BDF8');
-    this.setTooltip("Run if left is clear.");
+    this.setTooltip("Do this if the left side is open.");
   }
 };
 
@@ -461,7 +474,7 @@ Blockly.Blocks['if_path_right'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#38BDF8');
-    this.setTooltip("Run if right is clear.");
+    this.setTooltip("Do this if the right side is open.");
   }
 };
 
@@ -475,7 +488,7 @@ Blockly.Blocks['keyword_left'] = {
         .appendField("Left");
     this.setOutput(true, ["Direction", "Condition", "String"]);
     this.setColour('#F97316');
-    this.setTooltip("Left direction.");
+    this.setTooltip("The left direction.");
   }
 };
 
@@ -485,7 +498,7 @@ Blockly.Blocks['keyword_right'] = {
         .appendField("Right");
     this.setOutput(true, ["Direction", "Condition", "String"]);
     this.setColour('#F97316');
-    this.setTooltip("Right direction.");
+    this.setTooltip("The right direction.");
   }
 };
 
@@ -495,7 +508,7 @@ Blockly.Blocks['keyword_clear'] = {
         .appendField("Clear");
     this.setOutput(true, "Condition");
     this.setColour('#F97316');
-    this.setTooltip("Checks if path is clear.");
+    this.setTooltip("The path is open.");
   }
 };
 
@@ -505,7 +518,7 @@ Blockly.Blocks['keyword_blocked'] = {
         .appendField("Blocked");
     this.setOutput(true, "Condition");
     this.setColour('#F97316');
-    this.setTooltip("Checks if path is blocked.");
+    this.setTooltip("The path is blocked.");
   }
 };
 
@@ -515,7 +528,7 @@ Blockly.Blocks['keyword_goal'] = {
         .appendField("Ignition Node");
     this.setOutput(true, ["String", "Condition"]);
     this.setColour('#06B6D4');
-    this.setTooltip("Ignition goal node.");
+    this.setTooltip("The goal spot to reach.");
   }
 };
 
@@ -530,7 +543,7 @@ Blockly.Blocks['scan_next_node'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#06B6D4');
-    this.setTooltip("Shifts the scanner reticle to the next diagnostic node in the data stream.");
+    this.setTooltip("Look at the next computer node.");
   }
 };
 
@@ -540,7 +553,7 @@ Blockly.Blocks['scan_node_color'] = {
         .appendField("scan node color");
     this.setOutput(true, "String");
     this.setColour('#06B6D4');
-    this.setTooltip("Returns the color ('Blue', 'Red', 'Green') of the scanned node.");
+    this.setTooltip("Find out the color of the computer node.");
   }
 };
 
@@ -550,7 +563,7 @@ Blockly.Blocks['scan_node_state'] = {
         .appendField("scan node state");
     this.setOutput(true, "String");
     this.setColour('#06B6D4');
-    this.setTooltip("Returns the state ('Stable', 'Blinking') of the scanned node.");
+    this.setTooltip("Check if the computer node is steady or blinking.");
   }
 };
 
@@ -561,7 +574,7 @@ Blockly.Blocks['extract_power'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#3B82F6');
-    this.setTooltip("Takes power from a safe energy node to charge your ship.");
+    this.setTooltip("Collect energy to charge your spaceship.");
   }
 };
 
@@ -574,7 +587,7 @@ Blockly.Blocks['repeat_until_charged'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#F97316');
-    this.setTooltip("Keeps running until engine charge reaches 100%.");
+    this.setTooltip("Keep collecting energy until your spaceship is fully charged.");
   }
 };
 
@@ -596,7 +609,7 @@ Blockly.Blocks['lock_selection'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#3B82F6');
-    this.setTooltip("Confirms your selected challenges when standing on the middle tile.");
+    this.setTooltip("Lock in your choices.");
   }
 };
 
@@ -610,7 +623,7 @@ Blockly.Blocks['sensor_asteroid'] = {
     this.appendDummyInput().appendField("Asteroid Ahead?");
     this.setOutput(true, "Boolean");
     this.setColour('#38BDF8');
-    this.setTooltip("Checks if an asteroid hazard is detected ahead.");
+    this.setTooltip("Checks if a space rock is in your way.");
   }
 };
 
@@ -619,7 +632,7 @@ Blockly.Blocks['sensor_fuel_low'] = {
     this.appendDummyInput().appendField("Fuel Low?");
     this.setOutput(true, "Boolean");
     this.setColour('#38BDF8');
-    this.setTooltip("Checks if engine fuel is running low.");
+    this.setTooltip("Checks if your spaceship needs more fuel.");
   }
 };
 
@@ -628,7 +641,7 @@ Blockly.Blocks['sensor_oxygen_low'] = {
     this.appendDummyInput().appendField("Oxygen Low?");
     this.setOutput(true, "Boolean");
     this.setColour('#38BDF8');
-    this.setTooltip("Checks if life support oxygen levels are low.");
+    this.setTooltip("Checks if your air level is getting low.");
   }
 };
 
@@ -638,7 +651,7 @@ Blockly.Blocks['action_shield'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#8B5CF6');
-    this.setTooltip("Deploys the ship's defensive forcefield.");
+    this.setTooltip("Turn on your protective energy shield.");
   }
 };
 
@@ -648,7 +661,7 @@ Blockly.Blocks['action_refuel'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#F97316');
-    this.setTooltip("Injects backup fuel into the propulsion engine.");
+    this.setTooltip("Add fuel to your spaceship tank.");
   }
 };
 
@@ -658,7 +671,7 @@ Blockly.Blocks['action_pump_oxygen'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#06B6D4');
-    this.setTooltip("Pumps reserve oxygen into the cabin.");
+    this.setTooltip("Pump fresh air into your spaceship.");
   }
 };
 
@@ -672,7 +685,7 @@ Blockly.Blocks['allocate_oxygen'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#06B6D4');
-    this.setTooltip("Allocates power units to Life Support.");
+    this.setTooltip("Send energy to keep the air fresh.");
   }
 };
 
@@ -685,7 +698,7 @@ Blockly.Blocks['allocate_shields'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#8B5CF6');
-    this.setTooltip("Allocates power units to Shields.");
+    this.setTooltip("Send energy to power your protective shields.");
   }
 };
 
@@ -698,7 +711,7 @@ Blockly.Blocks['allocate_thrusters'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#F97316');
-    this.setTooltip("Allocates power units to Thrusters.");
+    this.setTooltip("Send energy to speed up your rocket engines.");
   }
 };
 
@@ -709,7 +722,7 @@ Blockly.Blocks['func_boost_systems'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#06B6D4');
-    this.setTooltip("Calls the Boost Systems routine.");
+    this.setTooltip("Runs your Boost Systems helper code.");
   }
 };
 
@@ -719,7 +732,7 @@ Blockly.Blocks['func_evasive_shields'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#8B5CF6');
-    this.setTooltip("Calls the Evasive Shields defense routine.");
+    this.setTooltip("Runs your Shield Defense helper code.");
   }
 };
 
@@ -729,7 +742,7 @@ Blockly.Blocks['func_warp_jump'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#F97316');
-    this.setTooltip("Calls the Hyperdrive Warp Jump routine.");
+    this.setTooltip("Runs your Super Speed Warp Jump code.");
   }
 };
 
@@ -740,7 +753,7 @@ Blockly.Blocks['unlock_door'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#06B6D4');
-    this.setTooltip("Unlock the airlock safety doors.");
+    this.setTooltip("Unlocks the safety door.");
   }
 };
 
@@ -750,7 +763,7 @@ Blockly.Blocks['open_valve'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#06B6D4');
-    this.setTooltip("Open the oxygen equalization valve.");
+    this.setTooltip("Opens the air valve.");
   }
 };
 
@@ -760,7 +773,7 @@ Blockly.Blocks['close_doors'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#06B6D4');
-    this.setTooltip("Unlock the airlock doors.");
+    this.setTooltip("Unlocks the safety door.");
   }
 };
 
@@ -770,7 +783,7 @@ Blockly.Blocks['pump_air'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#06B6D4');
-    this.setTooltip("Pump oxygen into the life support system.");
+    this.setTooltip("Fills the room with fresh air.");
   }
 };
 
@@ -780,7 +793,7 @@ Blockly.Blocks['charge_cell'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#8B5CF6');
-    this.setTooltip("Charge a shield capacitor cell.");
+    this.setTooltip("Charges one shield power cell.");
   }
 };
 
@@ -790,7 +803,7 @@ Blockly.Blocks['charge_battery'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#8B5CF6');
-    this.setTooltip("Charge a shield capacitor cell.");
+    this.setTooltip("Charges one shield power cell.");
   }
 };
 
@@ -804,7 +817,7 @@ Blockly.Blocks['check_fuel_type'] = {
         ]), "TYPE");
     this.setOutput(true, "Boolean");
     this.setColour('#38BDF8');
-    this.setTooltip("Checks the fuel tank type.");
+    this.setTooltip("Checks which fuel you are holding.");
   }
 };
 
@@ -814,7 +827,7 @@ Blockly.Blocks['add_cryo'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#F97316');
-    this.setTooltip("Inject cryogenic blue fuel.");
+    this.setTooltip("Pours blue fuel into the engine.");
   }
 };
 
@@ -824,7 +837,7 @@ Blockly.Blocks['add_catalyst'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#F97316');
-    this.setTooltip("Inject green catalyst fuel.");
+    this.setTooltip("Pours green fuel into the engine.");
   }
 };
 
@@ -834,7 +847,7 @@ Blockly.Blocks['mix_blue_fuel'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#F97316');
-    this.setTooltip("Inject cryogenic blue fuel.");
+    this.setTooltip("Pours blue fuel into the engine.");
   }
 };
 
@@ -844,7 +857,7 @@ Blockly.Blocks['mix_green_fuel'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#F97316');
-    this.setTooltip("Inject green catalyst fuel.");
+    this.setTooltip("Pours green fuel into the engine.");
   }
 };
 
@@ -856,7 +869,7 @@ Blockly.Blocks['set_ship_power'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#EAB308');
-    this.setTooltip("Set the ship power variable (must be 100).");
+    this.setTooltip("Sets your ship power (make it 100 to launch!).");
   }
 };
 
@@ -866,7 +879,7 @@ Blockly.Blocks['func_oxygen'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#06B6D4');
-    this.setTooltip("Turn on the oxygen system.");
+    this.setTooltip("Turns on the life support air system.");
   }
 };
 
@@ -876,7 +889,7 @@ Blockly.Blocks['func_shields'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#8B5CF6');
-    this.setTooltip("Turn on the shield defense system.");
+    this.setTooltip("Turns on the protective shield system.");
   }
 };
 
@@ -886,7 +899,7 @@ Blockly.Blocks['func_thrusters'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#F97316');
-    this.setTooltip("Turn on the rocket thrusters.");
+    this.setTooltip("Turns on the rocket engines.");
   }
 };
 
@@ -899,7 +912,7 @@ Blockly.Blocks['trigger_fuel_low'] = {
     this.appendDummyInput().appendField("Fuel < 20%");
     this.setOutput(true, ["Condition", "Boolean", "String"]);
     this.setColour('#06B6D4');
-    this.setTooltip("Triggers when ship fuel drops below the critical 20% threshold.");
+    this.setTooltip("Triggers when your fuel is low.");
   }
 };
 
@@ -908,7 +921,7 @@ Blockly.Blocks['trigger_small_asteroid'] = {
     this.appendDummyInput().appendField("Small Asteroid Detected");
     this.setOutput(true, ["Condition", "Boolean", "String"]);
     this.setColour('#06B6D4');
-    this.setTooltip("Triggers when a small asteroid warning appears in flight lane.");
+    this.setTooltip("Triggers when a small space rock is coming.");
   }
 };
 
@@ -917,7 +930,7 @@ Blockly.Blocks['trigger_oxygen_low'] = {
     this.appendDummyInput().appendField("Oxygen < 20%");
     this.setOutput(true, ["Condition", "Boolean", "String"]);
     this.setColour('#06B6D4');
-    this.setTooltip("Triggers when life support oxygen drops below the critical 20% threshold.");
+    this.setTooltip("Triggers when air is getting low.");
   }
 };
 
@@ -926,7 +939,7 @@ Blockly.Blocks['trigger_big_asteroid'] = {
     this.appendDummyInput().appendField("Big Asteroid Detected");
     this.setOutput(true, ["Condition", "Boolean", "String"]);
     this.setColour('#06B6D4');
-    this.setTooltip("Triggers when a massive asteroid warning appears in flight lane.");
+    this.setTooltip("Triggers when a giant space rock is coming.");
   }
 };
 
@@ -936,7 +949,7 @@ Blockly.Blocks['action_launch_rocket'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#10B981');
-    this.setTooltip("Ignites propulsion engines and launches the starship into active flight.");
+    this.setTooltip("Launch your spaceship into space!");
   }
 };
 
@@ -946,7 +959,7 @@ Blockly.Blocks['action_refill_fuel_cells'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#EC4899');
-    this.setTooltip("Executes fuel injection subroutine to restore fuel cells to 100%.");
+    this.setTooltip("Fill your spaceship fuel to 100%.");
   }
 };
 
@@ -956,7 +969,7 @@ Blockly.Blocks['action_fire_lasers'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#EC4899');
-    this.setTooltip("Fires ship plasma cannons to vaporize small asteroids.");
+    this.setTooltip("Blast small space rocks out of the way!");
   }
 };
 
@@ -966,7 +979,7 @@ Blockly.Blocks['action_pump_oxygen'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#EC4899');
-    this.setTooltip("Pressurizes life support tanks to restore oxygen to 100%.");
+    this.setTooltip("Pump fresh air into the spaceship.");
   }
 };
 
@@ -976,7 +989,7 @@ Blockly.Blocks['action_activate_shield'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#EC4899');
-    this.setTooltip("Deploys energy shield barrier to deflect massive asteroids.");
+    this.setTooltip("Put up your shield to bounce giant space rocks away!");
   }
 };
 
@@ -986,7 +999,7 @@ Blockly.Blocks['action_stop_rocket'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#10B981');
-    this.setTooltip("Cuts engine thrusters to bring the starship to a complete stop.");
+    this.setTooltip("Stop your rocket ship safely.");
   }
 };
 
@@ -996,7 +1009,7 @@ Blockly.Blocks['action_greet_ufo'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#EC4899');
-    this.setTooltip("Transmits a friendly greeting signal to the passing UFO.");
+    this.setTooltip("Wave hello to the friendly alien UFO!");
   }
 };
 
@@ -1006,7 +1019,7 @@ Blockly.Blocks['action_fire_tractor_beam'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#EC4899');
-    this.setTooltip("Transmits a friendly greeting signal to the passing UFO.");
+    this.setTooltip("Wave hello to the friendly alien UFO!");
   }
 };
 
@@ -1026,7 +1039,7 @@ Blockly.Blocks['case_emergency'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#3B82F6');
-    this.setTooltip("Runs the action when this flight situation occurs.");
+    this.setTooltip("Choose what to do when something happens in space.");
   }
 };
 
@@ -1041,7 +1054,7 @@ Blockly.Blocks['color_is'] = {
         .appendField("Color is");
     this.setOutput(true, ["Condition", "Boolean", "String"]);
     this.setColour('#06B6D4');
-    this.setTooltip("Checks if the chamber liquid matches the input color.");
+    this.setTooltip("Check if the liquid in the tank is this color.");
   }
 };
 
@@ -1086,7 +1099,7 @@ Blockly.Blocks['color_is_orange'] = {
     this.appendDummyInput().appendField("Color is Orange");
     this.setOutput(true, ["Condition", "Boolean", "String"]);
     this.setColour('#F97316');
-    this.setTooltip("True if the chamber liquid is currently Orange.");
+    this.setTooltip("True if the fuel has turned orange and is ready.");
   }
 };
 
@@ -1095,7 +1108,7 @@ Blockly.Blocks['color_is_blue'] = {
     this.appendDummyInput().appendField("Color is Blue");
     this.setOutput(true, ["Condition", "Boolean", "String"]);
     this.setColour('#3B82F6');
-    this.setTooltip("True if the chamber liquid is currently Blue (Cold Fuel).");
+    this.setTooltip("True if the fuel is blue and cold.");
   }
 };
 
@@ -1104,7 +1117,7 @@ Blockly.Blocks['color_is_green'] = {
     this.appendDummyInput().appendField("Color is Green");
     this.setOutput(true, ["Condition", "Boolean", "String"]);
     this.setColour('#10B981');
-    this.setTooltip("True if the chamber liquid is currently Green (Thick Fuel).");
+    this.setTooltip("True if the fuel is green and thick.");
   }
 };
 
@@ -1113,7 +1126,7 @@ Blockly.Blocks['color_is_purple'] = {
     this.appendDummyInput().appendField("Color is Purple");
     this.setOutput(true, ["Condition", "Boolean", "String"]);
     this.setColour('#A855F7');
-    this.setTooltip("True if the chamber liquid is currently Purple (Unstable Fuel).");
+    this.setTooltip("True if the fuel is purple and bubbly.");
   }
 };
 
@@ -1122,7 +1135,7 @@ Blockly.Blocks['color_is_not_orange'] = {
     this.appendDummyInput().appendField("Color is not Orange");
     this.setOutput(true, ["Condition", "Boolean", "String"]);
     this.setColour('#F97316');
-    this.setTooltip("True as long as the chamber liquid has not reached Orange.");
+    this.setTooltip("True as long as the fuel is not ready yet.");
   }
 };
 
@@ -1133,7 +1146,7 @@ Blockly.Blocks['while_color_not_orange'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#8B5CF6');
-    this.setTooltip("Repeat enclosed actions continuously.");
+    this.setTooltip("Keep mixing until the fuel turns orange.");
   }
 };
 
@@ -1143,7 +1156,7 @@ Blockly.Blocks['action_increase_heat'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#F97316');
-    this.setTooltip("Activates heating coils to activate grey fuel or turn blue fuel orange.");
+    this.setTooltip("Warm up the fuel tank.");
   }
 };
 
@@ -1153,7 +1166,7 @@ Blockly.Blocks['action_add_solution'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#06B6D4');
-    this.setTooltip("Adds chemical thinning solution to dissolve thick green fuel.");
+    this.setTooltip("Add special liquid to thin out green fuel.");
   }
 };
 
@@ -1163,7 +1176,7 @@ Blockly.Blocks['action_mix'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#A855F7');
-    this.setTooltip("Agitates the fuel chamber with mechanical mixing blades.");
+    this.setTooltip("Stir the fuel mixture inside the tank.");
   }
 };
 
@@ -1173,7 +1186,7 @@ Blockly.Blocks['action_put_fuel_tank'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#10B981');
-    this.setTooltip("Pumps finished Orange fuel to fuel the spaceship.");
+    this.setTooltip("Pour the finished orange fuel into your spaceship.");
   }
 };
 
@@ -1183,45 +1196,68 @@ Blockly.Blocks['action_put_fuel_tank'] = {
 
 Blockly.Blocks['send_to_area'] = {
   init: function() {
+    var block = this;
+    var dropdown = new Blockly.FieldDropdown(function() {
+      var isDailyGauntlet = false;
+      var secIndex = 0;
+
+      if (typeof window !== 'undefined') {
+        if ((window).__NETSTART_DAILY_SECTION_NAME__ === 'Master Sorting Gauntlet') {
+          isDailyGauntlet = true;
+        }
+        if (typeof (window).__NETSTART_CURRENT_SECTION__ === 'number') {
+          secIndex = (window).__NETSTART_CURRENT_SECTION__;
+        }
+      }
+
+      if (block.workspace) {
+        if (block.workspace.dailySectionName === 'Master Sorting Gauntlet') {
+          isDailyGauntlet = true;
+        }
+        if (typeof block.workspace.currentSectionIndex === 'number') {
+          secIndex = block.workspace.currentSectionIndex;
+        }
+      }
+
+      // Standalone Challenge Level: all 4 destinations
+      if (isDailyGauntlet) {
+        return [
+          ["Cargo Bay", "CARGO_BAY"],
+          ["Rocket Ship", "ROCKET_SHIP"],
+          ["Trash", "TRASH"],
+          ["Cafeteria", "CAFETERIA"]
+        ];
+      }
+
+      // Moon Level 2 Progression:
+      // Section 1 (index 0): Only Cargo Bay
+      // Section 2 (index 1): Cargo Bay and Trash
+      // Section 3 (index 2): Cargo Bay, Rocket Ship, and Trash
+      if (secIndex === 0) {
+        return [
+          ["Cargo Bay", "CARGO_BAY"]
+        ];
+      } else if (secIndex === 1) {
+        return [
+          ["Cargo Bay", "CARGO_BAY"],
+          ["Trash", "TRASH"]
+        ];
+      } else {
+        return [
+          ["Cargo Bay", "CARGO_BAY"],
+          ["Rocket Ship", "ROCKET_SHIP"],
+          ["Trash", "TRASH"]
+        ];
+      }
+    });
+
     this.appendDummyInput()
         .appendField("Send to")
-        .appendField(new Blockly.FieldDropdown(function() {
-          const ws = this.getSourceBlock() && this.getSourceBlock().workspace;
-          const secIndex = (ws && typeof ws.currentSectionIndex === 'number')
-            ? ws.currentSectionIndex
-            : (typeof window !== 'undefined' && typeof window.__NETSTART_CURRENT_SECTION__ === 'number')
-            ? window.__NETSTART_CURRENT_SECTION__
-            : 3;
-
-          if (secIndex === 0) {
-            return [
-              ["Cargo Bay", "CARGO_BAY"]
-            ];
-          }
-          if (secIndex === 1) {
-            return [
-              ["Cargo Bay", "CARGO_BAY"],
-              ["Trash", "TRASH"]
-            ];
-          }
-          if (secIndex === 2) {
-            return [
-              ["Cargo Bay", "CARGO_BAY"],
-              ["Rocket Ship", "ROCKET_SHIP"],
-              ["Trash", "TRASH"]
-            ];
-          }
-          return [
-            ["Cargo Bay", "CARGO_BAY"],
-            ["Rocket Ship", "ROCKET_SHIP"],
-            ["Trash", "TRASH"],
-            ["Cafeteria", "CAFETERIA"]
-          ];
-        }), "DESTINATION");
+        .appendField(dropdown, "DESTINATION");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#3B82F6');
-    this.setTooltip("Routes the current scanned item on the conveyor belt to the selected destination.");
+    this.setTooltip("Send the item on the belt to the chosen room.");
   }
 };
 
@@ -1232,7 +1268,7 @@ Blockly.Blocks['action_pack_cargo'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#3B82F6');
-    this.setTooltip("Packs the item currently at the front of the conveyor belt into the Cargo Bay.");
+    this.setTooltip("Pack the item into your Cargo Bay.");
   }
 };
 
@@ -1243,7 +1279,7 @@ Blockly.Blocks['action_discard_trash'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#3B82F6');
-    this.setTooltip("Discards the item currently at the front of the conveyor belt into the Scrap Chute.");
+    this.setTooltip("Toss the useless item into the Trash chute.");
   }
 };
 
@@ -1254,7 +1290,7 @@ Blockly.Blocks['action_route_fuel'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#3B82F6');
-    this.setTooltip("Routes the fuel item at the front of the conveyor belt into the Fuel Bay.");
+    this.setTooltip("Send the fuel can into the Fuel Bay.");
   }
 };
 
@@ -1265,7 +1301,7 @@ Blockly.Blocks['action_route_food'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#3B82F6');
-    this.setTooltip("Routes the food item at the front of the conveyor belt into Food Storage.");
+    this.setTooltip("Send the snack box into Food Storage.");
   }
 };
 
@@ -1276,7 +1312,7 @@ Blockly.Blocks['action_pack_item'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#3B82F6');
-    this.setTooltip("Packs the item currently at the front of the conveyor belt into the Cargo Bay.");
+    this.setTooltip("Pack the item into your Cargo Bay.");
   }
 };
 
@@ -1287,7 +1323,7 @@ Blockly.Blocks['action_discard_item'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#3B82F6');
-    this.setTooltip("Discards the item currently at the front of the conveyor belt into the scrap chute.");
+    this.setTooltip("Toss the useless item into the Trash chute.");
   }
 };
 
@@ -1298,7 +1334,7 @@ Blockly.Blocks['scan_current_item'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#3B82F6');
-    this.setTooltip("Scans the item at the front of the conveyor belt to identify its type.");
+    this.setTooltip("Scan the item on the belt to see what it is.");
   }
 };
 
@@ -1309,7 +1345,7 @@ Blockly.Blocks['scan_item'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#3B82F6');
-    this.setTooltip("Checks the current item at the front of the conveyor belt.");
+    this.setTooltip("Look at the item on the belt.");
   }
 };
 
@@ -1320,7 +1356,7 @@ Blockly.Blocks['pickup_item'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#3B82F6');
-    this.setTooltip("Packs the front item into Cargo Bay.");
+    this.setTooltip("Pack the item into your Cargo Bay.");
   }
 };
 
@@ -1331,7 +1367,7 @@ Blockly.Blocks['trash_item'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#6B7280');
-    this.setTooltip("Discards the front item into Scrap Chute.");
+    this.setTooltip("Toss the useless item into the Trash chute.");
   }
 };
 
@@ -1341,7 +1377,7 @@ Blockly.Blocks['item_cargo'] = {
         .appendField("Cargo");
     this.setOutput(true, ["Item", "Condition", "String"]);
     this.setColour('#06B6D4');
-    this.setTooltip("Cargo item.");
+    this.setTooltip("A useful cargo item.");
   }
 };
 
@@ -1351,7 +1387,7 @@ Blockly.Blocks['item_trash'] = {
         .appendField("Trash");
     this.setOutput(true, ["Item", "Condition", "String"]);
     this.setColour('#06B6D4');
-    this.setTooltip("Trash item.");
+    this.setTooltip("A piece of space junk or trash.");
   }
 };
 
@@ -1361,7 +1397,7 @@ Blockly.Blocks['item_fuel'] = {
         .appendField("Fuel");
     this.setOutput(true, ["Item", "Condition", "String"]);
     this.setColour('#06B6D4');
-    this.setTooltip("Fuel item.");
+    this.setTooltip("A fuel container.");
   }
 };
 
@@ -1371,7 +1407,7 @@ Blockly.Blocks['item_food'] = {
         .appendField("Food");
     this.setOutput(true, ["Item", "Condition", "String"]);
     this.setColour('#06B6D4');
-    this.setTooltip("Food ration item.");
+    this.setTooltip("A space snack or meal.");
   }
 };
 
@@ -1381,7 +1417,7 @@ Blockly.Blocks['item_oxygen'] = {
         .appendField("Cargo");
     this.setOutput(true, ["Item", "Condition", "String"]);
     this.setColour('#06B6D4');
-    this.setTooltip("Cargo item.");
+    this.setTooltip("A useful cargo item.");
   }
 };
 
@@ -1391,7 +1427,7 @@ Blockly.Blocks['item_junk'] = {
         .appendField("Trash");
     this.setOutput(true, ["Item", "Condition", "String"]);
     this.setColour('#06B6D4');
-    this.setTooltip("Trash scrap item.");
+    this.setTooltip("A piece of space junk or trash.");
   }
 };
 
@@ -1401,7 +1437,7 @@ Blockly.Blocks['item_none'] = {
         .appendField("None");
     this.setOutput(true, ["Item", "Condition", "String"]);
     this.setColour('#F97316');
-    this.setTooltip("No item.");
+    this.setTooltip("Nothing on the belt.");
   }
 };
 
@@ -1417,7 +1453,7 @@ Blockly.Blocks['if_scan_is'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#8B5CF6');
-    this.setTooltip("Runs the blocks inside if the scanned item matches the selected type.");
+    this.setTooltip("Do this if the scanned item matches this type.");
   }
 };
 
@@ -1436,7 +1472,7 @@ Blockly.Blocks['if_scan_else'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#8B5CF6');
-    this.setTooltip("Runs the 'then' block if the item matches, otherwise runs the 'otherwise' block.");
+    this.setTooltip("Do the first part if the item matches, or the second part if it does not.");
   }
 };
 
@@ -1486,12 +1522,18 @@ javascriptGenerator.forBlock['turn_direction'] = function(block) {
 };
 
 javascriptGenerator.forBlock['action_move'] = function(block) {
-  const dir = block.getFieldValue('DIR') || 'FORWARD';
-  if (dir === 'BACKWARD') return 'await moveBackward();\n';
-  if (dir === 'UP') return 'await moveUp();\n';
+  const dir = block.getFieldValue('DIR') || 'UP';
   if (dir === 'DOWN') return 'await moveDown();\n';
   if (dir === 'LEFT') return 'await moveLeft();\n';
   if (dir === 'RIGHT') return 'await moveRight();\n';
+  if (dir === 'FORWARD') return 'await moveForward();\n';
+  if (dir === 'BACKWARD') return 'await moveBackward();\n';
+  return 'await moveUp();\n';
+};
+
+javascriptGenerator.forBlock['action_move_forward'] = function(block) {
+  const dir = block.getFieldValue('DIR') || 'FORWARD';
+  if (dir === 'BACKWARD') return 'await moveBackward();\n';
   return 'await moveForward();\n';
 };
 
@@ -2115,8 +2157,9 @@ export function generatePlainEnglishPseudocode(workspace) {
         code = 'Action: Move Backward.\n';
         break;
 
-      case 'action_move': {
-        const d = block.getFieldValue('DIR') || 'FORWARD';
+      case 'action_move':
+      case 'action_move_forward': {
+        const d = block.getFieldValue('DIR') || 'UP';
         const map = {
           FORWARD: 'Forward',
           BACKWARD: 'Backward',
@@ -2125,7 +2168,7 @@ export function generatePlainEnglishPseudocode(workspace) {
           LEFT: 'Left',
           RIGHT: 'Right'
         };
-        code = `Action: Move ${map[d] || 'Forward'}.\n`;
+        code = `Action: Move ${map[d] || 'Up'}.\n`;
         break;
       }
 

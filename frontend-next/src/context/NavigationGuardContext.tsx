@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useCallback, useRef } from 
 import { useRouter, usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { AlertCircle, LogOut, Rocket, X, Pause } from "lucide-react";
+import { clearLegacyUnscopedData } from "@/lib/userStorage";
 
 interface NavigationGuardContextType {
   isInLevel: boolean;
@@ -34,6 +35,72 @@ export function NavigationGuardProvider({ children }: { children: React.ReactNod
   // Pending action: either a destination route string or 'LOGOUT'
   const [pendingAction, setPendingAction] = useState<string | null>(null);
 
+  // Helper to determine the best return path when user exits or navigates back from a level
+  const getDefaultReturnPath = useCallback(() => {
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const missionId = (urlParams.get("missionId") || "").toLowerCase();
+      if (missionId.startsWith("daily") || missionId.includes("daily")) return "/dashboard";
+      if (missionId.startsWith("moon") || missionId.startsWith("html-1") || missionId.startsWith("html-2") || missionId.startsWith("html-3")) return "/modules/moon";
+      if (missionId.startsWith("mars") || missionId.startsWith("html")) return "/modules/mars";
+      if (missionId.startsWith("venus") || missionId.startsWith("css")) return "/modules/venus";
+      if (missionId.startsWith("mercury") || missionId.startsWith("javascript") || missionId.startsWith("js")) return "/modules/mercury";
+      if (missionId.startsWith("jupiter") || missionId.startsWith("java")) return "/modules/jupiter";
+      if (missionId.startsWith("saturn") || missionId.startsWith("cpp")) return "/modules/saturn";
+      if (missionId.startsWith("earth") || missionId.startsWith("python")) return "/modules/earth";
+      
+      const search = window.location.search.toLowerCase();
+      if (search.includes("moon")) return "/modules/moon";
+      if (search.includes("mars") || search.includes("html")) return "/modules/mars";
+      if (search.includes("venus") || search.includes("css")) return "/modules/venus";
+      if (search.includes("mercury") || search.includes("js")) return "/modules/mercury";
+      if (search.includes("jupiter") || search.includes("java")) return "/modules/jupiter";
+      if (search.includes("saturn") || search.includes("cpp")) return "/modules/saturn";
+      if (search.includes("earth") || search.includes("python")) return "/modules/earth";
+    }
+    return "/modules";
+  }, []);
+
+  // Intercept browser back/forward buttons and backspace navigation when inside an active level
+  React.useEffect(() => {
+    if (!isInLevel || typeof window === "undefined") return;
+
+    // Push dummy state to capture back button
+    const stateObj = { ...(window.history.state || {}), netstart_in_level: true };
+    window.history.pushState(stateObj, "", window.location.href);
+
+    const handlePopState = (e: PopStateEvent) => {
+      // Re-push history entry to prevent immediate exit before user confirms
+      window.history.pushState(stateObj, "", window.location.href);
+      setPendingAction(getDefaultReturnPath());
+      setIsSuspendModalOpen(true);
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Backspace") {
+        const target = e.target as HTMLElement;
+        const tag = target?.tagName?.toLowerCase();
+        const isEditable = tag === "input" || tag === "textarea" || target?.isContentEditable;
+        if (!isEditable) {
+          e.preventDefault();
+          setPendingAction(getDefaultReturnPath());
+          setIsSuspendModalOpen(true);
+        }
+      } else if (e.key === "Escape" && isSuspendModalOpen) {
+        setIsSuspendModalOpen(false);
+        setPendingAction(null);
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isInLevel, getDefaultReturnPath]);
+
   const registerSaveHandler = useCallback((handler: () => Promise<void>) => {
     saveHandlerRef.current = handler;
   }, []);
@@ -51,9 +118,9 @@ export function NavigationGuardProvider({ children }: { children: React.ReactNod
       setPendingAction(path);
       setIsSuspendModalOpen(true);
     } else {
-      router.push(path);
+      window.location.href = path;
     }
-  }, [isInLevel, pathname, router]);
+  }, [isInLevel, pathname]);
 
   const requestLogout = useCallback(() => {
     if (isInLevel) {
@@ -82,16 +149,17 @@ export function NavigationGuardProvider({ children }: { children: React.ReactNod
       setIsSaving(false);
     }
 
-    const action = pendingAction;
+    const action = pendingAction || getDefaultReturnPath();
     setIsSuspendModalOpen(false);
+    setPendingAction(null);
 
     if (action === "LOGOUT") {
       // Seamless modal chaining: immediately mount global logout modal
       setPendingAction("LOGOUT");
       setIsLogoutModalOpen(true);
-    } else if (action) {
-      setPendingAction(null);
-      router.push(action);
+    } else {
+      // Guaranteed navigation out of the level
+      window.location.href = action;
     }
   };
 
@@ -102,6 +170,7 @@ export function NavigationGuardProvider({ children }: { children: React.ReactNod
 
   const handleConfirmLogout = async () => {
     setIsLogoutModalOpen(false);
+    clearLegacyUnscopedData();
     await signOut({ callbackUrl: "/login" });
   };
 

@@ -93,7 +93,7 @@ export default function RegisterPage() {
       {/* Left Side (Actually Right Side structurally due to flex-row-reverse): Illustration */}
       <div className="relative hidden md:flex md:w-[60%] lg:w-[65%] bg-subs border-l border-white/5 overflow-hidden group">
         <Image 
-          src="/login-bg-hq.jpg" 
+          src="/assets/global/ui/login-bg-hq.jpg" 
           alt="Registration Background" 
           fill
           className="object-cover group-hover:scale-105 transition-transform duration-1000 brightness-125" 

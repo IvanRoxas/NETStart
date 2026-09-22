@@ -6,13 +6,60 @@ import { authOptions } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { logSystemAction } from "@/lib/logger";
 
+import { SHOP_CATALOG, getCatalogItemById } from "@/lib/shopCatalog";
+
 export async function getShopItems() {
   try {
-    const items = await prisma.shopItem.findMany();
-    return { success: true, items };
+    let items = await prisma.shopItem.findMany();
+
+    const existingIds = new Set(items.map(i => i.id));
+    const hasMissing = SHOP_CATALOG.some(c => !existingIds.has(c.id));
+
+    // Auto-seed or upsert items from SHOP_CATALOG if missing
+    if (hasMissing || items.length < SHOP_CATALOG.length) {
+      for (const catItem of SHOP_CATALOG) {
+        await prisma.shopItem.upsert({
+          where: { id: catItem.id },
+          update: {
+            title: catItem.title,
+            type: catItem.type,
+            category: catItem.category,
+            subCategory: catItem.subCategory,
+            price: catItem.price,
+            imageUrl: catItem.imageUrl,
+          },
+          create: {
+            id: catItem.id,
+            title: catItem.title,
+            type: catItem.type,
+            category: catItem.category,
+            subCategory: catItem.subCategory,
+            price: catItem.price,
+            imageUrl: catItem.imageUrl,
+          },
+        });
+      }
+      items = await prisma.shopItem.findMany();
+    }
+
+    const catalogIds = new Set(SHOP_CATALOG.map((c) => c.id));
+    const validItems = items.filter((item) => catalogIds.has(item.id));
+
+    // Attach tag and description from catalog or defaults
+    const enrichedItems = validItems.map((item) => {
+      const meta = getCatalogItemById(item.id);
+      return {
+        ...item,
+        tag: meta?.tag || item.type,
+        description: meta?.description || "High-tech equipment for the NETStart space voyage.",
+      };
+    });
+
+    return { success: true, items: enrichedItems };
   } catch (error) {
     console.error("Failed to fetch shop items:", error);
-    return { success: false, error: "Failed to load shop items" };
+    // Fallback directly to catalog if database query fails or during dev sync
+    return { success: true, items: SHOP_CATALOG };
   }
 }
 
@@ -28,12 +75,30 @@ export async function getUserInventory() {
       include: { shopItem: true },
     });
     
+    const mappedInventory = inventory.map(inv => {
+      if (inv.shopItem && !SHOP_CATALOG.some(c => c.id === inv.shopItemId)) {
+        const match = SHOP_CATALOG.find(c => c.imageUrl === inv.shopItem?.imageUrl);
+        if (match) {
+          return {
+            ...inv,
+            shopItemId: match.id,
+            shopItem: {
+              ...inv.shopItem,
+              id: match.id,
+              title: match.title
+            }
+          };
+        }
+      }
+      return inv;
+    });
+
     const user = await prisma.user.findUnique({
       where: { id: (session.user as any).id },
       select: { gears: true, isVerified: true }
     });
 
-    return { success: true, inventory, gears: user?.gears || 0, isVerified: user?.isVerified || false };
+    return { success: true, inventory: mappedInventory, gears: user?.gears || 0, isVerified: user?.isVerified || false };
   } catch (error) {
     console.error("Failed to fetch user inventory:", error);
     return { success: false, error: "Failed to load inventory" };
@@ -51,14 +116,31 @@ export async function purchaseItem(itemId: string) {
 
     // Use a transaction to ensure atomicity
     const result = await prisma.$transaction(async (tx) => {
-      // 1. Fetch user and item
+      // Ensure item exists in DB if from catalog
+      let item = await tx.shopItem.findUnique({
+        where: { id: itemId },
+      });
+
+      if (!item) {
+        const catItem = getCatalogItemById(itemId);
+        if (catItem) {
+          item = await tx.shopItem.create({
+            data: {
+              id: catItem.id,
+              title: catItem.title,
+              type: catItem.type,
+              category: catItem.category,
+              subCategory: catItem.subCategory,
+              price: catItem.price,
+              imageUrl: catItem.imageUrl,
+            },
+          });
+        }
+      }
+
       const user = await tx.user.findUnique({
         where: { id: userId },
         select: { gears: true },
-      });
-
-      const item = await tx.shopItem.findUnique({
-        where: { id: itemId },
       });
 
       if (!user || !item) {

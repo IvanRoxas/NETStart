@@ -107,7 +107,7 @@ export default function AchievementsPage() {
           <div className="bg-[#1e0a2d]/80 border border-[#ff912d]/50 rounded-2xl p-6 md:p-8 flex flex-col md:flex-row gap-8 items-center shadow-[0_0_20px_rgba(255,145,45,0.15)] relative overflow-hidden">
             {/* Decorative Background Icon */}
             <div className="absolute -right-10 -bottom-10 opacity-10 pointer-events-none blur-[2px]">
-              <Image src="/Planets/Jupiter.svg" alt="Planet" width={300} height={300} />
+              <Image src="/assets/planets/celestial/Jupiter.svg" alt="Planet" width={300} height={300} />
             </div>
 
             <div className="relative w-28 h-28 shrink-0 z-10 flex items-center justify-center shadow-[0_0_15px_rgba(255,145,45,0.4)] rounded-full bg-[#1e0a2d]">
@@ -274,9 +274,6 @@ export default function AchievementsPage() {
                       <h3 className={`${vt323.className} text-3xl md:text-4xl text-white tracking-widest ${isCompleted ? 'text-[#ffb703]' : ''} drop-shadow`}>
                         {module.title}
                       </h3>
-                      <span className="text-white/60 text-sm font-bold uppercase tracking-wider shrink-0">
-                        {module.playtime} on record
-                      </span>
                     </div>
 
                     <div className="flex items-center gap-4 mt-1">
@@ -481,11 +478,11 @@ export default function AchievementsPage() {
             </button>
 
             {/* Badge Icon */}
-            <div className="w-32 h-32 shrink-0 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-purple-600/20 border-2 border-[#ff912d]/50 flex items-center justify-center shadow-lg overflow-hidden p-2">
+            <div className="w-44 h-44 shrink-0 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-purple-600/20 border-2 border-[#ff912d]/50 flex items-center justify-center shadow-lg overflow-hidden p-3">
               {selectedBadge.image ? (
-                <img src={selectedBadge.image} alt={selectedBadge.name} className="w-28 h-28 object-contain" />
+                <img src={selectedBadge.image} alt={selectedBadge.name} className="w-36 h-36 object-contain" />
               ) : (
-                <span className="text-[#ff912d] font-bold text-5xl">{selectedBadge.icon}</span>
+                <span className="text-[#ff912d] font-bold text-6xl">{selectedBadge.icon}</span>
               )}
             </div>
 
