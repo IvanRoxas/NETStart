@@ -7,6 +7,7 @@ import { useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import VisualNovelCutscene, { SceneItem } from '@/components/VisualNovelCutscene';
 import moonScenes from '@/data/moon.json';
+import marsScenes from '@/data/mars.json';
 
 import storySummaries from '@/data/story_summaries.json';
 
@@ -27,13 +28,14 @@ function SandboxContent() {
   const username = session?.user?.name || 'Operator';
 
   useEffect(() => {
-    if (!skipCutscene && missionId?.startsWith('moon-')) {
-      const typedMoonScenes = moonScenes as SceneItem[];
+    if (!skipCutscene && (missionId?.startsWith('moon-') || missionId?.startsWith('mars-'))) {
+      const isMars = missionId.startsWith('mars-');
+      const typedScenes = (isMars ? marsScenes : moonScenes) as SceneItem[];
       let startIndex = 0;
       let targetIndex = -1;
       
-      for (let i = 0; i < typedMoonScenes.length; i++) {
-        const scene = typedMoonScenes[i];
+      for (let i = 0; i < typedScenes.length; i++) {
+        const scene = typedScenes[i];
         if (scene.type === 'mission' && (scene as any).mission === missionId) {
           targetIndex = i;
           break;
@@ -42,13 +44,13 @@ function SandboxContent() {
       
       if (targetIndex !== -1) {
         for (let i = targetIndex - 1; i >= 0; i--) {
-           if (typedMoonScenes[i].type === 'mission') {
+           if (typedScenes[i].type === 'mission') {
              startIndex = i + 1;
              break;
            }
         }
         
-        const sliced = typedMoonScenes.slice(startIndex, targetIndex);
+        const sliced = typedScenes.slice(startIndex, targetIndex);
         if (sliced.length > 0) {
           setCutsceneData(sliced);
           setShowCutscene(true);

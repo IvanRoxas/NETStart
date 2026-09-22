@@ -233,12 +233,15 @@ export default function ModuleDetailsClient({
     }
 
     const isSavedProgress = Boolean(savedMissionId && savedMissionId.toLowerCase() === mission.id.toLowerCase());
-    const isReplay = !isSavedProgress && completedMissions.some(m => m.missionId.toLowerCase() === mission.id.toLowerCase());
+    const isCompleted = completedMissions.some(m => m.missionId.toLowerCase() === mission.id.toLowerCase());
+    const isReplay = isCompleted; // If it's completed, any launch is essentially a replay session.
     
-    let skipCutscene = false;
-    if (isRetry || isSavedProgress) {
-      skipCutscene = true;
-    }
+    // Truth table for skipCutscene:
+    // START (not completed, no save) -> false
+    // RESUME (not completed, has save) -> true
+    // REPLAY (completed, isRetry=false) -> false
+    // RETRY (completed, isRetry=true) -> true
+    const skipCutscene = isRetry || (!isCompleted && isSavedProgress);
 
     router.push(`/sandbox?missionId=${mission.id}${isReplay ? '&mode=replay' : ''}&skipCutscene=${skipCutscene}`);
   };

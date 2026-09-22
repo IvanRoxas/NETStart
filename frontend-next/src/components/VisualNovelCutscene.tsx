@@ -115,6 +115,45 @@ const SPEAKER_PROFILES: Record<string, SpeakerMetadata> = {
     pitch: 170,
     icon: "user",
   },
+  Mark: {
+    color: "from-[#14532d] via-[#166534] to-[#052e16]",
+    border: "border-green-400/80",
+    glow: "shadow-[0_0_35px_rgba(74,222,128,0.45)]",
+    badgeBg: "bg-green-500/20 text-green-300 border-green-500/40",
+    role: "LOCAL RESIDENT",
+    pitch: 120,
+    icon: "user",
+    image: "/scenes/characters/MARK.png",
+  },
+  "Emma G": {
+    color: "from-[#831843] via-[#be185d] to-[#4c0519]",
+    border: "border-pink-400/80",
+    glow: "shadow-[0_0_35px_rgba(244,114,182,0.45)]",
+    badgeBg: "bg-pink-500/20 text-pink-300 border-pink-500/40",
+    role: "MARS TWIN",
+    pitch: 280,
+    icon: "user",
+    image: "/scenes/characters/EMMA_G.png",
+  },
+  "Penny G": {
+    color: "from-[#831843] via-[#be185d] to-[#4c0519]",
+    border: "border-pink-400/80",
+    glow: "shadow-[0_0_35px_rgba(244,114,182,0.45)]",
+    badgeBg: "bg-pink-500/20 text-pink-300 border-pink-500/40",
+    role: "MARS TWIN",
+    pitch: 280,
+    icon: "user",
+    image: "/scenes/characters/PENNY_G.png",
+  },
+  "Emma G and Penny G": {
+    color: "from-[#831843] via-[#be185d] to-[#4c0519]",
+    border: "border-pink-400/80",
+    glow: "shadow-[0_0_35px_rgba(244,114,182,0.45)]",
+    badgeBg: "bg-pink-500/20 text-pink-300 border-pink-500/40",
+    role: "MARS TWINS",
+    pitch: 280,
+    icon: "user",
+  },
 };
 
 const DEFAULT_PROFILE: SpeakerMetadata = {
@@ -416,6 +455,20 @@ const VisualNovelCutscene = forwardRef<VisualNovelCutsceneHandle, VisualNovelCut
                         className="h-72 sm:h-[26rem] object-contain object-bottom drop-shadow-2xl mb-[8rem] sm:mb-[10rem] shrink-0" 
                       />
                     </>
+                  ) : rawSpeakerName === "Emma G and Penny G" ? (
+                    /* Twins Side-by-Side Sprites */
+                    <div className="flex items-end gap-2 sm:gap-4 mb-[8rem] sm:mb-[12rem]">
+                      <img 
+                        src={SPEAKER_PROFILES["Emma G"]?.image} 
+                        alt="Emma G" 
+                        className="h-[32rem] sm:h-[44rem] object-contain object-bottom drop-shadow-[0_0_40px_rgba(0,0,0,0.6)]" 
+                      />
+                      <img 
+                        src={SPEAKER_PROFILES["Penny G"]?.image} 
+                        alt="Penny G" 
+                        className="h-[32rem] sm:h-[44rem] object-contain object-bottom drop-shadow-[0_0_40px_rgba(0,0,0,0.6)]" 
+                      />
+                    </div>
                   ) : profile.image ? (
                     /* Actual Character Sprite */
                     <img 
