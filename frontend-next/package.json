@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "concurrently \"npx prisma dev --db-port 51224 --shadow-db-port 51225\" \"npx wait-on tcp:51224 && next dev\"",
+    "dev": "concurrently \"npm run dev:db\" \"powershell -Command \\\"Start-Sleep -Seconds 4\\\" && npm run dev:next\"",
+    "dev:db": "node prisma/clean_locks.js && npx prisma dev --db-port 51224 --shadow-db-port 51225",
+    "dev:next": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",

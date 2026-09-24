@@ -63,6 +63,7 @@ interface SpeakerMetadata {
   pitch: number;
   icon: "crown" | "alert" | "radio" | "user";
   image?: string;
+  silhouette?: boolean;
 }
 
 const SPEAKER_PROFILES: Record<string, SpeakerMetadata> = {
@@ -154,6 +155,48 @@ const SPEAKER_PROFILES: Record<string, SpeakerMetadata> = {
     pitch: 280,
     icon: "user",
   },
+  "??? (Spectrum)": {
+    color: "from-[#27272a] via-[#3f3f46] to-[#18181b]",
+    border: "border-zinc-500",
+    glow: "shadow-[0_0_35px_rgba(113,113,122,0.45)]",
+    badgeBg: "bg-zinc-500/20 text-zinc-300 border-zinc-500/40",
+    role: "UNKNOWN CALLER",
+    pitch: 100,
+    icon: "user",
+    image: "/scenes/characters/PROF_SPECTRUM.png",
+    silhouette: true
+  },
+  "??? (Hue)": {
+    color: "from-[#27272a] via-[#3f3f46] to-[#18181b]",
+    border: "border-zinc-500",
+    glow: "shadow-[0_0_35px_rgba(113,113,122,0.45)]",
+    badgeBg: "bg-zinc-500/20 text-zinc-300 border-zinc-500/40",
+    role: "UNKNOWN FIGURE",
+    pitch: 110,
+    icon: "user",
+    image: "/scenes/characters/PROF_HUE.png",
+    silhouette: true
+  },
+  "Professor Spectrum": {
+    color: "from-[#172554] via-[#1e3a8a] to-[#1e40af]",
+    border: "border-blue-400/80",
+    glow: "shadow-[0_0_35px_rgba(96,165,250,0.45)]",
+    badgeBg: "bg-blue-500/20 text-blue-300 border-blue-500/40",
+    role: "VENUS HEAD SCIENTIST",
+    pitch: 100,
+    icon: "user",
+    image: "/scenes/characters/PROF_SPECTRUM.png",
+  },
+  "Professor Hue": {
+    color: "from-[#7f1d1d] via-[#991b1b] to-[#b91c1c]",
+    border: "border-red-400/80",
+    glow: "shadow-[0_0_35px_rgba(248,113,113,0.45)]",
+    badgeBg: "bg-red-500/20 text-red-300 border-red-500/40",
+    role: "VENUS COLOR SPECIALIST",
+    pitch: 110,
+    icon: "user",
+    image: "/scenes/characters/PROF_HUE.png",
+  }
 };
 
 const DEFAULT_PROFILE: SpeakerMetadata = {
@@ -238,7 +281,7 @@ const VisualNovelCutscene = forwardRef<VisualNovelCutsceneHandle, VisualNovelCut
     const isMissionGate =
       isDivider && index > 0 && MISSION_GATE_PATTERN.test(scene.title || "");
     const rawSpeakerName = scene?.speaker || "";
-    const displaySpeakerName = rawSpeakerName === "Operator" ? username : rawSpeakerName;
+    const displaySpeakerName = rawSpeakerName === "Operator" ? username : rawSpeakerName.replace(/\s*\(.*?\)/g, "");
     const profile = SPEAKER_PROFILES[rawSpeakerName] || DEFAULT_PROFILE;
     const showCharacterCard =
       !isDivider && !!scene && !NO_SPRITE_SPEAKERS.has(rawSpeakerName) && rawSpeakerName.trim().length > 0;
@@ -474,7 +517,7 @@ const VisualNovelCutscene = forwardRef<VisualNovelCutsceneHandle, VisualNovelCut
                     <img 
                       src={profile.image} 
                       alt={displaySpeakerName} 
-                      className="h-[32rem] sm:h-[44rem] object-contain object-bottom drop-shadow-[0_0_40px_rgba(0,0,0,0.6)] mb-[8rem] sm:mb-[12rem]" 
+                      className={`h-[32rem] sm:h-[44rem] object-contain object-bottom drop-shadow-[0_0_40px_rgba(0,0,0,0.6)] mb-[8rem] sm:mb-[12rem] transition-all duration-[1500ms] ease-in-out ${profile.silhouette ? "brightness-0" : "brightness-100"}`} 
                     />
                   ) : (
                     /* Fallback Holo-card if no image */
