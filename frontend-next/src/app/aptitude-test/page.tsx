@@ -28,6 +28,8 @@ export default async function AptitudeTestPage() {
       hasTakenAptitudeTest: true,
       logicScore: true,
       patternRecognitionScore: true,
+      taskDecompositionScore: true,
+      aptitudeResult: true,
       recommendedLearningPath: true,
     }
   });

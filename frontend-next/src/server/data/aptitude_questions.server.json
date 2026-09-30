@@ -1,0 +1,260 @@
+{
+  "test": "NETStart Aptitude Test",
+  "totalQuestions": 15,
+  "categories": {
+    "pattern_recognition": {
+      "id": "pattern_recognition",
+      "name": "Pattern Recognition"
+    },
+    "task_decomposition": {
+      "id": "task_decomposition",
+      "name": "Task Decomposition"
+    },
+    "logical_reasoning": {
+      "id": "logical_reasoning",
+      "name": "Logical Reasoning"
+    }
+  },
+  "questions": [
+    {
+      "id": "pr-1",
+      "category": "pattern_recognition",
+      "number": 1,
+      "title": "Visual Rotation (Image Pattern)",
+      "question": "Observe the following sequence of clock faces:\n🕐 🕒 🕔 🕖 ?\nWhich image comes next in the pattern?",
+      "options": {
+        "A": "🕗",
+        "B": "🕘",
+        "C": "🕙",
+        "D": "🕚"
+      },
+      "answer": "B",
+      "concept": "Raven's Progressive Matrices (non-verbal pattern-completion test)",
+      "explanation": "The time on the clock advances by exactly 2 hours in each step."
+    },
+    {
+      "id": "pr-2",
+      "category": "pattern_recognition",
+      "number": 2,
+      "title": "Shading and Quantity Progression (Image Pattern)",
+      "question": "Observe the following sequence of shapes:\n◻️, ◼️◼️, ◻️◻️◻️, ◼️◼️◼️◼️, ?\nWhich image correctly continues the sequence?",
+      "options": {
+        "A": "◻️◻️◻️◻️",
+        "B": "◼️◼️◼️◼️◼️",
+        "C": "◻️◻️◻️◻️◻️",
+        "D": "◼️◻️◼️◻️◼️"
+      },
+      "answer": "C",
+      "concept": "Raven's Progressive Matrices (non-verbal pattern-completion test)",
+      "explanation": "The number of squares increases by one each time, and the shading strictly alternates between all-white and all-black."
+    },
+    {
+      "id": "pr-3",
+      "category": "pattern_recognition",
+      "number": 3,
+      "title": "Spatial Movement (Image Pattern)",
+      "question": "Observe the position of the black square in this sequence of 3-block grids:\nGrid 1: ◼️ ◻️ ◻️\nGrid 2: ◻️ ◼️ ◻️\nGrid 3: ◻️ ◻️ ◼️\nWhat should Grid 4 look like?",
+      "options": {
+        "A": "◻️ ◻️ ◻️",
+        "B": "◼️ ◻️ ◻️",
+        "C": "◼️ ◼️ ◼️",
+        "D": "◻️ ◼️ ◻️"
+      },
+      "answer": "B",
+      "concept": "Raven's Progressive Matrices (non-verbal pattern-completion test)",
+      "explanation": "The black square moves one space to the right in each step. Once it reaches the end, it wraps back around to the first position."
+    },
+    {
+      "id": "pr-4",
+      "category": "pattern_recognition",
+      "number": 4,
+      "title": "Number Sequence",
+      "question": "Look at the following sequence: 3, 6, 11, 18, 27, ?\nWhat number comes next?",
+      "options": {
+        "A": "34",
+        "B": "36",
+        "C": "38",
+        "D": "42"
+      },
+      "answer": "C",
+      "concept": "Raven's Progressive Matrices (non-verbal pattern-completion test)",
+      "explanation": "The differences between the numbers are +3, +5, +7, and +9. The next logical difference is +11, so 27 + 11 = 38."
+    },
+    {
+      "id": "pr-5",
+      "category": "pattern_recognition",
+      "number": 5,
+      "title": "Alternating Logic",
+      "question": "Analyze this system's output sequence: 10, 5, 15, 10, 20, ?\nWhat is the next output?",
+      "options": {
+        "A": "10",
+        "B": "15",
+        "C": "25",
+        "D": "30"
+      },
+      "answer": "B",
+      "concept": "Raven's Progressive Matrices (non-verbal pattern-completion test)",
+      "explanation": "The pattern alternates between subtracting 5 and adding 10. The last step was adding 10 to get 20, so the next step is subtracting 5 to get 15."
+    },
+    {
+      "id": "td-1",
+      "category": "task_decomposition",
+      "number": 1,
+      "title": "Task Ordering (Visual Routing)",
+      "question": "A delivery drone 🚁 must drop off packages at three distinct locations:\n📍 Location A\n📍 Location B\n📍 Location C\nIt must follow these two strict programming rules: Location B must be visited before Location C, and Location A must be visited last. What is the only valid delivery route?",
+      "options": {
+        "A": "🚁 ➡️ A ➡️ B ➡️ C",
+        "B": "🚁 ➡️ B ➡️ A ➡️ C",
+        "C": "🚁 ➡️ C ➡️ B ➡️ A",
+        "D": "🚁 ➡️ B ➡️ C ➡️ A"
+      },
+      "answer": "D",
+      "concept": "Precedence-constraint ordering (topological sorting)",
+      "explanation": "To satisfy both rules, B comes before C, and A is at the very end."
+    },
+    {
+      "id": "td-2",
+      "category": "task_decomposition",
+      "number": 2,
+      "title": "Process Optimization (Visual Sorting)",
+      "question": "You need to organize 5 numbered boxes in ascending order (1 to 5). They are currently arranged on a digital shelf like this:\n📦[3] 📦[1] 📦[4] 📦[5] 📦[2]\nIf your system can only swap two adjacent (side-by-side) boxes at a time, what is the most logical first swap to begin sorting them efficiently?",
+      "options": {
+        "A": "Swap 📦[4] and 📦[5]",
+        "B": "Swap 📦[3] and 📦[1]",
+        "C": "Swap 📦[5] and 📦[2]",
+        "D": "Swap 📦[1] and 📦[4]"
+      },
+      "answer": "B",
+      "concept": "Bubble sort algorithm",
+      "explanation": "Swapping 3 and 1 moves the lowest number to the front, creating the better sequence: 1, 3, 4, 5, 2."
+    },
+    {
+      "id": "td-3",
+      "category": "task_decomposition",
+      "number": 3,
+      "title": "Troubleshooting a Sequence (Flowchart)",
+      "question": "A system processes files through a 4-step automated pipeline:\n📄 (1. Read) ➡️ 🗜️ (2. Compress) ➡️ 🔒 (3. Encrypt with Password) ➡️ 📤 (4. Send)\nA user receives a file but cannot open it because they do not have the password. Which step in the pipeline successfully executed but caused the user's current issue?",
+      "options": {
+        "A": "Step 1 📄",
+        "B": "Step 2 🗜️",
+        "C": "Step 3 🔒",
+        "D": "Step 4 📤"
+      },
+      "answer": "C",
+      "concept": "Troubleshooting a Sequence (Flowchart)",
+      "explanation": "The encryption step worked exactly as intended by locking the file, which now requires a password to open."
+    },
+    {
+      "id": "td-4",
+      "category": "task_decomposition",
+      "number": 4,
+      "title": "Real-World Conditionals (Logic Gates)",
+      "question": "A smart irrigation system 🚿 is programmed with the following rule:\n\"Activate 🚿 IF (Soil is 🏜️ Dry) AND (Weather is NOT 🌧️ Raining).\"\nUnder which visual condition will the system successfully water the garden?",
+      "options": {
+        "A": "Soil is 💧 Wet, and Weather is ☀️ Sunny.",
+        "B": "Soil is 🏜️ Dry, and Weather is 🌧️ Raining heavily.",
+        "C": "Soil is 🏜️ Dry, and Weather is ☁️ Cloudy but not raining.",
+        "D": "Soil is 💧 Wet, and Weather is 🌧️ Raining."
+      },
+      "answer": "C",
+      "concept": "Boolean AND / OR logic",
+      "explanation": "Both conditions are met: the soil is dry, and it is not raining."
+    },
+    {
+      "id": "td-5",
+      "category": "task_decomposition",
+      "number": 5,
+      "title": "Iteration and Looping (System Cycle)",
+      "question": "A water pump ⚙️ fills a 100-liter tank 🛢️ by adding 10 liters per minute. To prevent overheating, the pump is programmed to follow this loop:\n🔄 Pump 40 Liters ➡️ 🛑 Pause for 2 minutes ➡️ Repeat\nHow many minutes in total will it take to completely fill the empty tank to 100 Liters?",
+      "options": {
+        "A": "10 minutes",
+        "B": "12 minutes",
+        "C": "14 minutes",
+        "D": "16 minutes"
+      },
+      "answer": "C",
+      "concept": "Iteration and Looping (System Cycle)",
+      "explanation": "It takes 10 minutes of active pumping. It pauses at 40 liters for 2 mins, and at 80 liters for 2 mins. 10 + 2 + 2 = 14 minutes."
+    },
+    {
+      "id": "lr-1",
+      "category": "logical_reasoning",
+      "number": 1,
+      "title": "Syllogism (Data Storage)",
+      "question": "If 🖥️ Server X can store more data 💾 than 🖥️ Server Y, and 🖥️ Server Z can store less data 💾 than 🖥️ Server Y, which of the following statements must be true?",
+      "options": {
+        "A": "🖥️ Server X stores the least amount of data.",
+        "B": "🖥️ Server Z stores the most amount of data.",
+        "C": "🖥️ Server X stores more data than Server Z.",
+        "D": "🖥️ Server Y stores more data than Server X."
+      },
+      "answer": "C",
+      "concept": "Syllogism",
+      "explanation": "The order from most to least storage is X, Y, Z. Therefore, X definitely holds more than Z."
+    },
+    {
+      "id": "lr-2",
+      "category": "logical_reasoning",
+      "number": 2,
+      "title": "Boolean Logic (AND/OR Vault)",
+      "question": "A highly secure digital vault 🏦 is programmed with this exact unlock condition:\n🔓 UNLOCK IF: (💳 Card A OR 💳 Card B) AND (🔢 PIN Code)\nWhich combination of actions will successfully open the vault?",
+      "options": {
+        "A": "Swiping 💳 Card A and 💳 Card B.",
+        "B": "Swiping 💳 Card A and entering the 🔢 PIN Code.",
+        "C": "Swiping 💳 Card B only.",
+        "D": "Entering the 🔢 PIN Code twice."
+      },
+      "answer": "B",
+      "concept": "Boolean Logic (AND/OR Vault)",
+      "explanation": "You need at least one of the cards, plus the PIN code."
+    },
+    {
+      "id": "lr-3",
+      "category": "logical_reasoning",
+      "number": 3,
+      "title": "Process of Elimination (Truth Puzzle)",
+      "question": "You are investigating a system with three locked folders. Only ONE contains the 🕵️‍♂️ Hidden File. Each folder has a note written on it, but only ONE note is telling the truth:\n📁 Folder 1: \"The file is in here.\"\n📁 Folder 2: \"The file is NOT in here.\"\n📁 Folder 3: \"The file is NOT in Folder 1.\"\nIf only one of these statements is true, which folder actually has the file?",
+      "options": {
+        "A": "📁 Folder 1",
+        "B": "📁 Folder 2",
+        "C": "📁 Folder 3",
+        "D": "None of them"
+      },
+      "answer": "B",
+      "concept": "Knights and Knaves truth puzzle",
+      "explanation": "If the file is in Folder 2, Folder 1's statement is false, Folder 2's statement is false, and Folder 3's statement is true. This perfectly satisfies the rule that exactly one statement is true."
+    },
+    {
+      "id": "lr-4",
+      "category": "logical_reasoning",
+      "number": 4,
+      "title": "Venn Diagram Logic (Mobile Users)",
+      "question": "In an IT class of 40 senior high school students 🧑‍🎓:\n25 use 🤖 Android phones.\n20 use 🍎 iPhones.\n10 students use BOTH 🤖 and 🍎 devices.\nHow many students use 🚫 NEITHER type of phone?",
+      "options": {
+        "A": "0",
+        "B": "5",
+        "C": "10",
+        "D": "15"
+      },
+      "answer": "B",
+      "concept": "Venn diagram / inclusion–exclusion",
+      "explanation": "To find the total number of phone users: 25 + 20 - 10 = 35 students. 40 total students - 35 phone users = 5 students who use neither."
+    },
+    {
+      "id": "lr-5",
+      "category": "logical_reasoning",
+      "number": 5,
+      "title": "Cause and Effect (Contrapositive Rules)",
+      "question": "A system administrator 👨‍💻 sets a strict security rule on the school network:\n📜 RULE: \"If a user is a 👨‍🏫 Teacher, they have 🗑️ permission to delete files.\"\nBased exclusively on this rule, which of the following statements is logically guaranteed to be true?",
+      "options": {
+        "A": "If a user has 🗑️ permission to delete files, they are a 👨‍🏫 Teacher.",
+        "B": "If a user CANNOT 🚫 delete files, they are NOT a 👨‍🏫 Teacher.",
+        "C": "🧑‍🎓 Students can also 🗑️ delete files.",
+        "D": "👨‍🏫 Teachers 🗑️ delete files every day."
+      },
+      "answer": "B",
+      "concept": "Logical contrapositive",
+      "explanation": "This is the logical contrapositive. If being a Teacher guarantees the ability to delete files, then lacking that ability guarantees the user is not a Teacher."
+    }
+  ]
+}

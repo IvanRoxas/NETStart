@@ -27,6 +27,8 @@ interface ModulesClientProps {
   userId?: string;
   isVerified: boolean;
   hasTakenAptitudeTest?: boolean;
+  aptitudeResult?: any;
+  recommendedLearningPath?: string | null;
   liveStats: LiveStats;
   completedMissions: CompletedMission[];
 }
@@ -41,7 +43,15 @@ const pathSegments = [
   { from: 5, to: 6, x1: 76, y1: 74, x2: 26, y2: 86 },
 ];
 
-export default function ModulesClient({ userId, isVerified, hasTakenAptitudeTest = false, liveStats, completedMissions }: ModulesClientProps) {
+export default function ModulesClient({
+  userId,
+  isVerified,
+  hasTakenAptitudeTest = false,
+  aptitudeResult,
+  recommendedLearningPath,
+  liveStats,
+  completedMissions,
+}: ModulesClientProps) {
   const [activePlanetId, setActivePlanetId] = useState<string | null>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const searchParams = useSearchParams();
@@ -478,6 +488,15 @@ export default function ModulesClient({ userId, isVerified, hasTakenAptitudeTest
             </div>
           </div>
         </div>
+
+        {/* Center: Recommended Orbit Learning Path (from Aptitude Assessment) */}
+        {hasTakenAptitudeTest && recommendedLearningPath && (
+          <div className="hidden xl:flex items-center gap-2 bg-[#ff912d]/10 border border-[#ff912d]/30 px-3.5 py-1.5 rounded-full text-xs font-mono font-bold text-[#ff912d]">
+            <Sparkles size={14} />
+            <span className="text-gray-400">RECOMMENDED PATH:</span>
+            <span className="text-white font-sans font-bold">{recommendedLearningPath}</span>
+          </div>
+        )}
 
         {/* Center/Right: Telemetry Metrics Chips (EXP Threshold Bar, Gears, Missions) */}
         <div className="flex items-center gap-3 flex-wrap">

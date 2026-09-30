@@ -58,6 +58,8 @@ model User {
   hasTakenAptitudeTest Boolean @default(false) @map("has_taken_aptitude_test")
   logicScore    Int?      @map("logic_score")
   patternRecognitionScore Int? @map("pattern_recognition_score")
+  taskDecompositionScore  Int? @map("task_decomposition_score")
+  aptitudeResult          Json? @map("aptitude_result")
   recommendedLearningPath String? @map("recommended_learning_path")
   xp            Int       @default(0)
   gears         Int       @default(0)
