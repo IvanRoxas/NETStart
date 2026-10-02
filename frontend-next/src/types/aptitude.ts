@@ -35,6 +35,7 @@ export interface CategorySummary {
 export interface AptitudeAIInsight {
   summary: string;
   advice: string;
+  source?: "gemini" | "mock" | "fallback";
 }
 
 export interface AptitudeTestResult {
@@ -55,11 +56,13 @@ export interface AptitudeTestResult {
 }
 
 export interface AptitudeAIContext {
+  totalCorrect: number;
+  totalPercent: number;
   totalScore: string;
   categories: {
-    patternRecognition: string;
-    taskDecomposition: string;
-    logicalReasoning: string;
+    patternRecognition: string | number;
+    taskDecomposition: string | number;
+    logicalReasoning: string | number;
   };
   strongestCategory: string;
   weakestCategory: string;

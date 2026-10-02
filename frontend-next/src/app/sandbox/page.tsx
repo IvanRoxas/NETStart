@@ -9,6 +9,9 @@ import VisualNovelCutscene, { SceneItem } from '@/components/VisualNovelCutscene
 import moonScenes from '@/data/moon.json';
 import marsScenes from '@/data/mars.json';
 import venusScenes from '@/data/venus.json';
+import mercuryScenes from '@/data/mercury.json';
+import saturnScenes from '@/data/saturn.json';
+import jupiterScenes from '@/data/jupiter.json';
 
 import storySummaries from '@/data/story_summaries.json';
 
@@ -29,10 +32,18 @@ function SandboxContent() {
   const username = session?.user?.name || 'Operator';
 
   useEffect(() => {
-    if (!skipCutscene && (missionId?.startsWith('moon-') || missionId?.startsWith('mars-') || missionId?.startsWith('venus-'))) {
-      const isMars = missionId?.startsWith('mars-');
-      const isVenus = missionId?.startsWith('venus-');
-      const typedScenes = (isVenus ? venusScenes : (isMars ? marsScenes : moonScenes)) as SceneItem[];
+    const planets = ['moon', 'mars', 'venus', 'mercury', 'saturn', 'jupiter'];
+    const isStoryMission = planets.some(p => missionId?.startsWith(`${p}-`));
+
+    if (!skipCutscene && isStoryMission && missionId) {
+      const typedScenes = (() => {
+        if (missionId.startsWith('mars-')) return marsScenes;
+        if (missionId.startsWith('venus-')) return venusScenes;
+        if (missionId.startsWith('mercury-')) return mercuryScenes;
+        if (missionId.startsWith('saturn-')) return saturnScenes;
+        if (missionId.startsWith('jupiter-')) return jupiterScenes;
+        return moonScenes;
+      })() as SceneItem[];
       let startIndex = 0;
       let targetIndex = -1;
       

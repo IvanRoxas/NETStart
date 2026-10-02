@@ -4,7 +4,11 @@ import { authOptions, prisma } from "@/lib/auth";
 import { addXPAndCheckLevelUp } from "@/lib/xp";
 import { logSystemAction } from "@/lib/logger";
 import questionsData from "@/server/data/aptitude_questions.server.json";
-import { generateAptitudeAIInsights } from "@/lib/gemini";
+import { generateStructuredResponse } from "@/ai/client";
+import { aptitudeSchema } from "@/ai/schemas/aptitudeSchema";
+import { getAptitudePrompt, getAptitudeFallback } from "@/ai/prompts/aptitude";
+import { NOVA_SYSTEM_INSTRUCTION } from "@/ai/prompts/shared";
+import { mockAptitudeResponse } from "@/ai/mock";
 import {
   AptitudeCategory,
   AptitudeTestResult,
@@ -12,6 +16,7 @@ import {
   CategorySummary,
   MissedQuestionItem,
   AptitudeAIContext,
+  AptitudeAIInsight,
 } from "@/types/aptitude";
 
 export const dynamic = "force-dynamic";
@@ -209,22 +214,47 @@ export async function POST(req: Request) {
 
     // Step 3: ONLY AFTER SAVING TO DATABASE, pass compact result to Gemini API layer
     const aiContext: AptitudeAIContext = {
+      totalCorrect,
+      totalPercent,
       totalScore: `${totalCorrect}/${totalQuestions} (${totalPercent}%)`,
       categories: {
-        patternRecognition: `${categoriesFormatted.pattern_recognition.correct}/${categoriesFormatted.pattern_recognition.total} (${categoriesFormatted.pattern_recognition.percent}%)`,
-        taskDecomposition: `${categoriesFormatted.task_decomposition.correct}/${categoriesFormatted.task_decomposition.total} (${categoriesFormatted.task_decomposition.percent}%)`,
-        logicalReasoning: `${categoriesFormatted.logical_reasoning.correct}/${categoriesFormatted.logical_reasoning.total} (${categoriesFormatted.logical_reasoning.percent}%)`,
+        patternRecognition: categoriesFormatted.pattern_recognition.correct,
+        taskDecomposition: categoriesFormatted.task_decomposition.correct,
+        logicalReasoning: categoriesFormatted.logical_reasoning.correct,
       },
       strongestCategory: `${strongestCategory.name} (${strongestCategory.percent}%)`,
       weakestCategory: `${weakestCategory.name} (${weakestCategory.percent}%)`,
       missedConcepts: missed.map((m) => m.concept),
     };
 
-    let aiInsight;
+    let aiInsight: AptitudeAIInsight;
     try {
-      aiInsight = await generateAptitudeAIInsights(aiContext);
+      const response = await generateStructuredResponse(
+        "aptitude",
+        NOVA_SYSTEM_INSTRUCTION,
+        getAptitudePrompt(aiContext),
+        aptitudeSchema,
+        {
+          type: "OBJECT",
+          properties: {
+            summary: { type: "STRING" },
+            advice: { type: "STRING" }
+          },
+          required: ["summary", "advice"]
+        },
+        () => getAptitudeFallback(aiContext),
+        mockAptitudeResponse
+      );
+      aiInsight = {
+        ...response.data,
+        source: response.source,
+      };
     } catch (err) {
       console.warn("[APTITUDE_API] Post-grading Gemini context generation caught error:", err);
+      aiInsight = {
+        ...getAptitudeFallback(aiContext),
+        source: "fallback",
+      };
     }
 
     const finalResult: AptitudeTestResult = {

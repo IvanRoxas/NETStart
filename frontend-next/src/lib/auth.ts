@@ -149,7 +149,7 @@ export const authOptions: NextAuthOptions = {
       // Assign custom display name defaulting to OAuth username
       let desiredDisplayName = user.name || `Explorer${Math.floor(10000 + Math.random() * 90000)}`;
       
-      const isTaken = await prisma.user.findUnique({
+      const isTaken = await prisma.user.findFirst({
         where: { displayName: desiredDisplayName }
       });
       

@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Lock, Rocket, Award, Settings, Zap, Brain, X } from 'lucide-react';
+import { Lock, Rocket, Award, Settings, Zap, Brain, X, Sparkles } from 'lucide-react';
 import PlanetNode from '@/components/PlanetNode';
 
 import { getUserStorageItem, setUserStorageItem, removeUserStorageItem } from '@/lib/userStorage';
