@@ -248,10 +248,12 @@ export default function ModulesClient({
   const mercuryCompleted = getCompletedMissionsCount("mercury") >= 3;
   const jupiterCompleted = getCompletedMissionsCount("jupiter") >= 3;
   const saturnCompleted = getCompletedMissionsCount("saturn") >= 3;
+  const earthCompleted = getCompletedMissionsCount("earth") >= 3;
 
   // Real unlocked index based on server completed missions
   let realUnlockedIndex = 0;
-  if (saturnCompleted) realUnlockedIndex = 6;
+  if (earthCompleted) realUnlockedIndex = 6;
+  else if (saturnCompleted) realUnlockedIndex = 6;
   else if (jupiterCompleted) realUnlockedIndex = 5;
   else if (mercuryCompleted) realUnlockedIndex = 4;
   else if (venusCompleted) realUnlockedIndex = 3;
@@ -831,6 +833,20 @@ export default function ModulesClient({
               Take Assessment Now
             </Link>
           </div>
+        </div>
+      )}
+
+      {/* Epilogue Grand Finale Launch Button */}
+      {earthCompleted && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 animate-in fade-in slide-in-from-bottom-6 duration-700">
+          <Link
+            href="/sandbox?missionId=epilogue"
+            className="flex items-center gap-3 px-6 py-3.5 rounded-full bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-600 hover:from-emerald-400 hover:to-indigo-500 text-white font-display font-black text-xs sm:text-sm uppercase tracking-widest shadow-[0_0_35px_rgba(16,185,129,0.6)] border-2 border-emerald-300/80 transition-all hover:scale-105 active:scale-95 cursor-pointer"
+          >
+            <Sparkles size={18} className="animate-spin text-amber-300 shrink-0" />
+            <span>All 7 Planets Restored // Play Epilogue</span>
+            <Rocket size={18} className="shrink-0" />
+          </Link>
         </div>
       )}
 

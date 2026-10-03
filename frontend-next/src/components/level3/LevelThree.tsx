@@ -5,6 +5,7 @@ import * as Blockly from 'blockly';
 import 'blockly/blocks';
 import * as En from 'blockly/msg/en';
 import '@/lib/customblocks';
+import { patchBlocklyFocus } from '@/lib/patchBlocklyFocus';
 import LevelThreeTabs from '@/components/level3/LevelThreeTabs';
 import { useLevelThreeState } from '@/hooks/useLevelThreeState';
 import {
@@ -111,6 +112,7 @@ export default function LevelThree() {
     }
 
     if (!workspaceRef.current) {
+      patchBlocklyFocus();
       workspaceRef.current = Blockly.inject(blocklyRef.current, {
         toolbox: toolboxConfig,
         grid: {
@@ -154,8 +156,15 @@ export default function LevelThree() {
   useEffect(() => {
     return () => {
       if (workspaceRef.current) {
-        workspaceRef.current.dispose();
+        try {
+          workspaceRef.current.dispose();
+        } catch (e) {
+          console.warn("LevelThree workspace disposal warning:", e);
+        }
         workspaceRef.current = null;
+      }
+      if (blocklyRef.current) {
+        blocklyRef.current.innerHTML = '';
       }
     };
   }, []);

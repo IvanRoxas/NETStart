@@ -12,8 +12,12 @@ import venusScenes from '@/data/venus.json';
 import mercuryScenes from '@/data/mercury.json';
 import saturnScenes from '@/data/saturn.json';
 import jupiterScenes from '@/data/jupiter.json';
+import earthScenes from '@/data/earth.json';
+import epilogueScenes from '@/data/epilogue.json';
 
 import storySummaries from '@/data/story_summaries.json';
+import { getUserStorageItem } from '@/lib/userStorage';
+import { useRouter } from 'next/navigation';
 
 const BlocklyMaze = dynamic(() => import('@/components/BlocklyMaze'), {
   ssr: false,
@@ -21,6 +25,7 @@ const BlocklyMaze = dynamic(() => import('@/components/BlocklyMaze'), {
 });
 
 function SandboxContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const missionId = searchParams?.get('missionId');
   const skipCutscene = searchParams?.get('skipCutscene') === 'true';
@@ -31,19 +36,59 @@ function SandboxContent() {
   const [summaryText, setSummaryText] = useState<string | undefined>(undefined);
   const username = session?.user?.name || 'Operator';
 
+  const checkPythonLast = () => {
+    try {
+      const uid = session?.user && (session.user as any).id;
+      const local = (typeof window !== 'undefined' && uid)
+        ? JSON.parse(getUserStorageItem('completed_missions', uid) || '[]')
+        : [];
+      const fallback = typeof window !== 'undefined'
+        ? JSON.parse(localStorage.getItem('completed_missions') || '[]')
+        : [];
+      const allCompleted: string[] = Array.from(new Set([...local, ...fallback]));
+      const hasMars = allCompleted.some(m => m.toLowerCase().startsWith('mars') || m.toLowerCase().startsWith('html'));
+      const hasVenus = allCompleted.some(m => m.toLowerCase().startsWith('venus') || m.toLowerCase().startsWith('css'));
+      const hasMercury = allCompleted.some(m => m.toLowerCase().startsWith('mercury') || m.toLowerCase().startsWith('js') || m.toLowerCase().startsWith('javascript'));
+      const hasJupiter = allCompleted.some(m => m.toLowerCase().startsWith('jupiter') || m.toLowerCase().startsWith('java'));
+      const hasSaturn = allCompleted.some(m => m.toLowerCase().startsWith('saturn') || m.toLowerCase().startsWith('cpp'));
+      return hasMars && hasVenus && hasMercury && hasJupiter && hasSaturn;
+    } catch (e) {
+      return true;
+    }
+  };
+
   useEffect(() => {
-    const planets = ['moon', 'mars', 'venus', 'mercury', 'saturn', 'jupiter'];
-    const isStoryMission = planets.some(p => missionId?.startsWith(`${p}-`));
+    const planets = ['moon', 'mars', 'venus', 'mercury', 'saturn', 'jupiter', 'earth'];
+    const isEpilogue = missionId === 'epilogue' || missionId?.startsWith('epilogue-');
+    const isStoryMission = isEpilogue || planets.some(p => missionId?.startsWith(`${p}-`));
 
     if (!skipCutscene && isStoryMission && missionId) {
+      // Epilogue cutscene
+      if (isEpilogue) {
+        setCutsceneData(epilogueScenes as SceneItem[]);
+        setShowCutscene(true);
+        setSummaryText((storySummaries as any).skip_summary || undefined);
+        return;
+      }
+
+      const isPythonLast = checkPythonLast();
       const typedScenes = (() => {
         if (missionId.startsWith('mars-')) return marsScenes;
         if (missionId.startsWith('venus-')) return venusScenes;
         if (missionId.startsWith('mercury-')) return mercuryScenes;
         if (missionId.startsWith('saturn-')) return saturnScenes;
         if (missionId.startsWith('jupiter-')) return jupiterScenes;
+        if (missionId.startsWith('earth-')) {
+          return (earthScenes as any[]).filter(s => {
+            if (!s.when) return true;
+            if (s.when === 'pythonLast') return isPythonLast;
+            if (s.when === '!pythonLast') return !isPythonLast;
+            return true;
+          });
+        }
         return moonScenes;
       })() as SceneItem[];
+
       let startIndex = 0;
       let targetIndex = -1;
       
@@ -75,7 +120,12 @@ function SandboxContent() {
         const parts = missionId.split('-');
         const moduleName = parts[0];
         const levelNum = parts[1];
-        if ((storySummaries as any)[moduleName] && (storySummaries as any)[moduleName][levelNum]) {
+        if (moduleName === 'earth') {
+          const group = isPythonLast ? (storySummaries as any).earth_last : (storySummaries as any).earth_not_last;
+          if (group && group[levelNum]) {
+            setSummaryText(group[levelNum]);
+          }
+        } else if ((storySummaries as any)[moduleName] && (storySummaries as any)[moduleName][levelNum]) {
           setSummaryText((storySummaries as any)[moduleName][levelNum]);
         }
       } catch(e) {}
@@ -88,7 +138,13 @@ function SandboxContent() {
         scenes={cutsceneData}
         username={username}
         summaryText={summaryText}
-        onFinished={() => setShowCutscene(false)}
+        onFinished={() => {
+          if (missionId === 'epilogue' || missionId?.startsWith('epilogue-')) {
+            router.push('/modules');
+          } else {
+            setShowCutscene(false);
+          }
+        }}
       />
     );
   }

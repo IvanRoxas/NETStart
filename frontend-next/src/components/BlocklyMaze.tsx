@@ -6,6 +6,7 @@ import 'blockly/blocks';
 import * as En from 'blockly/msg/en';
 import { javascriptGenerator } from 'blockly/javascript';
 import '@/lib/customblocks';
+import { patchBlocklyFocus } from '@/lib/patchBlocklyFocus';
 import { generatePlainEnglishPseudocode } from '@/lib/customblocks';
 import PlainEnglishCodeViewer from '@/components/PlainEnglishCodeViewer';
 import { useNavigationGuard } from '@/context/NavigationGuardContext';
@@ -2941,9 +2942,38 @@ export default function BlocklyMaze() {
     }
   }, [handleMars3Success]);
 
+  const resetWorkspaceRef = useRef(resetWorkspaceToDefaultStart);
+  resetWorkspaceRef.current = resetWorkspaceToDefaultStart;
+
+  const setupContextMenuRef = useRef(setupCustomContextMenu);
+  setupContextMenuRef.current = setupCustomContextMenu;
+
+  const showToastRef = useRef(showToast);
+  showToastRef.current = showToast;
+
+  const currentSectionRef = useRef(currentSection);
+  currentSectionRef.current = currentSection;
+
+  const completedSectionsRef = useRef(completedSections);
+  completedSectionsRef.current = completedSections;
+
+  const userIdRef = useRef(userId);
+  userIdRef.current = userId;
+
+  const displayTitleRef = useRef(displayTitle);
+  displayTitleRef.current = displayTitle;
+
+  const planetIconRef = useRef(planetIcon);
+  planetIconRef.current = planetIcon;
+
+  const isDailyRef = useRef(isDaily);
+  isDailyRef.current = isDaily;
+
   // Inject Blockly
   useEffect(() => {
     if (blocklyDiv.current && !workspace.current) {
+      patchBlocklyFocus();
+
       const netStartTheme = Blockly.Theme.defineTheme('netstart_space', {
         name: 'netstart_space',
         base: Blockly.Themes.Classic,
@@ -2975,7 +3005,7 @@ export default function BlocklyMaze() {
       registerMarsLevel3Blocks();
 
       const ws = Blockly.inject(blocklyDiv.current, {
-        toolbox: getToolboxForMission(missionId, currentSection),
+        toolbox: getToolboxForMission(missionId, currentSectionRef.current),
         comments: true,
         scrollbars: true,
         move: {
@@ -3004,11 +3034,11 @@ export default function BlocklyMaze() {
         },
       });
 
-      (ws as any).currentSectionIndex = currentSection;
+      (ws as any).currentSectionIndex = currentSectionRef.current;
       (ws as any).dailySectionName = dailySection?.name;
       (ws as any).missionId = missionId;
       if (typeof window !== 'undefined') {
-        (window as any).__NETSTART_CURRENT_SECTION__ = currentSection;
+        (window as any).__NETSTART_CURRENT_SECTION__ = currentSectionRef.current;
         (window as any).__NETSTART_DAILY_SECTION_NAME__ = dailySection?.name;
         (window as any).__NETSTART_MISSION_ID__ = missionId;
       }
@@ -3050,8 +3080,8 @@ export default function BlocklyMaze() {
         return false;
       };
 
-      resetWorkspaceToDefaultStart(ws);
-      setupCustomContextMenu();
+      resetWorkspaceRef.current(ws);
+      setupContextMenuRef.current();
 
       const updateCodeLive = () => {
         if (!workspace.current || isRestoringWorkspaceRef.current) return;
@@ -3080,7 +3110,7 @@ export default function BlocklyMaze() {
             setPlainEnglishCode(parseRes.htmlCode);
             setJsCode(parseRes.htmlCode);
             setMars2Validation(parseRes.validation);
-            const isSecDone = completedSections.includes(currentSection);
+            const isSecDone = completedSectionsRef.current.includes(currentSectionRef.current);
             const captionCount = parseRes.validation.customizations?.filter(c => c.caption || c.headline)?.length || 0;
             const allContainersPopulated = parseRes.validation.totalContainers === 5 && parseRes.validation.assignedImages?.every(img => img !== null) && !parseRes.validation.hasErrors;
             const obj1Met = captionCount >= 2;
@@ -3095,9 +3125,9 @@ export default function BlocklyMaze() {
                 return obj;
               }));
 
-              const goalKey1 = `${missionId}_sec${currentSection}_goal1`;
-              const goalKey2 = `${missionId}_sec${currentSection}_goal2`;
-              const goalKey3 = `${missionId}_sec${currentSection}_goal3`;
+              const goalKey1 = `${missionId}_sec${currentSectionRef.current}_goal1`;
+              const goalKey2 = `${missionId}_sec${currentSectionRef.current}_goal2`;
+              const goalKey3 = `${missionId}_sec${currentSectionRef.current}_goal3`;
 
               try {
                 let completedGoals: string[] = JSON.parse(getNetstartItem(`netstart_completed_goals_${missionId}`) || '[]');
@@ -3124,7 +3154,7 @@ export default function BlocklyMaze() {
             setPlainEnglishCode(parseRes.htmlCode);
             setJsCode(parseRes.htmlCode);
             setMars3Validation(parseRes.validation);
-            const isSecDone = completedSections.includes(currentSection);
+            const isSecDone = completedSectionsRef.current.includes(currentSectionRef.current);
             const obj1Met = parseRes.validation.hasContainer;
             const obj2Met = parseRes.validation.hasHeading && parseRes.validation.hasValidSeal;
             const obj3Met = parseRes.validation.hasEarthLink && parseRes.validation.hasVenusLink && !parseRes.validation.hasDecoys;
@@ -3137,9 +3167,9 @@ export default function BlocklyMaze() {
                 return obj;
               }));
 
-              const goalKey1 = `${missionId}_sec${currentSection}_goal1`;
-              const goalKey2 = `${missionId}_sec${currentSection}_goal2`;
-              const goalKey3 = `${missionId}_sec${currentSection}_goal3`;
+              const goalKey1 = `${missionId}_sec${currentSectionRef.current}_goal1`;
+              const goalKey2 = `${missionId}_sec${currentSectionRef.current}_goal2`;
+              const goalKey3 = `${missionId}_sec${currentSectionRef.current}_goal3`;
 
               try {
                 let completedGoals: string[] = JSON.parse(getNetstartItem(`netstart_completed_goals_${missionId}`) || '[]');
@@ -3172,7 +3202,7 @@ export default function BlocklyMaze() {
             const xmlText = Blockly.Xml.domToText(xmlDom);
             const blockCount = workspace.current.getAllBlocks(false).length;
             if (
-              userId &&
+              userIdRef.current &&
               hasHydratedSavedSection.current &&
               !isRestoringWorkspaceRef.current &&
               blockCount > 0 &&
@@ -3180,7 +3210,7 @@ export default function BlocklyMaze() {
               xmlText !== '<xml xmlns="https://developers.google.com/blockly/xml"></xml>' &&
               xmlText !== '<xml xmlns="https://developers.google.com/blockly/xml"/>'
             ) {
-              setNetstartItem(`netstart_saved_workspace_${missionId}_${currentSection}`, xmlText);
+              setNetstartItem(`netstart_saved_workspace_${missionId}_${currentSectionRef.current}`, xmlText);
               let completedGoals: string[] = [];
               try {
                 completedGoals = JSON.parse(getNetstartItem(`netstart_completed_goals_${missionId}`) || '[]');
@@ -3188,19 +3218,19 @@ export default function BlocklyMaze() {
 
               const saveState = {
                 missionId,
-                sectionIndex: currentSection,
+                sectionIndex: currentSectionRef.current,
                 xmlText,
-                title: displayTitle,
+                title: displayTitleRef.current,
                 completedGoals,
                 timestamp: Date.now()
               };
               setNetstartItem('netstart_active_saved_level', JSON.stringify(saveState));
               setNetstartItem('netstart_active_level', JSON.stringify({
                 missionId,
-                title: displayTitle,
-                module: getMissionModuleForMission(missionId, isDaily),
-                icon: planetIcon,
-                desc: getMissionDescForMission(missionId, isDaily),
+                title: displayTitleRef.current,
+                module: getMissionModuleForMission(missionId, isDailyRef.current),
+                icon: planetIconRef.current,
+                desc: getMissionDescForMission(missionId, isDailyRef.current),
                 startedAt: new Date().toISOString()
               }));
             }
@@ -3215,7 +3245,7 @@ export default function BlocklyMaze() {
       const onWorkspaceChange = (e: any) => {
         if (e && (e.type === Blockly.Events.BLOCK_DELETE || e.type === (Blockly.Events as any).DELETE)) {
           if (e && !(e as any).isUiEvent && ((e as any).blockId || (e as any).ids)) {
-            showToast("Block deleted", {
+            showToastRef.current("Block deleted", {
               onUndo: () => {
                 if (workspace.current) workspace.current.undo(false);
               },
@@ -3239,7 +3269,7 @@ export default function BlocklyMaze() {
             const selected = Blockly.getSelected();
             if (selected && typeof (selected as any).dispose === 'function' && (selected as any).type !== 'event_start' && (selected as any).isDeletable?.()) {
               (selected as any).dispose(true);
-              showToast("Block deleted", {
+              showToastRef.current("Block deleted", {
                 onUndo: () => {
                   if (workspace.current) workspace.current.undo(false);
                 },
@@ -3281,12 +3311,19 @@ export default function BlocklyMaze() {
         window.removeEventListener('keydown', handleKeyDown);
         window.removeEventListener('resize', handleResize);
         if (workspace.current) {
-          workspace.current.dispose();
+          try {
+            workspace.current.dispose();
+          } catch (e) {
+            console.warn("Workspace disposal warning:", e);
+          }
           workspace.current = null;
+        }
+        if (blocklyDiv.current) {
+          blocklyDiv.current.innerHTML = '';
         }
       };
     }
-  }, [missionId, resetWorkspaceToDefaultStart, setupCustomContextMenu, showToast]);
+  }, [missionId]);
 
   // Block highlighting & error visual indicators
   const clearAllBlockHighlights = useCallback((ws: Blockly.WorkspaceSvg | null) => {

@@ -148,13 +148,14 @@ export default async function ModuleMissionsPage({ params }: { params: Promise<P
     }).length;
   };
 
-  // Enforce 7-Planet Progression Chain
+  // Enforce 7-Planet Progression Chain (3 missions per planet)
   const moonCompleted = getCompletedCount("moon") >= 3;
-  const marsCompleted = getCompletedCount("mars") >= 5;
-  const venusCompleted = getCompletedCount("venus") >= 5;
-  const mercuryCompleted = getCompletedCount("mercury") >= 5;
-  const jupiterCompleted = getCompletedCount("jupiter") >= 5;
-  const saturnCompleted = getCompletedCount("saturn") >= 5;
+  const marsCompleted = getCompletedCount("mars") >= 3;
+  const venusCompleted = getCompletedCount("venus") >= 3;
+  const mercuryCompleted = getCompletedCount("mercury") >= 3;
+  const jupiterCompleted = getCompletedCount("jupiter") >= 3;
+  const saturnCompleted = getCompletedCount("saturn") >= 3;
+  const earthCompleted = getCompletedCount("earth") >= 3;
 
   const isModuleLocked = () => {
     if (moduleId === "moon") return false;

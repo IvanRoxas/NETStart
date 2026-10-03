@@ -97,6 +97,26 @@ const SPEAKER_PROFILES: Record<string, SpeakerMetadata> = {
     icon: "alert",
     image: "/scenes/characters/HIGHER HEAD.png",
   },
+  "Director Atlas": {
+    color: "from-[#451a03] via-[#9a3412] to-[#3b0764]",
+    border: "border-amber-400/80",
+    glow: "shadow-[0_0_35px_rgba(245,158,11,0.5)]",
+    badgeBg: "bg-amber-500/20 text-amber-300 border-amber-500/40",
+    role: "NETSTART HQ DIRECTOR",
+    pitch: 130,
+    icon: "alert",
+    image: "/scenes/characters/HIGHER HEAD.png",
+  },
+  "The Architect": {
+    color: "from-[#022c22] via-[#064e3b] to-[#0f172a]",
+    border: "border-emerald-400/80",
+    glow: "shadow-[0_0_40px_rgba(16,185,129,0.5)]",
+    badgeBg: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    role: "ASTROLINK ARCHITECT",
+    pitch: 95,
+    icon: "radio",
+    image: "/scenes/characters/ARCHITECT.png",
+  },
   Nova: {
     color: "from-[#042f2e] via-[#0d9488] to-[#134e4a]",
     border: "border-teal-400/80",
@@ -321,14 +341,26 @@ const VisualNovelCutscene = forwardRef<VisualNovelCutsceneHandle, VisualNovelCut
     const isMissionGate =
       isDivider && index > 0 && MISSION_GATE_PATTERN.test(scene.title || "");
     const rawSpeakerName = scene?.speaker || "";
-    const displaySpeakerName = rawSpeakerName === "Operator" ? username : rawSpeakerName.replace(/\s*\(.*?\)/g, "");
+    const isArchitectLine = rawSpeakerName === "The Architect";
+    const isArchitectTerminalScene = !!(scene?.background?.includes("earth_bg_003") || isArchitectLine);
+    const displaySpeakerName = (rawSpeakerName === "Operator" || rawSpeakerName === "Y/N") ? username : rawSpeakerName.replace(/\s*\(.*?\)/g, "");
     const profile = SPEAKER_PROFILES[rawSpeakerName] || DEFAULT_PROFILE;
     const showCharacterCard =
       !isDivider && !!scene && !NO_SPRITE_SPEAKERS.has(rawSpeakerName) && rawSpeakerName.trim().length > 0;
       
     // Pre-process text so both typing and quick-skip use the username correctly
     const rawText = scene?.text || "";
-    const processedText = rawText.includes("Operator") ? rawText.replace(/Operator/g, username) : rawText;
+    const processedText = rawText
+      .replace(/Operator/g, username)
+      .replace(/Y\/N/g, username);
+
+    const [lastRoomSpeaker, setLastRoomSpeaker] = useState<string>("Director Atlas");
+
+    useEffect(() => {
+      if (rawSpeakerName && rawSpeakerName !== "The Architect" && !NO_SPRITE_SPEAKERS.has(rawSpeakerName)) {
+        setLastRoomSpeaker(rawSpeakerName);
+      }
+    }, [rawSpeakerName]);
 
     useImperativeHandle(ref, () => ({
       resume() {
@@ -412,23 +444,101 @@ const VisualNovelCutscene = forwardRef<VisualNovelCutsceneHandle, VisualNovelCut
           onClick={handleAdvance}
           className="relative w-full h-full overflow-hidden select-none cursor-pointer bg-black"
         >
-          {/* Background Image Layer */}
-          {backgroundUrl && (
-            <div
-              className="absolute inset-0 bg-cover bg-center transition-all duration-700 transform scale-105"
-              style={{ backgroundImage: `url('${backgroundUrl}')` }}
-            />
-          )}
+          {/* Background Image Layer & Pinned In-World Elements */}
+          <div className="absolute inset-0 overflow-hidden flex items-center justify-center pointer-events-none">
+            <div 
+              className="relative shrink-0 pointer-events-auto"
+              style={{
+                width: 'max(100vw, calc(100vh * 2716 / 1568))',
+                height: 'max(100vh, calc(100vw * 1568 / 2716))',
+                aspectRatio: '2716 / 1568',
+              }}
+            >
+              {backgroundUrl && (
+                <img
+                  src={backgroundUrl}
+                  alt="Scene Background"
+                  className="absolute inset-0 w-full h-full object-cover select-none pointer-events-none transition-all duration-700"
+                />
+              )}
 
-          {/* Vignette Overlay & Subtle Scanlines */}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#06020f] via-transparent to-black/60 pointer-events-none" />
-          <div 
-            className="absolute inset-0 opacity-[0.04] pointer-events-none"
-            style={{
-              backgroundImage: "linear-gradient(rgba(255,255,255,0.8) 1px, transparent 1px)",
-              backgroundSize: "100% 3px"
-            }}
-          />
+              {/* Vignette Overlay & Subtle Scanlines */}
+              <div className="absolute inset-0 bg-gradient-to-t from-[#06020f]/80 via-transparent to-black/60 pointer-events-none" />
+              <div 
+                className="absolute inset-0 opacity-[0.04] pointer-events-none"
+                style={{
+                  backgroundImage: "linear-gradient(rgba(255,255,255,0.8) 1px, transparent 1px)",
+                  backgroundSize: "100% 3px"
+                }}
+              />
+
+              {/* The Architect Pinned Directly onto the Left Desk Monitor */}
+              {isArchitectTerminalScene && !isDivider && (
+                <div
+                  className={`absolute transition-all duration-500 flex flex-col items-center justify-center overflow-hidden rounded-xl pointer-events-none ${
+                    spriteIn ? "opacity-100" : "opacity-0"
+                  }`}
+                  style={{
+                    left: '17.2%',
+                    top: '29.5%',
+                    width: '19.0%',
+                    height: '38.0%',
+                  }}
+                >
+                  {/* Glowing Monitor Screen Tint & Active Bezel */}
+                  <div className={`absolute inset-0 rounded-xl transition-all duration-500 ${
+                    isArchitectLine
+                      ? "bg-cyan-950/40 border-2 border-cyan-400 shadow-[0_0_35px_rgba(6,182,212,0.65),inset_0_0_25px_rgba(6,182,212,0.45)]"
+                      : "bg-cyan-950/15 border border-cyan-500/25"
+                  }`} />
+
+                  {/* Telemetry Header inside monitor */}
+                  <div className="absolute top-1 left-2 right-2 z-10 flex items-center justify-between text-[7px] sm:text-[9px] font-mono text-cyan-300 font-bold pointer-events-none">
+                    <span className="bg-black/60 px-1 py-0.5 rounded border border-cyan-500/30">CH: 00_CORE</span>
+                    {isArchitectLine ? (
+                      <span className="animate-pulse text-cyan-300 font-bold flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 inline-block animate-ping" />
+                        TRANSMITTING
+                      </span>
+                    ) : (
+                      <span className="text-cyan-500/70">IDLE</span>
+                    )}
+                  </div>
+
+                  {/* The Architect Sprite INSIDE the Desk Monitor */}
+                  <div className="relative w-full h-full flex items-center justify-center p-1 sm:p-2 z-0">
+                    <img 
+                      src="/scenes/characters/ARCHITECT.png" 
+                      alt="The Architect" 
+                      className={`w-full h-full object-contain transition-all duration-500 ${
+                        isArchitectLine 
+                          ? "opacity-100 scale-100 brightness-110 filter drop-shadow-[0_0_20px_rgba(34,211,238,0.7)]" 
+                          : "opacity-45 scale-95 grayscale-[30%]"
+                      }`} 
+                    />
+                  </div>
+
+                  {/* CRT Scanlines Overlay */}
+                  <div 
+                    className="absolute inset-0 pointer-events-none opacity-30 mix-blend-screen z-10"
+                    style={{
+                      backgroundImage: "linear-gradient(rgba(34,211,238,0.25) 1px, transparent 1px)",
+                      backgroundSize: "100% 3px"
+                    }}
+                  />
+
+                  {/* Telemetry Footer inside monitor */}
+                  <div className="absolute bottom-1 left-2 right-2 z-10 flex items-center justify-between text-[6px] sm:text-[8px] font-mono text-cyan-300/80 pointer-events-none">
+                    <span>THE ARCHITECT</span>
+                    <span className="flex items-center gap-1">
+                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                      ROW_0_LINK
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
 
           {/* Top Control Bar (Scene Telemetry, Mute Button, Skip Button) */}
           <div className="absolute top-4 left-4 right-4 z-40 flex items-center justify-between pointer-events-auto">
@@ -493,7 +603,71 @@ const VisualNovelCutscene = forwardRef<VisualNovelCutsceneHandle, VisualNovelCut
           ) : (
             <>
               {/* STATE B: Character Visual Card (Rectangular Sci-Fi Hologram or Sprite) */}
-              {showCharacterCard && (
+              {/* STATE B2: Listener Characters on the side when The Architect is speaking */}
+              {isArchitectLine && (
+                <div
+                  className={`absolute right-6 sm:right-16 bottom-0 z-20 transition-all duration-500 ease-out flex items-end gap-6 ${
+                    spriteIn
+                      ? "opacity-100 translate-y-0"
+                      : "opacity-0 translate-y-8 pointer-events-none"
+                  }`}
+                >
+                  {lastRoomSpeaker === "Nova" ? (
+                    <img 
+                      src={SPEAKER_PROFILES["Nova"]?.image || "/scenes/characters/Nova Idle.png"} 
+                      alt="Nova" 
+                      className="h-[24rem] sm:h-[36rem] object-contain object-bottom drop-shadow-[0_0_40px_rgba(0,0,0,0.6)] mb-[8rem] sm:mb-[10rem] opacity-90 transition-all duration-300" 
+                    />
+                  ) : lastRoomSpeaker === "Operator" ? (
+                    <div className="flex items-end gap-4 mb-[8rem] sm:mb-[10rem]">
+                      {/* Operator Holo-card */}
+                      <div
+                        className={`w-32 sm:w-44 aspect-[3/4] rounded-2xl bg-gradient-to-b ${SPEAKER_PROFILES["Operator"].color} border-2 ${SPEAKER_PROFILES["Operator"].border} p-3 sm:p-4 flex flex-col justify-between relative overflow-hidden backdrop-blur-md mb-[2rem] sm:mb-[3rem] shrink-0 opacity-90`}
+                      >
+                        <div className="flex items-center justify-between text-[8px] font-mono text-white/50">
+                          <span>[HUD_ID]</span>
+                          <span className="text-[#ff912d] animate-pulse">LISTENING</span>
+                        </div>
+                        <div className="flex-1 flex flex-col items-center justify-center my-2">
+                          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-black/40 border border-white/10 flex items-center justify-center shadow-inner relative">
+                            <User size={28} className="text-[#ff912d] drop-shadow-md" />
+                          </div>
+                        </div>
+                        <div className="text-center space-y-1 bg-black/50 border border-white/10 p-2 rounded-xl">
+                          <div className="font-display font-black text-xs sm:text-sm text-white uppercase tracking-wider truncate">
+                            {username}
+                          </div>
+                          <div className="text-[8px] font-mono text-white/60 uppercase tracking-tight truncate">
+                            {SPEAKER_PROFILES["Operator"].role}
+                          </div>
+                        </div>
+                      </div>
+                      {/* Nova Companion */}
+                      <img 
+                        src={SPEAKER_PROFILES["Nova"]?.image || "/scenes/characters/Nova Idle.png"} 
+                        alt="Nova" 
+                        className="h-64 sm:h-[24rem] object-contain object-bottom drop-shadow-2xl shrink-0 opacity-90" 
+                      />
+                    </div>
+                  ) : lastRoomSpeaker === "Oberion" ? (
+                    <img 
+                      src={SPEAKER_PROFILES["Oberion"]?.image} 
+                      alt="Oberion" 
+                      className="h-[28rem] sm:h-[40rem] object-contain object-bottom drop-shadow-[0_0_40px_rgba(0,0,0,0.6)] mb-[8rem] sm:mb-[12rem] opacity-90" 
+                    />
+                  ) : (
+                    /* Default / Director Atlas */
+                    <img 
+                      src={SPEAKER_PROFILES["Director Atlas"]?.image || "/scenes/characters/HIGHER HEAD.png"} 
+                      alt="Director Atlas" 
+                      className="h-[28rem] sm:h-[40rem] object-contain object-bottom drop-shadow-[0_0_40px_rgba(0,0,0,0.6)] mb-[8rem] sm:mb-[12rem] opacity-95 transition-all duration-300" 
+                    />
+                  )}
+                </div>
+              )}
+
+              {/* STATE B3: Standard Active Speaker Card (Non-Architect) */}
+              {showCharacterCard && !isArchitectLine && (
                 <div
                   className={`absolute right-6 sm:right-16 bottom-0 z-20 transition-all duration-500 ease-out flex items-end gap-6 ${
                     spriteIn
