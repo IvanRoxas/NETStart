@@ -27,6 +27,7 @@ export async function middleware(req: NextRequest) {
   // Normal Protected Routes
   const isProtectedRoute = req.nextUrl.pathname.startsWith('/dashboard') || 
                            req.nextUrl.pathname.startsWith('/profile') || 
+                           req.nextUrl.pathname.startsWith('/code-sandbox') || 
                            isRestrictedRoute;
                            
   if (isProtectedRoute) {
@@ -46,5 +47,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/sandbox/:path*', '/missions/:path*', '/profile/:path*', '/admin/:path*'],
+  matcher: ['/dashboard/:path*', '/sandbox/:path*', '/code-sandbox/:path*', '/missions/:path*', '/profile/:path*', '/admin/:path*'],
 };
