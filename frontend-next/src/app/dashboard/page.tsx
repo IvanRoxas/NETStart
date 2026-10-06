@@ -790,7 +790,7 @@ export default async function DashboardPage() {
                     href="/profile"
                     className="relative z-10 w-full py-2 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-[#ff912d]/50 rounded-xl text-xs font-bold text-[#ff912d] transition-all flex items-center justify-center gap-1.5"
                   >
-                    Customize in Profile <ArrowRight size={12} />
+                    Customize Avatar <ArrowRight size={12} />
                   </Link>
                 </div>
               </div>
