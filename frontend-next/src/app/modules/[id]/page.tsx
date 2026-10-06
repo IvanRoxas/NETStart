@@ -1,11 +1,13 @@
 import { getServerSession } from "next-auth/next";
 import { authOptions, prisma } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import Link from 'next/link';
 import { ArrowLeft, Lock } from 'lucide-react';
 import ModuleDetailsClient from './ModuleDetailsClient';
+import { DEMO_MODE_COOKIE } from "@/lib/demoMode";
 
-const MODULE_MISSIONS: Record<string, { id: string; title: string; desc: string; tag?: string }[]> = {
+const MODULE_MISSIONS: Record<string, { id: string; title: string; desc: string; tag?: string; subtitle?: string }[]> = {
   moon: [
     { 
       id: "moon-1", 
@@ -30,46 +32,51 @@ const MODULE_MISSIONS: Record<string, { id: string; title: string; desc: string;
     { 
       id: "mars-1", 
       title: "Level 1: The Blank Billboard", 
-      desc: "Mark's giant space sign is completely broken! Snap your blocks together to fix the big, bold letters, and pack all the text neatly into a single box so everyone on Mars can read it.", 
-      tag: "Text Hierarchy, Structure" 
+      desc: "Help Director Mark build a fun space billboard for the colony. Pick a theme, add your title and text, and style your words to get a 5-star review.", 
+      tag: "Text Hierarchy & Structure" 
     },
     { 
       id: "mars-2", 
-      title: "Level 2: Picture Perfect!", 
-      desc: "Emma and Penny's screens are stuck on default placeholder images! Read the clues and pick the correct pictures from your toolbox to fix them.", 
-      tag: "Images, File Links" 
+      title: "Level 2: Picture Perfect", 
+      desc: "Emma and Penny's screens show boring placeholder boxes. Read the little clues, find the matching pictures from your toolbox, and link them up to brighten their day.", 
+      tag: "Images & Captions" 
     },
     { 
       id: "mars-3", 
-      title: "Level 3: The Big Space Message!", 
-      desc: "The AstroLink is turned on, but Earth and Venus don't recognize us! Put all your HTML blocks together to build a friendly message that proves who we are so they will answer our call.", 
-      tag: "Hyperlinks, Grouping" 
+      title: "Level 3: The Big Space Message", 
+      desc: "Say hello to your space neighbors. Assemble text boxes and buttons to build a friendly message form and reach out to Mercury and Venus.", 
+      tag: "Forms & Interactive Elements" 
     },
   ],
   venus: [
-    { id: "venus-1", title: "Venus Level 1: Thermal Selectors & Cascades", desc: "Master targeting classes, ids, pseudo-selectors, and the CSS cascade tree.", tag: "Selectors" },
-    { id: "venus-2", title: "Venus Level 2: Box Model Atmospheric Shields", desc: "Style border widths, margins, padding constraints, and display blocks.", tag: "Box Model" },
-    { id: "venus-3", title: "Venus Level 3: Flexbox Gas Flow Alignment", desc: "Master flex-direction, justify-content, align-items, and responsive layouts.", tag: "Flexbox" },
+    { id: "venus-1", title: "Level 1: Color It In", desc: "Professor Spectrum's lab lost all its colors. Drop in some furniture, splash your favorite colors and borders, and style the banner to make the room feel lively again.", tag: "Basic Styling & Colors" },
+    { id: "venus-2", title: "Level 2: Formatting the Prototype", desc: "We have the pieces, but the layout is a mess! We must align them properly so the structure holds before we can plug it into the planet's main machinery.", tag: "Layout & Alignment" },
+    { id: "venus-3", title: "Level 3: Restoring the Dead Zones", desc: "The AstroLink is powered on, but parts of the planet are still stuck in black and white. We need to link our new CSS prototype to the main HTML network to fix these dead zones and bring the color back.", tag: "CSS Linking" },
   ],
   mercury: [
-    { id: "mercury-1", title: "Mercury Level 1: Variable Orbital Bindings", desc: "Learn variables, let, const, primitive types, and math routines under solar radiation.", tag: "Variables" },
-    { id: "mercury-2", title: "Mercury Level 2: Solar Flare Branching Logic", desc: "Master branching structures (if-else), switch cases, and logic loops.", tag: "Logic" },
-    { id: "mercury-3", title: "Mercury Level 3: Velocity Function Expressions", desc: "Implement reusable function expressions, closures, and orbital scoping.", tag: "Functions" },
+    { id: "mercury-1", title: "Level 1: Saving the Biodome", desc: "Professor Dominic's plants are drying up after the solar storm! Fix the life support system and bring the garden back to life.", tag: "FINDING ELEMENTS" },
+    { id: "mercury-2", title: "Level 2: The Conveyor Belt", desc: "The storm melted the logic boards on the factory's main conveyor belt! Help the Professor un-jam the tracks by teaching the machine how to make choices!", tag: "Functions & Events" },
+    { id: "mercury-3", title: "Level 3: The Missing Interface", desc: "The electromagnetic surge completely wiped out Mercury's front-end software! Combine your web dev blocks to rebuild the main communication relay from scratch and bring the system back online!", tag: "Web Development" },
   ],
   jupiter: [
-    { id: "jupiter-1", title: "Jupiter Level 1: Class & Object Blueprints", desc: "Design object-oriented classes, instance constructors, and blueprint definitions.", tag: "OOP" },
-    { id: "jupiter-2", title: "Jupiter Level 2: Inheritance & Planetary Subclasses", desc: "Implement superclass inheritance, method overriding, and polymorphic behaviors.", tag: "Inheritance" },
-    { id: "jupiter-3", title: "Jupiter Level 3: Encapsulation & Atmospheric Modifiers", desc: "Protect telemetry state using access modifiers (private, protected, public) and getters/setters.", tag: "Encapsulation" },
+    { id: "jupiter-1", title: "Level 1: Unlock the Gate", desc: "The Jupiter space station thinks you are an intruder and locked the blast doors!  Teach the system exactly what kind of data you are sending to unlock the heavy security gates.", tag: "Data Types & Variables" },
+    { id: "jupiter-2", title: "Level 2: Try and Catch This!", desc: "Rescue Technician Io by building a Try/Catch safety net to intercept corrupted data blocks before they reach the server core!", tag: "TRY/CATCH" },
+    { id: "jupiter-3", title: "Level 3: The AI Core Lockdown", desc: "The Main Vault is on strict lockdown! The AI Core won't let anyone through. Can you build a custom ID blueprint and forge an object to sneak past the security scanner?", tag: "Classes & Objects" },
   ],
   saturn: [
-    { id: "saturn-1", title: "Saturn Level 1: Ring Pointers & References", desc: "Master direct memory addresses, pointer arithmetic, and reference passing.", tag: "Pointers" },
-    { id: "saturn-2", title: "Saturn Level 2: Dynamic Ring Memory Allocation", desc: "Manage heap memory allocations using new/delete and prevent zero-g memory leaks.", tag: "Memory" },
-    { id: "saturn-3", title: "Saturn Level 3: Structural Vectors & Ring Buffers", desc: "Build high-speed data structures and contiguous ring buffers using C++ STL vectors.", tag: "Vectors" },
+    { id: "saturn-1", title: "Saturn Level 1: Surprise Diagnostics", desc: "The station's sensors are scrambling data! Build the correct pipeline to catch the data, calculate the power, and route it to the main grid.", tag: "Variables" },
+    { id: "saturn-2", title: "Level 2: Jumpstarting the Rings", desc: "Saturn's rings are completely jammed with floating space debris! Use your ship's tractor beam to automatically sort the ice, rock, and metal into the correct disposal chutes so the rings can spin again.", tag: "SWITCH-CASES" },
+    {
+      id: "saturn-3",
+      title: "Level 3: A Leak in the System!",
+      desc: "Oh no, Engineer Titan's mainframe is hogging all the energy cores and refusing to give them back! Whatever you take, you MUST return before the station goes boom!",
+      tag: "Pointers and Power"
+    },
   ],
   earth: [
-    { id: "earth-1", title: "Earth Level 1: Telemetry Data Structures", desc: "Master Python lists, dictionaries, tuples, sets, and data slicing at Headquarters.", tag: "Structures" },
-    { id: "earth-2", title: "Earth Level 2: Satellite Pipeline Loops & Comprehensions", desc: "Process real-time telemetry streams using list comprehensions and iterative generators.", tag: "Loops" },
-    { id: "earth-3", title: "Earth Level 3: Mission Log File Automation", desc: "Automate reading and writing mission logs using Python context managers (with open).", tag: "File I/O" },
+    { id: "earth-1", title: "Level 1: Fix the Master Ledger!", desc: "The Master Ledger is scrambled! Use Python slicing and string tools to cut away the junk and restore each entry.", tag: "Text Processing" },
+    { id: "earth-2", title: "Level 2: The Planetary Archive", desc: "A solar storm scrambled the Master Ledger! Sort the loose data into digital folders to reconnect the solar system.", tag: "Dictionaries & Lists" },
+    { id: "earth-3", title: "Level 3: The Master Reboot", desc: "The Architect has one final program to bring together every repair you've made across the solar system, but he needs your help to run it. Use Python functions and modules to unify the network and bring the solar system online at once!", tag: "PYTHON, MODULES, +500 XP" },
   ],
 };
 
@@ -89,7 +96,7 @@ const MODULE_META: Record<string, { title: string; category: string; desc: strin
   mercury: { title: "Mercury (JavaScript)", category: "Dynamic Scripting Track", desc: "Harness rapid orbital mechanics with variables, conditional loops, and DOM manipulation." },
   jupiter: { title: "Jupiter (Java)", category: "Object-Oriented Architecture Track", desc: "Navigate the colossal gravity of Jupiter by building robust classes, inheritance hierarchies, and interfaces." },
   saturn: { title: "Saturn (C++)", category: "High-Performance Systems Track", desc: "Traverse Saturn's icy ring system using memory pointers, memory management, and high-performance algorithms." },
-  earth: { title: "Earth (Headquarters - Python)", category: "Command Headquarters Track", desc: "Return to Earth Mission Control to analyze space telemetry, automate satellite relays, and run data pipelines." },
+  earth: { title: "Earth (Python)", category: "Python Track", desc: "Return to Earth Mission Control to analyze space telemetry, automate satellite relays, and run data pipelines." },
 };
 
 // Meta Aliases
@@ -106,8 +113,11 @@ interface Params {
 }
 
 export default async function ModuleMissionsPage({ params }: { params: Promise<Params> }) {
+  const cookieStore = await cookies();
+  const isDemoMode = cookieStore.get(DEMO_MODE_COOKIE)?.value === 'true';
+
   const session = await getServerSession(authOptions);
-  if (!session) {
+  if (!session && !isDemoMode) {
     redirect("/login");
   }
 
@@ -121,10 +131,13 @@ export default async function ModuleMissionsPage({ params }: { params: Promise<P
     redirect("/modules");
   }
 
-  const userId = (session.user as any).id;
+  const userId = (session?.user as any)?.id || (isDemoMode ? "demo-cadet" : undefined);
+  if (!userId) {
+    redirect("/login");
+  }
 
   // Retrieve user completed missions
-  const completedMissions = await prisma.missionProgress.findMany({
+  const completedMissions = session ? await prisma.missionProgress.findMany({
     where: {
       userId,
       status: "COMPLETED",
@@ -132,7 +145,7 @@ export default async function ModuleMissionsPage({ params }: { params: Promise<P
     select: {
       missionId: true,
     }
-  });
+  }) : [];
 
   const getCompletedCount = (modId: string) => {
     return completedMissions.filter(m => {
@@ -148,15 +161,23 @@ export default async function ModuleMissionsPage({ params }: { params: Promise<P
     }).length;
   };
 
-  // Enforce 7-Planet Progression Chain
-  const moonCompleted = getCompletedCount("moon") >= 3;
-  const marsCompleted = getCompletedCount("mars") >= 5;
-  const venusCompleted = getCompletedCount("venus") >= 5;
-  const mercuryCompleted = getCompletedCount("mercury") >= 5;
-  const jupiterCompleted = getCompletedCount("jupiter") >= 5;
-  const saturnCompleted = getCompletedCount("saturn") >= 5;
+  // Enforce 7-Planet Progression Chain (3 missions per planet)
+  const hasCompletedFinal = (planetId: string) => {
+    return completedMissions.some(m => {
+      const mid = m.missionId.toLowerCase();
+      return mid === `${planetId}-3` || mid === `html-3-${planetId}` || mid === `css-3-${planetId}`;
+    });
+  };
+
+  const moonCompleted = getCompletedCount("moon") >= 3 || hasCompletedFinal("moon");
+  const marsCompleted = getCompletedCount("mars") >= 3 || hasCompletedFinal("mars");
+  const venusCompleted = getCompletedCount("venus") >= 3 || hasCompletedFinal("venus");
+  const mercuryCompleted = getCompletedCount("mercury") >= 3 || hasCompletedFinal("mercury");
+  const jupiterCompleted = getCompletedCount("jupiter") >= 3 || hasCompletedFinal("jupiter");
+  const saturnCompleted = getCompletedCount("saturn") >= 3 || hasCompletedFinal("saturn");
 
   const isModuleLocked = () => {
+    if (isDemoMode) return false;
     if (moduleId === "moon") return false;
     if (moduleId === "mars" || moduleId === "html") return !moonCompleted;
     if (moduleId === "venus" || moduleId === "css") return !(moonCompleted && marsCompleted);
@@ -167,35 +188,7 @@ export default async function ModuleMissionsPage({ params }: { params: Promise<P
     return false;
   };
 
-  if (isModuleLocked()) {
-    return (
-      <div className="min-h-screen w-full bg-[#1e0a2d] flex items-center justify-center relative overflow-hidden px-6">
-        <div className="absolute inset-0 z-0 pointer-events-none" style={{ backgroundImage: "url('/assets/global/ui/Landing Page BG.png')", backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.3 }} />
-        <div className="absolute inset-0 bg-black/60 z-0" />
-        
-        <div className="bg-[#1e0a2d]/90 backdrop-blur-xl border border-[#ff912d]/30 p-10 rounded-3xl max-w-md w-full text-center shadow-2xl relative z-10 flex flex-col items-center gap-6">
-          <div className="w-20 h-20 bg-[#ff912d]/10 rounded-full flex items-center justify-center border border-[#ff912d]/20 text-[#ff912d]">
-            <Lock className="w-10 h-10" />
-          </div>
-
-          <div className="space-y-2">
-            <h2 className="text-3xl font-bold text-white">Module Locked</h2>
-            <p className="text-gray-400">
-              You must complete all prior modules along the constellation flight path before entering this system orbit.
-            </p>
-          </div>
-
-          <Link
-            href="/modules"
-            className="mt-4 px-8 py-4 bg-gradient-to-r from-[#ff912d] to-[#ff5722] hover:from-[#ff5722] hover:to-[#ff912d] text-white font-bold rounded-xl shadow-lg transition-all hover:scale-105 flex items-center gap-2"
-          >
-            <ArrowLeft size={16} />
-            Return to Mission Map
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  const isLocked = isModuleLocked();
 
   return (
     <ModuleDetailsClient
@@ -205,9 +198,11 @@ export default async function ModuleMissionsPage({ params }: { params: Promise<P
       completedMissions={completedMissions}
       sessionUser={{
         id: userId,
-        name: session.user.name,
-        image: session.user.image,
+        name: session?.user?.name || "Cadet (Demo Mode)",
+        image: session?.user?.image || null,
       }}
+      initialDemoMode={isDemoMode}
+      isLocked={isLocked}
     />
   );
 }

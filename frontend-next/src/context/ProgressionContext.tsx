@@ -83,6 +83,8 @@ export function ProgressionProvider({ children }: { children: React.ReactNode })
           window.dispatchEvent(new CustomEvent("netstart:level_up", {
             detail: { oldLevel, newLevel, newXp }
           }));
+          // Refresh the notification bell so the new level_up notification appears
+          window.dispatchEvent(new Event("notifications_updated"));
         }
       }
 

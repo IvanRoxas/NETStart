@@ -1,152 +1,196 @@
 import * as Blockly from 'blockly';
 import { javascriptGenerator } from 'blockly/javascript';
 
-export interface MarsLevel3ChildBlock {
-  type: 'h1' | 'img' | 'a';
-  text?: string;
-  src?: string;
-  href?: string;
-  label?: string;
-  id?: string;
+export interface MarsLevel3Validation {
+  hasForm: boolean;
+  hasDropdown: boolean;
+  hasMercuryOption: boolean;
+  hasVenusOption: boolean;
+  hasInput: boolean;
+  hasButton: boolean;
+  hasTitle: boolean;
+  formTitle: string;
+  options: ('mercury' | 'venus')[];
+  inputCount: number;
+  buttonCount: number;
+  canDeploy: boolean;
+  isAssemblyValid: boolean;
+  failErrorCode: string | null;
+  failErrorMessage: string | null;
+  deployErrorMessage?: string | null;
+  completedObjectives: [boolean, boolean, boolean];
 }
 
 export interface MarsLevel3WorkspaceState {
-  isContainerPlaced: boolean;
-  children: MarsLevel3ChildBlock[];
+  hasForm: boolean;
+  hasDropdown: boolean;
+  hasMercuryOption: boolean;
+  hasVenusOption: boolean;
+  hasInput: boolean;
+  hasButton: boolean;
+  hasTitle: boolean;
+  formTitle: string;
+  options: ('mercury' | 'venus')[];
+  inputCount: number;
+  buttonCount: number;
   floatingBlocks: string[];
   hasErrors: boolean;
 }
 
-export interface MarsLevel3Validation {
-  hasContainer: boolean;
-  hasHeading: boolean;
-  headingText: string;
-  hasValidSeal: boolean;
-  imageSrc: string | null;
-  hasEarthLink: boolean;
-  hasVenusLink: boolean;
-  linkedDestinations: string[];
-  hasDecoys: boolean;
-  isGoldenPath: boolean;
-  failErrorCode: 1 | 2 | 3 | 4 | null;
-  failErrorMessage: string | null;
-  completedObjectives: boolean[];
-}
-
-export const MARS_L3_DESTINATIONS = [
-  { label: 'earth_network.html (Earth Relay)', value: 'earth_network.html', target: 'earth' },
-  { label: 'venus_network.html (Venus Uplink)', value: 'venus_network.html', target: 'venus' },
-  { label: 'solar_flare.html (Radiation Decoy)', value: 'solar_flare.html', target: 'decoy' },
-  { label: 'deep_space.html (Deep Space Void)', value: 'deep_space.html', target: 'decoy' },
-  { label: 'asteroid_belt.html (Asteroid Field)', value: 'asteroid_belt.html', target: 'decoy' },
-];
-
-export const MARS_L3_IMAGES = [
-  { label: '"mars_seal.png" (Official Seal)', value: 'mars_seal.png' },
-  { label: '"dog.png"', value: 'dog.png' },
-  { label: '"cat.png"', value: 'cat.png' },
-  { label: '"octopus.png"', value: 'octopus.png' },
-  { label: '"fish.png"', value: 'fish.png' },
-  { label: '"butterfly.png"', value: 'butterfly.png' },
-];
-
 export function registerMarsLevel3Blocks() {
   if (typeof window === 'undefined') return;
 
-  const MARS_L3_ITEM_TYPES = ['MARS_L3_ITEM'];
-
-  // 1. Container Block <div>
-  Blockly.Blocks['html_container_l3'] = {
+  // 1. [ Form Container ]: Parent Block with Title on second line
+  Blockly.Blocks['mars_form_container'] = {
     init: function () {
       this.appendDummyInput()
-        .appendField('Container (<div>)');
+        .appendField('Form Container');
+      this.appendDummyInput()
+        .appendField('Title:')
+        .appendField(
+          new Blockly.FieldTextInput(''),
+          'TITLE'
+        );
       this.appendStatementInput('CONTENT')
-        .setCheck(MARS_L3_ITEM_TYPES);
-      this.setColour('#8B5CF6'); // Vibrant Purple
-      this.setTooltip('Wrap all your message pieces safely inside this <div> container.');
+        .setCheck('MarsFormControl');
+      this.appendDummyInput()
+        .appendField('End Form');
+      this.setColour('#8B5CF6'); // Purple
+      this.setTooltip('A form box to hold your space message and buttons.');
       this.setHelpUrl('');
     },
   };
 
-  (javascriptGenerator as any).forBlock['html_container_l3'] = function (block: any) {
+  (javascriptGenerator as any).forBlock['mars_form_container'] = function (block: any) {
+    const rawTitle = block.getFieldValue('TITLE');
+    const title = (rawTitle !== null && rawTitle !== undefined) ? rawTitle.trim() : '';
+    const titleLine = title ? `  <h2>${title}</h2>\n` : '';
     const children = (javascriptGenerator as any).statementToCode(block, 'CONTENT') || '';
-    return `<div>\n${children}</div>\n`;
+    return `<form>\n${titleLine}${children}</form>\n`;
   };
 
-  // 2. Heading Block <h1>
-  Blockly.Blocks['html_heading_l3'] = {
+  // 2. [ Dropdown Menu ]: Generic Parent Dropdown (<select>)
+  Blockly.Blocks['mars_dropdown'] = {
     init: function () {
       this.appendDummyInput()
-        .appendField('Heading (<h1>)')
-        .appendField(new Blockly.FieldTextInput('Mars Network'), 'TEXT')
-        .appendField('</h1>');
-      this.setPreviousStatement(true, MARS_L3_ITEM_TYPES);
-      this.setNextStatement(true, MARS_L3_ITEM_TYPES);
-      this.setColour('#EC4899'); // Fuchsia / Pink
-      this.setTooltip('A large title heading to let Earth and Venus know who is calling.');
+        .appendField('Dropdown Menu');
+      this.appendStatementInput('OPTIONS')
+        .setCheck('MarsOption');
+      this.appendDummyInput()
+        .appendField('End Dropdown');
+      this.setPreviousStatement(true, 'MarsFormControl');
+      this.setNextStatement(true, 'MarsFormControl');
+      this.setColour('#F59E0B'); // Warm Amber
+      this.setTooltip('A dropdown menu. Snap planet choices inside!');
       this.setHelpUrl('');
     },
   };
 
-  (javascriptGenerator as any).forBlock['html_heading_l3'] = function (block: any) {
-    const text = block.getFieldValue('TEXT') || 'Mars Network';
-    return `  <h1>${text}</h1>\n`;
+  (javascriptGenerator as any).forBlock['mars_dropdown'] = function (block: any) {
+    let optionsCode = '';
+    let opt = block.getInputTargetBlock('OPTIONS');
+    while (opt) {
+      if (opt.type === 'mars_option_mercury' || opt.type === 'html_option_mercury') {
+        optionsCode += '    <option value="mercury">Mercury</option>\n';
+      } else if (opt.type === 'mars_option_venus' || opt.type === 'html_option_venus') {
+        optionsCode += '    <option value="venus">Venus</option>\n';
+      }
+      opt = opt.getNextBlock();
+    }
+    return `  <select name="planet">\n${optionsCode}  </select>\n`;
   };
 
-  // 3. Image Block <img>
-  Blockly.Blocks['html_image_l3'] = {
+  // 3. [ Option: Mercury ]: Option Child (<option>)
+  Blockly.Blocks['mars_option_mercury'] = {
     init: function () {
       this.appendDummyInput()
-        .appendField('Image (<img')
-        .appendField('src =')
-        .appendField(
-          new Blockly.FieldDropdown(
-            MARS_L3_IMAGES.map((img) => [img.label, img.value])
-          ),
-          'SRC'
-        )
-        .appendField('>)');
-      this.setPreviousStatement(true, MARS_L3_ITEM_TYPES);
-      this.setNextStatement(true, MARS_L3_ITEM_TYPES);
+        .appendField('Option: Mercury');
+      this.setPreviousStatement(true, 'MarsOption');
+      this.setNextStatement(true, 'MarsOption');
+      this.setColour('#D97706'); // Deep Gold
+      this.setTooltip('Adds Mercury as a choice in the dropdown menu.');
+      this.setHelpUrl('');
+    },
+  };
+
+  (javascriptGenerator as any).forBlock['mars_option_mercury'] = function () {
+    return '    <option value="mercury">Mercury</option>\n';
+  };
+
+  // 4. [ Option: Venus ]: Option Child (<option>)
+  Blockly.Blocks['mars_option_venus'] = {
+    init: function () {
+      this.appendDummyInput()
+        .appendField('Option: Venus');
+      this.setPreviousStatement(true, 'MarsOption');
+      this.setNextStatement(true, 'MarsOption');
+      this.setColour('#D97706'); // Deep Gold
+      this.setTooltip('Adds Venus as a choice in the dropdown menu.');
+      this.setHelpUrl('');
+    },
+  };
+
+  (javascriptGenerator as any).forBlock['mars_option_venus'] = function () {
+    return '    <option value="venus">Venus</option>\n';
+  };
+
+  // 5. [ Message Input ]: Clean Message Field
+  Blockly.Blocks['mars_text_input'] = {
+    init: function () {
+      this.appendDummyInput()
+        .appendField('Message Input');
+      this.setPreviousStatement(true, 'MarsFormControl');
+      this.setNextStatement(true, 'MarsFormControl');
       this.setColour('#0EA5E9'); // Sky Blue
-      this.setTooltip('Official Mars Seal graphic proving our friendly identity.');
+      this.setTooltip('A text box where space travelers can type a message.');
       this.setHelpUrl('');
     },
   };
 
-  (javascriptGenerator as any).forBlock['html_image_l3'] = function (block: any) {
-    const src = block.getFieldValue('SRC') || 'mars_seal.png';
-    return `  <img src="${src}">\n`;
+  (javascriptGenerator as any).forBlock['mars_text_input'] = function () {
+    return '  <input type="text" maxLength="25" />\n';
   };
 
-  // 4. Link Block <a href="...">
-  Blockly.Blocks['html_link_l3'] = {
+  // 6. [ Send Button ]: Send Signal
+  Blockly.Blocks['mars_button'] = {
     init: function () {
       this.appendDummyInput()
-        .appendField('Link (<a')
-        .appendField('href =')
-        .appendField(
-          new Blockly.FieldDropdown(
-            MARS_L3_DESTINATIONS.map((d) => [d.label, d.value])
-          ),
-          'HREF'
-        )
-        .appendField('>')
-        .appendField(new Blockly.FieldTextInput('Earth'), 'LABEL')
-        .appendField('</a>');
-      this.setPreviousStatement(true, MARS_L3_ITEM_TYPES);
-      this.setNextStatement(true, MARS_L3_ITEM_TYPES);
+        .appendField('Send Button');
+      this.setPreviousStatement(true, 'MarsFormControl');
+      this.setNextStatement(true, 'MarsFormControl');
       this.setColour('#10B981'); // Emerald Green
-      this.setTooltip('Hyperlink connecting the AstroLink transmission beam to target network nodes.');
+      this.setTooltip('A button that sends your message into space!');
       this.setHelpUrl('');
     },
   };
 
-  (javascriptGenerator as any).forBlock['html_link_l3'] = function (block: any) {
-    const href = block.getFieldValue('HREF') || 'earth_network.html';
-    const label = block.getFieldValue('LABEL') || (href.includes('earth') ? 'Earth' : href.includes('venus') ? 'Venus' : 'Link');
-    return `  <a href="${href}">${label}</a>\n`;
+  (javascriptGenerator as any).forBlock['mars_button'] = function () {
+    return '  <button type="submit">Send</button>\n';
   };
+
+  // Compatibility aliases
+  Blockly.Blocks['html_form_custom'] = Blockly.Blocks['mars_form_container'];
+  (javascriptGenerator as any).forBlock['html_form_custom'] = (javascriptGenerator as any).forBlock['mars_form_container'];
+  Blockly.Blocks['html_form_l3'] = Blockly.Blocks['mars_form_container'];
+  (javascriptGenerator as any).forBlock['html_form_l3'] = (javascriptGenerator as any).forBlock['mars_form_container'];
+
+  Blockly.Blocks['html_input_custom'] = Blockly.Blocks['mars_text_input'];
+  (javascriptGenerator as any).forBlock['html_input_custom'] = (javascriptGenerator as any).forBlock['mars_text_input'];
+  Blockly.Blocks['html_input_l3'] = Blockly.Blocks['mars_text_input'];
+  (javascriptGenerator as any).forBlock['html_input_l3'] = (javascriptGenerator as any).forBlock['mars_text_input'];
+
+  Blockly.Blocks['html_select_l3'] = Blockly.Blocks['mars_dropdown'];
+  (javascriptGenerator as any).forBlock['html_select_l3'] = (javascriptGenerator as any).forBlock['mars_dropdown'];
+
+  Blockly.Blocks['html_option_mercury'] = Blockly.Blocks['mars_option_mercury'];
+  (javascriptGenerator as any).forBlock['html_option_mercury'] = (javascriptGenerator as any).forBlock['mars_option_mercury'];
+  Blockly.Blocks['html_option_venus'] = Blockly.Blocks['mars_option_venus'];
+  (javascriptGenerator as any).forBlock['html_option_venus'] = (javascriptGenerator as any).forBlock['mars_option_venus'];
+
+  Blockly.Blocks['html_button_custom'] = Blockly.Blocks['mars_button'];
+  (javascriptGenerator as any).forBlock['html_button_custom'] = (javascriptGenerator as any).forBlock['mars_button'];
+  Blockly.Blocks['html_button_l3'] = Blockly.Blocks['mars_button'];
+  (javascriptGenerator as any).forBlock['html_button_l3'] = (javascriptGenerator as any).forBlock['mars_button'];
 }
 
 export const MARS_LEVEL_3_TOOLBOX = {
@@ -154,27 +198,35 @@ export const MARS_LEVEL_3_TOOLBOX = {
   contents: [
     {
       kind: 'category',
-      name: 'Structure',
+      name: 'Form',
       colour: '#8B5CF6',
       contents: [
-        { kind: 'block', type: 'html_container_l3' },
+        {
+          kind: 'block',
+          type: 'mars_form_container',
+          fields: {
+            TITLE: '',
+          },
+        },
       ],
     },
     {
       kind: 'category',
-      name: 'Text & Media',
-      colour: '#EC4899',
+      name: 'Options',
+      colour: '#F59E0B',
       contents: [
-        { kind: 'block', type: 'html_heading_l3' },
-        { kind: 'block', type: 'html_image_l3' },
+        { kind: 'block', type: 'mars_dropdown' },
+        { kind: 'block', type: 'mars_option_mercury' },
+        { kind: 'block', type: 'mars_option_venus' },
       ],
     },
     {
       kind: 'category',
-      name: 'Hyperlinks',
-      colour: '#10B981',
+      name: 'Input',
+      colour: '#0EA5E9',
       contents: [
-        { kind: 'block', type: 'html_link_l3' },
+        { kind: 'block', type: 'mars_text_input' },
+        { kind: 'block', type: 'mars_button' },
       ],
     },
   ],
@@ -190,93 +242,129 @@ export function parseMarsLevel3Workspace(ws: Blockly.WorkspaceSvg): {
   htmlCode: string;
 } {
   const topBlocks = ws.getTopBlocks(true);
-  const containerBlock = topBlocks.find((b) => b.type === 'html_container_l3');
-  const isContainerPlaced = !!containerBlock;
-  const children: MarsLevel3ChildBlock[] = [];
+  const formBlocks = topBlocks.filter(
+    (b) => b.type === 'mars_form_container' || b.type === 'html_form_custom' || b.type === 'html_form_l3'
+  );
+
+  const hasForm = formBlocks.length === 1;
+  const rawFormTitle = formBlocks[0]?.getFieldValue('TITLE');
+  const formTitle = (rawFormTitle !== null && rawFormTitle !== undefined) ? rawFormTitle.trim() : '';
   const floatingBlocks: string[] = [];
 
-  // Identify loose / floating blocks outside the container
   topBlocks.forEach((top) => {
-    if (top.type !== 'html_container_l3') {
+    if (top !== formBlocks[0]) {
       let curr: Blockly.Block | null = top;
       while (curr) {
-        floatingBlocks.push(curr.type);
+        floatingBlocks.push(curr.id);
         curr = curr.getNextBlock();
       }
     }
   });
 
-  // Extract nested blocks inside container
-  if (containerBlock) {
-    let inner: Blockly.Block | null = containerBlock.getInputTargetBlock('CONTENT');
+  let hasDropdown = false;
+  let dropdownCount = 0;
+  let hasMercuryOption = false;
+  let hasVenusOption = false;
+  let hasInput = false;
+  let hasButton = false;
+  let hasMisplacedDropdownChildren = false;
+  let hasMisplacedFormChildren = false;
+  const options: ('mercury' | 'venus')[] = [];
+  let inputCount = 0;
+  let buttonCount = 0;
+
+  if (formBlocks.length > 0) {
+    let inner: Blockly.Block | null = formBlocks[0].getInputTargetBlock('CONTENT');
     while (inner) {
-      if (inner.type === 'html_heading_l3') {
-        const text = inner.getFieldValue('TEXT') || '';
-        children.push({ type: 'h1', text, id: inner.id });
-      } else if (inner.type === 'html_image_l3') {
-        const src = inner.getFieldValue('SRC') || '';
-        children.push({ type: 'img', src, id: inner.id });
-      } else if (inner.type === 'html_link_l3') {
-        const href = inner.getFieldValue('HREF') || '';
-        const label = inner.getFieldValue('LABEL') || '';
-        children.push({ type: 'a', href, label, id: inner.id });
+      const t = inner.type;
+      if (t === 'mars_dropdown' || t === 'html_select_l3') {
+        hasDropdown = true;
+        dropdownCount++;
+        let opt: Blockly.Block | null = inner.getInputTargetBlock('OPTIONS');
+        while (opt) {
+          if (opt.type === 'mars_option_mercury' || opt.type === 'html_option_mercury') {
+            hasMercuryOption = true;
+            if (!options.includes('mercury')) options.push('mercury');
+          } else if (opt.type === 'mars_option_venus' || opt.type === 'html_option_venus') {
+            hasVenusOption = true;
+            if (!options.includes('venus')) options.push('venus');
+          } else {
+            // Illegal block placed inside a Dropdown Menu (e.g. text input or button)
+            hasMisplacedDropdownChildren = true;
+          }
+          opt = opt.getNextBlock();
+        }
+      } else if (t === 'mars_text_input' || t === 'html_input_custom' || t === 'html_input_l3') {
+        hasInput = true;
+        inputCount++;
+      } else if (t === 'mars_button' || t === 'html_button_custom' || t === 'html_button_l3') {
+        hasButton = true;
+        buttonCount++;
+      } else if (t === 'mars_option_mercury' || t === 'mars_option_venus' || t === 'html_option_mercury' || t === 'html_option_venus') {
+        // Option block placed directly inside the form container
+        hasMisplacedFormChildren = true;
       }
       inner = inner.getNextBlock();
     }
   }
 
-  // Validation Logic Checks
-  const hasContainer = isContainerPlaced;
-  const headingChild = children.find((c) => c.type === 'h1');
-  const hasHeading = !!headingChild && (headingChild.text || '').trim().length > 0;
-  const headingText = headingChild?.text || '';
+  // Deployment requirement: core form structure must be present
+  // Unincluded options do not block deployment into the simulation, but will be unavailable in the dropdown.
+  const canDeploy =
+    hasForm &&
+    formBlocks.length === 1 &&
+    hasDropdown &&
+    dropdownCount === 1 &&
+    hasInput &&
+    hasButton &&
+    !hasMisplacedDropdownChildren &&
+    !hasMisplacedFormChildren;
 
-  const imageChild = children.find((c) => c.type === 'img');
-  const imageSrc = imageChild?.src || null;
-  const hasValidSeal = imageSrc === 'mars_seal.png';
+  let failErrorCode: string | null = null;
+  let deployErrorMessage: string | null = null;
 
-  const linkChildren = children.filter((c) => c.type === 'a');
-  const linkedDestinations = linkChildren.map((l) => l.href || '');
-  const hasEarthLink = linkedDestinations.includes('earth_network.html');
-  const hasVenusLink = linkedDestinations.includes('venus_network.html');
-  const hasDecoys = linkedDestinations.some((href) =>
-    ['solar_flare.html', 'deep_space.html', 'asteroid_belt.html'].includes(href)
-  );
-
-  let failErrorCode: 1 | 2 | 3 | 4 | null = null;
-  let failErrorMessage: string | null = null;
-
-  // Granular Fail-State Debugging Engine
-  if (!hasContainer || (floatingBlocks.length > 0 && children.length === 0)) {
-    failErrorCode = 1;
-    failErrorMessage = 'Oh no! The pieces floated away! Put them all safely inside a Container.';
-  } else if (!hasHeading) {
-    failErrorCode = 2;
-    failErrorMessage = "Who's calling? Add a Heading to tell them the message is from Mars!";
-  } else if (!hasValidSeal) {
-    failErrorCode = 3;
-    failErrorMessage = "Wait, they don't believe it's us! Add the official Mars Seal image.";
-  } else if (!hasEarthLink || !hasVenusLink || hasDecoys) {
-    failErrorCode = 4;
-    failErrorMessage = 'Where is the message going? Make sure you have Links targeting Earth and Venus!';
+  if (formBlocks.length === 0) {
+    failErrorCode = 'NO_FORM';
+    deployErrorMessage = 'Missing a Form Container! Wrap your elements inside a Form Container.';
+  } else if (formBlocks.length > 1) {
+    failErrorCode = 'TOO_MANY_FORMS';
+    deployErrorMessage = 'Use exactly one Form Container!';
+  } else if (hasMisplacedDropdownChildren) {
+    failErrorCode = 'INVALID_DROPDOWN_CHILD';
+    deployErrorMessage = 'Only Option blocks can go inside a Dropdown Menu! Move your Message Input and Button outside the Dropdown.';
+  } else if (hasMisplacedFormChildren) {
+    failErrorCode = 'OPTION_OUTSIDE_DROPDOWN';
+    deployErrorMessage = 'Option blocks must be placed inside a Dropdown Menu, not directly in the Form Container!';
+  } else if (!hasDropdown) {
+    failErrorCode = 'MISSING_DROPDOWN';
+    deployErrorMessage = 'Missing a Dropdown Menu!';
+  } else if (dropdownCount > 1) {
+    failErrorCode = 'TOO_MANY_DROPDOWNS';
+    deployErrorMessage = 'Use only one Dropdown Menu for choosing target planets!';
+  } else if (!hasInput) {
+    failErrorCode = 'MISSING_INPUT';
+    deployErrorMessage = 'Missing a Message Input!';
+  } else if (!hasButton) {
+    failErrorCode = 'MISSING_BUTTON';
+    deployErrorMessage = 'Missing a Send Button!';
   }
 
-  const isGoldenPath =
-    hasContainer &&
-    hasHeading &&
-    hasValidSeal &&
-    hasEarthLink &&
-    hasVenusLink &&
-    !hasDecoys &&
-    floatingBlocks.length === 0;
+  // Full win assembly requires both options to ping both planets
+  const isAssemblyValid = canDeploy && hasMercuryOption && hasVenusOption;
 
-  // Objective Checkpoints:
-  // Objective 1: Enclose your message in a Container <div> structure
-  const obj1Completed = hasContainer;
-  // Objective 2: Include Heading <h1> and official Mars Seal <img>
-  const obj2Completed = hasHeading && hasValidSeal;
-  // Objective 3: Link live hyper-connections to Earth and Venus <a>
-  const obj3Completed = hasEarthLink && hasVenusLink && !hasDecoys;
+  let failErrorMessage: string | null = deployErrorMessage;
+  if (!failErrorMessage) {
+    if (!hasMercuryOption && !hasVenusOption) {
+      failErrorCode = 'MISSING_ALL_OPTIONS';
+      failErrorMessage = 'Snap Option: Mercury and Option: Venus inside your Dropdown Menu to ping both planets!';
+    } else if (!hasMercuryOption) {
+      failErrorCode = 'MISSING_MERCURY_OPTION';
+      failErrorMessage = 'Missing Option: Mercury inside your Dropdown Menu!';
+    } else if (!hasVenusOption) {
+      failErrorCode = 'MISSING_VENUS_OPTION';
+      failErrorMessage = 'Missing Option: Venus inside your Dropdown Menu!';
+    }
+  }
 
   let htmlCode = '';
   try {
@@ -287,25 +375,38 @@ export function parseMarsLevel3Workspace(ws: Blockly.WorkspaceSvg): {
 
   return {
     state: {
-      isContainerPlaced,
-      children,
+      hasForm,
+      hasDropdown,
+      hasMercuryOption,
+      hasVenusOption,
+      hasInput,
+      hasButton,
+      hasTitle: formTitle.length > 0,
+      formTitle,
+      options,
+      inputCount,
+      buttonCount,
       floatingBlocks,
       hasErrors: failErrorCode !== null,
     },
     validation: {
-      hasContainer,
-      hasHeading,
-      headingText,
-      hasValidSeal,
-      imageSrc,
-      hasEarthLink,
-      hasVenusLink,
-      linkedDestinations,
-      hasDecoys,
-      isGoldenPath,
+      hasForm,
+      hasDropdown,
+      hasMercuryOption,
+      hasVenusOption,
+      hasInput,
+      hasButton,
+      hasTitle: formTitle.length > 0,
+      formTitle,
+      options,
+      inputCount,
+      buttonCount,
+      canDeploy,
+      isAssemblyValid,
       failErrorCode,
       failErrorMessage,
-      completedObjectives: [obj1Completed, obj2Completed, obj3Completed],
+      deployErrorMessage,
+      completedObjectives: [formTitle.length > 0, false, false],
     },
     htmlCode,
   };

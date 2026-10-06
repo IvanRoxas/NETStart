@@ -131,6 +131,14 @@ export function registerMarsLevel2Blocks() {
         this.setColour(blockColor);
         this.setTooltip(`Box for Billboard ${i} to hold your picture and text.`);
         this.setHelpUrl('');
+
+        // Single-instance billboard: remove Duplicate from context menu
+        (this as any).customContextMenu = function (options: any[]) {
+          const dupIdx = options.findIndex((opt: any) => opt.text && /duplicate/i.test(opt.text));
+          if (dupIdx !== -1) {
+            options.splice(dupIdx, 1);
+          }
+        };
       },
     };
 
@@ -385,6 +393,44 @@ export function registerMarsLevel2Blocks() {
 export const MARS_LEVEL_2_DEFAULT_STARTER_XML = `
 <xml xmlns="https://developers.google.com/blockly/xml"></xml>
 `.trim();
+
+export const MARS_2_ALL_BILLBOARD_BLOCKS = [
+  { kind: 'block', type: 'html_billboard_1' },
+  { kind: 'block', type: 'html_billboard_2' },
+  { kind: 'block', type: 'html_billboard_3' },
+  { kind: 'block', type: 'html_billboard_4' },
+  { kind: 'block', type: 'html_billboard_5' },
+];
+
+export function getMarsLevel2Toolbox(usedTypes: Set<string> | string[] = []) {
+  const usedSet = usedTypes instanceof Set ? usedTypes : new Set(usedTypes);
+  const availableBillboards = MARS_2_ALL_BILLBOARD_BLOCKS.filter(
+    (item) => !usedSet.has(item.type)
+  );
+
+  return {
+    kind: 'categoryToolbox',
+    contents: [
+      {
+        kind: 'category',
+        name: 'Structure',
+        colour: '#8B5CF6',
+        contents: availableBillboards,
+      },
+      {
+        kind: 'category',
+        name: 'Content',
+        colour: '#0ea5e9',
+        contents: [
+          { kind: 'block', type: 'html_img' },
+          { kind: 'block', type: 'html_caption' },
+        ],
+      },
+    ],
+  };
+}
+
+export const MARS_LEVEL_2_TOOLBOX = getMarsLevel2Toolbox();
 
 // Target correct sequence of billboard images (Billboard 1 through 5)
 export const MARS_LEVEL_2_TARGETS = [

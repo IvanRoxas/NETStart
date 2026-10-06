@@ -35,11 +35,31 @@
     100% { transform: translateX(-50%); }
   }
 
+  @keyframes conveyorBeltUp {
+    0% { background-position: 0 0; }
+    100% { background-position: 0 -20px; }
+  }
+
 }
 
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+@keyframes drawerSlideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0.85;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-drawer-slide-in {
+  animation: drawerSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .animate-fade-in {
@@ -454,5 +474,20 @@ polygon.blocklyDropdownIcon,
   color: #000000 !important;
   filter: brightness(0) saturate(100%) !important;
   opacity: 1 !important;
+}
+
+/* =========================================================================
+   SLEEK COLLAPSED BLOCK STYLING
+   ========================================================================= */
+.blocklyCollapsed {
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.55));
+  opacity: 0.95;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+}
+
+.blocklyCollapsed:hover {
+  filter: drop-shadow(0 0 16px rgba(255, 145, 45, 0.4)) brightness(1.08);
+  opacity: 1;
 }
 

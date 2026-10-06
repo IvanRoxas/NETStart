@@ -13,10 +13,20 @@ const globalForPrisma = global as unknown as { prisma: PrismaClient };
 
 export let prisma: PrismaClient;
 
-if (!globalForPrisma.prisma) {
+const createPrismaClient = () => {
   const pool = new Pool({ connectionString });
   const adapter = new PrismaPg(pool);
-  prisma = new PrismaClient({ adapter });
+  return new PrismaClient({ adapter });
+};
+
+const cachedPrisma = globalForPrisma.prisma;
+const isOutdated = Boolean(
+  cachedPrisma &&
+  !(cachedPrisma as any)?._dmmf?.modelMap?.User?.fields?.some((f: any) => f.name === 'border')
+);
+
+if (!globalForPrisma.prisma || isOutdated) {
+  prisma = createPrismaClient();
   if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 } else {
   prisma = globalForPrisma.prisma;
@@ -90,6 +100,8 @@ export const authOptions: NextAuthOptions = {
         token.studentId = (user as any).studentId || null;
         token.xp = (user as any).xp || 0;
         token.activeTitle = (user as any).activeTitle || null;
+        token.border = (user as any).border || null;
+        token.createdAt = (user as any).createdAt ? new Date((user as any).createdAt).toISOString() : null;
         if (user.image && user.image.startsWith('data:')) {
           token.picture = `/api/profile/avatar?id=${user.id}&t=${Date.now()}`;
         }
@@ -107,20 +119,50 @@ export const authOptions: NextAuthOptions = {
         if (session.studentId !== undefined) token.studentId = session.studentId;
         if (session.xp !== undefined) token.xp = session.xp;
         if (session.activeTitle !== undefined) token.activeTitle = session.activeTitle;
+        if (session.border !== undefined) token.border = session.border;
       }
 
-      // Sync latest db value on token evaluation so admin resets reflect immediately
+      // Self-heal token.id if missing but email is present
+      if (!token.id && token.email) {
+        try {
+          const dbU = await prisma.user.findUnique({
+            where: { email: token.email },
+            select: { id: true, name: true, displayName: true, activeTitle: true, border: true, createdAt: true, xp: true, isVerified: true, hasTakenAptitudeTest: true, isBanned: true, image: true }
+          });
+          if (dbU) {
+            token.id = dbU.id;
+            token.name = dbU.name || token.name;
+            token.displayName = dbU.displayName || token.displayName;
+            token.activeTitle = dbU.activeTitle;
+            token.border = dbU.border;
+            token.createdAt = dbU.createdAt ? dbU.createdAt.toISOString() : null;
+            token.xp = dbU.xp || 0;
+            token.isVerified = dbU.isVerified;
+            token.hasTakenAptitudeTest = dbU.hasTakenAptitudeTest;
+            token.isBanned = dbU.isBanned;
+            if (dbU.image && !dbU.image.startsWith('data:')) token.picture = dbU.image;
+          }
+        } catch (e) {}
+      }
+
+      // Sync latest db value on token evaluation so changes reflect immediately
       if (token.id && token.type !== 'admin') {
         try {
           const dbU = await prisma.user.findUnique({
             where: { id: token.id as string },
-            select: { hasTakenAptitudeTest: true, isVerified: true, isBanned: true, xp: true, gears: true }
+            select: { hasTakenAptitudeTest: true, isVerified: true, isBanned: true, xp: true, gears: true, name: true, displayName: true, activeTitle: true, border: true, createdAt: true, image: true }
           });
           if (dbU) {
             token.hasTakenAptitudeTest = dbU.hasTakenAptitudeTest;
             token.isVerified = dbU.isVerified;
             token.isBanned = dbU.isBanned;
             if (typeof dbU.xp === 'number') token.xp = dbU.xp;
+            if (dbU.name) token.name = dbU.name;
+            if (dbU.displayName) token.displayName = dbU.displayName;
+            if (dbU.activeTitle !== undefined) token.activeTitle = dbU.activeTitle;
+            if (dbU.border !== undefined) token.border = dbU.border;
+            if (dbU.createdAt) token.createdAt = dbU.createdAt.toISOString();
+            if (dbU.image && !dbU.image.startsWith('data:')) token.picture = dbU.image;
           }
         } catch (e) {}
       }
@@ -137,6 +179,8 @@ export const authOptions: NextAuthOptions = {
         session.user.studentId = token.studentId as string | null;
         session.user.xp = token.xp as number;
         session.user.activeTitle = token.activeTitle as string | null;
+        session.user.border = (token.border as string) || null;
+        session.user.createdAt = (token.createdAt as string) || null;
         if (token.name) session.user.name = token.name as string;
         if (token.displayName) session.user.displayName = token.displayName as string;
         if (token.picture) session.user.image = token.picture as string;
@@ -149,7 +193,7 @@ export const authOptions: NextAuthOptions = {
       // Assign custom display name defaulting to OAuth username
       let desiredDisplayName = user.name || `Explorer${Math.floor(10000 + Math.random() * 90000)}`;
       
-      const isTaken = await prisma.user.findUnique({
+      const isTaken = await prisma.user.findFirst({
         where: { displayName: desiredDisplayName }
       });
       

@@ -4,8 +4,9 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { Lock, Rocket, Award, Settings, Zap, Brain, X } from 'lucide-react';
 import PlanetNode from '@/components/PlanetNode';
-
 import { getUserStorageItem, setUserStorageItem, removeUserStorageItem } from '@/lib/userStorage';
+import DemoToggle from '@/components/DemoToggle';
+import { useDemoMode } from '@/lib/demoMode';
 
 interface LiveStats {
   level: number;
@@ -44,10 +45,10 @@ export default function ModulesClient({ userId, isVerified, hasTakenAptitudeTest
   const [activePlanetId, setActivePlanetId] = useState<string | null>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
 
+  // Demo mode: temporarily unlocks all planets for debugging; pauses XP/progression side-effects
+  const { isDemoMode } = useDemoMode();
+
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      window.scrollTo(0, 0);
-    }
     if (!userId) return;
     try {
       const rawSave = getUserStorageItem('active_saved_level', userId) || getUserStorageItem('active_level', userId);
@@ -110,7 +111,7 @@ export default function ModulesClient({ userId, isVerified, hasTakenAptitudeTest
       id: "venus", 
       name: "Venus", 
       subtitle: "Styling, Layout", 
-      description: "Welcome to a world with absolutely no color! Grab your gear and help Professor Spectrum solve this black-and-white mystery.",
+      description: "Welcome to a world with no color. Help Professor Spectrum splash paints, borders, and pretty fonts across his laboratory.",
       top: "38%", 
       left: "25%", 
       sizeClass: "w-56 h-56 sm:w-64 sm:h-64", 
@@ -158,9 +159,9 @@ export default function ModulesClient({ userId, isVerified, hasTakenAptitudeTest
       description: "Look up... why aren't the giant hoops spinning? Visit the famous ringworld and help an exhausted engineer figure out why everything froze.",
       top: "74%", 
       left: "76%", 
-      sizeClass: "w-68 h-68 sm:w-80 sm:h-80", 
+      sizeClass: "w-76 h-76 sm:w-92 sm:h-92", 
       src: "/assets/planets/celestial/Saturn.svg", 
-      imgScale: 0.88, 
+      imgScale: 0.92, 
       rotationSpeed: 22, 
       reverse: true, 
       totalMissions: 3,
@@ -168,9 +169,9 @@ export default function ModulesClient({ userId, isVerified, hasTakenAptitudeTest
     },
     { 
       id: "earth", 
-      name: "Earth (HQ)", 
-      subtitle: "Dictionaries, Modules", 
-      description: "The main computer at Headquarters is acting super silly by mixing up its words and numbers! Put on your detective hat to clean up this digital mess.",
+      name: "Earth", 
+      subtitle: "Dictionaries, Lists", 
+      description: "The main computer on Earth is acting super silly by mixing up its words and numbers! Put on your detective hat to clean up this digital mess.",
       top: "86%", 
       left: "26%", 
       sizeClass: "w-56 h-56 sm:w-64 sm:h-64", 
@@ -215,12 +216,19 @@ export default function ModulesClient({ userId, isVerified, hasTakenAptitudeTest
   };
 
   // Determine path completion indicators (3 levels per planet)
-  const moonCompleted = getCompletedMissionsCount("moon") >= 3;
-  const marsCompleted = getCompletedMissionsCount("mars") >= 3;
-  const venusCompleted = getCompletedMissionsCount("venus") >= 3;
-  const mercuryCompleted = getCompletedMissionsCount("mercury") >= 3;
-  const jupiterCompleted = getCompletedMissionsCount("jupiter") >= 3;
-  const saturnCompleted = getCompletedMissionsCount("saturn") >= 3;
+  const hasCompletedFinal = (planetId: string) => {
+    return allCompletedMissions.some(m => {
+      const mid = m.missionId.toLowerCase();
+      return mid === `${planetId}-3` || mid === `html-3-${planetId}` || mid === `css-3-${planetId}`;
+    });
+  };
+
+  const moonCompleted = getCompletedMissionsCount("moon") >= 3 || hasCompletedFinal("moon");
+  const marsCompleted = getCompletedMissionsCount("mars") >= 3 || hasCompletedFinal("mars");
+  const venusCompleted = getCompletedMissionsCount("venus") >= 3 || hasCompletedFinal("venus");
+  const mercuryCompleted = getCompletedMissionsCount("mercury") >= 3 || hasCompletedFinal("mercury");
+  const jupiterCompleted = getCompletedMissionsCount("jupiter") >= 3 || hasCompletedFinal("jupiter");
+  const saturnCompleted = getCompletedMissionsCount("saturn") >= 3 || hasCompletedFinal("saturn");
 
   // Real unlocked index based on server completed missions
   let realUnlockedIndex = 0;
@@ -300,7 +308,7 @@ export default function ModulesClient({ userId, isVerified, hasTakenAptitudeTest
       const scrollContainer = document.getElementById('modules-scroll-container');
       if (scrollContainer) {
         const containerHeight = scrollContainer.scrollHeight;
-        const targetScrollY = (currentTopPercent / 100) * containerHeight - (scrollContainer.clientHeight * 0.60);
+        const targetScrollY = (currentTopPercent / 100) * containerHeight - (scrollContainer.clientHeight * 0.58);
         scrollContainer.scrollTo({
           top: Math.max(0, targetScrollY),
           behavior: 'auto'
@@ -347,41 +355,66 @@ export default function ModulesClient({ userId, isVerified, hasTakenAptitudeTest
     requestAnimationFrame(animate);
   };
 
-  // Smoothly travel camera focus to the current unlocked planet on page arrival
+  // Smoothly travel camera focus to the last unlocked planet on page arrival
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    // Determine target index: active ongoing planet or currently unlocked planet
-    const targetIdx = activePlanetId
-      ? Math.max(0, pathNodes.findIndex(n => n.id === activePlanetId))
-      : realUnlockedIndex;
-
+    // Focus on the last unlocked planet
+    const targetIdx = realUnlockedIndex;
     const targetNode = pathNodes[targetIdx] || pathNodes[0];
 
-    // Wait a brief tick for DOM and canvas layout to mount, then center the camera lower on the planet
-    const timer = setTimeout(() => {
-      const scrollContainer = document.getElementById('modules-scroll-container');
+    const performScroll = (behavior: ScrollBehavior = 'smooth') => {
+      const scrollContainer = document.getElementById('modules-scroll-container') || containerRef.current?.parentElement;
       const planetEl = document.getElementById(`planet-node-${targetNode.id}`);
 
-      if (scrollContainer && planetEl) {
-        const elRect = planetEl.getBoundingClientRect();
-        const containerRect = scrollContainer.getBoundingClientRect();
-        // Position planet center at ~60% down the viewport
-        const targetScrollTop = scrollContainer.scrollTop + (elRect.top - containerRect.top) - (containerRect.height * 0.60) + (elRect.height / 2);
-        
+      if (scrollContainer) {
+        let targetScrollTop = 0;
+
+        if (planetEl) {
+          const elRect = planetEl.getBoundingClientRect();
+          const containerRect = scrollContainer.getBoundingClientRect();
+          // Position planet center at ~58% down the visible viewport (exact alignment)
+          const currentCenterRelativeToContainer = elRect.top - containerRect.top + (elRect.height / 2);
+          const desiredCenterRelativeToContainer = containerRect.height * 0.58;
+          const delta = currentCenterRelativeToContainer - desiredCenterRelativeToContainer;
+          targetScrollTop = scrollContainer.scrollTop + delta;
+        } else {
+          // Fallback based on node.top percentage
+          const topPercent = parseFloat(targetNode.top) / 100;
+          const containerHeight = scrollContainer.scrollHeight || (containerRef.current?.scrollHeight ?? 0);
+          targetScrollTop = (topPercent * containerHeight) - (scrollContainer.clientHeight * 0.58);
+        }
+
         scrollContainer.scrollTo({
           top: Math.max(0, targetScrollTop),
-          behavior: 'smooth'
+          behavior
         });
       }
-    }, 450);
+    };
 
-    return () => clearTimeout(timer);
+    // Staggered execution for instantaneous placement and smooth settling on page load
+    const t1 = setTimeout(() => performScroll('auto'), 50);
+    const t2 = setTimeout(() => performScroll('smooth'), 250);
+    const t3 = setTimeout(() => performScroll('smooth'), 500);
+
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+    };
   }, [realUnlockedIndex, activePlanetId]);
 
   // Detect if an unlock animation needs to play (plays strictly once upon completing a planet)
+  // Demo mode: always skips travel animation and unlocks all planets immediately
   useEffect(() => {
     if (!userId) return;
+
+    // In demo mode, just set all planets to unlocked immediately — no animation
+    if (isDemoMode) {
+      setAnimState(prev => ({ ...prev, unlockedIndex: pathNodes.length - 1, isAnimating: false }));
+      return;
+    }
+
     try {
       const storedIdxStr = getUserStorageItem('last_animated_planet_idx', userId);
       const unlockPending = getUserStorageItem('planet_unlock_pending', userId) === 'true';
@@ -415,11 +448,17 @@ export default function ModulesClient({ userId, isVerified, hasTakenAptitudeTest
     } catch (e) {
       console.warn("Error reading progression animation state:", e);
     }
-  }, [realUnlockedIndex, userId]);
+  }, [realUnlockedIndex, userId, isDemoMode]);
 
   const getStatusForModule = (id: string) => {
     const nodeIndex = pathNodes.findIndex(n => n.id === id);
     if (nodeIndex === -1) return 'LOCKED';
+
+    // Demo mode: treat every planet as CURRENT so it renders as clickable/unlocked
+    if (isDemoMode) return nodeIndex < pathNodes.length - 1 ? 'COMPLETED' : 'CURRENT';
+
+    // If this planet contains the active saved level progress, it is always accessible
+    if (activePlanetId === id) return 'CURRENT';
 
     if (nodeIndex < animState.unlockedIndex) return 'COMPLETED';
     if (nodeIndex === animState.unlockedIndex) return 'CURRENT';
@@ -448,7 +487,7 @@ export default function ModulesClient({ userId, isVerified, hasTakenAptitudeTest
               [MISSION TRACK]
             </div>
             <div className="text-sm sm:text-base font-black text-white font-display uppercase tracking-wide">
-              {currentTrackNode.name} {currentTrackNode.subtitle ? `• ${currentTrackNode.subtitle}` : ''}
+              {currentTrackNode.name} {currentTrackNode.languageBadge?.label ? `• ${currentTrackNode.languageBadge.label}` : ''}
             </div>
           </div>
         </div>
@@ -518,7 +557,9 @@ export default function ModulesClient({ userId, isVerified, hasTakenAptitudeTest
             <img 
               src={unlockToast.icon} 
               alt={unlockToast.title} 
-              className="w-11 h-11 object-contain drop-shadow-[0_0_10px_rgba(255,145,45,0.5)] shrink-0"
+              className={`w-11 h-11 object-contain drop-shadow-[0_0_10px_rgba(255,145,45,0.5)] shrink-0 ${
+                (unlockToast.title.toLowerCase().includes('venus') || (unlockToast.icon && unlockToast.icon.includes('Venus'))) && !venusCompleted ? 'grayscale' : ''
+              }`}
             />
           ) : (
             <div className="w-10 h-10 rounded-full bg-[#ff912d]/20 border border-[#ff912d]/40 flex items-center justify-center shrink-0">
@@ -788,6 +829,11 @@ export default function ModulesClient({ userId, isVerified, hasTakenAptitudeTest
           </div>
         </div>
       )}
+
+      {/* Floating Demo Mode Toggle Button (bottom-left corner for quick debug access without cluttering the header) */}
+      <div className="fixed bottom-6 left-24 z-50">
+        <DemoToggle />
+      </div>
 
     </div>
   );

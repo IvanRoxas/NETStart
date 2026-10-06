@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 60" width="100%" height="100%">
+  <!-- Ceiling Ventilation Fan Facing Downward (Open & Spinning Airflow) -->
+  <defs>
+    <radialGradient id="ventDownGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#38BDF8" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#0284C7" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <!-- Outer metallic ceiling frame -->
+  <ellipse cx="70" cy="30" rx="66" ry="26" fill="#1E293B" stroke="#0284C7" stroke-width="3"/>
+  <ellipse cx="70" cy="30" rx="54" ry="20" fill="url(#ventDownGlow)"/>
+  <ellipse cx="70" cy="30" rx="54" ry="20" fill="none" stroke="#38BDF8" stroke-width="2" stroke-dasharray="6 3"/>
+  <!-- Open fan hub -->
+  <ellipse cx="70" cy="30" rx="16" ry="7" fill="#0EA5E9" stroke="#E0F2FE" stroke-width="1.5"/>
+  <!-- Downward air stream indicators -->
+  <path d="M 45 42 Q 40 52 35 58" stroke="#38BDF8" stroke-width="2" stroke-linecap="round" opacity="0.8"/>
+  <path d="M 70 44 Q 70 54 70 60" stroke="#38BDF8" stroke-width="2.5" stroke-linecap="round" opacity="0.9"/>
+  <path d="M 95 42 Q 100 52 105 58" stroke="#38BDF8" stroke-width="2" stroke-linecap="round" opacity="0.8"/>
+</svg>

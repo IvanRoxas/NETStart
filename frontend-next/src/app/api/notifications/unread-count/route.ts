@@ -18,7 +18,8 @@ export async function GET(request: Request) {
     const count = await prisma.notification.count({
       where: { 
         userId: user.id,
-        readAt: null
+        readAt: null,
+        notificationType: { not: 'daily_task_completed' }
       }
     });
 

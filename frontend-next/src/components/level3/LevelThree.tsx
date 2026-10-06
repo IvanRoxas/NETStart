@@ -32,11 +32,14 @@ import {
   Flame,
   ArrowRight,
   LogOut,
+  Minimize2,
+  Maximize2,
 } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useProgression } from '@/context/ProgressionContext';
 import { useNavigationGuard } from '@/context/NavigationGuardContext';
 import { XP_REWARDS } from '@/lib/leveling';
+import { isDemoModeActive } from '@/lib/demoMode';
 
 Blockly.setLocale(En as any);
 
@@ -45,7 +48,11 @@ export default function LevelThree() {
   const searchParams = useSearchParams();
   const missionId = searchParams.get('missionId') || 'moon-3';
 
-  const { addXp } = useProgression();
+  const { addXp: _rawAddXp } = useProgression();
+  const addXp = useCallback((amount: number, sourceLabel?: string) => {
+    if (isDemoModeActive()) return;
+    _rawAddXp(amount, sourceLabel);
+  }, [_rawAddXp]);
   const { requestNavigation } = useNavigationGuard();
 
   const {
@@ -113,6 +120,7 @@ export default function LevelThree() {
     if (!workspaceRef.current) {
       workspaceRef.current = Blockly.inject(blocklyRef.current, {
         toolbox: toolboxConfig,
+        collapse: true,
         grid: {
           spacing: 20,
           length: 2,

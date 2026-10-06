@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions, prisma } from "@/lib/auth";
 import { XP_REWARDS } from "@/lib/xpEconomy";
+import { getDailyTaskInfo, getTodayActiveDailyTaskIds, getTodayPHTDateStr } from "@/lib/dailyTasks";
 
 export async function POST(req: Request) {
   try {
@@ -20,13 +21,17 @@ export async function POST(req: Request) {
 
     // Determine current PHT date
     const nowUtc = new Date();
-    const phtFormatter = new Intl.DateTimeFormat("en-CA", {
-      timeZone: "Asia/Manila",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    });
-    const todayStrPHT = phtFormatter.format(nowUtc);
+    const todayStrPHT = getTodayPHTDateStr(nowUtc);
+
+    // Enforce that only today's active daily tasks are monitored/accomplished
+    const activeDailyTaskIds = getTodayActiveDailyTaskIds(nowUtc);
+    if (!activeDailyTaskIds.includes(taskId)) {
+      return NextResponse.json({
+        success: false,
+        notActiveToday: true,
+        message: "This task is not part of today's active daily tasks.",
+      });
+    }
 
     const missionId = `daily-task-${taskId}-${todayStrPHT}`;
 
@@ -44,22 +49,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: true, alreadyCompleted: true });
     }
 
-    // Reward config mapping
-    const gearsRewardMap: Record<string, number> = {
-      "task-daily-level": 20,
-      "task-curriculum-1": 10,
-      "task-curriculum-2": 10,
-      "task-curriculum-3": 10,
-      "task-explore-1": 5,
-      "task-explore-2": 5,
-      "task-explore-3": 5,
-      "task-achieve-1": 5,
-      "task-achieve-2": 5,
-      "task-achieve-3": 5,
-    };
 
-    const xpEarned = XP_REWARDS.DAILY_COMMISSIONS.MISSION_XP; // 5 XP
-    const gearsEarned = gearsRewardMap[taskId] || 5;
+    const taskInfo = getDailyTaskInfo(taskId);
+    const xpEarned = taskInfo.xpReward || XP_REWARDS.DAILY_COMMISSIONS.MISSION_XP;
+    const gearsEarned = taskInfo.gearsReward || 5;
 
     await prisma.$transaction(async (tx) => {
       await tx.missionProgress.upsert({
@@ -95,9 +88,11 @@ export async function POST(req: Request) {
       xpEarned,
       gearsEarned,
       missionId,
+      task: taskInfo,
     });
   } catch (error: any) {
     console.error("Error completing daily task:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
+

@@ -47,7 +47,11 @@ export default function TopHeader({ title }: TopHeaderProps) {
       const res = await fetch(`/api/notifications?t=${Date.now()}`);
       if (res.ok) {
         const data = await res.json();
-        setNotifications(data.notifications || []);
+        const rawList = data.notifications || [];
+        const filtered = Array.isArray(rawList)
+          ? rawList.filter((n: any) => n.type !== 'daily_task_completed' && n.notification_type !== 'daily_task_completed')
+          : [];
+        setNotifications(filtered);
       }
     } catch (err) {
       console.error('Failed to fetch notifications', err);

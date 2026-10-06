@@ -8,6 +8,7 @@ import DailyChallengeTimer from "@/components/DailyChallengeTimer";
 import { getXPDetails } from "@/lib/leveling";
 import { XP_REWARDS } from "@/lib/xpEconomy";
 import { Zap, Settings, Rocket, Award, ShieldCheck, Compass, ArrowRight, Lock, CheckCircle2, Circle, Sparkles, Play, Gift, Clock, Flame, Brain } from "lucide-react";
+import AvatarDisplay from "@/components/AvatarDisplay";
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
@@ -32,6 +33,7 @@ export default async function DashboardPage() {
       name: true,
       displayName: true,
       image: true,
+      banner: true,
       xp: true,
       gears: true,
       isVerified: true,
@@ -244,7 +246,7 @@ export default async function DashboardPage() {
       desc: "Finish today's quick practice coding challenge.",
       xpReward: XP_REWARDS.DAILY_COMMISSIONS.MISSION_XP,
       gearsReward: 20,
-      completed: isDailyLevelCompleted,
+      completed: isDailyLevelCompleted || completedTaskIdsToday.has("task-daily-level"),
       link: `/sandbox?mode=daily&missionId=${dailyMissionId}&tier=${level}`,
     },
     {
@@ -372,11 +374,21 @@ export default async function DashboardPage() {
   return (
     <div className="flex w-full h-full">
       {/* MAIN CONTENT */}
-      <main className="flex-1 flex flex-col z-10 h-full overflow-hidden bg-[#1e0a2d]">
+      <main className="flex-1 flex flex-col z-10 h-full overflow-hidden bg-[#1e0a2d] relative">
+        {/* Background Override Layer */}
+        {dbUser?.banner && (
+          <div 
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat pointer-events-none z-0 transition-all duration-500"
+            style={{ backgroundImage: `url("${dbUser.banner}")` }}
+          >
+            <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/30 to-black/50" />
+          </div>
+        )}
+
         <TopHeader title="Dashboard" />
 
         {/* Scrollable Content (Shifted slightly to the right with increased left padding) */}
-        <div className="flex-1 overflow-y-auto overflow-x-hidden py-6 md:py-8 lg:py-10 pl-10 md:pl-14 lg:pl-16 pr-6 md:pr-8 lg:pr-10 no-scrollbar">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden py-6 md:py-8 lg:py-10 pl-10 md:pl-14 lg:pl-16 pr-6 md:pr-8 lg:pr-10 no-scrollbar relative z-10">
           <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-[1fr_310px] xl:grid-cols-[1fr_335px] gap-8 pb-12">
             
             {/* LEFT COLUMN */}
@@ -413,13 +425,13 @@ export default async function DashboardPage() {
                   </div>
 
                   {/* Gears Badge */}
-                  <div className="flex items-center gap-2 bg-[#361d57] border border-[#a855f7]/40 rounded-2xl px-3 sm:px-4 py-2 shadow-md">
-                    <div className="w-7 h-7 rounded-xl bg-purple-500/20 text-[#a855f7] flex items-center justify-center font-bold flex-shrink-0">
+                  <div className="flex items-center gap-2 bg-[#361d57] border border-[#ff912d]/40 rounded-2xl px-3 sm:px-4 py-2 shadow-md">
+                    <div className="w-7 h-7 rounded-xl bg-[#ff912d]/20 text-[#ff912d] flex items-center justify-center font-bold flex-shrink-0">
                       <Settings size={15} className="animate-spin-slow" />
                     </div>
                     <div className="flex flex-col">
                       <span className="text-xs font-mono font-bold uppercase tracking-wider text-white/50 leading-none">Gears</span>
-                      <span className="text-xs sm:text-sm font-black font-display text-[#a855f7] mt-0.5 whitespace-nowrap">{dbUser?.gears || 0}</span>
+                      <span className="text-xs sm:text-sm font-black font-display text-[#ff912d] mt-0.5 whitespace-nowrap">{dbUser?.gears || 0}</span>
                     </div>
                   </div>
                 </div>
@@ -518,8 +530,11 @@ export default async function DashboardPage() {
                     <Compass className="text-[#ff912d]" size={20} />
                     <h2 className="font-display font-black text-xl text-white tracking-wide uppercase">Progress Tracker</h2>
                   </div>
-                  <Link href="/modules" className="text-xs text-[#ff912d] hover:underline font-bold flex items-center gap-1">
-                    View Missions <ArrowRight size={13} />
+                  <Link 
+                    href="/modules" 
+                    className="text-sm sm:text-base text-[#ff912d] hover:text-[#ff912d]/80 font-bold flex items-center gap-1.5 px-3 py-1 rounded-lg hover:bg-[#ff912d]/10 transition-colors group/view-missions"
+                  >
+                    View Missions <ArrowRight size={16} className="transition-transform group-hover/view-missions:translate-x-1" />
                   </Link>
                 </div>
 
@@ -670,7 +685,7 @@ export default async function DashboardPage() {
                   <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 flex-1 justify-center">
                     
                     {/* Custom Challenge Icon Thumbnail Container */}
-                    <div className="w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 rounded-3xl bg-gradient-to-b from-[#1a082c] to-[#130927] border border-white/10 flex items-center justify-center relative overflow-hidden flex-shrink-0 shadow-inner p-3">
+                    <div className="w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 rounded-3xl bg-gradient-to-b from-[#1a082c] to-[#130927] border-2 border-[#ff912d]/60 shadow-[0_0_20px_rgba(255,145,45,0.25)] flex items-center justify-center relative overflow-hidden flex-shrink-0 p-3">
                       <img 
                         src="/assets/global/ui/Landing Page BG.png" 
                         alt="Starfield"
@@ -697,10 +712,10 @@ export default async function DashboardPage() {
                       {/* Reward Chips & Launch Button Row */}
                       <div className="flex flex-wrap items-center justify-between gap-3 pt-1 mt-auto">
                         <div className="flex items-center gap-2.5 mx-auto sm:mx-0">
-                          <span className="text-xs sm:text-sm font-mono font-black bg-[#ff912d]/20 text-[#ff912d] px-3.5 py-1.5 rounded-xl border border-[#ff912d]/40 shadow-sm">
+                          <span className="text-sm sm:text-base font-mono font-black bg-[#ff912d]/20 text-[#ff912d] px-4 py-2 rounded-xl border-2 border-[#ff912d]/50 shadow-sm flex items-center gap-1.5">
                             +{dailyGeneratedLevel.xpReward} XP Reward
                           </span>
-                          <span className="text-xs sm:text-sm font-mono font-black bg-purple-500/20 text-[#a855f7] px-3.5 py-1.5 rounded-xl border border-purple-500/40 shadow-sm">
+                          <span className="text-sm sm:text-base font-mono font-black bg-[#ff912d]/20 text-[#ff912d] px-4 py-2 rounded-xl border-2 border-[#ff912d]/50 shadow-sm flex items-center gap-1.5">
                             +{dailyGeneratedLevel.gearsReward} Gears
                           </span>
                         </div>
@@ -743,7 +758,7 @@ export default async function DashboardPage() {
               {/* Top Right: Astronaut Avatar Portrait Card */}
               <div className="relative group/avatar-card">
                 <div className="absolute inset-0 bg-[#090311]/75 rounded-3xl translate-x-2 translate-y-2 z-0 transition-all duration-300 group-hover/avatar-card:translate-x-3 group-hover/avatar-card:translate-y-3" />
-                <div className="relative z-10 bg-[#361d57] border-2 border-[#ff912d]/50 p-5 sm:p-6 rounded-3xl transition-all duration-300 shadow-xl group-hover/avatar-card:-translate-x-1 group-hover/avatar-card:-translate-y-1 flex flex-col justify-between gap-5 overflow-hidden min-h-[290px]">
+                <div className="relative z-10 bg-[#361d57] border-2 border-[#ff912d]/50 p-5 sm:p-6 rounded-3xl transition-all duration-300 shadow-xl group-hover/avatar-card:-translate-x-1 group-hover/avatar-card:-translate-y-1 flex flex-col justify-between gap-4 overflow-hidden min-h-[380px]">
                   
                   {/* Cosmic Backdrop Ambient Effects */}
                   <img 
@@ -765,10 +780,9 @@ export default async function DashboardPage() {
                     </span>
                   </div>
 
-                  {/* Middle Stage: Floor Stage with Character Standing Shadow at the Bottom */}
-                  <div className="relative z-10 w-full flex-1 flex flex-col items-center justify-end my-3 min-h-[140px] pb-3">
-                    {/* Evident Character Floor Standing Shadow (Enlarged & Un-cutoff) */}
-                    <div className="w-44 h-6 sm:w-52 sm:h-7 bg-[#05010a]/95 rounded-[100%] blur-[3px] shadow-[0_0_25px_rgba(0,0,0,0.95)] border border-black/60 mb-2" />
+                  {/* Middle Stage: Floor Stage with Character Standing & Shadow Below */}
+                  <div className="relative z-10 w-full flex-1 flex flex-col items-center justify-end my-1 min-h-[260px] pb-1">
+                    <AvatarDisplay className="w-full h-64 sm:h-72" scale={1.35} />
                   </div>
 
                   {/* Quick Profile Link */}
@@ -789,7 +803,7 @@ export default async function DashboardPage() {
                   {/* Daily Tasks Header */}
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <Sparkles className="text-[#ff912d]" size={18} />
+                      <Clock className="text-[#ff912d]" size={18} />
                       <h3 className="font-display font-black text-lg text-white tracking-wide uppercase">
                         Daily Tasks
                       </h3>
@@ -854,7 +868,7 @@ export default async function DashboardPage() {
                             <span className="text-xs font-mono font-black bg-[#ff912d]/20 text-[#ff912d] px-2.5 py-1 rounded-lg border border-[#ff912d]/35">
                               +{task.xpReward} XP
                             </span>
-                            <span className="text-xs font-mono font-black bg-purple-500/20 text-[#a855f7] px-2.5 py-1 rounded-lg border border-purple-500/35">
+                            <span className="text-xs font-mono font-black bg-[#ff912d]/20 text-[#ff912d] px-2.5 py-1 rounded-lg border border-[#ff912d]/35">
                               +{task.gearsReward} Gears
                             </span>
                           </div>

@@ -124,18 +124,20 @@
 .neo-notif-card {
     display: flex;
     align-items: center;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
+    background: rgba(22, 8, 38, 0.88);
+    border: 1px solid rgba(255, 145, 45, 0.2);
+    border-radius: 14px;
     padding: 1.5rem 2rem;
     gap: 1.5rem;
-    transition: transform 0.2s, background 0.2s;
-    backdrop-filter: blur(10px);
+    transition: transform 0.2s, background 0.2s, border-color 0.2s;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
 }
 
 .neo-notif-card:hover {
     transform: translateY(-2px);
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(28, 10, 48, 0.96);
+    border-color: rgba(255, 145, 45, 0.45);
 }
 
 /* Avatar */

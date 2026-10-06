@@ -16,7 +16,10 @@ export async function GET(request: Request) {
     if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
     const notifications = await prisma.notification.findMany({
-      where: { userId: user.id },
+      where: { 
+        userId: user.id,
+        notificationType: { not: 'daily_task_completed' }
+      },
       orderBy: { createdAt: 'desc' },
       include: {
         sender: {

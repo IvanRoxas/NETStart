@@ -59,8 +59,11 @@ export default function NotificationDropdown({
 
   if (!mounted) return null;
 
-  const displayedNotifs = notifications.slice(0, 5);
-  const hasMore = notifications.length > 5;
+  const filteredNotifs = notifications.filter(
+    (n: any) => n.type !== 'daily_task_completed' && n.notification_type !== 'daily_task_completed'
+  );
+  const displayedNotifs = filteredNotifs.slice(0, 5);
+  const hasMore = filteredNotifs.length > 5;
 
   const timeAgo = (dateStr: string) => {
     const now = new Date();
@@ -150,6 +153,12 @@ export default function NotificationDropdown({
                       ) : (
                         <span className="text-[#ff912d] font-bold text-base">{badgeImg || '🏆'}</span>
                       )
+                    ) : (notif.type === 'daily_task_completed' || notif.notification_type === 'daily_task_completed') ? (
+                      <div className="w-full h-full flex items-center justify-center bg-amber-400/20 rounded-full shadow-inner text-amber-400">
+                        <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                          <path d="M12 2L14.6 9.4L22 12L14.6 14.6L12 22L9.4 14.6L2 12L9.4 9.4L12 2Z" />
+                        </svg>
+                      </div>
                     ) : notif.sender?.avatar_url ? (
                       <Image src={notif.sender.avatar_url} alt="" width={40} height={40} className="w-full h-full object-cover rounded-full" />
                     ) : (
@@ -179,6 +188,11 @@ export default function NotificationDropdown({
                           <strong className="text-[#ff912d] font-bold block mb-0.5">Level Up!</strong>
                           {notifData?.badgeName || 'Level Up!'}
                         </>
+                      ) : (notif.type === 'daily_task_completed' || notif.notification_type === 'daily_task_completed') ? (
+                        <>
+                          <strong className="text-amber-400 font-bold block mb-0.5">Daily Task Completed!</strong>
+                          <span>{notifData?.title || 'Daily Task'} (+{notifData?.xpEarned || 5} XP)</span>
+                        </>
                       ) : (
                         <>
                           <strong className="text-white font-bold">{notif.sender?.displayName || notif.sender?.name || 'System'}</strong>
@@ -186,6 +200,7 @@ export default function NotificationDropdown({
                         </>
                       )}
                     </p>
+
                     <span className="text-xs text-white/40">{timeAgo(notif.created_at)}</span>
 
                     {isUnread && <div className="absolute top-4 right-4 w-2 h-2 rounded-full bg-[#ff912d]"></div>}

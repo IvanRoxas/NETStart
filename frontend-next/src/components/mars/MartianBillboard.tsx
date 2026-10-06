@@ -1290,7 +1290,7 @@ export default function MartianBillboard({
               </span>
             </div>
 
-            {/* Unified Director Vance Card with Square Portrait, Name & Speech Bubble (Left Aligned) */}
+            {/* Unified Director Mark Card with Square Portrait, Name & Speech Bubble (Left Aligned) */}
             <div className="flex items-start gap-3 sm:gap-4 w-full bg-white/5 border border-white/10 rounded-2xl p-3 sm:p-3.5 text-left">
               {/* Square Character Portrait */}
               <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl bg-gradient-to-br from-indigo-900 via-purple-950 to-slate-900 border-2 border-fuchsia-400 shadow-[0_0_15px_rgba(217,70,239,0.4)] p-1 flex items-center justify-center shrink-0 relative overflow-hidden mt-0.5">
@@ -1328,7 +1328,7 @@ export default function MartianBillboard({
               {/* Name and Director's Comment unified inside container (Left Aligned) */}
               <div className="flex-1 flex flex-col items-start text-left gap-1">
                 <span className="font-display font-black text-sm sm:text-base text-white leading-tight">
-                  Director Vance
+                  Director Mark
                 </span>
                 <p className="text-xs sm:text-sm text-purple-100/90 leading-snug italic text-left">
                   &ldquo;{validation.ratingRemarks}&rdquo;

@@ -14,9 +14,13 @@ export async function getShopItems() {
 
     const existingIds = new Set(items.map(i => i.id));
     const hasMissing = SHOP_CATALOG.some(c => !existingIds.has(c.id));
+    const hasOutOfDate = items.some(i => {
+      const cat = getCatalogItemById(i.id);
+      return cat && cat.title !== i.title;
+    });
 
-    // Auto-seed or upsert items from SHOP_CATALOG if missing
-    if (hasMissing || items.length < SHOP_CATALOG.length) {
+    // Auto-seed or upsert items from SHOP_CATALOG if missing or updated
+    if (hasMissing || hasOutOfDate || items.length < SHOP_CATALOG.length) {
       for (const catItem of SHOP_CATALOG) {
         await prisma.shopItem.upsert({
           where: { id: catItem.id },
@@ -45,11 +49,12 @@ export async function getShopItems() {
     const catalogIds = new Set(SHOP_CATALOG.map((c) => c.id));
     const validItems = items.filter((item) => catalogIds.has(item.id));
 
-    // Attach tag and description from catalog or defaults
+    // Attach tag, title, and description from catalog or defaults
     const enrichedItems = validItems.map((item) => {
       const meta = getCatalogItemById(item.id);
       return {
         ...item,
+        title: meta?.title || item.title,
         tag: meta?.tag || item.type,
         description: meta?.description || "High-tech equipment for the NETStart space voyage.",
       };
@@ -66,12 +71,17 @@ export async function getShopItems() {
 export async function getUserInventory() {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || !(session.user as any)?.id) {
+    let userId = (session?.user as any)?.id;
+    if (!userId && session?.user?.email) {
+      const u = await prisma.user.findUnique({ where: { email: session.user.email }, select: { id: true } });
+      userId = u?.id;
+    }
+    if (!session || !userId) {
       return { success: false, error: "Unauthorized" };
     }
 
     const inventory = await prisma.userInventory.findMany({
-      where: { userId: (session.user as any).id },
+      where: { userId },
       include: { shopItem: true },
     });
     

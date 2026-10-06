@@ -35,10 +35,28 @@ export default function NotificationsPage() {
     });
     const [processingIds, setProcessingIds] = useState<number[]>([]);
     const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
+    const [banner, setBanner] = useState<string | null>(null);
 
     const showToast = (message: string, type: 'success' | 'error' = 'success') => {
         setToast({ message, type });
     };
+
+    useEffect(() => {
+        async function fetchUserBanner() {
+            try {
+                const res = await fetch(`/api/profile?t=${Date.now()}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.user?.banner) {
+                        setBanner(data.user.banner);
+                    }
+                }
+            } catch (err) {
+                console.error('Failed to load user background banner:', err);
+            }
+        }
+        fetchUserBanner();
+    }, []);
 
     const fetchNotifications = async (url = '/api/notifications?page=1') => {
         setLoading(true);
@@ -47,7 +65,11 @@ export default function NotificationsPage() {
             if (!res.ok) throw new Error('Failed to fetch');
             const data = await res.json();
 
-            setNotifications(data.results || data.notifications || data || []);
+            const rawList = data.results || data.notifications || data || [];
+            const filteredList = Array.isArray(rawList)
+                ? rawList.filter((n: any) => n.type !== 'daily_task_completed' && n.notification_type !== 'daily_task_completed')
+                : [];
+            setNotifications(filteredList);
 
             if (data.count !== undefined) {
                 const urlObj = new URL(url, window.location.origin);
@@ -164,9 +186,18 @@ export default function NotificationsPage() {
     const endItem = Math.min(pageInfo.current * pageSize, pageInfo.count);
 
     return (
-        <main className="flex-1 flex flex-col z-10 w-full h-full overflow-hidden bg-[#270d3c]">
+        <main className="flex-1 flex flex-col z-10 w-full h-full overflow-hidden bg-[#270d3c] relative">
+            {/* Background Override Layer */}
+            {banner && (
+                <div 
+                    className="absolute inset-0 bg-cover bg-center bg-no-repeat pointer-events-none z-0 transition-all duration-500"
+                    style={{ backgroundImage: `url("${banner}")` }}
+                >
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/40 to-black/60" />
+                </div>
+            )}
             <TopHeader title="Notifications" />
-            <div className="notifications-page-wrapper flex-1 overflow-y-auto">
+            <div className="notifications-page-wrapper flex-1 overflow-y-auto relative z-10">
                 {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
                 {/* Header & Search */}
@@ -262,6 +293,12 @@ export default function NotificationsPage() {
                                                 <div className="w-full h-full flex items-center justify-center bg-[#ffb703] rounded-full shadow-inner">
                                                     <span className="text-black font-black text-3xl">{notif.data?.level || notif.data?.badgeName?.replace(/\D/g, '') || ''}</span>
                                                 </div>
+                                            ) : (notif.type === 'daily_task_completed' || notif.notification_type === 'daily_task_completed') ? (
+                                                <div className="w-full h-full flex items-center justify-center bg-amber-400/20 rounded-full shadow-inner text-amber-400">
+                                                    <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+                                                        <path d="M12 2L14.6 9.4L22 12L14.6 14.6L12 22L9.4 14.6L2 12L9.4 9.4L12 2Z" />
+                                                    </svg>
+                                                </div>
                                             ) : (
                                                 <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-500/20 to-purple-600/20 rounded-full">
                                                     <span className="text-[#ff912d] font-bold text-xl">{notif.data?.badgeIcon || '🏆'}</span>
@@ -286,7 +323,9 @@ export default function NotificationsPage() {
                                                                 ? 'Achievement Unlocked!'
                                                                 : (notif.type === 'level_up' || notif.notification_type === 'level_up')
                                                                     ? 'Level Up!'
-                                                                    : (notif.sender?.username || notif.sender?.name || 'System')}
+                                                                    : (notif.type === 'daily_task_completed' || notif.notification_type === 'daily_task_completed')
+                                                                        ? 'Daily Task Completed!'
+                                                                        : (notif.sender?.username || notif.sender?.name || 'System')}
                                             </span>
                                             <span className="neo-notif-time">{timeAgo(notif.created_at || notif.createdAt)}</span>
                                         </div>
@@ -305,9 +344,12 @@ export default function NotificationsPage() {
                                                                 ? `You unlocked the "${notif.data?.badgeName}" achievement!`
                                                                 : (notif.type === 'level_up' || notif.notification_type === 'level_up')
                                                                     ? notif.data?.badgeName || 'You leveled up!'
-                                                                    : notif.data?.message || notif.message || 'New notification received.'}
+                                                                    : (notif.type === 'daily_task_completed' || notif.notification_type === 'daily_task_completed')
+                                                                        ? `Completed "${notif.data?.title || 'Daily Task'}": +${notif.data?.xpEarned || 5} XP earned.`
+                                                                        : notif.data?.message || notif.message || 'New notification received.'}
                                         </p>
                                     </div>
+
 
                                     <div className="neo-notif-actions">
                                         {(notif.type === 'friend_request' || notif.notification_type === 'friend_request') && !notif.read_at ? (

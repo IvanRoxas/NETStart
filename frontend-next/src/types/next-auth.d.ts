@@ -16,6 +16,8 @@ declare module "next-auth" {
       xp: number;
       activeTitle: string | null;
       displayName?: string;
+      border?: string | null;
+      createdAt?: string | null;
     };
   }
 }
@@ -31,5 +33,8 @@ declare module "next-auth/jwt" {
     xp: number;
     activeTitle: string | null;
     displayName?: string;
+    border?: string | null;
+    createdAt?: string | null;
   }
 }
+

@@ -40,7 +40,7 @@ export async function POST(req: Request) {
 
     // Ensure displayName defaults to username and is unique
     let defaultDisplayName = username;
-    const isDisplayNameTaken = await prisma.user.findUnique({
+    const isDisplayNameTaken = await prisma.user.findFirst({
       where: { displayName: username }
     });
     

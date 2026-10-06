@@ -1,6 +1,8 @@
 import { getServerSession } from "next-auth/next";
 import { authOptions, prisma } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
+import { DEMO_MODE_COOKIE } from "@/lib/demoMode";
 import TopHeader from "@/components/TopHeader";
 import ModulesClient from "./ModulesClient";
 import DailyTaskTracker from "@/components/DailyTaskTracker";
@@ -10,9 +12,12 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export default async function ModulesPage() {
+  const cookieStore = await cookies();
+  const isDemoMode = cookieStore.get(DEMO_MODE_COOKIE)?.value === 'true';
+
   const session = await getServerSession(authOptions);
 
-  if (!session) {
+  if (!session && !isDemoMode) {
     redirect("/login");
   }
 
@@ -20,11 +25,11 @@ export default async function ModulesPage() {
   const userId = sessionUser?.id;
   const userEmail = sessionUser?.email;
 
-  if (!userId && !userEmail) {
+  if (!userId && !userEmail && !isDemoMode) {
     redirect("/login");
   }
 
-  const dbUser = await prisma.user.findUnique({
+  const dbUser = (userId || userEmail) ? await prisma.user.findUnique({
     where: userId ? { id: userId } : { email: userEmail },
     select: {
       id: true,
@@ -33,21 +38,21 @@ export default async function ModulesPage() {
       isVerified: true,
       hasTakenAptitudeTest: true,
     }
-  });
+  }) : null;
 
-  if (!dbUser) {
+  if (!dbUser && !isDemoMode) {
     redirect("/login");
   }
 
-  const activeUserId = dbUser.id;
+  const activeUserId = dbUser?.id || "demo-cadet";
 
-  const isVerified = dbUser?.isVerified === true;
-  const hasTakenAptitudeTest = dbUser?.hasTakenAptitudeTest === true;
+  const isVerified = isDemoMode ? true : dbUser?.isVerified === true;
+  const hasTakenAptitudeTest = isDemoMode ? true : dbUser?.hasTakenAptitudeTest === true;
   const xp = dbUser?.xp || 0;
   const gears = dbUser?.gears || 0;
   const { level, progress, nextThreshold, levelCurrentXp, levelRequiredXp, isMaxLevel } = getXPDetails(xp);
 
-  const completedMissions = await prisma.missionProgress.findMany({
+  const completedMissions = dbUser ? await prisma.missionProgress.findMany({
     where: {
       userId: activeUserId,
       status: "COMPLETED",
@@ -60,7 +65,7 @@ export default async function ModulesPage() {
     select: {
       missionId: true,
     }
-  });
+  }) : [];
 
   const liveStats = {
     level,

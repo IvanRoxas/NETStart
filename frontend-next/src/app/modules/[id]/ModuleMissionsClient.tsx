@@ -2,7 +2,9 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Lock, Zap, Settings, X } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Lock, Zap, Settings, X, AlertTriangle } from 'lucide-react';
+import { isDemoModeActive } from '@/lib/demoMode';
 
 const PLANET_IMAGES: Record<string, string> = {
   moon: "/assets/planets/00_moon/environment/MainMoon.svg",
@@ -59,6 +61,8 @@ interface Mission {
   id: string;
   title: string;
   desc: string;
+  tag?: string;
+  subtitle?: string;
 }
 
 interface CompletedMission {
@@ -79,7 +83,7 @@ interface ModuleMissionsClientProps {
 }
 
 import { useSession } from 'next-auth/react';
-import { getUserStorageItem } from '@/lib/userStorage';
+import { getUserStorageItem, setUserStorageItem, removeUserStorageItem } from '@/lib/userStorage';
 
 export default function ModuleMissionsClient({
   moduleId,
@@ -91,9 +95,33 @@ export default function ModuleMissionsClient({
 }: ModuleMissionsClientProps) {
   const { data: session } = useSession();
   const userId = (session?.user as any)?.id;
+  const router = useRouter();
   const [activeMissionModal, setActiveMissionModal] = React.useState<Mission | null>(null);
   const [savedMissionId, setSavedMissionId] = React.useState<string | null>(null);
+  const [existingSaveInfo, setExistingSaveInfo] = React.useState<{ title: string; sectionIndex: number; missionId: string } | null>(null);
+  const [pendingMission, setPendingMission] = React.useState<Mission | null>(null);
+  const [showOverrideModal, setShowOverrideModal] = React.useState(false);
   const displayLangName = MODULE_DISPLAY_NAMES[moduleId] || moduleId.toUpperCase();
+
+  const matchMissionAliases = (a?: string, b?: string): boolean => {
+    if (!a || !b) return false;
+    const aL = a.toLowerCase();
+    const bL = b.toLowerCase();
+    if (aL === bL) return true;
+    if ((aL === 'saturn-3' || aL === 'cpp-3') && (bL === 'saturn-3' || bL === 'cpp-3')) return true;
+    if ((aL === 'saturn-2' || aL === 'cpp-2') && (bL === 'saturn-2' || bL === 'cpp-2')) return true;
+    if ((aL === 'saturn-1' || aL === 'cpp-1') && (bL === 'saturn-1' || bL === 'cpp-1')) return true;
+    if ((aL === 'jupiter-3' || aL === 'java-3') && (bL === 'jupiter-3' || bL === 'java-3')) return true;
+    if ((aL === 'jupiter-2' || aL === 'java-2') && (bL === 'jupiter-2' || bL === 'java-2')) return true;
+    if ((aL === 'jupiter-1' || aL === 'java-1') && (bL === 'jupiter-1' || bL === 'java-1')) return true;
+    if ((aL === 'mercury-1' || aL === 'js-1-mercury') && (bL === 'mercury-1' || bL === 'js-1-mercury')) return true;
+    if ((aL === 'mercury-2' || aL === 'js-2-mercury') && (bL === 'mercury-2' || bL === 'js-2-mercury')) return true;
+    if ((aL === 'mercury-3' || aL === 'js-3-mercury' || aL === 'javascript-3' || aL === 'js-3') && (bL === 'mercury-3' || bL === 'js-3-mercury' || bL === 'javascript-3' || bL === 'js-3')) return true;
+    if ((aL === 'earth-1' || aL === 'python-1' || aL === 'earth') && (bL === 'earth-1' || bL === 'python-1' || bL === 'earth')) return true;
+    if ((aL === 'earth-2' || aL === 'python-2') && (bL === 'earth-2' || bL === 'python-2')) return true;
+    if ((aL === 'earth-3' || aL === 'python-3') && (bL === 'earth-3' || bL === 'python-3')) return true;
+    return false;
+  };
 
   React.useEffect(() => {
     if (!userId) return;
@@ -108,6 +136,348 @@ export default function ModuleMissionsClient({
     } catch (e) {}
   }, [userId]);
 
+  const launchLevel = (mission: Mission) => {
+    const isCompleted = completedMissions.some(m => m.missionId.toLowerCase() === mission.id.toLowerCase());
+    const hasActiveProgress = Boolean(savedMissionId && matchMissionAliases(savedMissionId, mission.id));
+    const isReplay = !hasActiveProgress && isCompleted;
+
+    if (isReplay && userId) {
+      try {
+        removeUserStorageItem('active_saved_level', userId);
+        removeUserStorageItem(`completed_sections_${mission.id}`, userId);
+        removeUserStorageItem(`completed_goals_${mission.id}`, userId);
+        for (let s = 0; s < 10; s++) {
+          removeUserStorageItem(`saved_workspace_${mission.id}_${s}`, userId);
+          removeUserStorageItem(`saved_workspace_${mission.id.toLowerCase()}_${s}`, userId);
+        }
+        if (mission.id.toLowerCase() === 'mercury-2' || mission.id.toLowerCase() === 'js-2-mercury') {
+          removeUserStorageItem('saved_workspace_mercury-2_0', userId);
+          removeUserStorageItem('saved_workspace_js-2-mercury_0', userId);
+        }
+        if (mission.id.toLowerCase() === 'mercury-3' || mission.id.toLowerCase() === 'js-3-mercury') {
+          removeUserStorageItem('saved_workspace_mercury-3_0', userId);
+          removeUserStorageItem('saved_workspace_js-3-mercury_0', userId);
+          removeUserStorageItem('mercury3_tab_mercury-3_html', userId);
+          removeUserStorageItem('mercury3_tab_mercury-3_css', userId);
+          removeUserStorageItem('mercury3_tab_mercury-3_js', userId);
+          removeUserStorageItem('mercury3_active_tab_mercury-3', userId);
+        }
+        if (mission.id.toLowerCase() === 'jupiter-1' || mission.id.toLowerCase() === 'java-1') {
+          removeUserStorageItem('saved_workspace_jupiter-1_0', userId);
+          removeUserStorageItem('saved_workspace_java-1_0', userId);
+        }
+        if (mission.id.toLowerCase() === 'jupiter-2' || mission.id.toLowerCase() === 'java-2') {
+          const j2Aliases = [mission.id, 'jupiter-2', 'java-2'];
+          j2Aliases.forEach(id => {
+            removeUserStorageItem(`jupiter2_wave_${id}_1`, userId);
+            removeUserStorageItem(`jupiter2_wave_${id}_2`, userId);
+            removeUserStorageItem(`jupiter2_wave_${id}_3`, userId);
+            removeUserStorageItem(`jupiter2_active_wave_${id}`, userId);
+            removeUserStorageItem(`jupiter2_wave1_complete_${id}`, userId);
+            removeUserStorageItem(`jupiter2_wave2_complete_${id}`, userId);
+            removeUserStorageItem(`saved_workspace_${id}_0`, userId);
+          });
+        }
+        if (mission.id.toLowerCase() === 'jupiter-3' || mission.id.toLowerCase() === 'java-3') {
+          removeUserStorageItem('saved_workspace_jupiter-3_0', userId);
+          removeUserStorageItem('saved_workspace_java-3_0', userId);
+        }
+        if (mission.id.toLowerCase() === 'saturn-2' || mission.id.toLowerCase() === 'cpp-2') {
+          removeUserStorageItem('saved_workspace_saturn-2_0', userId);
+          removeUserStorageItem('saved_workspace_cpp-2_0', userId);
+        }
+        if (mission.id.toLowerCase() === 'saturn-3' || mission.id.toLowerCase() === 'cpp-3') {
+          removeUserStorageItem('saved_workspace_saturn-3_0', userId);
+          removeUserStorageItem('saved_workspace_cpp-3_0', userId);
+        }
+        if (mission.id.toLowerCase() === 'earth-1' || mission.id.toLowerCase() === 'python-1' || mission.id.toLowerCase() === 'earth') {
+          for (let s = 0; s < 5; s++) {
+            removeUserStorageItem(`saved_workspace_earth-1_${s}`, userId);
+            removeUserStorageItem(`saved_workspace_python-1_${s}`, userId);
+            removeUserStorageItem(`saved_workspace_earth_${s}`, userId);
+          }
+        }
+        if (mission.id.toLowerCase() === 'earth-2' || mission.id.toLowerCase() === 'python-2') {
+          const earth2Aliases = [mission.id, 'earth-2', 'python-2'];
+          earth2Aliases.forEach(id => {
+            removeUserStorageItem(`earth2_tab_${id}_tab1`, userId);
+            removeUserStorageItem(`earth2_tab_${id}_tab2`, userId);
+            removeUserStorageItem(`earth2_tab1_complete_${id}`, userId);
+            removeUserStorageItem(`earth2_active_tab_${id}`, userId);
+            removeUserStorageItem(`saved_workspace_${id}_0`, userId);
+          });
+        }
+        if (mission.id.toLowerCase() === 'earth-3' || mission.id.toLowerCase() === 'python-3') {
+          for (let s = 0; s < 5; s++) {
+            removeUserStorageItem(`saved_workspace_earth-3_${s}`, userId);
+            removeUserStorageItem(`saved_workspace_python-3_${s}`, userId);
+          }
+        }
+        if (mission.id.toLowerCase() === 'venus-3' || mission.id.toLowerCase() === 'css-3-venus') {
+          removeUserStorageItem('venus3_solved_sectors', userId);
+          removeUserStorageItem('venus3_active_tab', userId);
+          removeUserStorageItem(`venus3_active_tab_${mission.id}`, userId);
+          removeUserStorageItem(`venus3_styles_${mission.id}`, userId);
+          removeUserStorageItem(`venus3_tab_${mission.id}_main`, userId);
+          removeUserStorageItem(`venus3_tab_${mission.id}_alpha`, userId);
+          removeUserStorageItem(`venus3_tab_${mission.id}_beta`, userId);
+          removeUserStorageItem(`venus3_tab_${mission.id}_gamma`, userId);
+        }
+      } catch (e) { }
+    } else if (!hasActiveProgress && userId) {
+      // Starting fresh without an active save: wipe any leftover workspace saves from previous sessions
+      try {
+        for (let s = 0; s < 10; s++) {
+          removeUserStorageItem(`saved_workspace_${mission.id}_${s}`, userId);
+          removeUserStorageItem(`saved_workspace_${mission.id.toLowerCase()}_${s}`, userId);
+        }
+        if (mission.id.toLowerCase() === 'mercury-1' || mission.id.toLowerCase() === 'js-1-mercury') {
+          removeUserStorageItem('saved_workspace_mercury-1_0', userId);
+          removeUserStorageItem('saved_workspace_js-1-mercury_0', userId);
+        }
+        if (mission.id.toLowerCase() === 'mercury-2' || mission.id.toLowerCase() === 'js-2-mercury') {
+          removeUserStorageItem('saved_workspace_mercury-2_0', userId);
+          removeUserStorageItem('saved_workspace_js-2-mercury_0', userId);
+        }
+        if (mission.id.toLowerCase() === 'mercury-3' || mission.id.toLowerCase() === 'js-3-mercury' || mission.id.toLowerCase() === 'javascript-3' || mission.id.toLowerCase() === 'js-3') {
+          removeUserStorageItem('saved_workspace_mercury-3_0', userId);
+          removeUserStorageItem('saved_workspace_js-3-mercury_0', userId);
+          removeUserStorageItem('mercury3_tab_mercury-3_html', userId);
+          removeUserStorageItem('mercury3_tab_mercury-3_css', userId);
+          removeUserStorageItem('mercury3_tab_mercury-3_js', userId);
+          removeUserStorageItem('mercury3_active_tab_mercury-3', userId);
+        }
+        if (mission.id.toLowerCase() === 'jupiter-1' || mission.id.toLowerCase() === 'java-1') {
+          removeUserStorageItem('saved_workspace_jupiter-1_0', userId);
+          removeUserStorageItem('saved_workspace_java-1_0', userId);
+        }
+        if (mission.id.toLowerCase() === 'jupiter-2' || mission.id.toLowerCase() === 'java-2') {
+          const j2Aliases = [mission.id, 'jupiter-2', 'java-2'];
+          j2Aliases.forEach(id => {
+            removeUserStorageItem(`jupiter2_wave_${id}_1`, userId);
+            removeUserStorageItem(`jupiter2_wave_${id}_2`, userId);
+            removeUserStorageItem(`jupiter2_wave_${id}_3`, userId);
+            removeUserStorageItem(`jupiter2_active_wave_${id}`, userId);
+            removeUserStorageItem(`jupiter2_wave1_complete_${id}`, userId);
+            removeUserStorageItem(`jupiter2_wave2_complete_${id}`, userId);
+            removeUserStorageItem(`saved_workspace_${id}_0`, userId);
+          });
+        }
+        if (mission.id.toLowerCase() === 'jupiter-3' || mission.id.toLowerCase() === 'java-3') {
+          removeUserStorageItem('saved_workspace_jupiter-3_0', userId);
+          removeUserStorageItem('saved_workspace_java-3_0', userId);
+        }
+        if (mission.id.toLowerCase() === 'saturn-2' || mission.id.toLowerCase() === 'cpp-2') {
+          removeUserStorageItem('saved_workspace_saturn-2_0', userId);
+          removeUserStorageItem('saved_workspace_cpp-2_0', userId);
+        }
+        if (mission.id.toLowerCase() === 'saturn-3' || mission.id.toLowerCase() === 'cpp-3') {
+          removeUserStorageItem('saved_workspace_saturn-3_0', userId);
+          removeUserStorageItem('saved_workspace_cpp-3_0', userId);
+        }
+        if (mission.id.toLowerCase() === 'earth-1' || mission.id.toLowerCase() === 'python-1' || mission.id.toLowerCase() === 'earth') {
+          for (let s = 0; s < 5; s++) {
+            removeUserStorageItem(`saved_workspace_earth-1_${s}`, userId);
+            removeUserStorageItem(`saved_workspace_python-1_${s}`, userId);
+            removeUserStorageItem(`saved_workspace_earth_${s}`, userId);
+          }
+        }
+        if (mission.id.toLowerCase() === 'earth-2' || mission.id.toLowerCase() === 'python-2') {
+          const earth2Aliases = [mission.id, 'earth-2', 'python-2'];
+          earth2Aliases.forEach(id => {
+            removeUserStorageItem(`earth2_tab_${id}_tab1`, userId);
+            removeUserStorageItem(`earth2_tab_${id}_tab2`, userId);
+            removeUserStorageItem(`earth2_tab1_complete_${id}`, userId);
+            removeUserStorageItem(`earth2_active_tab_${id}`, userId);
+            removeUserStorageItem(`saved_workspace_${id}_0`, userId);
+          });
+        }
+        if (mission.id.toLowerCase() === 'earth-3' || mission.id.toLowerCase() === 'python-3') {
+          for (let s = 0; s < 5; s++) {
+            removeUserStorageItem(`saved_workspace_earth-3_${s}`, userId);
+            removeUserStorageItem(`saved_workspace_python-3_${s}`, userId);
+          }
+        }
+        removeUserStorageItem(`completed_sections_${mission.id}`, userId);
+        removeUserStorageItem(`completed_sections_${mission.id.toLowerCase()}`, userId);
+        if (!isCompleted) {
+          removeUserStorageItem(`completed_goals_${mission.id}`, userId);
+          removeUserStorageItem(`completed_goals_${mission.id.toLowerCase()}`, userId);
+        }
+      } catch (e) { }
+    }
+
+    try {
+      if (userId) {
+        setUserStorageItem('active_level', JSON.stringify({
+          missionId: mission.id,
+          title: mission.title,
+          module: displayLangName,
+          icon: PLANET_IMAGES[moduleId] || "/assets/planets/celestial/Planet 1.svg",
+          desc: mission.desc,
+          tag: 'Mission',
+          startedAt: new Date().toISOString()
+        }), userId);
+      }
+    } catch (e) { }
+
+    router.push(`/sandbox?missionId=${mission.id}${isReplay ? '&mode=replay' : ''}`);
+  };
+
+  const handleStartMission = (mission: Mission) => {
+    try {
+      if (userId) {
+        const rawSave = getUserStorageItem('active_saved_level', userId);
+        if (rawSave) {
+          const parsed = JSON.parse(rawSave);
+          if (parsed.missionId && !matchMissionAliases(parsed.missionId, mission.id)) {
+            setExistingSaveInfo({
+              title: parsed.title || parsed.missionId,
+              sectionIndex: parsed.sectionIndex || 0,
+              missionId: parsed.missionId,
+            });
+            setPendingMission(mission);
+            setShowOverrideModal(true);
+            return;
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("Error checking existing save:", e);
+    }
+
+    launchLevel(mission);
+  };
+
+  const handleConfirmOverride = () => {
+    if (!pendingMission) return;
+    try {
+      if (userId) {
+        removeUserStorageItem('active_saved_level', userId);
+        removeUserStorageItem('active_level', userId);
+
+        if (existingSaveInfo?.missionId) {
+          const oldId = existingSaveInfo.missionId;
+          const oldIdLower = oldId.toLowerCase();
+          removeUserStorageItem(`completed_sections_${oldId}`, userId);
+          removeUserStorageItem(`completed_goals_${oldId}`, userId);
+          removeUserStorageItem(`completed_sections_${oldIdLower}`, userId);
+          removeUserStorageItem(`completed_goals_${oldIdLower}`, userId);
+          for (let s = 0; s < 10; s++) {
+            removeUserStorageItem(`saved_workspace_${oldId}_${s}`, userId);
+            removeUserStorageItem(`saved_workspace_${oldIdLower}_${s}`, userId);
+          }
+          if (oldIdLower === 'mercury-1' || oldIdLower === 'js-1-mercury') {
+            removeUserStorageItem('saved_workspace_mercury-1_0', userId);
+            removeUserStorageItem('saved_workspace_js-1-mercury_0', userId);
+          }
+          if (oldIdLower === 'mercury-2' || oldIdLower === 'js-2-mercury') {
+            removeUserStorageItem('saved_workspace_mercury-2_0', userId);
+            removeUserStorageItem('saved_workspace_js-2-mercury_0', userId);
+          }
+          if (oldIdLower === 'mercury-3' || oldIdLower === 'js-3-mercury') {
+            removeUserStorageItem('saved_workspace_mercury-3_0', userId);
+            removeUserStorageItem('saved_workspace_js-3-mercury_0', userId);
+            removeUserStorageItem('mercury3_tab_mercury-3_html', userId);
+            removeUserStorageItem('mercury3_tab_mercury-3_css', userId);
+            removeUserStorageItem('mercury3_tab_mercury-3_js', userId);
+            removeUserStorageItem('mercury3_active_tab_mercury-3', userId);
+          }
+          if (oldIdLower === 'jupiter-1' || oldIdLower === 'java-1') {
+            removeUserStorageItem('saved_workspace_jupiter-1_0', userId);
+            removeUserStorageItem('saved_workspace_java-1_0', userId);
+          }
+          if (oldIdLower === 'jupiter-2' || oldIdLower === 'java-2') {
+            const j2Aliases = [oldId, oldIdLower, 'jupiter-2', 'java-2'];
+            j2Aliases.forEach(id => {
+              removeUserStorageItem(`jupiter2_wave_${id}_1`, userId);
+              removeUserStorageItem(`jupiter2_wave_${id}_2`, userId);
+              removeUserStorageItem(`jupiter2_wave_${id}_3`, userId);
+              removeUserStorageItem(`jupiter2_active_wave_${id}`, userId);
+              removeUserStorageItem(`jupiter2_wave1_complete_${id}`, userId);
+              removeUserStorageItem(`jupiter2_wave2_complete_${id}`, userId);
+              removeUserStorageItem(`saved_workspace_${id}_0`, userId);
+            });
+          }
+          if (oldIdLower === 'jupiter-3' || oldIdLower === 'java-3') {
+            removeUserStorageItem('saved_workspace_jupiter-3_0', userId);
+            removeUserStorageItem('saved_workspace_java-3_0', userId);
+          }
+          if (oldIdLower === 'saturn-2' || oldIdLower === 'cpp-2') {
+            removeUserStorageItem('saved_workspace_saturn-2_0', userId);
+            removeUserStorageItem('saved_workspace_cpp-2_0', userId);
+          }
+          if (oldIdLower === 'saturn-3' || oldIdLower === 'cpp-3') {
+            removeUserStorageItem('saved_workspace_saturn-3_0', userId);
+            removeUserStorageItem('saved_workspace_cpp-3_0', userId);
+          }
+          if (oldIdLower === 'earth-1' || oldIdLower === 'python-1' || oldIdLower === 'earth') {
+            for (let s = 0; s < 5; s++) {
+              removeUserStorageItem(`saved_workspace_earth-1_${s}`, userId);
+              removeUserStorageItem(`saved_workspace_python-1_${s}`, userId);
+              removeUserStorageItem(`saved_workspace_earth_${s}`, userId);
+            }
+          }
+          if (oldIdLower === 'earth-2' || oldIdLower === 'python-2') {
+            const earth2Aliases = [oldId, oldIdLower, 'earth-2', 'python-2'];
+            earth2Aliases.forEach(id => {
+              removeUserStorageItem(`earth2_tab_${id}_tab1`, userId);
+              removeUserStorageItem(`earth2_tab_${id}_tab2`, userId);
+              removeUserStorageItem(`earth2_tab1_complete_${id}`, userId);
+              removeUserStorageItem(`earth2_active_tab_${id}`, userId);
+              removeUserStorageItem(`saved_workspace_${id}_0`, userId);
+            });
+          }
+          if (oldIdLower === 'earth-3' || oldIdLower === 'python-3') {
+            for (let s = 0; s < 5; s++) {
+              removeUserStorageItem(`saved_workspace_earth-3_${s}`, userId);
+              removeUserStorageItem(`saved_workspace_python-3_${s}`, userId);
+            }
+          }
+        }
+
+        const isEarth2Existing = existingSaveInfo && (existingSaveInfo.missionId.toLowerCase() === 'earth-2' || existingSaveInfo.missionId.toLowerCase() === 'python-2');
+        const isEarth2Pending = pendingMission.id.toLowerCase() === 'earth-2' || pendingMission.id.toLowerCase() === 'python-2';
+
+        if (isEarth2Existing || isEarth2Pending) {
+          const e2Ids = [
+            ...(isEarth2Existing && existingSaveInfo ? [existingSaveInfo.missionId] : []),
+            ...(isEarth2Pending ? [pendingMission.id] : []),
+            'earth-2',
+            'python-2'
+          ];
+          e2Ids.forEach(id => {
+            removeUserStorageItem(`earth2_tab_${id}_tab1`, userId);
+            removeUserStorageItem(`earth2_tab_${id}_tab2`, userId);
+            removeUserStorageItem(`earth2_tab1_complete_${id}`, userId);
+            removeUserStorageItem(`earth2_active_tab_${id}`, userId);
+            removeUserStorageItem(`saved_workspace_${id}_0`, userId);
+          });
+        }
+
+        const isVenus3Existing = existingSaveInfo && (existingSaveInfo.missionId.toLowerCase() === 'venus-3' || existingSaveInfo.missionId.toLowerCase() === 'css-3-venus');
+        const isVenus3Pending = pendingMission.id.toLowerCase() === 'venus-3' || pendingMission.id.toLowerCase() === 'css-3-venus';
+
+        if (isVenus3Existing || isVenus3Pending) {
+          const v3Id = isVenus3Existing ? existingSaveInfo.missionId : pendingMission.id;
+          removeUserStorageItem('venus3_solved_sectors', userId);
+          removeUserStorageItem('venus3_active_tab', userId);
+          removeUserStorageItem(`venus3_active_tab_${v3Id}`, userId);
+          removeUserStorageItem(`venus3_styles_${v3Id}`, userId);
+          removeUserStorageItem(`venus3_tab_${v3Id}_main`, userId);
+          removeUserStorageItem(`venus3_tab_${v3Id}_alpha`, userId);
+          removeUserStorageItem(`venus3_tab_${v3Id}_beta`, userId);
+          removeUserStorageItem(`venus3_tab_${v3Id}_gamma`, userId);
+        }
+      }
+      setSavedMissionId(pendingMission.id.toLowerCase());
+    } catch (e) {
+      console.warn(e);
+    }
+    setShowOverrideModal(false);
+    launchLevel(pendingMission);
+  };
+
   const handleClose = (e: React.MouseEvent) => {
     if (onClose) {
       e.preventDefault();
@@ -116,7 +486,7 @@ export default function ModuleMissionsClient({
   };
 
   // Immersive locked overlay view
-  if (isLocked) {
+  if (isLocked && !isDemoModeActive()) {
     return (
       <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#1a082c]/75 backdrop-blur-md p-6">
         <button
@@ -180,9 +550,10 @@ export default function ModuleMissionsClient({
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full overflow-y-auto pr-2 custom-scrollbar p-1 pb-8">
           {missions.map((mission, index) => {
             const isCompleted = completedMissions.some(m => m.missionId.toLowerCase() === mission.id.toLowerCase());
+            const hasActiveProgress = Boolean(savedMissionId && matchMissionAliases(savedMissionId, mission.id));
 
-            // Progression Lock Check: Level i is unlocked if level i-1 is completed (Level 1 is always unlocked)
-            const isUnlocked = index === 0 || completedMissions.some(m => m.missionId.toLowerCase() === missions[index - 1].id.toLowerCase());
+            // Progression Lock Check: Level i is unlocked if level i-1 is completed (Level 1 is always unlocked), demo mode is on, or it has active progress
+            const isUnlocked = isDemoModeActive() || hasActiveProgress || index === 0 || completedMissions.some(m => m.missionId.toLowerCase() === missions[index - 1].id.toLowerCase());
 
             return (
               <div
@@ -235,6 +606,11 @@ export default function ModuleMissionsClient({
                 {/* Bottom Text Area (bg-[#130927] p-5) */}
                 <div className="bg-[#130927] p-5 flex flex-col flex-1 text-left justify-between min-h-[190px]">
                   <div className="space-y-2">
+                    {mission.subtitle && (
+                      <div className="text-[10px] font-mono uppercase tracking-wider text-[#ff912d] font-bold">
+                        {mission.subtitle}
+                      </div>
+                    )}
                     <h3 className="text-white font-bold text-base sm:text-lg leading-snug flex items-center justify-between gap-3 h-12 line-clamp-2 overflow-hidden">
                       <span className="line-clamp-2">{mission.title.replace(/^[a-zA-Z]+\s+Level\s+\d+:\s*/, '')}</span>
                       {isCompleted && (
@@ -267,12 +643,14 @@ export default function ModuleMissionsClient({
                       <span
                         className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all select-none ${!isUnlocked
                             ? 'bg-white/5 text-gray-500 border border-white/5'
-                            : isCompleted
+                            : hasActiveProgress
                               ? 'bg-[#8c2e0b] hover:bg-[#a3360d] text-white border-2 border-[#ffd1a9]/90 shadow-[0_4px_12px_rgba(0,0,0,0.3),0_0_12px_rgba(234,88,12,0.35)]'
-                              : 'bg-gradient-to-r from-[#ff912d] to-[#ff5722] hover:from-[#ff5722] hover:to-[#ff912d] text-white shadow-md shadow-[#ff912d]/10'
+                              : isCompleted
+                                ? 'bg-emerald-600 hover:bg-emerald-500 text-white border-2 border-emerald-300/90 shadow-[0_4px_12px_rgba(0,0,0,0.3),0_0_12px_rgba(16,185,129,0.35)]'
+                                : 'bg-gradient-to-r from-[#ff912d] to-[#ff5722] hover:from-[#ff5722] hover:to-[#ff912d] text-white shadow-md shadow-[#ff912d]/10'
                           }`}
                       >
-                        {!isUnlocked ? 'Locked' : isCompleted ? 'Replay' : 'Enter Lab'}
+                        {!isUnlocked ? 'Locked' : hasActiveProgress ? 'Resume' : isCompleted ? 'Replay' : 'Enter Lab'}
                       </span>
                     </div>
                   </div>
@@ -320,7 +698,9 @@ export default function ModuleMissionsClient({
               <img 
                 src={PLANET_IMAGES[moduleId] || "/assets/planets/celestial/Planet 1.svg"} 
                 alt="Planet" 
-                className="w-16 h-16 object-contain relative z-10 drop-shadow-[0_0_15px_rgba(255,145,45,0.4)] animate-pulse" 
+                className={`w-16 h-16 object-contain relative z-10 drop-shadow-[0_0_15px_rgba(255,145,45,0.4)] animate-pulse ${
+                  (moduleId === 'venus' || moduleId === 'css') && !missions.every(m => completedMissions.some(cm => cm.missionId.toLowerCase() === m.id.toLowerCase())) ? 'grayscale' : ''
+                }`} 
               />
               <p className="text-gray-300 text-sm font-medium leading-relaxed relative z-10">
                 {activeMissionModal.desc}
@@ -345,20 +725,74 @@ export default function ModuleMissionsClient({
               >
                 Cancel
               </button>
-              <Link
-                href={`/sandbox?missionId=${activeMissionModal.id}${savedMissionId === activeMissionModal.id.toLowerCase() ? '' : completedMissions.some(m => m.missionId.toLowerCase() === activeMissionModal.id.toLowerCase()) ? '&mode=replay' : ''}`}
-                className={`flex-1 py-3.5 font-black text-xs sm:text-sm uppercase tracking-widest rounded-xl transition-all hover:scale-105 active:scale-95 text-center cursor-pointer ${
-                  savedMissionId === activeMissionModal.id.toLowerCase()
-                    ? 'bg-[#8c2e0b] hover:bg-[#a3360d] text-white border-2 border-[#ffd1a9]/90 shadow-[0_4px_16px_rgba(0,0,0,0.3),0_0_14px_rgba(234,88,12,0.4)]'
-                    : completedMissions.some(m => m.missionId.toLowerCase() === activeMissionModal.id.toLowerCase())
-                    ? 'bg-[#8c2e0b] hover:bg-[#a3360d] text-white border-2 border-[#ffd1a9]/90 shadow-[0_4px_16px_rgba(0,0,0,0.3),0_0_14px_rgba(234,88,12,0.4)]'
-                    : 'bg-[#ff912d] hover:bg-orange-400 text-black shadow-[0_0_20px_rgba(255,145,45,0.4)]'
-                }`}
-              >
-                {savedMissionId === activeMissionModal.id.toLowerCase() ? 'Resume Mission' : completedMissions.some(m => m.missionId.toLowerCase() === activeMissionModal.id.toLowerCase()) ? 'Replay Mission' : 'Start Mission'}
-              </Link>
+              {(() => {
+                const isCompleted = completedMissions.some(m => m.missionId.toLowerCase() === activeMissionModal.id.toLowerCase());
+                const hasActiveProgress = Boolean(savedMissionId && matchMissionAliases(savedMissionId, activeMissionModal.id));
+                const isResume = hasActiveProgress;
+                const isReplay = !hasActiveProgress && isCompleted;
+
+                return (
+                  <button
+                    onClick={() => handleStartMission(activeMissionModal)}
+                    className={`flex-1 py-3.5 font-black text-xs sm:text-sm uppercase tracking-widest rounded-xl transition-all hover:scale-105 active:scale-95 text-center cursor-pointer ${
+                      isResume || isReplay
+                        ? 'bg-[#8c2e0b] hover:bg-[#a3360d] text-white border-2 border-[#ffd1a9]/90 shadow-[0_4px_16px_rgba(0,0,0,0.3),0_0_14px_rgba(234,88,12,0.4)]'
+                        : 'bg-[#ff912d] hover:bg-orange-400 text-black shadow-[0_0_20px_rgba(255,145,45,0.4)]'
+                    }`}
+                  >
+                    {isResume ? 'Resume Mission' : isReplay ? 'Replay Mission' : 'Start Mission'}
+                  </button>
+                );
+              })()}
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* Save Override Confirmation Modal */}
+      {showOverrideModal && existingSaveInfo && pendingMission && (
+        <div className="fixed inset-0 z-[120] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
+          <div className="bg-[#1e0a2d] border border-[#ff912d]/40 rounded-[32px] p-7 sm:p-9 max-w-xl w-full shadow-[0_0_50px_rgba(255,145,45,0.15)] relative flex flex-col gap-6 text-left">
+            <button
+              onClick={() => setShowOverrideModal(false)}
+              className="absolute top-6 right-6 text-gray-400 hover:text-white transition-colors cursor-pointer p-1.5 rounded-full hover:bg-white/10"
+              title="Close"
+            >
+              <X size={22} />
+            </button>
+
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-amber-500/20 border border-amber-500/40 text-amber-400 flex items-center justify-center shrink-0 shadow-inner">
+                <AlertTriangle size={28} />
+              </div>
+              <div>
+                <h3 className="text-xl sm:text-2xl font-display font-black text-white uppercase tracking-wide">
+                  Overwrite Save?
+                </h3>
+              </div>
+            </div>
+
+            <div className="bg-black/50 border border-white/10 rounded-2xl p-5 text-sm sm:text-base text-gray-300 leading-relaxed font-sans">
+              <p>
+                Starting <strong className="text-white font-bold">{pendingMission.title}</strong> will replace your active progress in <strong className="text-[#ff912d] font-bold">{existingSaveInfo.title}</strong> (Section {existingSaveInfo.sectionIndex + 1}).
+              </p>
+            </div>
+
+            <div className="flex items-center gap-4 pt-2">
+              <button
+                onClick={() => setShowOverrideModal(false)}
+                className="flex-1 py-3.5 sm:py-4 px-5 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-white font-mono font-bold text-xs sm:text-sm uppercase tracking-wider transition-all cursor-pointer text-center active:scale-95"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmOverride}
+                className="flex-1 py-3.5 sm:py-4 px-5 rounded-xl bg-gradient-to-r from-[#ff912d] to-amber-500 hover:from-amber-500 hover:to-[#ff912d] text-black font-mono font-black text-xs sm:text-sm uppercase tracking-wider transition-all shadow-lg shadow-[#ff912d]/25 cursor-pointer text-center active:scale-95"
+              >
+                Proceed
+              </button>
+            </div>
           </div>
         </div>
       )}

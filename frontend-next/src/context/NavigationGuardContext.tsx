@@ -77,16 +77,7 @@ export function NavigationGuardProvider({ children }: { children: React.ReactNod
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Backspace") {
-        const target = e.target as HTMLElement;
-        const tag = target?.tagName?.toLowerCase();
-        const isEditable = tag === "input" || tag === "textarea" || target?.isContentEditable;
-        if (!isEditable) {
-          e.preventDefault();
-          setPendingAction(getDefaultReturnPath());
-          setIsSuspendModalOpen(true);
-        }
-      } else if (e.key === "Escape" && isSuspendModalOpen) {
+      if (e.key === "Escape" && isSuspendModalOpen) {
         setIsSuspendModalOpen(false);
         setPendingAction(null);
       }

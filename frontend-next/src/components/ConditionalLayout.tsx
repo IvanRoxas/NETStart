@@ -9,6 +9,7 @@ import AdminProviders from "@/components/AdminProviders";
 import AppLayout from "@/components/AppLayout";
 
 import AchievementPopupProvider from "@/components/AchievementPopupProvider";
+import DailyTaskNotificationProvider from "@/components/DailyTaskNotificationProvider";
 import { NavigationGuardProvider } from "@/context/NavigationGuardContext";
 import { ProgressionProvider } from "@/context/ProgressionContext";
 
@@ -35,15 +36,18 @@ export default function ConditionalLayout({ children }: { children: React.ReactN
         <ProgressionProvider>
           <NavigationGuardProvider>
             <AchievementPopupProvider>
-              <AppLayout>
-                {children}
-              </AppLayout>
+              <DailyTaskNotificationProvider>
+                <AppLayout>
+                  {children}
+                </AppLayout>
+              </DailyTaskNotificationProvider>
             </AchievementPopupProvider>
           </NavigationGuardProvider>
         </ProgressionProvider>
       </Providers>
     );
   }
+
 
   if (isAuthPage) {
     // Render without Navbar, Footer, and SpaceBackground

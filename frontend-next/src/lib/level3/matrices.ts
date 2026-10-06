@@ -15,7 +15,7 @@ export const SECTION_1_MATRIX: LevelThreeMatrixConfig = {
   name: "Section 1: The AND Gate",
   subtag: "Section 1 of 5",
   desc: "Scan the dashboard nodes! Use the AND block to take power only when a node is BOTH Blue AND Stable. Watch out for red traps!",
-  tip: "Hint: Use If (scan node color == 'Blue' AND scan node state == 'Stable') -> extract power.",
+  tip: "Hint: Check both the color and stability of each node before taking power.",
   matrix: [
     [3, 1, 10, 1, 11, 1, 8],
   ],
@@ -29,7 +29,7 @@ export const SECTION_2_MATRIX: LevelThreeMatrixConfig = {
   name: "Section 2: The NOT Gate",
   subtag: "Section 2 of 5",
   desc: "Drive along the zigzag path. Use the NOT block to skip any Red trap nodes and take power from the Green nodes!",
-  tip: "Hint: Use If NOT (scan node color == 'Red') -> extract power.",
+  tip: "Hint: Avoid dangerous red traps as you navigate across the track.",
   matrix: [
     [3, 1, 11, 0, 0],
     [0, 1, 12, 1, 0],
@@ -45,7 +45,7 @@ export const SECTION_3_MATRIX: LevelThreeMatrixConfig = {
   name: "Section 3: Mission Control Hub",
   subtag: "Section 3 of 5",
   desc: "Drive to the terminal pads to choose your final challenge levels. Once you pick, drive back to the center tile and lock in your choices!",
-  tip: "Hint: Pick at least one challenge terminal, then return to the middle tile [3, 3] to lock in.",
+  tip: "Hint: Visit a challenge terminal, then return to Mission Control to lock in.",
   matrix: [
     [1, 1, 1, 1, 1, 1, 1],
     [1, 21, 1, 1, 1, 22, 1],
@@ -67,7 +67,7 @@ export const OPTION_A_HARD_NAV: LevelThreeMatrixConfig = {
   name: "Bonus Challenge A: Hazard Maze",
   subtag: "Maze Navigation",
   desc: "Drive through the maze without touching red hazard tiles to reach the ignition goal!",
-  tip: "Hint: Use repeat loops to drive cleanly through each turn.",
+  tip: "Hint: Plan your turns carefully to steer clear of hazard tiles.",
   matrix: [
     [3, 1, 1, 2, 1, 1, 1, 2, 1, 1],
     [0, 2, 1, 2, 1, 2, 1, 2, 1, 2],
@@ -90,7 +90,7 @@ export const OPTION_B_HARD_SORT: LevelThreeMatrixConfig = {
   name: "Bonus Challenge B: Fast Power Sorter",
   subtag: "Sorting Challenge",
   desc: "Drive along the line of nodes. Use 'repeat until engine charged' and check node colors to reach 100% power without hitting traps!",
-  tip: "Hint: Use repeat until engine charged, and only take power from safe nodes.",
+  tip: "Hint: Keep collecting power until fully charged while avoiding traps.",
   matrix: [
     [3, 10, 11, 10, 11, 13, 10, 11, 10, 14, 12, 11, 10, 1, 8],
   ],
@@ -104,7 +104,7 @@ export const OPTION_C_HARD_LOGIC: LevelThreeMatrixConfig = {
   name: "Bonus Challenge C: Master Logic Test",
   subtag: "Logic Challenge",
   desc: "An open area filled with energy nodes! Combine AND, OR, and NOT blocks to collect safe power, reach 100%, and ignite the engine.",
-  tip: "Hint: Take power if (Blue AND Stable) OR (Green AND Stable).",
+  tip: "Hint: Look for stable nodes of the right colors to safely power the engine.",
   matrix: [
     [3, 1, 10, 1, 11, 1, 13, 1],
     [1, 14, 1, 12, 1, 11, 1, 10],

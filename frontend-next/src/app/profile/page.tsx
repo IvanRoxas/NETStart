@@ -7,12 +7,15 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { VT323 } from 'next/font/google';
 import TopHeader from '@/components/TopHeader';
+import { Check, X, ChevronDown } from 'lucide-react';
 import { allBadges } from '@/lib/badgesData';
 import { getXPDetails } from '@/lib/leveling';
 import { getUnlockedAchievements } from '@/app/actions/achievements';
 import SpaceLoader from '@/components/SpaceLoader';
 import DailyTaskTracker from '@/components/DailyTaskTracker';
 import { getUserStorageItem } from '@/lib/userStorage';
+import { getUserInventory } from '@/app/actions/shop';
+import { getBorderScale } from '@/lib/shopCatalog';
 
 const vt323 = VT323({ weight: '400', subsets: ['latin'] });
 
@@ -49,6 +52,44 @@ const DAILY_LEVEL_POOL = [
   },
 ];
 
+const normalizeMissionKey = (rawId: string): string => {
+  const k = (rawId || "").toLowerCase().trim();
+  if (k === 'moon-1' || k === '1' || k === 'level-1' || k === 'html-1') return 'moon-1';
+  if (k === 'moon-2' || k === '2' || k === 'level-2' || k === 'html-2') return 'moon-2';
+  if (k === 'moon-3' || k === '3' || k === 'level-3' || k === 'html-3') return 'moon-3';
+  if (k.includes('mars')) {
+    if (k.includes('1')) return 'mars-1';
+    if (k.includes('2')) return 'mars-2';
+    if (k.includes('3')) return 'mars-3';
+  }
+  if (k.includes('venus') || k.includes('css')) {
+    if (k.includes('1')) return 'venus-1';
+    if (k.includes('2')) return 'venus-2';
+    if (k.includes('3')) return 'venus-3';
+  }
+  if (k.includes('mercury') || k.includes('js') || k.includes('javascript')) {
+    if (k.includes('1')) return 'mercury-1';
+    if (k.includes('2')) return 'mercury-2';
+    if (k.includes('3')) return 'mercury-3';
+  }
+  if (k.includes('jupiter') || k.includes('java')) {
+    if (k.includes('1')) return 'jupiter-1';
+    if (k.includes('2')) return 'jupiter-2';
+    if (k.includes('3')) return 'jupiter-3';
+  }
+  if (k.includes('saturn') || k.includes('cpp')) {
+    if (k.includes('1')) return 'saturn-1';
+    if (k.includes('2')) return 'saturn-2';
+    if (k.includes('3')) return 'saturn-3';
+  }
+  if (k.includes('earth') || k.includes('python')) {
+    if (k.includes('1')) return 'earth-1';
+    if (k.includes('2')) return 'earth-2';
+    if (k.includes('3')) return 'earth-3';
+  }
+  return k;
+};
+
 const getMissionDetails = (missionId: string, customMission?: any) => {
   const allMissions: Record<string, { title: string; desc: string; module: string; icon: string }> = {
     // The Moon (Tutorial)
@@ -66,65 +107,63 @@ const getMissionDetails = (missionId: string, customMission?: any) => {
     "mars-1": { title: "Level 1: The Blank Billboard", desc: "Mark's giant space sign is completely broken! Snap your blocks together to fix the big, bold letters, and pack all the text neatly into a single box so everyone on Mars can read it.", module: "Mars (HTML)", icon: "/assets/planets/celestial/Mars.svg" },
     "mars-2": { title: "Level 2: Picture Perfect!", desc: "Emma and Penny's screens are stuck on default placeholder images! Read the clues and pick the correct pictures from your toolbox to fix them.", module: "Mars (HTML)", icon: "/assets/planets/celestial/Mars.svg" },
     "mars-3": { title: "Level 3: The Big Space Message!", desc: "The AstroLink is turned on, but Earth and Venus don't recognize us! Put all your HTML blocks together to build a friendly message that proves who we are so they will answer our call.", module: "Mars (HTML)", icon: "/assets/planets/celestial/Mars.svg" },
-    "html-1": { title: "Level 1: The Blank Billboard", desc: "Mark's giant space sign is completely broken! Snap your blocks together to fix the big, bold letters, and pack all the text neatly into a single box so everyone on Mars can read it.", module: "Mars (HTML)", icon: "/assets/planets/celestial/Mars.svg" },
-    "html-2": { title: "Level 2: Picture Perfect!", desc: "Emma and Penny's screens are stuck on default placeholder images! Read the clues and pick the correct pictures from your toolbox to fix them.", module: "Mars (HTML)", icon: "/assets/planets/celestial/Mars.svg" },
-    "html-3": { title: "Level 3: The Big Space Message!", desc: "The AstroLink is turned on, but Earth and Venus don't recognize us! Put all your HTML blocks together to build a friendly message that proves who we are so they will answer our call.", module: "Mars (HTML)", icon: "/assets/planets/celestial/Mars.svg" },
+    "html-1-mars": { title: "Level 1: The Blank Billboard", desc: "Mark's giant space sign is completely broken! Snap your blocks together to fix the big, bold letters, and pack all the text neatly into a single box so everyone on Mars can read it.", module: "Mars (HTML)", icon: "/assets/planets/celestial/Mars.svg" },
+    "html-2-mars": { title: "Level 2: Picture Perfect!", desc: "Emma and Penny's screens are stuck on default placeholder images! Read the clues and pick the correct pictures from your toolbox to fix them.", module: "Mars (HTML)", icon: "/assets/planets/celestial/Mars.svg" },
+    "html-3-mars": { title: "Level 3: The Big Space Message!", desc: "The AstroLink is turned on, but Earth and Venus don't recognize us! Put all your HTML blocks together to build a friendly message that proves who we are so they will answer our call.", module: "Mars (HTML)", icon: "/assets/planets/celestial/Mars.svg" },
 
     // Venus (CSS)
-    "venus-1": { title: "Venus Level 1: Thermal Selectors & Cascades", desc: "Master targeting classes, ids, pseudo-selectors, and the CSS cascade tree.", module: "Venus (CSS)", icon: "/assets/planets/celestial/Venus.svg" },
-    "venus-2": { title: "Venus Level 2: Box Model Atmospheric Shields", desc: "Style border widths, margins, padding constraints, and display blocks.", module: "Venus (CSS)", icon: "/assets/planets/celestial/Venus.svg" },
-    "venus-3": { title: "Venus Level 3: Flexbox Gas Flow Alignment", desc: "Master flex-direction, justify-content, align-items, and responsive layouts.", module: "Venus (CSS)", icon: "/assets/planets/celestial/Venus.svg" },
-    "css-1": { title: "Venus Level 1: Thermal Selectors & Cascades", desc: "Master targeting classes, ids, pseudo-selectors, and the CSS cascade tree.", module: "Venus (CSS)", icon: "/assets/planets/celestial/Venus.svg" },
-    "css-2": { title: "Venus Level 2: Box Model Atmospheric Shields", desc: "Style border widths, margins, padding constraints, and display blocks.", module: "Venus (CSS)", icon: "/assets/planets/celestial/Venus.svg" },
-    "css-3": { title: "Venus Level 3: Flexbox Gas Flow Alignment", desc: "Master flex-direction, justify-content, align-items, and responsive layouts.", module: "Venus (CSS)", icon: "/assets/planets/celestial/Venus.svg" },
+    "venus-1": { title: "Level 1: Color It In", desc: "Professor Spectrum's lab lost all its colors. Drop in some furniture, splash your favorite colors and borders, and style the banner to make the room feel lively again.", module: "Venus (CSS)", icon: "/assets/planets/celestial/Venus.svg" },
+    "venus-2": { title: "Level 2: Formatting the Prototype", desc: "We have the pieces, but the layout is a mess! We must align them properly so the structure holds before we can plug it into the planet's main machinery.", module: "Venus (CSS)", icon: "/assets/planets/celestial/Venus.svg" },
+    "venus-3": { title: "Level 3: Restoring the Dead Zones", desc: "The AstroLink is powered on, but parts of the planet are still stuck in black and white. We need to link our new CSS prototype to the main HTML network to fix these dead zones and bring the color back.", module: "Venus (CSS)", icon: "/assets/planets/celestial/Venus.svg" },
+    "css-1": { title: "Level 1: Color It In", desc: "Professor Spectrum's lab lost all its colors. Drop in some furniture, splash your favorite colors and borders, and style the banner to make the room feel lively again.", module: "Venus (CSS)", icon: "/assets/planets/celestial/Venus.svg" },
+    "css-2": { title: "Level 2: Formatting the Prototype", desc: "We have the pieces, but the layout is a mess! We must align them properly so the structure holds before we can plug it into the planet's main machinery.", module: "Venus (CSS)", icon: "/assets/planets/celestial/Venus.svg" },
+    "css-3": { title: "Level 3: Restoring the Dead Zones", desc: "The AstroLink is powered on, but parts of the planet are still stuck in black and white. We need to link our new CSS prototype to the main HTML network to fix these dead zones and bring the color back.", module: "Venus (CSS)", icon: "/assets/planets/celestial/Venus.svg" },
+    "css-1-venus": { title: "Level 1: Color It In", desc: "Professor Spectrum's lab lost all its colors. Drop in some furniture, splash your favorite colors and borders, and style the banner to make the room feel lively again.", module: "Venus (CSS)", icon: "/assets/planets/celestial/Venus.svg" },
+    "css-2-venus": { title: "Level 2: Formatting the Prototype", desc: "We have the pieces, but the layout is a mess! We must align them properly so the structure holds before we can plug it into the planet's main machinery.", module: "Venus (CSS)", icon: "/assets/planets/celestial/Venus.svg" },
+    "css-3-venus": { title: "Level 3: Restoring the Dead Zones", desc: "The AstroLink is powered on, but parts of the planet are still stuck in black and white. We need to link our new CSS prototype to the main HTML network to fix these dead zones and bring the color back.", module: "Venus (CSS)", icon: "/assets/planets/celestial/Venus.svg" },
 
     // Mercury (JavaScript)
-    "mercury-1": { title: "Mercury Level 1: Variable Orbital Bindings", desc: "Learn variables, let, const, primitive types, and math routines under solar radiation.", module: "Mercury (JavaScript)", icon: "/assets/planets/celestial/Mercury.svg" },
-    "mercury-2": { title: "Mercury Level 2: Solar Flare Branching Logic", desc: "Master branching structures (if-else), switch cases, and logic loops.", module: "Mercury (JavaScript)", icon: "/assets/planets/celestial/Mercury.svg" },
-    "mercury-3": { title: "Mercury Level 3: Velocity Function Expressions", desc: "Implement reusable function expressions, closures, and orbital scoping.", module: "Mercury (JavaScript)", icon: "/assets/planets/celestial/Mercury.svg" },
-    "javascript-1": { title: "Mercury Level 1: Variable Orbital Bindings", desc: "Learn variables, let, const, primitive types, and math routines under solar radiation.", module: "Mercury (JavaScript)", icon: "/assets/planets/celestial/Mercury.svg" },
-    "javascript-2": { title: "Mercury Level 2: Solar Flare Branching Logic", desc: "Master branching structures (if-else), switch cases, and logic loops.", module: "Mercury (JavaScript)", icon: "/assets/planets/celestial/Mercury.svg" },
-    "javascript-3": { title: "Mercury Level 3: Velocity Function Expressions", desc: "Implement reusable function expressions, closures, and orbital scoping.", module: "Mercury (JavaScript)", icon: "/assets/planets/celestial/Mercury.svg" },
-    "js-1": { title: "Mercury Level 1: Variable Orbital Bindings", desc: "Learn variables, let, const, primitive types, and math routines under solar radiation.", module: "Mercury (JavaScript)", icon: "/assets/planets/celestial/Mercury.svg" },
-    "js-2": { title: "Mercury Level 2: Solar Flare Branching Logic", desc: "Master branching structures (if-else), switch cases, and logic loops.", module: "Mercury (JavaScript)", icon: "/assets/planets/celestial/Mercury.svg" },
-    "js-3": { title: "Mercury Level 3: Velocity Function Expressions", desc: "Implement reusable function expressions, closures, and orbital scoping.", module: "Mercury (JavaScript)", icon: "/assets/planets/celestial/Mercury.svg" },
+    "mercury-1": { title: "Level 1: Saving the Biodome", desc: "Professor Dominic's plants are drying up after the solar storm! Fix the life support system and bring the garden back to life.", module: "Mercury (JavaScript)", icon: "/assets/planets/celestial/Mercury.svg" },
+    "mercury-2": { title: "Level 2: The Conveyor Belt", desc: "The storm melted the logic boards on the factory's main conveyor belt! Help the Professor un-jam the tracks by teaching the machine how to make choices!", module: "Mercury (JavaScript)", icon: "/assets/planets/celestial/Mercury.svg" },
+    "mercury-3": { title: "Level 3: The Missing Interface", desc: "The electromagnetic surge completely wiped out Mercury's front-end software! Combine your web dev blocks to rebuild the main communication relay from scratch and bring the system back online!", module: "Mercury (JavaScript)", icon: "/assets/planets/celestial/Mercury.svg" },
+    "javascript-1": { title: "Level 1: Saving the Biodome", desc: "Professor Dominic's plants are drying up after the solar storm! Fix the life support system and bring the garden back to life.", module: "Mercury (JavaScript)", icon: "/assets/planets/celestial/Mercury.svg" },
+    "javascript-2": { title: "Level 2: The Conveyor Belt", desc: "The storm melted the logic boards on the factory's main conveyor belt! Help the Professor un-jam the tracks by teaching the machine how to make choices!", module: "Mercury (JavaScript)", icon: "/assets/planets/celestial/Mercury.svg" },
+    "javascript-3": { title: "Level 3: The Missing Interface", desc: "The electromagnetic surge completely wiped out Mercury's front-end software! Combine your web dev blocks to rebuild the main communication relay from scratch and bring the system back online!", module: "Mercury (JavaScript)", icon: "/assets/planets/celestial/Mercury.svg" },
+    "js-1": { title: "Level 1: Saving the Biodome", desc: "Professor Dominic's plants are drying up after the solar storm! Fix the life support system and bring the garden back to life.", module: "Mercury (JavaScript)", icon: "/assets/planets/celestial/Mercury.svg" },
+    "js-2": { title: "Level 2: The Conveyor Belt", desc: "The storm melted the logic boards on the factory's main conveyor belt! Help the Professor un-jam the tracks by teaching the machine how to make choices!", module: "Mercury (JavaScript)", icon: "/assets/planets/celestial/Mercury.svg" },
+    "js-3": { title: "Level 3: The Missing Interface", desc: "The electromagnetic surge completely wiped out Mercury's front-end software! Combine your web dev blocks to rebuild the main communication relay from scratch and bring the system back online!", module: "Mercury (JavaScript)", icon: "/assets/planets/celestial/Mercury.svg" },
+    "js-1-mercury": { title: "Level 1: Saving the Biodome", desc: "Professor Dominic's plants are drying up after the solar storm! Fix the life support system and bring the garden back to life.", module: "Mercury (JavaScript)", icon: "/assets/planets/celestial/Mercury.svg" },
+    "js-2-mercury": { title: "Level 2: The Conveyor Belt", desc: "The storm melted the logic boards on the factory's main conveyor belt! Help the Professor un-jam the tracks by teaching the machine how to make choices!", module: "Mercury (JavaScript)", icon: "/assets/planets/celestial/Mercury.svg" },
+    "js-3-mercury": { title: "Level 3: The Missing Interface", desc: "The electromagnetic surge completely wiped out Mercury's front-end software! Combine your web dev blocks to rebuild the main communication relay from scratch and bring the system back online!", module: "Mercury (JavaScript)", icon: "/assets/planets/celestial/Mercury.svg" },
 
     // Jupiter (Java)
-    "jupiter-1": { title: "Jupiter Level 1: Class & Object Blueprints", desc: "Design object-oriented classes, instance constructors, and blueprint definitions.", module: "Jupiter (Java)", icon: "/assets/planets/celestial/Jupiter.svg" },
-    "jupiter-2": { title: "Jupiter Level 2: Inheritance & Planetary Subclasses", desc: "Implement superclass inheritance, method overriding, and polymorphic behaviors.", module: "Jupiter (Java)", icon: "/assets/planets/celestial/Jupiter.svg" },
-    "jupiter-3": { title: "Jupiter Level 3: Encapsulation & Atmospheric Modifiers", desc: "Protect telemetry state using access modifiers (private, protected, public) and getters/setters.", module: "Jupiter (Java)", icon: "/assets/planets/celestial/Jupiter.svg" },
-    "java-1": { title: "Jupiter Level 1: Class & Object Blueprints", desc: "Design object-oriented classes, instance constructors, and blueprint definitions.", module: "Jupiter (Java)", icon: "/assets/planets/celestial/Jupiter.svg" },
-    "java-2": { title: "Jupiter Level 2: Inheritance & Planetary Subclasses", desc: "Implement superclass inheritance, method overriding, and polymorphic behaviors.", module: "Jupiter (Java)", icon: "/assets/planets/celestial/Jupiter.svg" },
-    "java-3": { title: "Jupiter Level 3: Encapsulation & Atmospheric Modifiers", desc: "Protect telemetry state using access modifiers (private, protected, public) and getters/setters.", module: "Jupiter (Java)", icon: "/assets/planets/celestial/Jupiter.svg" },
+    "jupiter-1": { title: "Level 1: Unlock the Gate", desc: "The Jupiter space station thinks you are an intruder and locked the blast doors! Teach the system exactly what kind of data you are sending to unlock the heavy security gates.", module: "Jupiter (Java)", icon: "/assets/planets/celestial/Jupiter.svg" },
+    "jupiter-2": { title: "Level 2: Try and Catch This!", desc: "Rescue Technician Io by building a Try/Catch safety net to intercept corrupted data blocks before they reach the server core!", module: "Jupiter (Java)", icon: "/assets/planets/celestial/Jupiter.svg" },
+    "jupiter-3": { title: "Level 3: The AI Core Lockdown", desc: "The Main Vault is on strict lockdown! The AI Core won't let anyone through. Can you build a custom ID blueprint and forge an object to sneak past the security scanner?", module: "Jupiter (Java)", icon: "/assets/planets/celestial/Jupiter.svg" },
+    "java-1": { title: "Level 1: Unlock the Gate", desc: "The Jupiter space station thinks you are an intruder and locked the blast doors! Teach the system exactly what kind of data you are sending to unlock the heavy security gates.", module: "Jupiter (Java)", icon: "/assets/planets/celestial/Jupiter.svg" },
+    "java-2": { title: "Level 2: Try and Catch This!", desc: "Rescue Technician Io by building a Try/Catch safety net to intercept corrupted data blocks before they reach the server core!", module: "Jupiter (Java)", icon: "/assets/planets/celestial/Jupiter.svg" },
+    "java-3": { title: "Level 3: The AI Core Lockdown", desc: "The Main Vault is on strict lockdown! The AI Core won't let anyone through. Can you build a custom ID blueprint and forge an object to sneak past the security scanner?", module: "Jupiter (Java)", icon: "/assets/planets/celestial/Jupiter.svg" },
 
     // Saturn (C++)
-    "saturn-1": { title: "Saturn Level 1: Ring Pointers & References", desc: "Master direct memory addresses, pointer arithmetic, and reference passing.", module: "Saturn (C++)", icon: "/assets/planets/celestial/Saturn.svg" },
-    "saturn-2": { title: "Saturn Level 2: Dynamic Ring Memory Allocation", desc: "Manage heap memory allocations using new/delete and prevent zero-g memory leaks.", module: "Saturn (C++)", icon: "/assets/planets/celestial/Saturn.svg" },
-    "saturn-3": { title: "Saturn Level 3: Structural Vectors & Ring Buffers", desc: "Build high-speed data structures and contiguous ring buffers using C++ STL vectors.", module: "Saturn (C++)", icon: "/assets/planets/celestial/Saturn.svg" },
-    "cpp-1": { title: "Saturn Level 1: Ring Pointers & References", desc: "Master direct memory addresses, pointer arithmetic, and reference passing.", module: "Saturn (C++)", icon: "/assets/planets/celestial/Saturn.svg" },
-    "cpp-2": { title: "Saturn Level 2: Dynamic Ring Memory Allocation", desc: "Manage heap memory allocations using new/delete and prevent zero-g memory leaks.", module: "Saturn (C++)", icon: "/assets/planets/celestial/Saturn.svg" },
-    "cpp-3": { title: "Saturn Level 3: Structural Vectors & Ring Buffers", desc: "Build high-speed data structures and contiguous ring buffers using C++ STL vectors.", module: "Saturn (C++)", icon: "/assets/planets/celestial/Saturn.svg" },
+    "saturn-1": { title: "Saturn Level 1: Surprise Diagnostics", desc: "The station's sensors are scrambling data! Build the correct pipeline to catch the data, calculate the power, and route it to the main grid.", module: "Saturn (C++)", icon: "/assets/planets/celestial/Saturn.svg" },
+    "saturn-2": { title: "Level 2: Jumpstarting the Rings", desc: "Saturn's rings are completely jammed with floating space debris! Use your ship's tractor beam to automatically sort the ice, rock, and metal into the correct disposal chutes so the rings can spin again.", module: "Saturn (C++)", icon: "/assets/planets/celestial/Saturn.svg" },
+    "saturn-3": { title: "Level 3: A Leak in the System!", desc: "Oh no, Engineer Titan's mainframe is hogging all the energy cores and refusing to give them back! Whatever you take, you MUST return before the station goes boom!", module: "Saturn (C++)", icon: "/assets/planets/celestial/Saturn.svg" },
+    "cpp-1": { title: "Saturn Level 1: Surprise Diagnostics", desc: "The station's sensors are scrambling data! Build the correct pipeline to catch the data, calculate the power, and route it to the main grid.", module: "Saturn (C++)", icon: "/assets/planets/celestial/Saturn.svg" },
+    "cpp-2": { title: "Level 2: Jumpstarting the Rings", desc: "Saturn's rings are completely jammed with floating space debris! Use your ship's tractor beam to automatically sort the ice, rock, and metal into the correct disposal chutes so the rings can spin again.", module: "Saturn (C++)", icon: "/assets/planets/celestial/Saturn.svg" },
+    "cpp-3": { title: "Level 3: A Leak in the System!", desc: "Oh no, Engineer Titan's mainframe is hogging all the energy cores and refusing to give them back! Whatever you take, you MUST return before the station goes boom!", module: "Saturn (C++)", icon: "/assets/planets/celestial/Saturn.svg" },
 
     // Earth (Python)
-    "earth-1": { title: "Earth Level 1: Telemetry Data Structures", desc: "Master Python lists, dictionaries, tuples, sets, and data slicing at Headquarters.", module: "Earth (Python)", icon: "/assets/planets/celestial/Earth.svg" },
-    "earth-2": { title: "Earth Level 2: Satellite Pipeline Loops & Comprehensions", desc: "Process real-time telemetry streams using list comprehensions and iterative generators.", module: "Earth (Python)", icon: "/assets/planets/celestial/Earth.svg" },
-    "earth-3": { title: "Earth Level 3: Mission Log File Automation", desc: "Automate reading and writing mission logs using Python context managers (with open).", module: "Earth (Python)", icon: "/assets/planets/celestial/Earth.svg" },
-    "python-1": { title: "Earth Level 1: Telemetry Data Structures", desc: "Master Python lists, dictionaries, tuples, sets, and data slicing at Headquarters.", module: "Earth (Python)", icon: "/assets/planets/celestial/Earth.svg" },
-    "python-2": { title: "Earth Level 2: Satellite Pipeline Loops & Comprehensions", desc: "Process real-time telemetry streams using list comprehensions and iterative generators.", module: "Earth (Python)", icon: "/assets/planets/celestial/Earth.svg" },
-    "python-3": { title: "Earth Level 3: Mission Log File Automation", desc: "Automate reading and writing mission logs using Python context managers (with open).", module: "Earth (Python)", icon: "/assets/planets/celestial/Earth.svg" },
+    "earth-1": { title: "Level 1: Fix the Master Ledger!", desc: "The Master Ledger is scrambled! Use Python slicing and string tools to cut away the junk and restore each entry.", module: "Earth (Python)", icon: "/assets/planets/celestial/Earth.svg" },
+    "earth-2": { title: "Level 2: The Planetary Archive", desc: "A solar storm scrambled the Master Ledger! Sort the loose data into digital folders to reconnect the solar system.", module: "Earth (Python)", icon: "/assets/planets/celestial/Earth.svg" },
+    "earth-3": { title: "Level 3: The Master Reboot", desc: "The Architect has one final program to bring together every repair you've made across the solar system, but he needs your help to run it. Use Python functions and modules to unify the network and bring the solar system online at once!", module: "Earth (Python)", icon: "/assets/planets/celestial/Earth.svg" },
+    "python-1": { title: "Level 1: Fix the Master Ledger!", desc: "The Master Ledger is scrambled! Use Python slicing and string tools to cut away the junk and restore each entry.", module: "Earth (Python)", icon: "/assets/planets/celestial/Earth.svg" },
+    "python-2": { title: "Level 2: The Planetary Archive", desc: "A solar storm scrambled the Master Ledger! Sort the loose data into digital folders to reconnect the solar system.", module: "Earth (Python)", icon: "/assets/planets/celestial/Earth.svg" },
+    "python-3": { title: "Level 3: The Master Reboot", desc: "The Architect has one final program to bring together every repair you've made across the solar system, but he needs your help to run it. Use Python functions and modules to unify the network and bring the solar system online at once!", module: "Earth (Python)", icon: "/assets/planets/celestial/Earth.svg" },
   };
 
   const key = (missionId || "").toLowerCase();
-
-  // If customMission has a non-generic title and desc, prioritize it
-  if (customMission?.title && customMission.title !== "Daily Mission Level" && customMission.title !== "Daily Level" && !customMission.title.startsWith("Mission ")) {
-    return {
-      title: customMission.title,
-      desc: customMission.desc || (allMissions[key]?.desc ?? "Complete objectives and guide your rover or starship safely through the mission challenges."),
-      module: customMission.module || allMissions[key]?.module || (key.startsWith("daily") ? "Daily Challenge" : "Space Mission"),
-      icon: customMission.icon || allMissions[key]?.icon || (key.startsWith("daily") ? "/assets/global/daily/weave-trap.svg" : "/assets/planets/00_moon/environment/MainMoon.svg")
-    };
-  }
+  const normKey = normalizeMissionKey(key);
+  const canon = allMissions[normKey] || allMissions[key];
 
   // Daily level calculation using deterministic date hash
   if (key.startsWith("daily") || key.includes("daily")) {
@@ -164,7 +203,27 @@ const getMissionDetails = (missionId: string, customMission?: any) => {
     };
   }
 
-  return allMissions[key] || {
+  // Canon always takes precedence for known campaign missions so descriptions stay synchronized!
+  if (canon) {
+    return {
+      title: canon.title,
+      desc: canon.desc,
+      module: canon.module,
+      icon: canon.icon,
+    };
+  }
+
+  // Fallback to customMission if provided
+  if (customMission?.title && customMission.title !== "Daily Mission Level" && customMission.title !== "Daily Level" && !customMission.title.startsWith("Mission ")) {
+    return {
+      title: customMission.title,
+      desc: customMission.desc || "Complete objectives and guide your rover or starship safely through the mission challenges.",
+      module: customMission.module || "Space Mission",
+      icon: customMission.icon || "/assets/planets/00_moon/environment/MainMoon.svg"
+    };
+  }
+
+  return {
     title: key.startsWith('moon') ? `The Moon: Level ${key.split('-')[1] || '1'}` : `Mission ${missionId}`,
     desc: "Complete objectives and guide your rover or starship safely through the mission challenges.",
     module: key.startsWith('moon') ? "The Moon" : key.startsWith('mars') ? "Mars (HTML)" : key.startsWith('venus') ? "Venus (CSS)" : key.startsWith('mercury') ? "Mercury (JavaScript)" : key.startsWith('jupiter') ? "Jupiter (Java)" : key.startsWith('saturn') ? "Saturn (C++)" : key.startsWith('earth') ? "Earth (Python)" : "Space Mission",
@@ -196,15 +255,29 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [dbAchievements, setDbAchievements] = useState<any[]>([]);
   const [ongoingMissions, setOngoingMissions] = useState<any[]>([]);
+  const [expandedMissionId, setExpandedMissionId] = useState<string | null>(null);
 
-  // Edit Profile State
+  // Profile Customization & Edit State
   const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState({ displayName: '', status: '', bio: '' });
-  const [activeTitle, setActiveTitle] = useState('Novice Explorer');
+  const [selectedTitle, setSelectedTitle] = useState('Novice Explorer');
+  const [selectedIcon, setSelectedIcon] = useState('/assets/global/badges/Profile.svg');
+  const [selectedBanner, setSelectedBanner] = useState('');
+  const [selectedBorder, setSelectedBorder] = useState('');
+  const [previewBanner, setPreviewBanner] = useState<string | null>(null);
+  const [previewIcon, setPreviewIcon] = useState<string | null>(null);
+  const [previewBorder, setPreviewBorder] = useState<string | null>(null);
+  const [editDisplayName, setEditDisplayName] = useState('');
+  const [editBio, setEditBio] = useState('');
+  const [activeCategory, setActiveCategory] = useState<'background' | 'icons' | 'borders'>('background');
+  const [userInventory, setUserInventory] = useState<any[]>([]);
+  const [showUnsavedModal, setShowUnsavedModal] = useState(false);
+  const [stats, setStats] = useState<any>(null);
   const [saving, setSaving] = useState(false);
 
   // Badges & Modal State
   const [selectedBadge, setSelectedBadge] = useState<any>(null);
+  const [fullPreviewBg, setFullPreviewBg] = useState<{ id: string; title: string; imageUrl: string; description?: string } | null>(null);
+  const [fullPreviewBorder, setFullPreviewBorder] = useState<{ id: string; title: string; imageUrl: string; description?: string } | null>(null);
   const [toastMessage, setToastMessage] = useState<string>('');
   const [unlockedDates, setUnlockedDates] = useState<Record<string, string>>({});
 
@@ -245,10 +318,191 @@ export default function ProfilePage() {
     // Always preserve currently assigned title
     if (profile?.activeTitle) titles.add(profile.activeTitle);
     if (profile?.title) titles.add(profile.title);
-    if (activeTitle) titles.add(activeTitle);
+    if (selectedTitle) titles.add(selectedTitle);
 
     return Array.from(titles);
-  }, [xp, dbAchievements, unlockedDates, profile, activeTitle]);
+  }, [xp, dbAchievements, unlockedDates, profile, selectedTitle]);
+
+  // Memoize valid showcased badges without phantom holes or missing badges
+  const validShowcasedBadges = useMemo(() => {
+    const rawList: string[] = profile?.showcasedBadges || [];
+    const valid: Array<{
+      id: string;
+      name: string;
+      description: string;
+      xpReward: number;
+      gearsReward: number;
+      icon: string;
+      image?: string;
+      triggerCode?: string;
+    }> = [];
+
+    rawList.forEach((badgeId) => {
+      if (!badgeId) return;
+      const normalizedId = String(badgeId).toLowerCase().trim();
+      const triggerCode = String(badgeId).toUpperCase().trim();
+      const baseBadge = allBadges.find(b => b.id.toLowerCase() === normalizedId || b.id.toUpperCase() === triggerCode);
+      const dbData = dbAchievements.find(a =>
+        (a.triggerCode && a.triggerCode.toUpperCase() === triggerCode) ||
+        (a.id && a.id.toLowerCase() === normalizedId) ||
+        (a.id && a.id === badgeId)
+      );
+
+      if (baseBadge || dbData) {
+        valid.push({
+          id: badgeId,
+          name: dbData?.name || baseBadge?.name || 'Achievement',
+          description: dbData?.description || baseBadge?.description || '',
+          xpReward: dbData?.xpReward || baseBadge?.xpReward || 100,
+          gearsReward: dbData?.gearsReward || 0,
+          icon: dbData?.iconUrl || baseBadge?.icon || '🏆',
+          image: dbData?.iconUrl || baseBadge?.image,
+          triggerCode: triggerCode,
+        });
+      }
+    });
+
+    return valid;
+  }, [profile?.showcasedBadges, dbAchievements]);
+
+  const ownedBackgrounds = useMemo(() => {
+    const list: { id: string; title: string; imageUrl: string; description?: string }[] = [
+      {
+        id: 'default-cosmic',
+        title: 'Default Cosmic',
+        imageUrl: '',
+        description: 'Default deep purple space theme',
+      }
+    ];
+
+    const addedUrls = new Set<string>(['']);
+
+    userInventory.forEach((inv: any) => {
+      const item = inv.shopItem;
+      if (item && (item.type === 'BACKGROUND' || item.subCategory === 'Background')) {
+        if (item.imageUrl && !addedUrls.has(item.imageUrl)) {
+          addedUrls.add(item.imageUrl);
+          list.push({
+            id: item.id || inv.id,
+            title: item.title || 'Cosmic Background',
+            imageUrl: item.imageUrl,
+            description: item.description,
+          });
+        }
+      }
+    });
+
+    if (profile?.banner && !addedUrls.has(profile.banner)) {
+      list.push({
+        id: 'current-banner',
+        title: 'Current Background',
+        imageUrl: profile.banner,
+        description: 'Your equipped background',
+      });
+    }
+
+    return list;
+  }, [userInventory, profile?.banner]);
+
+  const ownedIcons = useMemo(() => {
+    const list: { id: string; title: string; imageUrl: string }[] = [
+      {
+        id: 'default-cadet',
+        title: 'Default Cadet',
+        imageUrl: '/assets/global/badges/Profile.svg',
+      }
+    ];
+
+    const addedUrls = new Set<string>(['/assets/global/badges/Profile.svg']);
+
+    userInventory.forEach((inv: any) => {
+      const item = inv.shopItem;
+      if (item && (item.type === 'ICON' || item.subCategory === 'Icons')) {
+        if (item.imageUrl && !addedUrls.has(item.imageUrl)) {
+          addedUrls.add(item.imageUrl);
+          list.push({
+            id: item.id || inv.id,
+            title: item.title || 'Profile Icon',
+            imageUrl: item.imageUrl,
+          });
+        }
+      }
+    });
+
+    if (profile?.image && !addedUrls.has(profile.image) && profile.image !== '/assets/planets/celestial/Planet 1.svg') {
+      list.push({
+        id: 'current-avatar',
+        title: 'Current Icon',
+        imageUrl: profile.image,
+      });
+    }
+
+    return list;
+  }, [userInventory, profile?.image]);
+
+  const ownedBorders = useMemo(() => {
+    const list: { id: string; title: string; imageUrl: string; description?: string }[] = [
+      {
+        id: 'default-border',
+        title: 'Default Orange',
+        imageUrl: '',
+        description: 'The standard glowing solar border',
+      }
+    ];
+
+    const addedUrls = new Set<string>(['']);
+
+    userInventory.forEach((inv: any) => {
+      const item = inv.shopItem;
+      if (item && (item.type === 'BORDER' || item.subCategory === 'Borders')) {
+        if (item.imageUrl && !addedUrls.has(item.imageUrl)) {
+          addedUrls.add(item.imageUrl);
+          list.push({
+            id: item.id || inv.id,
+            title: item.title || 'Profile Border',
+            imageUrl: item.imageUrl,
+            description: item.description,
+          });
+        }
+      }
+    });
+
+    if (profile?.border && !addedUrls.has(profile.border)) {
+      list.push({
+        id: 'current-border',
+        title: 'Current Border',
+        imageUrl: profile.border,
+        description: 'Your equipped border',
+      });
+    }
+
+    return list;
+  }, [userInventory, profile?.border]);
+
+  const hasUnsavedChanges = useMemo(() => {
+    if (!isEditing) return false;
+    const currentTitle = profile?.activeTitle || profile?.title || (session?.user as any)?.activeTitle || 'Novice Explorer';
+    const currentDisplayName = profile?.displayName || profile?.name || session?.user?.displayName || session?.user?.name || '';
+    const currentBio = profile?.bio || '';
+    const currentIcon = (profile?.image && profile.image !== '/assets/planets/celestial/Planet 1.svg')
+      ? profile.image
+      : (session?.user?.image && session.user.image !== '/assets/planets/celestial/Planet 1.svg')
+        ? session.user.image
+        : '/assets/global/badges/Profile.svg';
+    const currentBanner = profile?.banner || '';
+    const currentBorder = profile?.border || (session?.user as any)?.border || '';
+
+    return (
+      editDisplayName !== currentDisplayName ||
+      editBio !== currentBio ||
+      selectedTitle !== currentTitle ||
+      selectedIcon !== currentIcon ||
+      selectedBanner !== currentBanner ||
+      selectedBorder !== currentBorder ||
+      (previewBanner !== null && previewBanner !== currentBanner) ||
+      (previewBorder !== null && previewBorder !== currentBorder)
+    );
+  }, [isEditing, editDisplayName, editBio, selectedTitle, selectedIcon, selectedBanner, selectedBorder, previewBanner, previewBorder, profile, session]);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -259,16 +513,25 @@ export default function ProfilePage() {
     }
   }, [status, session, router]);
 
-  const fetchProfile = async () => {
+  const fetchProfile = async (retryCount = 0) => {
     try {
+      // 1. Fetch primary profile data
       const res = await fetch(`/api/profile?t=${Date.now()}`);
+      if (!res.ok) {
+        if (retryCount < 2) {
+          setTimeout(() => fetchProfile(retryCount + 1), 600);
+          return;
+        }
+        throw new Error(`Profile fetch returned status ${res.status}`);
+      }
       const data = await res.json();
 
-      const achievementsRes = await getUnlockedAchievements();
-
-      if (res.ok) {
+      if (data?.user) {
         setProfile(data.user);
         setXp(data.user.xp || 0);
+        if (data.stats) {
+          setStats(data.stats);
+        }
         let ongoing = data.missionProgress || [];
         const userId = data.user.id;
         if (typeof window !== 'undefined' && userId) {
@@ -327,24 +590,44 @@ export default function ProfilePage() {
           }
         }
         setOngoingMissions(ongoing);
-        setFormData({
-          displayName: data.user.displayName || data.user.name || '',
-          status: data.user.status || '',
-          bio: data.user.bio || ''
-        });
-        setActiveTitle(data.user.activeTitle || data.user.title || 'Novice Explorer');
+        setSelectedTitle(data.user.activeTitle || data.user.title || (session?.user as any)?.activeTitle || 'Novice Explorer');
+        setSelectedIcon(
+          (data.user.image && data.user.image !== '/assets/planets/celestial/Planet 1.svg')
+            ? data.user.image
+            : (session?.user?.image && session.user.image !== '/assets/planets/celestial/Planet 1.svg')
+              ? session.user.image
+              : '/assets/global/badges/Profile.svg'
+        );
+        setSelectedBanner(data.user.banner || '');
+        setSelectedBorder(data.user.border || (session?.user as any)?.border || '');
+        setEditDisplayName(data.user.displayName || data.user.name || session?.user?.displayName || session?.user?.name || '');
+        setEditBio(data.user.bio || '');
       }
-      if (achievementsRes.success) {
-        setDbAchievements(achievementsRes.allDbAchievements || []);
-        const datesMap: Record<string, string> = {};
-        achievementsRes.userAchievementsDetails?.forEach((ua: any) => {
-          if (ua.triggerCode) datesMap[ua.triggerCode.toUpperCase()] = ua.unlockedAt;
-          if (ua.achievementId) datesMap[ua.achievementId] = ua.unlockedAt;
-        });
-        setUnlockedDates(datesMap);
-      }
+
+      // 2. Fetch auxiliary data concurrently without risking primary profile loading
+      Promise.allSettled([
+        getUnlockedAchievements(),
+        getUserInventory(),
+      ]).then(([achResult, invResult]) => {
+        if (achResult.status === 'fulfilled' && achResult.value?.success) {
+          const achievementsRes = achResult.value;
+          setDbAchievements(achievementsRes.allDbAchievements || []);
+          const datesMap: Record<string, string> = {};
+          achievementsRes.userAchievementsDetails?.forEach((ua: any) => {
+            if (ua.triggerCode) datesMap[ua.triggerCode.toUpperCase()] = ua.unlockedAt;
+            if (ua.achievementId) datesMap[ua.achievementId] = ua.unlockedAt;
+          });
+          setUnlockedDates(datesMap);
+        }
+        if (invResult.status === 'fulfilled' && invResult.value?.success && invResult.value.inventory) {
+          setUserInventory(invResult.value.inventory);
+        }
+      }).catch(err => {
+        console.warn("Non-fatal error fetching auxiliary profile info:", err);
+      });
+
     } catch (e) {
-      console.error(e);
+      console.error("Error fetching profile:", e);
     } finally {
       setLoading(false);
     }
@@ -382,28 +665,89 @@ export default function ProfilePage() {
     }
   };
 
+  const handleOpenEditSidebar = () => {
+    const currentTitle = profile?.activeTitle || profile?.title || (session?.user as any)?.activeTitle || 'Novice Explorer';
+    const currentIcon = (profile?.image && profile.image !== '/assets/planets/celestial/Planet 1.svg')
+      ? profile.image
+      : (session?.user?.image && session.user.image !== '/assets/planets/celestial/Planet 1.svg')
+        ? session.user.image
+        : '/assets/global/badges/Profile.svg';
+    const currentBanner = profile?.banner || '';
+    const currentBorder = profile?.border || (session?.user as any)?.border || '';
 
+    setSelectedTitle(currentTitle);
+    setSelectedIcon(currentIcon);
+    setSelectedBanner(currentBanner);
+    setSelectedBorder(currentBorder);
+    setPreviewBanner(null);
+    setPreviewIcon(null);
+    setPreviewBorder(null);
+    setEditDisplayName(profile?.displayName || profile?.name || session?.user?.displayName || session?.user?.name || '');
+    setEditBio(profile?.bio || '');
+    setIsEditing(true);
+  };
 
-  const handleUpdateProfile = async () => {
+  const handleCloseSidebar = () => {
+    if (hasUnsavedChanges) {
+      setShowUnsavedModal(true);
+    } else {
+      handleDiscardCustomization();
+    }
+  };
+
+  const handleDiscardCustomization = () => {
+    const currentTitle = profile?.activeTitle || profile?.title || (session?.user as any)?.activeTitle || 'Novice Explorer';
+    const currentIcon = (profile?.image && profile.image !== '/assets/planets/celestial/Planet 1.svg')
+      ? profile.image
+      : (session?.user?.image && session.user.image !== '/assets/planets/celestial/Planet 1.svg')
+        ? session.user.image
+        : '/assets/global/badges/Profile.svg';
+    const currentBanner = profile?.banner || '';
+    const currentBorder = profile?.border || (session?.user as any)?.border || '';
+
+    setSelectedTitle(currentTitle);
+    setSelectedIcon(currentIcon);
+    setSelectedBanner(currentBanner);
+    setSelectedBorder(currentBorder);
+    setPreviewBanner(null);
+    setPreviewIcon(null);
+    setPreviewBorder(null);
+    setEditDisplayName(profile?.displayName || profile?.name || session?.user?.displayName || session?.user?.name || '');
+    setEditBio(profile?.bio || '');
+    setIsEditing(false);
+    setShowUnsavedModal(false);
+  };
+
+  const handleSaveCustomization = async () => {
     setSaving(true);
     try {
       const res = await fetch('/api/profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          displayName: formData.displayName.trim(),
-          bio: formData.bio,
-          activeTitle: activeTitle
+          displayName: editDisplayName.trim(),
+          bio: editBio.trim(),
+          activeTitle: selectedTitle,
+          image: selectedIcon,
+          banner: selectedBanner,
+          border: selectedBorder,
         })
       });
       const data = await res.json();
       if (res.ok && data.user) {
         setProfile(data.user);
+        setEditBio(data.user.bio || '');
+        setPreviewBanner(null);
+        setPreviewIcon(null);
+        setPreviewBorder(null);
         setIsEditing(false);
+        setShowUnsavedModal(false);
         showToast('Profile updated successfully!');
         await update({
           displayName: data.user?.displayName,
-          activeTitle: data.user?.activeTitle
+          image: data.user?.image,
+          activeTitle: data.user?.activeTitle,
+          border: data.user?.border
         });
       } else {
         showToast(data.error || 'Failed to update profile');
@@ -428,13 +772,44 @@ export default function ProfilePage() {
     );
   }
 
-  const joinedDate = profile?.createdAt ? new Date(profile.createdAt).toLocaleDateString() : 'UNKNOWN';
+  const userCreatedAt = profile?.createdAt || (session?.user as any)?.createdAt;
+  const joinedDate = userCreatedAt ? new Date(userCreatedAt).toLocaleDateString() : 'Recently';
+  const activeBg = previewBanner !== null ? previewBanner : profile?.banner;
 
   return (
-    <main className="flex-1 flex flex-col z-10 w-full h-full overflow-hidden bg-[#270d3c]">
+    <main className="relative flex-1 flex flex-col z-10 w-full h-full overflow-hidden bg-[#270d3c]">
+      {/* Background override layer */}
+      {activeBg && (
+        <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+          <Image
+            src={activeBg}
+            alt="Profile Background"
+            fill
+            className="object-cover object-center opacity-90 brightness-95 scale-100 transition-all duration-300"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/30 to-black/50" />
+        </div>
+      )}
+
+      {/* Interactivity Blocking Backdrop while editing */}
+      {isEditing && (
+        <div
+          className="fixed inset-0 z-40 bg-black/5 cursor-pointer"
+          onClick={() => {
+            if (hasUnsavedChanges) {
+              setShowUnsavedModal(true);
+            } else {
+              handleDiscardCustomization();
+            }
+          }}
+          title="Click outside to cancel or save profile edits"
+        />
+      )}
+
       <DailyTaskTracker taskIds={["task-achieve-2"]} />
       <TopHeader title="Profile" />
-      <div className="flex-1 overflow-y-auto overflow-x-hidden p-6 lg:p-10 pr-10 lg:pr-16 no-scrollbar @container">
+      <div className={`flex-1 overflow-y-auto overflow-x-hidden p-6 lg:p-10 pr-10 lg:pr-16 no-scrollbar @container relative z-10 ${isEditing ? 'pointer-events-none select-none' : ''}`}>
 
         <div className="max-w-7xl mx-auto w-full flex flex-col gap-10">
 
@@ -459,118 +834,83 @@ export default function ProfilePage() {
                       Identification Card
                     </h2>
 
-                    {!isEditing ? (
-                      <button
-                        onClick={() => {
-                          setFormData({
-                            displayName: profile?.displayName || profile?.name || '',
-                            status: profile?.status || '',
-                            bio: profile?.bio || ''
-                          });
-                          setActiveTitle(profile?.activeTitle || profile?.title || 'Novice Explorer');
-                          setIsEditing(true);
-                        }}
-                        className="bg-white/10 hover:bg-white/20 text-white font-bold py-1.5 px-5 text-sm rounded-full cursor-pointer transition-all border border-white/10 flex items-center gap-2 active:scale-95 whitespace-nowrap shadow-sm hover:border-[#ff912d]/50"
-                      >
-                        <svg className="w-4 h-4 text-[#ff912d]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-                        Edit Profile
-                      </button>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => {
-                            setIsEditing(false);
-                            setFormData({ displayName: profile?.displayName || profile?.name || '', status: profile?.status || '', bio: profile?.bio || '' });
-                            setActiveTitle(profile?.activeTitle || profile?.title || 'Novice Explorer');
-                          }}
-                          className="bg-red-500/20 hover:bg-red-500/30 text-red-400 font-bold py-1.5 px-4 text-xs rounded-full cursor-pointer transition-colors border border-red-500/30 active:scale-95 whitespace-nowrap"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          onClick={handleUpdateProfile}
-                          disabled={saving}
-                          className="bg-[#ff912d] hover:bg-[#ff912d]/80 text-black font-bold py-1.5 px-5 text-xs rounded-full cursor-pointer transition-all disabled:opacity-50 active:scale-95 flex items-center justify-center gap-2 whitespace-nowrap shadow-md"
-                        >
-                          {saving ? 'Saving...' : 'Save Changes'}
-                        </button>
-                      </div>
-                    )}
+                    <button
+                      onClick={handleOpenEditSidebar}
+                      className="bg-white/10 hover:bg-white/20 text-white font-bold py-1.5 px-5 text-sm rounded-full cursor-pointer transition-all border border-white/10 flex items-center gap-2 active:scale-95 whitespace-nowrap shadow-sm hover:border-[#ff912d]/50"
+                    >
+                      <svg className="w-4 h-4 text-[#ff912d]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                      Edit Profile
+                    </button>
                   </div>
 
                   {/* Two-Column Dossier Layout */}
                   <div className="grid grid-cols-1 md:grid-cols-[260px_1fr] @2xl:grid-cols-[280px_1fr] gap-6 items-stretch flex-1">
                     {/* Zone 1: The Identity Panel (Left Column) */}
                     <div className="flex flex-col items-center justify-center text-center p-5 sm:p-6 bg-black/30 border border-[#ff912d]/25 rounded-2xl relative shadow-inner h-full">
-                      {/* Avatar with Circular Frame and Glowing Border */}
-                      <div className="w-36 h-36 sm:w-40 sm:h-40 @2xl:w-44 @2xl:h-44 rounded-full border-4 border-[#ff912d] shadow-[0_0_25px_rgba(255,145,45,0.4)] relative overflow-hidden flex items-center justify-center bg-[#1e0a2d] group/avatar shrink-0">
-                        <div className="absolute inset-0 flex items-center justify-center rounded-full overflow-hidden">
-                          {profile?.image ? (
-                            <Image
-                              src={profile.image === '/assets/planets/celestial/Planet 1.svg' ? '/assets/global/badges/Profile.svg' : profile.image}
-                              alt="Avatar"
-                              fill
-                              className="object-cover rounded-full"
-                            />
-                          ) : (
-                            <Image
-                              src="/assets/global/badges/Profile.svg"
-                              alt="Avatar"
-                              fill
-                              className="object-cover rounded-full"
-                            />
-                          )}
-                        </div>
-                      </div>
+                      {/* Avatar with Circular Frame and Custom or Default Glowing Border */}
+                      {(() => {
+                        const activeBorderUrl = (isEditing && previewBorder !== null)
+                          ? previewBorder
+                          : (isEditing ? selectedBorder : (profile?.border || (session?.user as any)?.border));
+                        const isCustomBorder = Boolean(activeBorderUrl && activeBorderUrl !== 'default');
+                        const avatarImg = (isEditing && previewIcon)
+                          ? previewIcon
+                          : (profile?.image && profile.image !== '/assets/planets/celestial/Planet 1.svg')
+                            ? profile.image
+                            : (session?.user?.image && session.user.image !== '/assets/planets/celestial/Planet 1.svg')
+                              ? session.user.image
+                              : '/assets/global/badges/Profile.svg';
 
-                      {/* Display Name */}
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          value={formData.displayName}
-                          onChange={e => setFormData({ ...formData, displayName: e.target.value })}
-                          className="text-xl font-black text-white text-center bg-transparent border-b-2 border-[#ff912d]/60 focus:border-[#ff912d] outline-none w-full max-w-[220px] mt-3 px-1 py-0.5 tracking-wide focus:bg-white/[0.05] rounded-t transition-all"
-                          placeholder="Explorer Name"
-                        />
-                      ) : (
-                        <h3 className="text-xl font-black text-white tracking-wide mt-3 truncate max-w-full drop-shadow-md">
-                          {profile?.displayName || profile?.name || 'Explorer'}
-                        </h3>
-                      )}
+                        return (
+                          <>
+                            <div className="relative w-32 h-32 sm:w-36 sm:h-36 @2xl:w-40 @2xl:h-40 mt-1 flex items-center justify-center shrink-0 group/avatar">
+                              {/* Inner Circular Avatar */}
+                              <div className={`w-full h-full rounded-full relative overflow-hidden flex items-center justify-center bg-[#1e0a2d] ${isCustomBorder
+                                  ? ''
+                                  : 'border-4 border-[#ff912d] shadow-[0_0_25px_rgba(255,145,45,0.4)]'
+                                }`}>
+                                <Image
+                                  src={avatarImg}
+                                  alt="Avatar"
+                                  fill
+                                  className="object-cover rounded-full"
+                                />
+                              </div>
 
-                      {/* Earned Rank / Title Badge */}
-                      {isEditing ? (
-                        <div className="mt-2.5 relative inline-flex items-center">
-                          <div className="inline-flex items-center gap-1.5 pl-3 pr-2 py-1 rounded-full bg-[#1e0a2d] border border-[#ff912d] text-[#ff912d] shadow-[0_0_14px_rgba(255,145,45,0.35)] relative cursor-pointer hover:border-[#ff912d]/80 transition-all">
-                            <svg className="w-3.5 h-3.5 text-[#ff912d] shrink-0 pointer-events-none" viewBox="0 0 24 24" fill="currentColor">
-                              <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
-                            </svg>
-                            <select
-                              value={activeTitle}
-                              onChange={e => setActiveTitle(e.target.value)}
-                              className="bg-transparent text-xs font-bold uppercase tracking-wider text-[#ff912d] outline-none cursor-pointer pr-5 appearance-none text-center max-w-[200px] truncate"
-                            >
-                              {availableTitles.map(t => (
-                                <option key={t} value={t} className="bg-[#1e0a2d] text-white py-1">
-                                  {t}
-                                </option>
-                              ))}
-                            </select>
-                            <svg className="w-3 h-3 text-[#ff912d] pointer-events-none absolute right-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" />
-                            </svg>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="mt-2.5 inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#ff912d]/15 border border-[#ff912d]/50 text-[#ff912d] shadow-[0_0_12px_rgba(255,145,45,0.25)]">
-                          <svg className="w-3.5 h-3.5 text-[#ff912d] shrink-0" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
-                          </svg>
-                          <span className="font-bold text-xs uppercase tracking-widest truncate">
-                            {profile?.activeTitle || profile?.title || 'Novice Explorer'}
-                          </span>
-                        </div>
-                      )}
+                              {/* Custom Border Overlay */}
+                              {isCustomBorder && (
+                                <div 
+                                  className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-10 flex items-center justify-center"
+                                  style={{ width: getBorderScale(activeBorderUrl), height: getBorderScale(activeBorderUrl) }}
+                                >
+                                  <img
+                                    src={activeBorderUrl}
+                                    alt="Profile Border"
+                                    className="w-full h-full object-contain pointer-events-none select-none drop-shadow-[0_0_12px_rgba(0,0,0,0.6)]"
+                                  />
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Display Name */}
+                            <h3 className={`text-xl font-black text-white tracking-wide truncate max-w-full drop-shadow-md ${
+                              isCustomBorder ? 'mt-7 sm:mt-9' : 'mt-3 sm:mt-4'
+                            }`}>
+                              {`"${((isEditing && editDisplayName) ? editDisplayName : (profile?.displayName || profile?.name || session?.user?.displayName || session?.user?.name || 'Explorer')).replace(/^["“”']+|["“”']+$/g, '')}"`}
+                            </h3>
+
+                            {/* Earned Rank / Title Badge */}
+                            <div className="mt-2.5 inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#ff912d]/15 border border-[#ff912d]/50 text-[#ff912d] shadow-[0_0_12px_rgba(255,145,45,0.25)]">
+                              <svg className="w-3.5 h-3.5 text-[#ff912d] shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
+                              </svg>
+                              <span className="font-bold text-xs uppercase tracking-widest truncate">
+                                {(isEditing && selectedTitle) ? selectedTitle : (profile?.activeTitle || profile?.title || (session?.user as any)?.activeTitle || 'Novice Explorer')}
+                              </span>
+                            </div>
+                          </>
+                        );
+                      })()}
                     </div>
 
                     {/* Zone 2: The Data Terminal (Right Column) */}
@@ -578,7 +918,7 @@ export default function ProfilePage() {
                       {/* Username and Joined Date */}
                       <div className="px-1 shrink-0 flex flex-col gap-1.5">
                         <span className="text-2xl sm:text-3xl font-bold text-white font-sans tracking-normal drop-shadow-md">
-                          @{profile?.name || profile?.username || 'explorer'}
+                          @{profile?.name || profile?.username || session?.user?.name || (session?.user?.email ? session.user.email.split('@')[0] : 'explorer')}
                         </span>
                         <p className="text-xs text-white/40 tracking-wider">
                           Joined on <span className="text-white/70 font-semibold">{joinedDate}</span>
@@ -586,26 +926,40 @@ export default function ProfilePage() {
                       </div>
 
                       {/* About Me Container (Expands to fill remaining height) */}
-                      <div className="flex-1 flex flex-col gap-2.5 bg-black/35 border border-[#ff912d]/30 rounded-2xl p-4 shadow-inner backdrop-blur-sm relative overflow-hidden">
+                      <div className="flex-1 flex flex-col gap-3 bg-black/35 border border-[#ff912d]/30 rounded-2xl p-5 sm:p-6 shadow-inner relative overflow-hidden min-h-[165px] sm:min-h-[190px]">
                         {/* Section Header */}
-                        <div className="flex items-center justify-between border-b border-white/10 pb-2 shrink-0">
-                          <span className={`${vt323.className} font-bold text-[#ff912d] text-lg sm:text-xl tracking-[0.15em] uppercase`}>
+                        <div className="flex items-center justify-between border-b border-white/10 pb-2.5 shrink-0">
+                          <span className={`${vt323.className} font-bold text-[#ff912d] text-xl sm:text-2xl tracking-[0.15em] uppercase`}>
                             About Me
                           </span>
+                          {isEditing && (
+                            <span className="text-[10px] text-[#ff912d] font-bold uppercase tracking-wider flex items-center gap-1.5">
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#ff912d] animate-pulse" />
+                              Editing
+                            </span>
+                          )}
                         </div>
 
                         {/* Bio Content Screen */}
                         <div className="flex-1 flex flex-col min-h-0">
                           {isEditing ? (
-                            <textarea
-                              value={formData.bio}
-                              onChange={e => setFormData({ ...formData, bio: e.target.value })}
-                              className="flex-1 w-full min-h-[110px] bg-white/[0.06] hover:bg-white/[0.08] focus:bg-white/[0.1] text-white font-medium p-3 rounded-xl border border-[#ff912d]/50 focus:border-[#ff912d] focus:ring-1 focus:ring-[#ff912d] outline-none shadow-inner resize-none text-xs sm:text-sm leading-relaxed"
-                              placeholder="Tell us about yourself..."
-                            />
+                            <div className="flex-1 flex flex-col relative">
+                              <textarea
+                                value={editBio}
+                                maxLength={250}
+                                onChange={(e) => setEditBio(e.target.value)}
+                                placeholder="Describe Yourself!"
+                                className="flex-1 w-full min-h-[120px] sm:min-h-[140px] bg-[#1e0a2d]/70 text-white text-sm sm:text-base font-medium leading-relaxed p-4 rounded-xl border border-[#ff912d]/60 focus:border-[#ff912d] outline-none shadow-inner resize-none transition-all placeholder:text-white/30"
+                              />
+                              <span className="absolute bottom-2.5 right-3 text-[10px] text-white/40 font-mono pointer-events-none">
+                                {editBio.length}/250
+                              </span>
+                            </div>
                           ) : (
-                            <div className="flex-1 w-full min-h-[110px] bg-[#1e0a2d]/40 text-white/90 text-xs sm:text-sm font-medium leading-relaxed p-3.5 rounded-xl border border-white/5 shadow-inner overflow-y-auto whitespace-pre-wrap">
-                              {profile?.bio || 'An aspiring NETStart explorer traversing the cosmic web constellations.'}
+                            <div
+                              className="flex-1 w-full min-h-[120px] sm:min-h-[140px] bg-[#1e0a2d]/40 text-white/90 text-sm sm:text-base font-medium leading-relaxed p-4 rounded-xl border border-white/5 shadow-inner overflow-y-auto whitespace-pre-wrap"
+                            >
+                              {profile?.bio || 'Describe Yourself!'}
                             </div>
                           )}
                         </div>
@@ -672,26 +1026,13 @@ export default function ProfilePage() {
                   <div className="border border-[#ff912d]/30 bg-black/20 rounded-xl p-5 relative flex-1 flex flex-col justify-between gap-4 shadow-inner">
                     <div className="grid grid-cols-3 place-items-center gap-4 sm:gap-5 max-w-[280px] mx-auto my-auto">
                       {Array.from({ length: 6 }).map((_, i) => {
-                        const badgeId = profile?.showcasedBadges?.[i];
-                        const baseBadge = badgeId ? allBadges.find(b => b.id === badgeId) : null;
-                        const triggerCode = badgeId ? badgeId.toUpperCase() : '';
-                        const dbData = badgeId ? dbAchievements.find(a => a.triggerCode === triggerCode || a.id === badgeId) : null;
+                        const badge = validShowcasedBadges[i];
 
-                        if (baseBadge || dbData) {
-                          const badge = {
-                            id: badgeId,
-                            name: dbData?.name || baseBadge?.name || 'Achievement',
-                            description: dbData?.description || baseBadge?.description || '',
-                            xpReward: dbData?.xpReward || baseBadge?.xpReward || 100,
-                            gearsReward: dbData?.gearsReward || 0,
-                            icon: dbData?.iconUrl || baseBadge?.icon || '🏆',
-                            image: dbData?.iconUrl || baseBadge?.image,
-                          };
-
+                        if (badge) {
                           return (
                             <div
-                              key={i}
-                              onClick={() => setSelectedBadge({ ...badge, isUnlocked: true, unlockedAt: unlockedDates[triggerCode] || unlockedDates[badgeId!] })}
+                              key={badge.id || i}
+                              onClick={() => setSelectedBadge({ ...badge, isUnlocked: true, unlockedAt: unlockedDates[badge.triggerCode || ''] || unlockedDates[badge.id] })}
                               className="group relative w-16 h-16 bg-gradient-to-br from-indigo-500/20 to-purple-600/20 border-2 border-[#ff912d]/60 shadow-[0_0_12px_rgba(255,145,45,0.25)] rounded-full flex items-center justify-center cursor-pointer hover:border-[#ff912d] hover:bg-[#ff912d]/20 transition-all hover:shadow-[0_0_20px_rgba(255,145,45,0.5)] overflow-visible"
                             >
                               <div className="w-full h-full rounded-full overflow-hidden flex items-center justify-center">
@@ -762,11 +1103,15 @@ export default function ProfilePage() {
                     {statsTab === 'overview' ? (
                       <div className="grid grid-cols-2 gap-6">
                         <div className="bg-[#361d57]/40 border border-[#ff912d]/30 rounded-xl p-6 text-center shadow-inner flex flex-col items-center justify-center">
-                          <span className={`${vt323.className} text-[#ff912d] text-5xl mb-2 drop-shadow-md`}>0</span>
+                          <span className={`${vt323.className} text-[#ff912d] text-5xl mb-2 drop-shadow-md`}>
+                            {stats?.perfectModulesCount ?? 0}
+                          </span>
                           <span className="text-white/60 text-xs font-bold uppercase tracking-widest text-center">Modules Completed</span>
                         </div>
                         <div className="bg-[#361d57]/40 border border-[#ff912d]/30 rounded-xl p-6 text-center shadow-inner flex flex-col items-center justify-center">
-                          <span className={`${vt323.className} text-[#ffb703] text-5xl mb-2 drop-shadow-md`}>0</span>
+                          <span className={`${vt323.className} text-[#ffb703] text-5xl mb-2 drop-shadow-md`}>
+                            {stats?.planetsExploredCount ?? 0}
+                          </span>
                           <span className="text-white/60 text-xs font-bold uppercase tracking-widest text-center">Planets Explored</span>
                         </div>
                       </div>
@@ -775,20 +1120,20 @@ export default function ProfilePage() {
                         <div className="bg-[#361d57]/30 border border-white/5 rounded-lg p-4 flex flex-col gap-2">
                           <div className="flex justify-between items-end">
                             <span className="text-white/80 text-xs font-bold uppercase tracking-wider">Frontend Track</span>
-                            <span className="text-[#ff912d] text-xs font-bold">0%</span>
+                            <span className="text-[#ff912d] text-xs font-bold">{stats?.frontendTrackPercent ?? 0}%</span>
                           </div>
                           <div className="w-full h-1.5 bg-black/60 rounded-full overflow-hidden">
-                            <div className="h-full bg-[#ff912d] w-0 rounded-full"></div>
+                            <div className="h-full bg-[#ff912d] rounded-full transition-all duration-700" style={{ width: `${stats?.frontendTrackPercent ?? 0}%` }}></div>
                           </div>
                         </div>
 
                         <div className="bg-[#361d57]/30 border border-white/5 rounded-lg p-4 flex flex-col gap-2">
                           <div className="flex justify-between items-end">
                             <span className="text-white/80 text-xs font-bold uppercase tracking-wider">Backend Track</span>
-                            <span className="text-[#9b4dff] text-xs font-bold">0%</span>
+                            <span className="text-[#9b4dff] text-xs font-bold">{stats?.backendTrackPercent ?? 0}%</span>
                           </div>
                           <div className="w-full h-1.5 bg-black/60 rounded-full overflow-hidden">
-                            <div className="h-full bg-[#9b4dff] w-0 rounded-full"></div>
+                            <div className="h-full bg-[#9b4dff] rounded-full transition-all duration-700" style={{ width: `${stats?.backendTrackPercent ?? 0}%` }}></div>
                           </div>
                         </div>
                       </div>
@@ -845,9 +1190,29 @@ export default function ProfilePage() {
                                 <span className="text-[#ff912d] text-[10px] uppercase font-bold tracking-widest bg-[#ff912d]/10 px-2 py-1 rounded border border-[#ff912d]/20 shrink-0">{timeStr}</span>
                               </div>
 
-                              <p className="text-white/70 text-xs leading-relaxed line-clamp-2 mb-2">
-                                {details.desc}
-                              </p>
+                              {/* Mission Description with expandable full view */}
+                              <div className="flex flex-col gap-1 mb-2">
+                                <p
+                                  title={details.desc}
+                                  className={`text-white/80 text-xs leading-relaxed transition-all ${
+                                    expandedMissionId === mission.id
+                                      ? 'max-h-40 overflow-y-auto pr-1 select-text bg-black/40 p-2.5 rounded-xl border border-white/10 shadow-inner'
+                                      : 'line-clamp-2'
+                                  }`}
+                                >
+                                  {details.desc}
+                                </p>
+                                {details.desc && details.desc.length > 70 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => setExpandedMissionId(expandedMissionId === mission.id ? null : mission.id)}
+                                    className="text-[#ff912d] hover:text-[#ffa34d] text-[11px] font-bold self-start inline-flex items-center gap-1 transition-colors cursor-pointer"
+                                  >
+                                    <span>{expandedMissionId === mission.id ? 'Show less' : 'Read full brief'}</span>
+                                    <ChevronDown size={12} className={`transition-transform duration-200 ${expandedMissionId === mission.id ? 'rotate-180' : ''}`} />
+                                  </button>
+                                )}
+                              </div>
 
                               <div className="flex justify-between items-center pt-3 border-t border-white/10">
                                 <div className="flex items-center gap-2">
@@ -948,9 +1313,548 @@ export default function ProfilePage() {
         </div>
       )}
 
+      {/* RIGHT CUSTOMIZATION SIDEBAR */}
+      {isEditing && (
+        <aside
+          className="fixed top-0 right-0 h-full w-[360px] sm:w-[420px] z-50 bg-[#1e0a2d] border-l-2 border-[#ff912d] shadow-2xl flex flex-col animate-drawer-slide-in"
+          role="dialog"
+          aria-label="Customize Profile"
+        >
+          {/* Sidebar Header */}
+          <div className="flex items-center justify-between p-5 border-b border-[#ff912d]/30 bg-[#270d3c]/90 shrink-0">
+            <div className="flex items-center gap-2">
+              <div className="w-2.5 h-2.5 rounded-full bg-[#ff912d] animate-pulse" />
+              <h2 className={`${vt323.className} text-[#ff912d] text-2xl font-bold uppercase tracking-wider`}>
+                Edit Profile
+              </h2>
+            </div>
+            <button
+              type="button"
+              onClick={handleCloseSidebar}
+              className="text-white/60 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
+              title="Close"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-6 no-scrollbar">
+            {/* 1. Display Name Input */}
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-bold uppercase tracking-wider text-[#ff912d] flex items-center gap-1.5">
+                <svg className="w-3.5 h-3.5 text-[#ff912d]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                Display Name
+              </label>
+              <input
+                type="text"
+                value={editDisplayName}
+                maxLength={30}
+                onChange={(e) => setEditDisplayName(e.target.value)}
+                placeholder="Enter display name"
+                className="w-full bg-[#270d3c] border border-[#ff912d]/50 text-white rounded-xl py-3 px-3.5 text-sm sm:text-base font-semibold focus:border-[#ff912d] outline-none transition-colors placeholder:text-white/30"
+              />
+            </div>
+
+            {/* 2. About Me / Bio Input */}
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs sm:text-sm font-bold uppercase tracking-wider text-[#ff912d] flex items-center gap-1.5">
+                  <svg className="w-4 h-4 text-[#ff912d]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                  About Me
+                </label>
+                <span className="text-xs text-white/40 font-mono">
+                  {editBio.length}/250
+                </span>
+              </div>
+              <textarea
+                value={editBio}
+                maxLength={250}
+                rows={3}
+                onChange={(e) => setEditBio(e.target.value)}
+                placeholder="Describe Yourself!"
+                className="w-full bg-[#270d3c] border border-[#ff912d]/50 text-white rounded-xl p-3.5 text-sm sm:text-base font-medium focus:border-[#ff912d] outline-none transition-colors resize-none leading-relaxed placeholder:text-white/30"
+              />
+            </div>
+
+            {/* 3. Title Dropdown */}
+            <div className="flex flex-col gap-2">
+              <label className="text-xs sm:text-sm font-bold uppercase tracking-wider text-[#ff912d] flex items-center gap-1.5">
+                <svg className="w-4 h-4 text-[#ff912d]" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
+                </svg>
+                Title
+              </label>
+              <div className="relative">
+                <select
+                  value={selectedTitle}
+                  onChange={(e) => setSelectedTitle(e.target.value)}
+                  className="w-full bg-[#270d3c] border border-[#ff912d]/50 text-white rounded-xl py-3 pl-3.5 pr-10 text-sm sm:text-base font-semibold uppercase tracking-wider focus:border-[#ff912d] outline-none appearance-none cursor-pointer"
+                >
+                  {availableTitles.map(t => (
+                    <option key={t} value={t} className="bg-[#1e0a2d] text-white py-2 text-sm sm:text-base">
+                      {t}
+                    </option>
+                  ))}
+                </select>
+                <svg className="w-4 h-4 text-[#ff912d] pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+
+            {/* 3. Category Tabs */}
+            <div className="flex flex-col gap-3">
+              <div className="flex border border-[#ff912d]/40 rounded-xl overflow-hidden bg-[#270d3c]/80 p-1">
+                <button
+                  type="button"
+                  onClick={() => setActiveCategory('background')}
+                  className={`flex-1 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all cursor-pointer ${activeCategory === 'background'
+                      ? 'bg-[#ff912d] text-black shadow-md'
+                      : 'text-white/70 hover:text-white'
+                    }`}
+                >
+                  Background
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveCategory('icons')}
+                  className={`flex-1 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all cursor-pointer ${activeCategory === 'icons'
+                      ? 'bg-[#ff912d] text-black shadow-md'
+                      : 'text-white/70 hover:text-white'
+                    }`}
+                >
+                  Profile Icons
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveCategory('borders')}
+                  className={`flex-1 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all cursor-pointer ${activeCategory === 'borders'
+                      ? 'bg-[#ff912d] text-black shadow-md'
+                      : 'text-white/70 hover:text-white'
+                    }`}
+                >
+                  Borders
+                </button>
+              </div>
+
+              {/* Items Grid: 2 items per row */}
+              {activeCategory === 'background' ? (
+                <div className="grid grid-cols-2 gap-3 pt-1">
+                  {ownedBackgrounds.map((item) => {
+                    const isSelected = selectedBanner === item.imageUrl;
+                    const isPreviewing = previewBanner !== null ? previewBanner === item.imageUrl : isSelected;
+
+                    return (
+                      <div
+                        key={item.id}
+                        onClick={() => {
+                          setSelectedBanner(item.imageUrl);
+                          setPreviewBanner(item.imageUrl);
+                        }}
+                        className={`relative group flex flex-col rounded-xl overflow-hidden border-2 cursor-pointer transition-all bg-[#270d3c] ${isSelected
+                            ? 'border-[#ff912d] shadow-[0_0_15px_rgba(255,145,45,0.4)]'
+                            : isPreviewing
+                              ? 'border-[#ff912d]/60 shadow-[0_0_10px_rgba(255,145,45,0.2)]'
+                              : 'border-white/10 hover:border-white/30'
+                          }`}
+                      >
+                        {/* Checkmark when selected */}
+                        {isSelected && (
+                          <div className="absolute top-2 left-2 z-20 w-6 h-6 rounded-full bg-[#ff912d] border-2 border-white flex items-center justify-center shadow-lg">
+                            <Check className="w-3.5 h-3.5 text-black font-extrabold stroke-[3]" />
+                          </div>
+                        )}
+
+                        {/* Preview Modal Button on Top Right */}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setFullPreviewBg(item);
+                          }}
+                          className="absolute top-2 right-2 z-20 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-black/80 hover:bg-[#ff912d] text-white hover:text-black border border-white/20 transition-all shadow cursor-pointer active:scale-95"
+                          title="Open full background preview"
+                        >
+                          Preview
+                        </button>
+
+                        {/* Thumbnail */}
+                        <div className="relative w-full h-24 bg-black/50 overflow-hidden">
+                          {item.imageUrl ? (
+                            <Image
+                              src={item.imageUrl}
+                              alt={item.title}
+                              fill
+                              className="object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-[#180728] via-[#270d3c] to-[#361d57] text-white/70 p-2 text-center">
+                              <span className="text-[11px] font-bold tracking-wider uppercase text-[#ff912d]">Default Purple</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Title & Status */}
+                        <div className="p-2.5 flex items-center justify-between bg-black/40 border-t border-white/5">
+                          <span className="text-xs font-bold text-white truncate max-w-[100px]">{item.title}</span>
+                          {isSelected ? (
+                            <span className="text-[#ff912d] font-bold text-[10px] uppercase tracking-wider">Equipped</span>
+                          ) : isPreviewing ? (
+                            <span className="text-yellow-300 font-semibold text-[10px]">Active</span>
+                          ) : (
+                            <span className="text-white/40 text-[10px]">Equip</span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : activeCategory === 'icons' ? (
+                <div className="grid grid-cols-2 gap-3 pt-1">
+                  {ownedIcons.map((item) => {
+                    const isSelected = selectedIcon === item.imageUrl;
+
+                    return (
+                      <div
+                        key={item.id}
+                        onClick={() => {
+                          setSelectedIcon(item.imageUrl);
+                          setPreviewIcon(item.imageUrl);
+                        }}
+                        className={`relative group flex flex-col items-center p-3.5 rounded-2xl border-2 cursor-pointer transition-all bg-[#270d3c] ${isSelected
+                            ? 'border-[#ff912d] shadow-[0_0_18px_rgba(255,145,45,0.4)] bg-[#361d57]'
+                            : 'border-white/10 hover:border-white/30 hover:bg-[#361d57]/50'
+                          }`}
+                      >
+                        {/* Checkmark when selected */}
+                        {isSelected && (
+                          <div className="absolute top-2 right-2 z-20 w-6 h-6 rounded-full bg-[#ff912d] border-2 border-white flex items-center justify-center shadow-md">
+                            <Check className="w-3.5 h-3.5 text-black font-extrabold stroke-[3]" />
+                          </div>
+                        )}
+
+                        <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 border-[#ff912d]/60 mb-2 bg-[#1e0a2d] shadow-inner">
+                          <Image
+                            src={item.imageUrl}
+                            alt={item.title}
+                            fill
+                            className="object-cover rounded-full"
+                          />
+                        </div>
+                        <span className="text-xs font-bold text-white text-center truncate max-w-full">
+                          {item.title}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-3 pt-1">
+                  {ownedBorders.map((item) => {
+                    const isSelected = selectedBorder === item.imageUrl;
+                    const isPreviewing = previewBorder !== null ? previewBorder === item.imageUrl : isSelected;
+
+                    return (
+                      <div
+                        key={item.id}
+                        onClick={() => {
+                          setSelectedBorder(item.imageUrl);
+                          setPreviewBorder(item.imageUrl);
+                        }}
+                        className={`relative group flex flex-col rounded-xl overflow-hidden border-2 cursor-pointer transition-all bg-[#270d3c] ${isSelected
+                            ? 'border-[#ff912d] shadow-[0_0_15px_rgba(255,145,45,0.4)]'
+                            : isPreviewing
+                              ? 'border-[#ff912d]/60 shadow-[0_0_10px_rgba(255,145,45,0.2)]'
+                              : 'border-white/10 hover:border-white/30'
+                          }`}
+                      >
+                        {/* Checkmark when selected */}
+                        {isSelected && (
+                          <div className="absolute top-2 left-2 z-20 w-6 h-6 rounded-full bg-[#ff912d] border-2 border-white flex items-center justify-center shadow-lg">
+                            <Check className="w-3.5 h-3.5 text-black font-extrabold stroke-[3]" />
+                          </div>
+                        )}
+
+                        {/* Preview Modal Button on Top Right */}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setFullPreviewBorder(item);
+                          }}
+                          className="absolute top-2 right-2 z-20 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-black/80 hover:bg-[#ff912d] text-white hover:text-black border border-white/20 transition-all shadow cursor-pointer active:scale-95"
+                          title="Open full border preview"
+                        >
+                          Preview
+                        </button>
+
+                        {/* Thumbnail showcasing border framing avatar */}
+                        <div className="relative w-full h-24 bg-black/50 overflow-hidden flex items-center justify-center p-2">
+                          <div className="relative w-16 h-16 flex items-center justify-center">
+                            {/* Inner mini avatar */}
+                            <div className="w-12 h-12 rounded-full overflow-hidden flex items-center justify-center bg-[#1e0a2d]">
+                              <img
+                                src={
+                                  previewIcon || (profile?.image && profile.image !== '/assets/planets/celestial/Planet 1.svg' ? profile.image : '/assets/global/badges/Profile.svg')
+                                }
+                                alt="Avatar"
+                                className="w-full h-full object-cover rounded-full"
+                              />
+                            </div>
+                            {item.imageUrl ? (
+                              <img
+                                src={item.imageUrl}
+                                alt={item.title}
+                                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 object-contain pointer-events-none drop-shadow-[0_0_8px_rgba(0,0,0,0.8)]"
+                                style={{ width: getBorderScale(item.imageUrl || item.title), height: getBorderScale(item.imageUrl || item.title) }}
+                              />
+                            ) : (
+                              <div className="absolute inset-0 rounded-full border-2 border-[#ff912d] shadow-[0_0_8px_rgba(255,145,45,0.4)] pointer-events-none" />
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Title & Status */}
+                        <div className="p-2.5 flex items-center justify-between bg-black/40 border-t border-white/5">
+                          <span className="text-xs font-bold text-white truncate max-w-[100px]">{item.title}</span>
+                          {isSelected ? (
+                            <span className="text-[#ff912d] font-bold text-[10px] uppercase tracking-wider">Equipped</span>
+                          ) : isPreviewing ? (
+                            <span className="text-yellow-300 font-semibold text-[10px]">Active</span>
+                          ) : (
+                            <span className="text-white/40 text-[10px]">Equip</span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Sidebar Action Footer */}
+          <div className="p-4 border-t border-[#ff912d]/30 bg-[#270d3c]/95 flex flex-col gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={handleSaveCustomization}
+              disabled={saving}
+              className="w-full py-2.5 bg-[#ff912d] hover:bg-[#ff912d]/80 text-black font-bold uppercase tracking-wider rounded-xl transition-all shadow-md active:scale-95 disabled:opacity-50 text-xs cursor-pointer flex items-center justify-center gap-1.5"
+            >
+              <Check className="w-4 h-4 stroke-[3]" />
+              {saving ? 'Saving...' : 'Save Changes'}
+            </button>
+            <button
+              type="button"
+              onClick={handleCloseSidebar}
+              disabled={saving}
+              className="w-full py-2 bg-white/10 hover:bg-white/20 text-white/80 hover:text-white font-bold uppercase tracking-wider rounded-xl transition-all text-xs cursor-pointer"
+            >
+              Cancel
+            </button>
+          </div>
+        </aside>
+      )}
+
+      {/* FULL BACKGROUND PREVIEW MODAL */}
+      {fullPreviewBg && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/85 backdrop-blur-md p-4 sm:p-6 animate-in fade-in duration-200">
+          <div className="relative bg-[#1e0a2d] border-2 border-[#ff912d] rounded-3xl p-5 sm:p-7 max-w-3xl w-full shadow-2xl flex flex-col gap-5 overflow-hidden">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-[#ff912d]/30 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-3 h-3 rounded-full bg-[#ff912d] animate-pulse" />
+                <h3 className={`${vt323.className} text-[#ff912d] text-2xl sm:text-3xl font-bold uppercase tracking-wider`}>
+                  {fullPreviewBg.title}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setFullPreviewBg(null)}
+                className="text-white/60 hover:text-white p-1.5 rounded-xl hover:bg-white/10 transition-colors cursor-pointer"
+                title="Close preview"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Full Image Display Container */}
+            <div className="relative w-full h-[45vh] sm:h-[55vh] rounded-2xl overflow-hidden border border-white/15 bg-black/60 shadow-inner flex items-center justify-center">
+              {fullPreviewBg.imageUrl ? (
+                <Image
+                  src={fullPreviewBg.imageUrl}
+                  alt={fullPreviewBg.title}
+                  fill
+                  className="object-cover"
+                  priority
+                />
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-[#180728] via-[#270d3c] to-[#361d57] text-white p-6 text-center">
+                  <h4 className="text-xl font-bold text-[#ff912d] uppercase tracking-widest mb-2">Default Cosmic Theme</h4>
+                  <p className="text-sm text-white/70 max-w-md">The signature deep purple nebula background of the NETStart star system.</p>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Actions */}
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setFullPreviewBg(null)}
+                className="px-5 py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold uppercase tracking-wider rounded-xl transition-all text-xs cursor-pointer"
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedBanner(fullPreviewBg.imageUrl);
+                  setPreviewBanner(fullPreviewBg.imageUrl);
+                  setFullPreviewBg(null);
+                  showToast(`Applied ${fullPreviewBg.title}!`);
+                }}
+                className="px-6 py-2.5 bg-[#ff912d] hover:bg-[#ff912d]/80 text-black font-bold uppercase tracking-wider rounded-xl transition-all shadow-md text-xs cursor-pointer active:scale-95 flex items-center gap-2"
+              >
+                <Check className="w-4 h-4 stroke-[3]" />
+                Equip Background
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* FULL BORDER PREVIEW MODAL */}
+      {fullPreviewBorder && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/85 backdrop-blur-md p-4 sm:p-6 animate-in fade-in duration-200">
+          <div className="relative bg-[#1e0a2d] border-2 border-[#ff912d] rounded-3xl p-5 sm:p-7 max-w-lg w-full shadow-2xl flex flex-col gap-5 overflow-hidden">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-[#ff912d]/30 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-3 h-3 rounded-full bg-[#ff912d] animate-pulse" />
+                <h3 className={`${vt323.className} text-[#ff912d] text-2xl sm:text-3xl font-bold uppercase tracking-wider`}>
+                  {fullPreviewBorder.title}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setFullPreviewBorder(null)}
+                className="text-white/60 hover:text-white p-1.5 rounded-xl hover:bg-white/10 transition-colors cursor-pointer"
+                title="Close preview"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Display Container */}
+            <div className="relative w-full py-8 rounded-2xl overflow-hidden border border-white/15 bg-black/60 shadow-inner flex flex-col items-center justify-center gap-4">
+              <div className="relative w-36 h-36 sm:w-44 sm:h-44 flex items-center justify-center">
+                <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full overflow-hidden flex items-center justify-center bg-[#1e0a2d] border border-white/10 shadow-xl">
+                  <img
+                    src={previewIcon || (profile?.image && profile.image !== '/assets/planets/celestial/Planet 1.svg' ? profile.image : '/assets/global/badges/Profile.svg')}
+                    alt="Avatar"
+                    className="w-full h-full object-cover rounded-full"
+                  />
+                </div>
+                {fullPreviewBorder.imageUrl ? (
+                  <img
+                    src={fullPreviewBorder.imageUrl}
+                    alt={fullPreviewBorder.title}
+                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 object-contain pointer-events-none drop-shadow-[0_0_20px_rgba(0,0,0,0.8)]"
+                    style={{ width: getBorderScale(fullPreviewBorder.imageUrl || fullPreviewBorder.title), height: getBorderScale(fullPreviewBorder.imageUrl || fullPreviewBorder.title) }}
+                  />
+                ) : (
+                  <div className="absolute inset-0 rounded-full border-4 border-[#ff912d] shadow-[0_0_25px_rgba(255,145,45,0.4)] pointer-events-none" />
+                )}
+              </div>
+              <p className="text-xs text-white/70 text-center px-4">
+                {fullPreviewBorder.description || 'Custom profile border frame.'}
+              </p>
+            </div>
+
+            {/* Modal Actions */}
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setFullPreviewBorder(null)}
+                className="px-5 py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold uppercase tracking-wider rounded-xl transition-all text-xs cursor-pointer"
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedBorder(fullPreviewBorder.imageUrl);
+                  setPreviewBorder(fullPreviewBorder.imageUrl);
+                  setFullPreviewBorder(null);
+                  showToast(`Equipped ${fullPreviewBorder.title}!`);
+                }}
+                className="px-6 py-2.5 bg-[#ff912d] hover:bg-[#ff912d]/80 text-black font-bold uppercase tracking-wider rounded-xl transition-all shadow-md text-xs cursor-pointer active:scale-95 flex items-center gap-2"
+              >
+                <Check className="w-4 h-4 stroke-[3]" />
+                Equip Border
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* UNSAVED CHANGES MODAL */}
+      {showUnsavedModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="relative bg-[#1e0a2d] border-2 border-[#ff912d] rounded-3xl p-6 sm:p-7 max-w-md w-full shadow-2xl flex flex-col gap-4 text-center">
+            <div className="w-14 h-14 rounded-full bg-[#ff912d]/20 border-2 border-[#ff912d] flex items-center justify-center mx-auto text-[#ff912d] shadow-[0_0_15px_rgba(255,145,45,0.3)]">
+              <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+
+            <h3 className={`${vt323.className} text-[#ff912d] text-3xl font-bold uppercase tracking-wider`}>
+              Unsaved Customization
+            </h3>
+
+            <p className="text-white/80 text-sm leading-relaxed">
+              You have unsaved changes to your profile. Would you like to save your edits before leaving?
+            </p>
+
+            <div className="flex flex-col gap-2.5 mt-2">
+              <button
+                type="button"
+                onClick={handleSaveCustomization}
+                disabled={saving}
+                className="w-full py-3 bg-[#ff912d] hover:bg-[#ff912d]/80 text-black font-bold uppercase tracking-wider rounded-xl transition-all shadow-md text-xs cursor-pointer active:scale-95 flex items-center justify-center gap-2"
+              >
+                <Check className="w-4 h-4 stroke-[3]" />
+                {saving ? 'Saving...' : 'Save Changes'}
+              </button>
+              <button
+                type="button"
+                onClick={handleDiscardCustomization}
+                className="w-full py-2.5 bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/40 font-bold uppercase tracking-wider rounded-xl transition-all text-xs cursor-pointer active:scale-95"
+              >
+                Discard & Exit
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowUnsavedModal(false)}
+                className="text-white/50 hover:text-white text-xs underline py-1 cursor-pointer transition-colors"
+              >
+                Keep Editing
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-[#361d57] border-2 border-[#ff912d] text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 animate-fade-in">
+        <div className="fixed bottom-6 right-6 z-[110] bg-[#361d57] border-2 border-[#ff912d] text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 animate-fade-in">
           <div className="w-2.5 h-2.5 rounded-full bg-[#ff912d] animate-pulse" />
           <span className="text-sm font-semibold tracking-wide">{toastMessage}</span>
         </div>

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="100%" height="100%">
+  <!-- Placeholder Solar Lily (Withered) -->
+  <defs>
+    <radialGradient id="lilyDeadGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#451a03" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#451a03" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="100" cy="100" r="90" fill="url(#lilyDeadGlow)"/>
+  <!-- Drooping Stem -->
+  <path d="M 100 180 Q 90 140 76 110 Q 64 80 84 74" stroke="#451a03" stroke-width="8" stroke-linecap="round" fill="none"/>
+  <!-- Shriveled Leaves -->
+  <path d="M 90 146 Q 56 150 48 166 Q 70 170 88 150" fill="#271005"/>
+  <path d="M 80 126 Q 110 134 116 150 Q 96 154 78 130" fill="#271005"/>
+  <!-- Drooping Brown Petals -->
+  <path d="M 84 74 C 60 40 70 20 96 30 C 104 50 92 66 84 74 Z" fill="#78350F"/>
+  <path d="M 84 74 C 44 62 30 80 40 102 C 60 106 76 86 84 74 Z" fill="#5A280B"/>
+  <path d="M 84 74 C 110 70 130 86 120 106 C 100 110 90 86 84 74 Z" fill="#5A280B"/>
+  <circle cx="84" cy="74" r="14" fill="#291206"/>
+</svg>

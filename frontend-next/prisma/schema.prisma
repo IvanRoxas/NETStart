@@ -46,6 +46,7 @@ model User {
   password      String?
   image         String?
   banner        String?
+  border        String?   @map("border")
   status        String?
   bio           String?   @db.Text
   isBanned      Boolean   @default(false) @map("is_banned")

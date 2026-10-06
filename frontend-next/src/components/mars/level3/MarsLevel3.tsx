@@ -7,12 +7,26 @@ import type { MarsLevel3Validation } from '@/lib/mars/marsLevel3Definitions';
 interface MarsLevel3Props {
   validation: MarsLevel3Validation;
   isRunning: boolean;
+  phase: 'assembly' | 'sandbox';
+  setPhase: (p: 'assembly' | 'sandbox') => void;
+  isMercuryPinged: boolean;
+  isVenusPinged: boolean;
+  isStatusOpened?: boolean;
+  onPlanetPinged: (planet: 'mercury' | 'venus') => void;
+  onPlanetStatusOpened?: (planet: 'mercury' | 'venus') => void;
   onSimulationComplete?: (success: boolean, failureReason?: string) => void;
 }
 
 export default function MarsLevel3({
   validation,
   isRunning,
+  phase,
+  setPhase,
+  isMercuryPinged,
+  isVenusPinged,
+  isStatusOpened,
+  onPlanetPinged,
+  onPlanetStatusOpened,
   onSimulationComplete,
 }: MarsLevel3Props) {
   return (
@@ -20,6 +34,13 @@ export default function MarsLevel3({
       <SimulationConsole
         validation={validation}
         isRunning={isRunning}
+        phase={phase}
+        setPhase={setPhase}
+        isMercuryPinged={isMercuryPinged}
+        isVenusPinged={isVenusPinged}
+        isStatusOpened={isStatusOpened}
+        onPlanetPinged={onPlanetPinged}
+        onPlanetStatusOpened={onPlanetStatusOpened}
         onSimulationComplete={onSimulationComplete}
       />
     </div>

@@ -654,7 +654,7 @@ export function parseWorkspaceHtml(workspace: Blockly.WorkspaceSvg | null): {
   if (hasMatchingBody) matched++;
   validation.matchedCount = matched;
 
-  // Director Vance Feedback & Rating Evaluation
+  // Director Mark Feedback & Rating Evaluation
   if (allElements.length === 0) {
     validation.ratingScore = 0;
     validation.ratingRemarks = "Your billboard is empty! Connect Title, Subtitle, and Text blocks to start.";

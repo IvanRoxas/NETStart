@@ -98,16 +98,24 @@ export default function PlanetNode({
   const isCompleted = status === 'COMPLETED';
   const isCurrent = status === 'CURRENT';
 
+  // Special thematic condition: Venus begins completely colorless upon unlocking,
+  // regaining its vibrant color scheme once fully completed (all missions solved).
+  const isVenus = id.toLowerCase() === 'venus' || id.toLowerCase() === 'css';
+  const isVenusRestored = isCompleted || completedCount >= totalCount;
+  const isVenusColorless = isVenus && !isVenusRestored;
+
   // Apply state classes
-  const planetFilterClass = isLocked
+  const planetFilterClass = (isLocked || isVenusColorless)
     ? 'grayscale opacity-100 transition-all duration-300'
     : 'transition-all duration-300';
 
   const shadowGlowClass = isCompleted
     ? 'drop-shadow-[0_0_20px_rgba(16,185,129,0.4)]'
-    : isCurrent
-      ? 'drop-shadow-[0_0_25px_rgba(255,145,45,0.35)]'
-      : 'drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]';
+    : isVenusColorless
+      ? 'drop-shadow-[0_0_15px_rgba(255,255,255,0.15)]'
+      : isCurrent
+        ? 'drop-shadow-[0_0_25px_rgba(255,145,45,0.35)]'
+        : 'drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]';
 
   // Overlay checkmark/lock badges
   const renderStatusBadge = () => {
