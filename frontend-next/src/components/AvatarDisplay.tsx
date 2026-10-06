@@ -29,24 +29,24 @@ export default function AvatarDisplay({
   layers = DEFAULT_AVATAR_LAYERS,
   className = "w-full h-64 sm:h-72",
   showShadow = true,
-  scale = 1.38,
+  scale = 1.20,
   offsetYClass = "translate-y-4 sm:translate-y-5",
 }: AvatarDisplayProps) {
   const activeSkin = layers.skin ?? DEFAULT_AVATAR_LAYERS.skin;
   const activeFace = layers.face ?? DEFAULT_AVATAR_LAYERS.face;
   const activeUnderwear = layers.underwear ?? DEFAULT_AVATAR_LAYERS.underwear;
 
-  // Ground shadow width scaled proportionally to feet stance width (never wider than model)
-  const shadowWidthPx = Math.round(76 * scale);
+  // Ground shadow width scaled to frame the feet stance naturally
+  const shadowWidthPx = Math.round(96 * scale);
 
   return (
     <div className={`relative flex items-center justify-center overflow-visible ${className}`}>
       {/* Avatar + Ground Shadow Unit (positioned down to allocate headspace for accessories, hair, hats) */}
       <div className={`relative w-full h-full flex items-center justify-center ${offsetYClass}`}>
-        {/* Floor Standing Contact Shadow (positioned directly under feet at bottom 6%) */}
+        {/* Floor Standing Contact Shadow (positioned directly under feet at bottom 5.5%) */}
         {showShadow && (
           <div 
-            className="absolute bottom-[6%] left-1/2 -translate-x-1/2 h-2.5 sm:h-3 bg-black/65 rounded-[100%] blur-[2px] z-0 pointer-events-none transition-all duration-300" 
+            className="absolute bottom-[5.5%] left-1/2 -translate-x-1/2 h-3.5 sm:h-4 bg-black/70 rounded-[100%] blur-[2.5px] z-0 pointer-events-none transition-all duration-300" 
             style={{ width: `${shadowWidthPx}px` }}
           />
         )}

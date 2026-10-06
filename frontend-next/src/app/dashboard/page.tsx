@@ -682,10 +682,10 @@ export default async function DashboardPage() {
                   </div>
 
                   {/* Main Content Area: Custom Icon Graphic + Mission Description & Launch Action */}
-                  <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 flex-1 justify-center">
+                  <div className="flex flex-col sm:flex-row items-center sm:items-center gap-6 lg:gap-8 flex-1 justify-center">
                     
-                    {/* Custom Challenge Icon Thumbnail Container */}
-                    <div className="w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 rounded-3xl bg-gradient-to-b from-[#1a082c] to-[#130927] border-2 border-[#ff912d]/60 shadow-[0_0_20px_rgba(255,145,45,0.25)] flex items-center justify-center relative overflow-hidden flex-shrink-0 p-3">
+                    {/* Custom Challenge Icon Thumbnail Container (scaled up for balanced layout) */}
+                    <div className="w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 lg:w-72 lg:h-72 rounded-3xl bg-gradient-to-b from-[#1a082c] to-[#130927] border-2 border-[#ff912d]/60 shadow-[0_0_25px_rgba(255,145,45,0.3)] flex items-center justify-center relative overflow-hidden flex-shrink-0 p-4 sm:p-5">
                       <img 
                         src="/assets/global/ui/Landing Page BG.png" 
                         alt="Starfield"
@@ -694,7 +694,7 @@ export default async function DashboardPage() {
                       <img 
                         src={dailyGeneratedLevel.customIcon} 
                         alt={dailyGeneratedLevel.title} 
-                        className="w-full h-full object-contain relative z-10 drop-shadow-[0_0_25px_rgba(255,145,45,0.45)] transition-transform duration-500 group-hover/daily-level-card:scale-110" 
+                        className="w-full h-full object-contain relative z-10 drop-shadow-[0_0_25px_rgba(255,145,45,0.45)] transition-transform duration-500 group-hover/daily-level-card:scale-105" 
                       />
                     </div>
 
@@ -782,7 +782,7 @@ export default async function DashboardPage() {
 
                   {/* Middle Stage: Floor Stage with Character Standing & Shadow Below */}
                   <div className="relative z-10 w-full flex-1 flex flex-col items-center justify-end my-1 min-h-[260px] pb-1">
-                    <AvatarDisplay className="w-full h-64 sm:h-72" scale={1.35} />
+                    <AvatarDisplay className="w-full h-64 sm:h-72" scale={1.20} />
                   </div>
 
                   {/* Quick Profile Link */}
