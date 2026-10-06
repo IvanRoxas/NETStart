@@ -37,16 +37,16 @@ export default function AvatarDisplay({
   const activeUnderwear = layers.underwear ?? DEFAULT_AVATAR_LAYERS.underwear;
 
   // Ground shadow width scaled to frame the feet stance naturally
-  const shadowWidthPx = Math.round(96 * scale);
+  const shadowWidthPx = Math.round(118 * scale);
 
   return (
     <div className={`relative flex items-center justify-center overflow-visible ${className}`}>
       {/* Avatar + Ground Shadow Unit (positioned down to allocate headspace for accessories, hair, hats) */}
       <div className={`relative w-full h-full flex items-center justify-center ${offsetYClass}`}>
-        {/* Floor Standing Contact Shadow (positioned directly under feet at bottom 5.5%) */}
+        {/* Floor Standing Contact Shadow (positioned directly under feet at bottom 5%) */}
         {showShadow && (
           <div 
-            className="absolute bottom-[5.5%] left-1/2 -translate-x-1/2 h-3.5 sm:h-4 bg-black/70 rounded-[100%] blur-[2.5px] z-0 pointer-events-none transition-all duration-300" 
+            className="absolute bottom-[5%] left-1/2 -translate-x-1/2 h-4 sm:h-5 bg-black/75 rounded-[100%] blur-[3px] z-0 pointer-events-none transition-all duration-300" 
             style={{ width: `${shadowWidthPx}px` }}
           />
         )}
