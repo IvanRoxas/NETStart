@@ -253,9 +253,6 @@ export default function AvatarCustomizeModal({
 
   if (!isOpen || !mounted) return null;
 
-  const humanSkins = BASE_SKINS.filter(s => s.category === 'human');
-  const cosmicSkins = BASE_SKINS.filter(s => s.category === 'cosmic');
-
   const renderSkinButton = (skin: typeof BASE_SKINS[0]) => {
     const isSelected = selectedSkin === skin.url;
     return (
@@ -525,34 +522,8 @@ export default function AvatarCustomizeModal({
 
             {/* TAB CONTENT: SKIN COLOR */}
             {activeTab === 'skin' && (
-              <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar pr-0.5 flex flex-col gap-3">
-                {/* Human Complexions (Skin Tone 1, 2, and 5 together) */}
-                <div>
-                  <div className="flex items-center justify-between mb-1.5 px-0.5">
-                    <span className="text-[10px] font-mono uppercase tracking-wider text-[#ff912d] font-bold flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#ff912d]" />
-                      Human Complexions
-                    </span>
-                    <span className="text-[10px] font-mono text-white/40">1, 2, 5</span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
-                    {humanSkins.map(renderSkinButton)}
-                  </div>
-                </div>
-
-                {/* Cosmic & Fantasy Complexions (4, 6, 3, 7, 8) */}
-                <div className="pt-2.5 border-t border-white/10">
-                  <div className="flex items-center justify-between mb-1.5 px-0.5">
-                    <span className="text-[10px] font-mono uppercase tracking-wider text-purple-300 font-bold flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />
-                      Cosmic Complexions
-                    </span>
-                    <span className="text-[10px] font-mono text-white/40">Fantasy</span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
-                    {cosmicSkins.map(renderSkinButton)}
-                  </div>
-                </div>
+              <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar pr-0.5 grid grid-cols-2 gap-2 sm:gap-2.5">
+                {BASE_SKINS.map(renderSkinButton)}
               </div>
             )}
 
