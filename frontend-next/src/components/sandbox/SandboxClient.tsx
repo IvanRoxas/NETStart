@@ -10,12 +10,35 @@ import { generateJsWorkerUrl } from '@/lib/sandbox/runners/jsRunner';
 import { generatePythonWorkerUrl } from '@/lib/sandbox/runners/pythonRunner';
 import { Play, RotateCcw, ChevronUp, ChevronDown, Square, FileCode, X } from 'lucide-react';
 import * as acorn from 'acorn';
+import { ProjectBlueprint, CheckResult } from '@/lib/sandbox/projects/types';
+import { runWebChecks } from '@/lib/sandbox/projects/webChecker';
+import CoachPanel from './CoachPanel';
+import ProjectPicker, { ProjectProgress } from './ProjectPicker';
+import { projects } from '@/lib/sandbox/projects';
+
+export type ProjectState = {
+  files: Record<string, string>;
+  currentStepIndex: number;
+  unlockedSteps: number;
+  hintTiers: Record<number, number>;
+  checkResults: CheckResult[] | null;
+  score: number | null;
+};
 
 export default function SandboxClient() {
   const [selectedLang, setSelectedLang] = useState<LanguageConfig>(LANGUAGES[0]);
+  const [freeSelectedLang, setFreeSelectedLang] = useState<LanguageConfig>(LANGUAGES[0]);
   
   // Store code per language/file
   const [filesState, setFilesState] = useState<Record<string, Record<string, string>>>({});
+  
+  const [projectsState, setProjectsState] = useState<Record<string, ProjectState>>({});
+  
+  const [sandboxMode, setSandboxMode] = useState<'free' | 'guided'>('free');
+  const [activeProject, setActiveProject] = useState<ProjectBlueprint | null>(null);
+  const [checking, setChecking] = useState(false);
+  const [showModeSwitchConfirm, setShowModeSwitchConfirm] = useState(false);
+  const [pendingMode, setPendingMode] = useState<'free' | 'guided' | null>(null);
   const [activeFileIndex, setActiveFileIndex] = useState(0);
   
   const [srcDoc, setSrcDoc] = useState<string>('');
@@ -66,6 +89,132 @@ export default function SandboxClient() {
     });
   }, []);
 
+  const handleSelectProject = (project: ProjectBlueprint) => {
+    setActiveProject(project);
+    setProjectsState(prev => {
+      if (!prev[project.id]) {
+        return {
+          ...prev,
+          [project.id]: {
+            files: { ...project.files },
+            currentStepIndex: 0,
+            unlockedSteps: 0,
+            hintTiers: {},
+            checkResults: null,
+            score: null
+          }
+        };
+      }
+      return prev;
+    });
+
+    const lang = LANGUAGES.find(l => l.id === project.track);
+    if (lang) {
+      setSelectedLang(lang);
+      setActiveFileIndex(0);
+    }
+  };
+
+  const handleModeSwitchRequest = (mode: 'free' | 'guided') => {
+    if (mode === sandboxMode) return;
+    
+    if (mode === 'guided') {
+      handleStop();
+      setConsoleLogs([]);
+      setDiagnostic(null);
+      setActiveProject(null);
+      setSandboxMode('guided');
+    } else {
+      if (sandboxMode === 'guided' && activeProject) {
+        setPendingMode(mode);
+        setShowModeSwitchConfirm(true);
+      } else {
+        setSandboxMode(mode);
+        setSelectedLang(freeSelectedLang);
+      }
+    }
+  };
+
+  const confirmModeSwitch = () => {
+    if (pendingMode === 'free') {
+      setSelectedLang(freeSelectedLang);
+    }
+    setSandboxMode(pendingMode || 'free');
+    setPendingMode(null);
+    setShowModeSwitchConfirm(false);
+    setActiveProject(null);
+  };
+
+  const handleInsertStarter = (fileName: string, code: string) => {
+    if (!activeProject) return;
+    setProjectsState(prev => {
+      const proj = prev[activeProject.id];
+      if (!proj) return prev;
+      return {
+        ...prev,
+        [activeProject.id]: {
+          ...proj,
+          files: {
+            ...proj.files,
+            [fileName]: (proj.files[fileName] || '') + '\n' + code
+          }
+        }
+      };
+    });
+  };
+
+  const handleCheckWork = async () => {
+    if (!activeProject || !iframeRef.current) return;
+    setChecking(true);
+    
+    const projState = projectsState[activeProject.id];
+    if (!projState) {
+      setChecking(false);
+      return;
+    }
+    
+    setProjectsState(prev => ({ ...prev, [activeProject.id]: { ...prev[activeProject.id], checkResults: null } }));
+    const files = projState.files as any;
+    
+    const isFinalStep = projState.currentStepIndex === activeProject.steps.length - 1;
+    const checksToRun = isFinalStep 
+      ? activeProject.steps.flatMap(s => s.checks) 
+      : activeProject.steps[projState.currentStepIndex].checks;
+
+    const res = await runWebChecks(files, checksToRun, iframeRef);
+    
+    setProjectsState(prev => {
+      const p = prev[activeProject.id];
+      const nextP = { ...p };
+      
+      if (!Array.isArray(res)) {
+        nextP.checkResults = [{ id: 'error', pass: false, message: res.message }];
+        if (res.line) {
+          setDiagnostic({ fileName: 'script.js', line: res.line, message: res.message });
+        }
+      } else {
+        nextP.checkResults = res;
+        if (isFinalStep) {
+          const corePass = activeProject.rubric.core.every(id => res.find(r => r.id === id)?.pass);
+          if (corePass) {
+            const stretchPassCount = activeProject.rubric.stretch.filter(id => res.find(r => r.id === id)?.pass).length;
+            nextP.score = 70 + Math.round((30 * stretchPassCount) / activeProject.rubric.stretch.length);
+          }
+        } else {
+          const stepCoreChecks = activeProject.steps[p.currentStepIndex].checks.filter(c => c.isCore);
+          const allCorePassed = stepCoreChecks.length === 0 || stepCoreChecks.every(c => res.find(r => r.id === c.id)?.pass);
+          if (allCorePassed) {
+            nextP.unlockedSteps = Math.max(p.unlockedSteps, p.currentStepIndex + 1);
+          }
+        }
+      }
+      
+      return { ...prev, [activeProject.id]: nextP };
+    });
+    
+    setChecking(false);
+  };
+
   useEffect(() => {
     // Listen for console logs from iframe (web mode)
     const handleMessage = (e: MessageEvent) => {
@@ -96,6 +245,9 @@ export default function SandboxClient() {
     const lang = LANGUAGES.find(l => l.id === id);
     if (lang) {
       setSelectedLang(lang);
+      if (sandboxMode === 'free') {
+        setFreeSelectedLang(lang);
+      }
       setActiveFileIndex(0);
       setConsoleLogs([]);
       setDiagnostic(null);
@@ -109,13 +261,30 @@ export default function SandboxClient() {
 
   const handleCodeChange = (val: string) => {
     const activeFileName = selectedLang.files[activeFileIndex].name;
-    setFilesState(prev => ({
-      ...prev,
-      [selectedLang.id]: {
-        ...prev[selectedLang.id],
-        [activeFileName]: val
-      }
-    }));
+    if (sandboxMode === 'guided' && activeProject) {
+      setProjectsState(prev => {
+        const proj = prev[activeProject.id];
+        if (!proj) return prev;
+        return {
+          ...prev,
+          [activeProject.id]: {
+            ...proj,
+            files: {
+              ...proj.files,
+              [activeFileName]: val
+            }
+          }
+        };
+      });
+    } else {
+      setFilesState(prev => ({
+        ...prev,
+        [selectedLang.id]: {
+          ...prev[selectedLang.id],
+          [activeFileName]: val
+        }
+      }));
+    }
     setDiagnostic(null);
     setStatus('Ready');
   };
@@ -160,17 +329,53 @@ export default function SandboxClient() {
   const handleConfirmRestore = () => {
     setShowRestoreModal(false);
     handleStop();
-    setFilesState(prev => {
-      const next = { ...prev };
-      next[selectedLang.id] = {};
-      selectedLang.files.forEach(f => {
-        next[selectedLang.id][f.name] = f.defaultCode;
+    if (sandboxMode === 'guided' && activeProject) {
+      // not used in guided anymore, but kept for safety
+      setProjectsState(prev => ({
+        ...prev,
+        [activeProject.id]: {
+          ...prev[activeProject.id],
+          files: { ...activeProject.files }
+        }
+      }));
+    } else {
+      setFilesState(prev => {
+        const next = { ...prev };
+        next[selectedLang.id] = {};
+        selectedLang.files.forEach(f => {
+          next[selectedLang.id][f.name] = f.defaultCode;
+        });
+        return next;
       });
-      return next;
-    });
+    }
     setConsoleLogs([]);
     setDiagnostic(null);
     setStatus('Ready');
+  };
+
+  const handleExitProject = () => {
+    handleStop();
+    setConsoleLogs([]);
+    setDiagnostic(null);
+    setActiveProject(null);
+  };
+
+  const handleRestartProject = () => {
+    if (!activeProject) return;
+    handleStop();
+    setConsoleLogs([]);
+    setDiagnostic(null);
+    setProjectsState(prev => ({
+      ...prev,
+      [activeProject.id]: {
+        files: { ...activeProject.files },
+        currentStepIndex: 0,
+        unlockedSteps: 0,
+        hintTiers: {},
+        checkResults: null,
+        score: null
+      }
+    }));
   };
 
   const handleRun = () => {
@@ -203,7 +408,9 @@ export default function SandboxClient() {
     setConsoleLogs([]);
     setDiagnostic(null);
     
-    const files = filesState[selectedLang.id] || {};
+    const files = sandboxMode === 'guided' && activeProject 
+      ? (projectsState[activeProject.id]?.files || {})
+      : (filesState[selectedLang.id] || {});
     
     let jsCodeToParse = '';
     let jsFileName = '';
@@ -449,18 +656,39 @@ export default function SandboxClient() {
   }, []);
 
   const currentFile = selectedLang.files[activeFileIndex];
-  const currentValue = filesState[selectedLang.id]?.[currentFile?.name] ?? currentFile?.defaultCode ?? '';
+  const currentStateMap = sandboxMode === 'guided' && activeProject ? projectsState[activeProject.id]?.files : filesState[selectedLang.id];
+  const currentValue = currentStateMap?.[currentFile?.name] ?? currentFile?.defaultCode ?? '';
 
   return (
     <div className="flex flex-col h-full w-full bg-[#0d0418] text-white">
       {/* Top Bar */}
       <div className="flex items-center justify-between p-4 border-b border-white/10 bg-[#150524] gap-2 flex-wrap">
         <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
-          <LanguageSelect
-            languages={LANGUAGES}
-            selectedId={selectedLang.id}
-            onSelect={handleLanguageChange}
-          />
+          <div className="flex bg-black/40 rounded border border-white/10 overflow-hidden text-sm mr-2 shrink-0">
+            <button
+              onClick={() => handleModeSwitchRequest('free')}
+              className={`px-3 py-1.5 transition-colors ${sandboxMode === 'free' ? 'bg-orange-500 text-white font-semibold' : 'text-gray-400 hover:text-white'}`}
+            >
+              Free Code
+            </button>
+            <button
+              onClick={() => handleModeSwitchRequest('guided')}
+              className={`px-3 py-1.5 transition-colors ${sandboxMode === 'guided' ? 'bg-orange-500 text-white font-semibold' : 'text-gray-400 hover:text-white'}`}
+            >
+              Guided Projects
+            </button>
+          </div>
+          {sandboxMode === 'guided' && activeProject ? (
+            <div className="text-xs font-bold text-orange-400 px-3 py-1.5 rounded bg-black/30 border border-white/10 uppercase tracking-wider">
+              {activeProject.track === 'web' ? 'HTML/CSS/JS' : activeProject.track === 'python' ? 'Python' : 'JavaScript'}
+            </div>
+          ) : (
+            <LanguageSelect
+              languages={LANGUAGES}
+              selectedId={selectedLang.id}
+              onSelect={handleLanguageChange}
+            />
+          )}
           <div className="text-xs font-mono px-3 py-1 rounded bg-black/30 border border-white/10 flex items-center gap-2">
             <span className={`w-2 h-2 rounded-full ${
               status === 'Ready' || status === 'Stopped' 
@@ -480,15 +708,17 @@ export default function SandboxClient() {
         </div>
         
         <div className="flex items-center gap-2 sm:gap-3">
-          <button
-            onClick={() => setShowRestoreModal(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm text-gray-400 hover:text-white hover:bg-white/5 rounded transition-colors"
-            title="Restore starter code"
-          >
-            <FileCode className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            <span className="hidden sm:inline">Restore starter code</span>
-            <span className="sm:hidden">Restore</span>
-          </button>
+          {sandboxMode === 'free' && (
+            <button
+              onClick={() => setShowRestoreModal(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm text-gray-400 hover:text-white hover:bg-white/5 rounded transition-colors"
+              title="Restore starter code"
+            >
+              <FileCode className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">Restore starter code</span>
+              <span className="sm:hidden">Restore</span>
+            </button>
+          )}
           
           <button
             onClick={handleReset}
@@ -519,7 +749,41 @@ export default function SandboxClient() {
       </div>
 
       {/* Main Content */}
+      {sandboxMode === 'guided' && !activeProject ? (
+        <ProjectPicker 
+          projects={projects} 
+          onSelect={handleSelectProject}
+          progressMap={Object.fromEntries(
+            Object.entries(projectsState).map(([id, state]) => [
+              id,
+              {
+                unlockedSteps: state.unlockedSteps,
+                totalSteps: projects.find(p => p.id === id)?.steps.length || 0,
+                score: state.score
+              }
+            ])
+          )}
+        />
+      ) : (
       <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
+        {sandboxMode === 'guided' && activeProject && projectsState[activeProject.id] && (
+          <CoachPanel
+            project={activeProject}
+            currentStepIndex={projectsState[activeProject.id].currentStepIndex}
+            unlockedSteps={projectsState[activeProject.id].unlockedSteps}
+            onStepSelect={(idx) => setProjectsState(prev => ({ ...prev, [activeProject.id]: { ...prev[activeProject.id], currentStepIndex: idx } }))}
+            onCheckWork={handleCheckWork}
+            onInsertStarter={handleInsertStarter}
+            checkResults={projectsState[activeProject.id].checkResults}
+            checking={checking}
+            score={projectsState[activeProject.id].score}
+            onKeepImproving={() => setProjectsState(prev => ({ ...prev, [activeProject.id]: { ...prev[activeProject.id], score: null } }))}
+            onExit={handleExitProject}
+            onRestart={handleRestartProject}
+            hintTiers={projectsState[activeProject.id].hintTiers}
+            onHintTiersChange={(tiers) => setProjectsState(prev => ({ ...prev, [activeProject.id]: { ...prev[activeProject.id], hintTiers: tiers } }))}
+          />
+        )}
         {/* Editor Area */}
         <div className="flex-1 flex flex-col min-w-0 min-h-0 border-r border-white/10">
           {/* File Tabs */}
@@ -588,6 +852,7 @@ export default function SandboxClient() {
           />
         </div>
       </div>
+      )}
 
       {/* Custom Confirmation Modal for Restore Starter Code */}
       {showRestoreModal && (
@@ -625,6 +890,20 @@ export default function SandboxClient() {
               >
                 Restore Code
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mode Switch Confirm Modal */}
+      {showModeSwitchConfirm && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 font-mono text-white animate-in fade-in duration-150">
+          <div className="relative w-full max-w-md bg-[#150a21] border border-white/15 rounded-xl p-6 shadow-2xl">
+            <h3 className="text-base font-bold text-orange-400 uppercase tracking-wider mb-2">Switch Mode?</h3>
+            <p className="text-sm text-gray-300 mb-6">Your guided project progress is saved locally, but switching modes will change your workspace. Continue?</p>
+            <div className="flex justify-end gap-3">
+              <button onClick={() => setShowModeSwitchConfirm(false)} className="px-4 py-2 text-xs font-semibold text-gray-400 hover:text-white transition-colors">Cancel</button>
+              <button onClick={confirmModeSwitch} className="px-4 py-2 text-xs font-semibold bg-orange-500 hover:bg-orange-600 rounded transition-colors">Switch</button>
             </div>
           </div>
         </div>

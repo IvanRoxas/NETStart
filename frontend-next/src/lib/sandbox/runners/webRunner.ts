@@ -1,4 +1,11 @@
+import { injectBuiltInAssets } from '../assets';
+
 export function generateWebRunnerSrc(html: string, css: string, js: string): string {
+  const assets = injectBuiltInAssets(html, css, js);
+  html = assets.html;
+  css = assets.css;
+  js = assets.js;
+
   const interceptorCode = `
       (function() {
         const originalConsole = {
