@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { 
   X, 
@@ -39,15 +40,18 @@ interface InventoryItem {
 }
 
 // 8 Available Base Skins (Faceless 2000x2000 SVGs with Full Face on top)
+// Human skin complexions 1, 2, and 5 are grouped together at the top
 export const BASE_SKINS = [
-  { id: 'skin-1', name: 'Skin Tone 1', hex: '#fbe3d5', label: 'Light Fair', url: '/assets/global/shop/avatar/base/Skin 1 Faceless.svg' },
-  { id: 'skin-2', name: 'Skin Tone 2', hex: '#f7cfb8', label: 'Fair Peach', url: '/assets/global/shop/avatar/base/Skin 2 Faceless.svg' },
-  { id: 'skin-3', name: 'Skin Tone 3', hex: '#e8b796', label: 'Warm Sand', url: '/assets/global/shop/avatar/base/Skin 3 Faceless.svg' },
-  { id: 'skin-4', name: 'Skin Tone 4', hex: '#c99368', label: 'Golden Honey', url: '/assets/global/shop/avatar/base/Skin 4 Faceless.svg' },
-  { id: 'skin-5', name: 'Skin Tone 5', hex: '#ad714b', label: 'Amber Tan', url: '/assets/global/shop/avatar/base/Skin 5 Faceless.svg' },
-  { id: 'skin-6', name: 'Skin Tone 6', hex: '#885135', label: 'Rich Caramel', url: '/assets/global/shop/avatar/base/Skin 6 Faceless.svg' },
-  { id: 'skin-7', name: 'Skin Tone 7', hex: '#5b3622', label: 'Deep Espresso', url: '/assets/global/shop/avatar/base/Skin 7 Faceless.svg' },
-  { id: 'skin-8', name: 'Skin Tone 8', hex: '#382319', label: 'Obsidian Night', url: '/assets/global/shop/avatar/base/Skin 8 Faceless.svg' },
+  // Human-Skin Complexions (1, 2, 5)
+  { id: 'skin-1', name: 'Skin Tone 1', hex: '#ead0c3', label: 'Light Fair', category: 'human', url: '/assets/global/shop/avatar/base/Skin 1 Faceless.svg' },
+  { id: 'skin-2', name: 'Skin Tone 2', hex: '#4e3c30', label: 'Deep Espresso', category: 'human', url: '/assets/global/shop/avatar/base/Skin 2 Faceless.svg' },
+  { id: 'skin-5', name: 'Skin Tone 5', hex: '#8d6244', label: 'Amber Tan', category: 'human', url: '/assets/global/shop/avatar/base/Skin 5 Faceless.svg' },
+  // Cosmic & Fantasy Complexions (4, 6, 3, 7, 8)
+  { id: 'skin-4', name: 'Skin Tone 4', hex: '#b9cc90', label: 'Alien Sage', category: 'cosmic', url: '/assets/global/shop/avatar/base/Skin 4 Faceless.svg' },
+  { id: 'skin-6', name: 'Skin Tone 6', hex: '#bfd0e6', label: 'Cosmic Ice', category: 'cosmic', url: '/assets/global/shop/avatar/base/Skin 6 Faceless.svg' },
+  { id: 'skin-3', name: 'Skin Tone 3', hex: '#c1bdd3', label: 'Lavender Dusk', category: 'cosmic', url: '/assets/global/shop/avatar/base/Skin 3 Faceless.svg' },
+  { id: 'skin-7', name: 'Skin Tone 7', hex: '#c3bcd5', label: 'Deep Violet', category: 'cosmic', url: '/assets/global/shop/avatar/base/Skin 7 Faceless.svg' },
+  { id: 'skin-8', name: 'Skin Tone 8', hex: '#e1c5d4', label: 'Blossom Pink', category: 'cosmic', url: '/assets/global/shop/avatar/base/Skin 8 Faceless.svg' },
 ];
 
 type CustomizationTab = 'skin' | 'hair' | 'accessories' | 'tops' | 'bottoms' | 'shoes';
@@ -70,6 +74,11 @@ export default function AvatarCustomizeModal({
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+  const [mounted, setMounted] = useState<boolean>(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Live customizable state
   const [selectedSkin, setSelectedSkin] = useState<string>(BASE_SKINS[0].url);
@@ -242,13 +251,75 @@ export default function AvatarCustomizeModal({
     }
   };
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 bg-black/85 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto">
+  const humanSkins = BASE_SKINS.filter(s => s.category === 'human');
+  const cosmicSkins = BASE_SKINS.filter(s => s.category === 'cosmic');
+
+  const renderSkinButton = (skin: typeof BASE_SKINS[0]) => {
+    const isSelected = selectedSkin === skin.url;
+    return (
+      <button
+        key={skin.id}
+        onClick={() => setSelectedSkin(skin.url)}
+        className={`relative p-2 sm:p-2.5 rounded-2xl border transition-all flex flex-col items-center gap-1.5 sm:gap-2 text-center cursor-pointer group ${
+          isSelected
+            ? 'bg-[#ff912d]/20 border-[#ff912d] shadow-[0_0_15px_rgba(255,145,45,0.3)]'
+            : 'bg-white/5 hover:bg-white/10 border-white/10 hover:border-white/20'
+        }`}
+      >
+        {/* Check badge when selected */}
+        {isSelected && (
+          <div className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-[#ff912d] text-black flex items-center justify-center shadow-md">
+            <Check size={10} className="stroke-[3]" />
+          </div>
+        )}
+
+        {/* Head Avatar Preview with Full Face on Top */}
+        <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden border-2 border-white/20 bg-black/40 flex items-center justify-center shadow-inner">
+          <div 
+            className="relative w-full h-full"
+            style={{ transform: 'scale(2.4) translateY(18%)', transformOrigin: 'center center' }}
+          >
+            <img
+              src={skin.url}
+              alt={skin.name}
+              className="absolute inset-0 w-full h-full object-contain pointer-events-none"
+              style={{ zIndex: 1 }}
+            />
+            <img
+              src={DEFAULT_AVATAR_LAYERS.face}
+              alt="Face"
+              className="absolute inset-0 w-full h-full object-contain pointer-events-none"
+              style={{ zIndex: 2 }}
+            />
+          </div>
+        </div>
+
+        {/* Swatch & Title */}
+        <div className="flex flex-col items-center gap-0.5 sm:gap-1 w-full">
+          <div className="flex items-center gap-1.5">
+            <span 
+              className="w-3 h-3 rounded-full border border-white/40 shadow-sm shrink-0"
+              style={{ backgroundColor: skin.hex }}
+            />
+            <span className="text-[11px] sm:text-xs font-display font-black text-white truncate">
+              {skin.name}
+            </span>
+          </div>
+          <span className="text-[9px] sm:text-[10px] font-mono text-white/50 truncate">
+            {skin.label}
+          </span>
+        </div>
+      </button>
+    );
+  };
+
+  return createPortal(
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-2 sm:p-4 md:p-6 bg-black/85 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto">
       {/* Toast Notification Modal */}
       {toastMessage && (
-        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[60] flex items-center gap-2.5 px-5 py-3 rounded-2xl shadow-2xl border backdrop-blur-md animate-in slide-in-from-top-4 duration-300 bg-[#1e0a2d] border-[#ff912d]/60 text-white">
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[210] flex items-center gap-2.5 px-5 py-3 rounded-2xl shadow-2xl border backdrop-blur-md animate-in slide-in-from-top-4 duration-300 bg-[#1e0a2d] border-[#ff912d]/60 text-white">
           {toastMessage.type === 'success' ? (
             <CheckCircle2 size={18} className="text-emerald-400 shrink-0" />
           ) : (
@@ -454,65 +525,34 @@ export default function AvatarCustomizeModal({
 
             {/* TAB CONTENT: SKIN COLOR */}
             {activeTab === 'skin' && (
-              <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar pr-0.5 grid grid-cols-2 gap-2 sm:gap-2.5">
-                {BASE_SKINS.map((skin) => {
-                  const isSelected = selectedSkin === skin.url;
-                  return (
-                    <button
-                      key={skin.id}
-                      onClick={() => setSelectedSkin(skin.url)}
-                      className={`relative p-2 sm:p-2.5 rounded-2xl border transition-all flex flex-col items-center gap-1.5 sm:gap-2 text-center cursor-pointer group ${
-                        isSelected
-                          ? 'bg-[#ff912d]/20 border-[#ff912d] shadow-[0_0_15px_rgba(255,145,45,0.3)]'
-                          : 'bg-white/5 hover:bg-white/10 border-white/10 hover:border-white/20'
-                      }`}
-                    >
-                      {/* Check badge when selected */}
-                      {isSelected && (
-                        <div className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-[#ff912d] text-black flex items-center justify-center shadow-md">
-                          <Check size={10} className="stroke-[3]" />
-                        </div>
-                      )}
+              <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar pr-0.5 flex flex-col gap-3">
+                {/* Human Complexions (Skin Tone 1, 2, and 5 together) */}
+                <div>
+                  <div className="flex items-center justify-between mb-1.5 px-0.5">
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-[#ff912d] font-bold flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#ff912d]" />
+                      Human Complexions
+                    </span>
+                    <span className="text-[10px] font-mono text-white/40">1, 2, 5</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
+                    {humanSkins.map(renderSkinButton)}
+                  </div>
+                </div>
 
-                      {/* Head Avatar Preview with Full Face on Top */}
-                      <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden border-2 border-white/20 bg-black/40 flex items-center justify-center shadow-inner">
-                        <div 
-                          className="relative w-full h-full"
-                          style={{ transform: 'scale(2.4) translateY(18%)', transformOrigin: 'center center' }}
-                        >
-                          <img
-                            src={skin.url}
-                            alt={skin.name}
-                            className="absolute inset-0 w-full h-full object-contain pointer-events-none"
-                            style={{ zIndex: 1 }}
-                          />
-                          <img
-                            src={DEFAULT_AVATAR_LAYERS.face}
-                            alt="Face"
-                            className="absolute inset-0 w-full h-full object-contain pointer-events-none"
-                            style={{ zIndex: 2 }}
-                          />
-                        </div>
-                      </div>
-
-                      {/* Swatch & Title */}
-                      <div className="flex flex-col items-center gap-0.5 sm:gap-1 w-full">
-                        <div className="flex items-center gap-1.5">
-                          <span 
-                            className="w-3 h-3 rounded-full border border-white/40 shadow-sm shrink-0"
-                            style={{ backgroundColor: skin.hex }}
-                          />
-                          <span className="text-[11px] sm:text-xs font-display font-black text-white truncate">
-                            {skin.name}
-                          </span>
-                        </div>
-                        <span className="text-[9px] sm:text-[10px] font-mono text-white/50 truncate">
-                          {skin.label}
-                        </span>
-                      </div>
-                    </button>
-                  );
-                })}
+                {/* Cosmic & Fantasy Complexions (4, 6, 3, 7, 8) */}
+                <div className="pt-2.5 border-t border-white/10">
+                  <div className="flex items-center justify-between mb-1.5 px-0.5">
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-purple-300 font-bold flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />
+                      Cosmic Complexions
+                    </span>
+                    <span className="text-[10px] font-mono text-white/40">Fantasy</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
+                    {cosmicSkins.map(renderSkinButton)}
+                  </div>
+                </div>
               </div>
             )}
 
@@ -622,6 +662,7 @@ export default function AvatarCustomizeModal({
         </div>
 
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
