@@ -39,13 +39,15 @@ interface InventoryItem {
   };
 }
 
-// 8 Available Base Skins (Faceless 2000x2000 SVGs with Full Face on top)
-// Human skin complexions 1, 2, and 5 are grouped together at the top
+// 10 Available Base Skins (Faceless 2000x2000 SVGs with Full Face on top)
+// Human skin complexions (1, 2, 5, 9, 10) are placed together at the beginning
 export const BASE_SKINS = [
-  // Human-Skin Complexions (1, 2, 5)
+  // Human-Skin Complexions (1, 2, 5, 9, 10)
   { id: 'skin-1', name: 'Skin Tone 1', hex: '#ead0c3', label: 'Light Fair', category: 'human', url: '/assets/global/shop/avatar/base/Skin 1 Faceless.svg' },
   { id: 'skin-2', name: 'Skin Tone 2', hex: '#4e3c30', label: 'Deep Espresso', category: 'human', url: '/assets/global/shop/avatar/base/Skin 2 Faceless.svg' },
   { id: 'skin-5', name: 'Skin Tone 5', hex: '#8d6244', label: 'Amber Tan', category: 'human', url: '/assets/global/shop/avatar/base/Skin 5 Faceless.svg' },
+  { id: 'skin-9', name: 'Skin Tone 9', hex: '#efb9a2', label: 'Warm Peach', category: 'human', url: '/assets/global/shop/avatar/base/Skin 9 Faceless.svg' },
+  { id: 'skin-10', name: 'Skin Tone 10', hex: '#e8ae86', label: 'Golden Sand', category: 'human', url: '/assets/global/shop/avatar/base/Skin 10 Faceless.svg' },
   // Cosmic & Fantasy Complexions (4, 6, 3, 7, 8)
   { id: 'skin-4', name: 'Skin Tone 4', hex: '#b9cc90', label: 'Alien Sage', category: 'cosmic', url: '/assets/global/shop/avatar/base/Skin 4 Faceless.svg' },
   { id: 'skin-6', name: 'Skin Tone 6', hex: '#bfd0e6', label: 'Cosmic Ice', category: 'cosmic', url: '/assets/global/shop/avatar/base/Skin 6 Faceless.svg' },
@@ -378,8 +380,8 @@ export default function AvatarCustomizeModal({
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
               
-              // Count owned items for badge (skin always 8)
-              const count = tab.id === 'skin' ? 8 : inventory.filter((inv) => {
+              // Count owned items for badge (skin always BASE_SKINS.length)
+              const count = tab.id === 'skin' ? BASE_SKINS.length : inventory.filter((inv) => {
                 const sub = (inv.item.subCategory || '').toLowerCase();
                 if (tab.id === 'hair') return sub === 'hair' || sub === 'hairstyles';
                 if (tab.id === 'accessories') return sub === 'accessories' || sub === 'hats';

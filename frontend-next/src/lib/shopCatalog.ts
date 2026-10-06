@@ -23,6 +23,12 @@ export function getBorderScale(borderNameOrUrl?: string | null): string {
   if (lower.includes('flower') || lower.includes('blossom')) return '136%';
   if (lower.includes('cupcake')) return '134%';
   if (lower.includes('knitted') || lower.includes('love')) return '132%';
+  if (lower.includes('garden')) return '132%';
+  if (lower.includes('snow') || lower.includes('winter')) return '132%';
+  if (lower.includes('ruby')) return '130%';
+  if (lower.includes('golden') || lower.includes('ring') || lower.includes('halo')) return '128%';
+  if (lower.includes('robot') || lower.includes('mecha')) return '130%';
+  if (lower.includes('tech') || lower.includes('girl') || lower.includes('duo')) return '130%';
   if (lower.includes('mushroom')) return '128%';
   if (lower.includes('flame')) return '128%';
   if (lower.includes('paper')) return '126%';
@@ -581,6 +587,72 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     imageUrl: '/assets/global/shop/borders/Ropes.svg',
     tag: 'Border',
     description: 'A sturdy twisted rope border made for rugged adventurers.'
+  },
+  {
+    id: 'border-garden',
+    title: 'Enchanted Garden',
+    type: 'BORDER',
+    category: 'PROFILE',
+    subCategory: 'Borders',
+    price: 240,
+    imageUrl: '/assets/global/shop/borders/Garden.svg',
+    tag: 'Border',
+    description: 'A lush botanical border blooming with verdant vines, blossoms, and nature’s charm.'
+  },
+  {
+    id: 'border-golden-ring',
+    title: 'Golden Halo',
+    type: 'BORDER',
+    category: 'PROFILE',
+    subCategory: 'Borders',
+    price: 260,
+    imageUrl: '/assets/global/shop/borders/Golden Ring.svg',
+    tag: 'Border',
+    description: 'A polished radiant golden ring border shimmering with pure stellar brilliance.'
+  },
+  {
+    id: 'border-red-ruby',
+    title: 'Crimson Ruby',
+    type: 'BORDER',
+    category: 'PROFILE',
+    subCategory: 'Borders',
+    price: 280,
+    imageUrl: '/assets/global/shop/borders/Red Ruby.svg',
+    tag: 'Border',
+    description: 'A majestic frame embedded with precious glowing red rubies and royal gems.'
+  },
+  {
+    id: 'border-snowy-winter',
+    title: 'Snowy Frost',
+    type: 'BORDER',
+    category: 'PROFILE',
+    subCategory: 'Borders',
+    price: 250,
+    imageUrl: '/assets/global/shop/borders/Snowy Winter.svg',
+    tag: 'Border',
+    description: 'A frosty crystal border glistening with falling snowflakes and winter magic.'
+  },
+  {
+    id: 'border-tech-duo',
+    title: 'Cyber Duo',
+    type: 'BORDER',
+    category: 'PROFILE',
+    subCategory: 'Borders',
+    price: 260,
+    imageUrl: '/assets/global/shop/borders/Tech Girl and Boy.svg',
+    tag: 'Border',
+    description: 'A futuristic neon cyber border celebrating young coders and stellar tech explorers.'
+  },
+  {
+    id: 'border-tech-robot',
+    title: 'Mecha Automaton',
+    type: 'BORDER',
+    category: 'PROFILE',
+    subCategory: 'Borders',
+    price: 270,
+    imageUrl: '/assets/global/shop/borders/Tech Robot.svg',
+    tag: 'Border',
+    description: 'An advanced robotic circuit frame equipped with high-tech gears and mechanical sensors.'
   },
 
   // ==========================================
