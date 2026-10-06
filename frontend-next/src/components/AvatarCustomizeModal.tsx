@@ -533,33 +533,21 @@ export default function AvatarCustomizeModal({
             {/* TAB CONTENT: GEAR CATEGORIES (Hair, Accessories, Tops, Bottoms, Shoes) */}
             {activeTab !== 'skin' && (
               <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar pr-0.5 flex flex-col gap-2.5 sm:gap-3">
-                {/* Unequip / Default Card at the top */}
+                {/* Unequip / None Option at the top */}
                 <button
                   onClick={handleUnequipSlot}
-                  className={`p-2.5 sm:p-3 rounded-2xl border transition-all flex items-center justify-between cursor-pointer shrink-0 ${
+                  className={`p-2.5 sm:p-3 rounded-2xl border transition-all flex items-center gap-2.5 cursor-pointer shrink-0 ${
                     !equippedItems[activeTab === 'hair' ? 'hair' : activeTab === 'accessories' ? 'accessory' : activeTab === 'tops' ? 'top' : activeTab === 'bottoms' ? 'bottom' : 'shoes']
                       ? 'bg-purple-500/20 border-purple-400/60 shadow-md'
                       : 'bg-white/5 hover:bg-white/10 border-white/10'
                   }`}
                 >
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/50 shrink-0">
-                      <X size={15} />
-                    </div>
-                    <div className="text-left">
-                      <div className="text-xs font-display font-black text-white">
-                        {activeTab === 'bottoms' ? 'Default (Underwear)' : 'None (Unequip)'}
-                      </div>
-                      <div className="text-[10px] font-mono text-white/40">
-                        Remove equipped {activeTab}
-                      </div>
-                    </div>
+                  <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/50 shrink-0">
+                    <X size={15} />
                   </div>
-                  {!equippedItems[activeTab === 'hair' ? 'hair' : activeTab === 'accessories' ? 'accessory' : activeTab === 'tops' ? 'top' : activeTab === 'bottoms' ? 'bottom' : 'shoes'] && (
-                    <span className="text-[10px] font-mono font-bold text-purple-300 bg-purple-500/30 px-2 py-0.5 rounded">
-                      Equipped
-                    </span>
-                  )}
+                  <span className="text-xs font-display font-black text-white">
+                    None
+                  </span>
                 </button>
 
                 {/* If user owns 0 items in this category */}
