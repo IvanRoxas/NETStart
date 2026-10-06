@@ -8,7 +8,7 @@ import DailyChallengeTimer from "@/components/DailyChallengeTimer";
 import { getXPDetails } from "@/lib/leveling";
 import { XP_REWARDS } from "@/lib/xpEconomy";
 import { Zap, Settings, Rocket, Award, ShieldCheck, Compass, ArrowRight, Lock, CheckCircle2, Circle, Sparkles, Play, Gift, Clock, Flame, Brain, Check } from "lucide-react";
-import AvatarDisplay from "@/components/AvatarDisplay";
+import DashboardAvatarCard from "@/components/DashboardAvatarCard";
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
@@ -849,45 +849,8 @@ export default async function DashboardPage() {
             {/* RIGHT COLUMN (Slimmer, Portrait Vertical) */}
             <div className="flex flex-col justify-between gap-6 w-full">
               
-              {/* Top Right: Astronaut Avatar Portrait Card */}
-              <div className="relative group/avatar-card">
-                <div className="absolute inset-0 bg-[#090311]/75 rounded-3xl translate-x-2 translate-y-2 z-0 transition-all duration-300 group-hover/avatar-card:translate-x-3 group-hover/avatar-card:translate-y-3" />
-                <div className="relative z-10 bg-[#361d57] border-2 border-[#ff912d]/50 p-5 sm:p-6 rounded-3xl transition-all duration-300 shadow-xl group-hover/avatar-card:-translate-x-1 group-hover/avatar-card:-translate-y-1 flex flex-col justify-between gap-4 overflow-hidden min-h-[380px]">
-                  
-                  {/* Cosmic Backdrop Ambient Effects */}
-                  <img 
-                    src="/assets/global/ui/Landing Page BG.png" 
-                    alt="Stars" 
-                    className="absolute inset-0 w-full h-full object-cover opacity-30 pointer-events-none" 
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-b from-[#1a082c]/80 via-transparent to-[#1a082c]/90 pointer-events-none" />
-                  <div className="absolute -top-10 -right-10 w-24 h-24 bg-[#ff912d]/15 rounded-full blur-xl pointer-events-none" />
-                  <div className="absolute -bottom-10 -left-10 w-24 h-24 bg-[#a855f7]/15 rounded-full blur-xl pointer-events-none" />
-
-                  {/* Header: User Display Name at the Top */}
-                  <div className="relative z-10 w-full flex items-center justify-between border-b border-white/10 pb-2">
-                    <h3 className="text-white font-display font-black text-base tracking-wide">
-                      {userDisplayName}
-                    </h3>
-                    <span className="text-[10px] font-mono font-bold text-[#ff912d] bg-[#ff912d]/15 px-2 py-0.5 rounded border border-[#ff912d]/30">
-                      AVATAR
-                    </span>
-                  </div>
-
-                  {/* Middle Stage: Floor Stage with Character Standing & Shadow Below */}
-                  <div className="relative z-10 w-full flex-1 flex flex-col items-center justify-end my-1 min-h-[260px] pb-1">
-                    <AvatarDisplay className="w-full h-64 sm:h-72" scale={1.20} />
-                  </div>
-
-                  {/* Quick Profile Link */}
-                  <Link 
-                    href="/profile"
-                    className="relative z-10 w-full h-[36px] bg-white/5 hover:bg-white/10 border border-white/10 hover:border-[#ff912d]/50 rounded-xl text-sm font-black tracking-wide text-[#ff912d] transition-all flex items-center justify-center gap-2"
-                  >
-                    Customize Avatar <ArrowRight size={14} />
-                  </Link>
-                </div>
-              </div>
+              {/* Top Right: Astronaut Avatar Portrait Card with Live Customizer Modal */}
+              <DashboardAvatarCard userDisplayName={userDisplayName} />
 
               {/* Daily Tasks Card (Tasks Completed) */}
               <div className="relative group/commissions-card flex-1">
