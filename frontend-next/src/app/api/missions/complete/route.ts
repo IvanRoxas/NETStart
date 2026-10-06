@@ -59,9 +59,10 @@ export async function POST(req: Request) {
       let gearsEarned = 0;
 
       if (!wasCompleted) {
+        const isDailyLevel = missionId.toLowerCase().startsWith('daily');
         const isEarth3 = missionId.toLowerCase() === 'earth-3' || missionId.toLowerCase() === 'python-3';
-        xpEarned = isEarth3 ? 500 : XP_REWARDS.TOTAL_LEVEL_YIELD;
-        gearsEarned = 20;
+        xpEarned = isEarth3 ? 500 : isDailyLevel ? 100 : XP_REWARDS.TOTAL_LEVEL_YIELD;
+        gearsEarned = isDailyLevel ? 250 : 20;
 
         await tx.user.update({
           where: { id: userId },

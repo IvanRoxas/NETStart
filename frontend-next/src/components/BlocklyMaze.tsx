@@ -4898,8 +4898,8 @@ export default function BlocklyMaze() {
       if (res.ok) {
         const data = await res.json();
         setRewards({
-          xpEarned: data.xpEarned || 150,
-          gearsEarned: data.gearsEarned || 20,
+          xpEarned: data.xpEarned ?? (isDaily ? 100 : 150),
+          gearsEarned: data.gearsEarned ?? (isDaily ? 250 : 20),
         });
         if (data.completedDailyTasks && Array.isArray(data.completedDailyTasks)) {
           data.completedDailyTasks.forEach((task: any) => {
@@ -11355,7 +11355,7 @@ export default function BlocklyMaze() {
   const totalCount = objectives.length;
   const rawCompletedCount = objectives.filter(o => o.completed).length;
   const completedCount = rawCompletedCount;
-  const currentSectionXp = isDemoModeActive() ? 0 : (completedCount * XP_REWARDS.CAMPAIGN_GOAL) + (showPopup ? XP_REWARDS.SECTION_COMPLETION_BONUS : 0);
+  const currentSectionXp = isDemoModeActive() ? 0 : isDaily ? 100 : (completedCount * XP_REWARDS.CAMPAIGN_GOAL) + (showPopup ? XP_REWARDS.SECTION_COMPLETION_BONUS : 0);
 
   const completionModalCode = useMemo(() => {
     let raw = plainEnglishCode || jsCode;
@@ -13661,7 +13661,7 @@ export default function BlocklyMaze() {
                           Mission Gear Reward
                         </span>
                         <span className="text-xs text-gray-400 font-sans whitespace-nowrap">
-                          {isDemoModeActive() ? 'Demo Mode (Unsaved)' : isReplayMode ? 'Already Claimed' : 'Campaign Bonus'}
+                          {isDemoModeActive() ? 'Demo Mode (Unsaved)' : isReplayMode ? 'Already Claimed' : isDaily ? 'Daily Challenge Reward' : 'Campaign Bonus'}
                         </span>
                       </div>
                     </div>
@@ -13672,7 +13672,7 @@ export default function BlocklyMaze() {
                         ? 'text-purple-300/70 line-through'
                         : 'text-purple-300 drop-shadow-[0_0_12px_rgba(192,132,252,0.6)]'
                       }`}>
-                      <span>{isDemoModeActive() ? '+0 Gears (Demo)' : '+20 Gears'}</span>
+                      <span>{isDemoModeActive() ? '+0 Gears (Demo)' : isDaily ? '+250 Gears' : '+20 Gears'}</span>
                     </div>
                   </div>
                 )}
