@@ -7,7 +7,7 @@ import DailyCommissionClaimButton from "@/components/DailyCommissionClaimButton"
 import DailyChallengeTimer from "@/components/DailyChallengeTimer";
 import { getXPDetails } from "@/lib/leveling";
 import { XP_REWARDS } from "@/lib/xpEconomy";
-import { Zap, Settings, Rocket, Award, ShieldCheck, Compass, ArrowRight, Lock, CheckCircle2, Circle, Sparkles, Play, Gift, Clock, Flame, Brain } from "lucide-react";
+import { Zap, Settings, Rocket, Award, ShieldCheck, Compass, ArrowRight, Lock, CheckCircle2, Circle, Sparkles, Play, Gift, Clock, Flame, Brain, Check } from "lucide-react";
 import AvatarDisplay from "@/components/AvatarDisplay";
 
 export default async function DashboardPage() {
@@ -186,6 +186,105 @@ export default async function DashboardPage() {
   );
 
   const hasCampaignCompletedToday = campaignCompletedMissions.some(m => isCompletedTodayPHT(m.completedAt));
+
+  // Gather all unique PHT dates with completed daily activities/challenges
+  const completedDailyDates = new Set<string>();
+  for (const m of completedMissions) {
+    if (m.completedAt) {
+      try {
+        const dStr = phtFormatter.format(new Date(m.completedAt));
+        if (m.missionId.startsWith("daily") || m.missionId.includes("daily")) {
+          completedDailyDates.add(dStr);
+        }
+      } catch {}
+    }
+    const dateMatch = m.missionId.match(/\d{4}-\d{2}-\d{2}/);
+    if (dateMatch && (m.missionId.startsWith("daily") || m.missionId.includes("daily"))) {
+      completedDailyDates.add(dateMatch[0]);
+    }
+  }
+  if (isDailyLevelCompleted) {
+    completedDailyDates.add(todayStrPHT);
+  }
+
+  // Calculate consecutive daily challenge streak
+  const [tYear, tMonth, tDay] = todayStrPHT.split("-").map(Number);
+  const todayUtcMs = Date.UTC(tYear, tMonth - 1, tDay);
+  const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+
+  const getPhtDateStrOffset = (daysAgo: number): string => {
+    const d = new Date(todayUtcMs - daysAgo * ONE_DAY_MS);
+    const y = d.getUTCFullYear();
+    const m = String(d.getUTCMonth() + 1).padStart(2, "0");
+    const day = String(d.getUTCDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  };
+
+  const hasCompletedToday = completedDailyDates.has(todayStrPHT) || isDailyLevelCompleted;
+  let currentStreak = 0;
+
+  if (hasCompletedToday) {
+    currentStreak = 1;
+    let offset = 1;
+    while (true) {
+      const prevDateStr = getPhtDateStrOffset(offset);
+      if (completedDailyDates.has(prevDateStr)) {
+        currentStreak++;
+        offset++;
+      } else {
+        break;
+      }
+    }
+  } else {
+    // Check if completed yesterday
+    const yesterdayStr = getPhtDateStrOffset(1);
+    if (completedDailyDates.has(yesterdayStr)) {
+      currentStreak = 1;
+      let offset = 2;
+      while (true) {
+        const prevDateStr = getPhtDateStrOffset(offset);
+        if (completedDailyDates.has(prevDateStr)) {
+          currentStreak++;
+          offset++;
+        } else {
+          break;
+        }
+      }
+    } else {
+      // Missed yesterday - streak resets to 0!
+      currentStreak = 0;
+    }
+  }
+
+  // Streak Multiplier & Bonus XP (resets if streak is broken)
+  const streakMultiplier = currentStreak >= 7 ? 2.0 : currentStreak >= 2 ? Number((1 + (currentStreak - 1) * 0.1).toFixed(1)) : 1.0;
+  const streakBonusXp = Math.round((streakMultiplier - 1) * 100);
+
+  // 7-day progress indicator for the current week (Monday - Sunday)
+  const todayDayOfWeek = (new Date(todayUtcMs).getUTCDay() + 6) % 7; // 0 = Mon, 1 = Tue, ..., 6 = Sun
+  const mondayUtcMs = todayUtcMs - todayDayOfWeek * ONE_DAY_MS;
+  const WEEK_DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+  const weekDaysProgress = WEEK_DAY_LABELS.map((label, idx) => {
+    const dayMs = mondayUtcMs + idx * ONE_DAY_MS;
+    const d = new Date(dayMs);
+    const y = d.getUTCFullYear();
+    const m = String(d.getUTCMonth() + 1).padStart(2, "0");
+    const day = String(d.getUTCDate()).padStart(2, "0");
+    const dateStr = `${y}-${m}-${day}`;
+
+    const isToday = idx === todayDayOfWeek;
+    const isPast = idx < todayDayOfWeek;
+    const isCompleted = completedDailyDates.has(dateStr) || (isToday && hasCompletedToday);
+
+    return {
+      label,
+      dateStr,
+      isToday,
+      isPast,
+      isCompleted,
+    };
+  });
 
   // Daily Rotating Challenge Pool (5 Playable Challenges with Custom Vector Icons)
   const DAILY_LEVEL_POOL = [
@@ -709,15 +808,97 @@ export default async function DashboardPage() {
                         </p>
                       </div>
 
+                      {/* Interactive Daily Streak & Multiplier Telemetry Bar */}
+                      <div className="bg-[#1a082c]/85 border border-[#ff912d]/30 rounded-2xl p-3 sm:p-4 shadow-inner flex flex-col gap-3 my-1">
+                        {/* Top Row: Streak Counter & Active Multiplier */}
+                        <div className="flex flex-wrap items-center justify-between gap-2.5">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-8 h-8 rounded-xl bg-[#ff912d]/20 border border-[#ff912d]/40 flex items-center justify-center text-[#ff912d] shadow-sm">
+                              <Flame size={17} className="fill-[#ff912d]/30" />
+                            </div>
+                            <div>
+                              <span className="text-[10px] sm:text-[11px] font-mono uppercase tracking-wider text-white/50 block leading-tight">Daily Challenge Streak</span>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                <span className="text-sm sm:text-base font-display font-black text-white leading-tight">
+                                  {currentStreak} {currentStreak === 1 ? "Day" : "Days"}
+                                </span>
+                                {hasCompletedToday ? (
+                                  <span className="text-[10px] font-mono text-emerald-400 font-bold bg-emerald-500/15 px-2 py-0.5 rounded border border-emerald-500/30 flex items-center gap-1">
+                                    <Check size={10} className="stroke-[3]" /> Completed Today
+                                  </span>
+                                ) : currentStreak > 0 ? (
+                                  <span className="text-[10px] font-mono text-amber-400 font-bold bg-amber-500/15 px-2 py-0.5 rounded border border-amber-500/30">
+                                    Ready Today
+                                  </span>
+                                ) : (
+                                  <span className="text-[10px] font-mono text-white/40 font-bold bg-white/5 px-2 py-0.5 rounded border border-white/10">
+                                    Start Your Streak
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2.5 bg-gradient-to-r from-[#ff912d]/15 to-[#a855f7]/15 px-3 py-1.5 rounded-xl border border-[#ff912d]/35">
+                            <Zap size={15} className="text-[#ff912d]" />
+                            <div className="text-left">
+                              <span className="text-[10px] font-mono uppercase tracking-wider text-[#ff912d] block leading-tight">Active Bonus</span>
+                              <span className="text-xs sm:text-sm font-mono font-bold text-white leading-tight">
+                                {streakMultiplier.toFixed(1)}× Multiplier {streakBonusXp > 0 ? `(+${streakBonusXp} Bonus XP on clear)` : "(Complete daily to increase)"}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* 7-Day Progress Dots Indicator (Mon - Sun) */}
+                        <div className="pt-2 border-t border-white/5">
+                          <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
+                            {weekDaysProgress.map((day) => (
+                              <div key={day.label} className="flex flex-col items-center gap-1">
+                                <span className={`text-[10px] sm:text-[11px] font-mono uppercase tracking-wider font-bold ${day.isToday ? "text-[#ff912d]" : "text-white/40"}`}>
+                                  {day.label}
+                                </span>
+                                <div 
+                                  className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-all ${
+                                    day.isCompleted
+                                      ? "bg-emerald-500 text-black shadow-[0_0_10px_rgba(16,185,129,0.5)] border border-emerald-300"
+                                      : day.isToday
+                                      ? "bg-[#ff912d]/20 text-[#ff912d] border-2 border-[#ff912d] shadow-[0_0_12px_rgba(255,145,45,0.4)] animate-pulse"
+                                      : day.isPast
+                                      ? "bg-white/5 text-white/20 border border-white/10"
+                                      : "bg-white/5 text-white/20 border border-white/5"
+                                  }`}
+                                  title={day.isCompleted ? `${day.label}: Completed` : day.isToday ? `${day.label}: Today` : day.label}
+                                >
+                                  {day.isCompleted ? (
+                                    <Check size={14} className="stroke-[3]" />
+                                  ) : day.isToday ? (
+                                    <Flame size={13} className="text-[#ff912d]" />
+                                  ) : (
+                                    <span className="w-1.5 h-1.5 rounded-full bg-white/20" />
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
                       {/* Reward Chips & Launch Button Row */}
                       <div className="flex flex-wrap items-center justify-between gap-3 pt-1 mt-auto">
-                        <div className="flex items-center gap-2.5 mx-auto sm:mx-0">
+                        <div className="flex flex-wrap items-center gap-2.5 mx-auto sm:mx-0">
                           <span className="text-sm sm:text-base font-mono font-black bg-[#ff912d]/20 text-[#ff912d] px-4 py-2 rounded-xl border-2 border-[#ff912d]/50 shadow-sm flex items-center gap-1.5">
                             +{dailyGeneratedLevel.xpReward} XP Reward
                           </span>
                           <span className="text-sm sm:text-base font-mono font-black bg-[#ff912d]/20 text-[#ff912d] px-4 py-2 rounded-xl border-2 border-[#ff912d]/50 shadow-sm flex items-center gap-1.5">
                             +{dailyGeneratedLevel.gearsReward} Gears
                           </span>
+                          {streakBonusXp > 0 && (
+                            <span className="text-xs sm:text-sm font-mono font-black bg-amber-400/20 text-amber-300 px-3 py-1.5 rounded-xl border border-amber-400/40 shadow-sm flex items-center gap-1.5">
+                              <Zap size={14} className="text-amber-300" />
+                              +{streakBonusXp} Streak Bonus
+                            </span>
+                          )}
                         </div>
 
                         <Link 
@@ -788,9 +969,9 @@ export default async function DashboardPage() {
                   {/* Quick Profile Link */}
                   <Link 
                     href="/profile"
-                    className="relative z-10 w-full py-2 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-[#ff912d]/50 rounded-xl text-xs font-bold text-[#ff912d] transition-all flex items-center justify-center gap-1.5"
+                    className="relative z-10 w-full h-[36px] bg-white/5 hover:bg-white/10 border border-white/10 hover:border-[#ff912d]/50 rounded-xl text-sm font-black tracking-wide text-[#ff912d] transition-all flex items-center justify-center gap-2"
                   >
-                    Customize Avatar <ArrowRight size={12} />
+                    Customize Avatar <ArrowRight size={14} />
                   </Link>
                 </div>
               </div>
