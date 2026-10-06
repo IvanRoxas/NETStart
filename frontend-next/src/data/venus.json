@@ -1,0 +1,337 @@
+[
+  {
+    "id": "venus-001",
+    "type": "divider",
+    "title": "Venus",
+    "subtitle": "CSS"
+  },
+  {
+    "id": "venus-002",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "Heading towards Venus, they noticed from afar that the planet looked starkly black and white, as if it were trapped in a retro film. Once they landed, the two began to investigate the situation.",
+    "background": "venus_bg_001.png"
+  },
+  {
+    "id": "venus-003",
+    "type": "dialogue",
+    "speaker": "Nova",
+    "text": "Why is everything black and white?",
+    "background": "venus_bg_002.png"
+  },
+  {
+    "id": "venus-004",
+    "type": "dialogue",
+    "speaker": "Operator",
+    "text": "I don’t even recall this planet looking like this.",
+    "background": "venus_bg_002.png"
+  },
+  {
+    "id": "venus-005",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "Suddenly, a communicator rang from the Astronaut’s pocket. It was a video transmission from an unknown contact.",
+    "background": "venus_bg_002.png"
+  },
+  {
+    "id": "venus-006",
+    "type": "dialogue",
+    "speaker": "Operator",
+    "text": "Hello? Who is this?",
+    "background": "venus_bg_002.png"
+  },
+  {
+    "id": "venus-007",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "The Astronaut frowned at the image of a frantic scientist.",
+    "background": "venus_bg_002.png"
+  },
+  {
+    "id": "venus-008",
+    "type": "dialogue",
+    "speaker": "??? (Spectrum)",
+    "text": "Are you Chief Operator?",
+    "background": "venus_bg_002.png"
+  },
+  {
+    "id": "venus-009",
+    "type": "dialogue",
+    "speaker": "Operator",
+    "text": "Yes. Who is this?",
+    "background": "venus_bg_002.png"
+  },
+  {
+    "id": "venus-010",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "The scientist smiled in relief.",
+    "background": "venus_bg_002.png"
+  },
+  {
+    "id": "venus-011",
+    "type": "dialogue",
+    "speaker": "Professor Spectrum",
+    "text": "I’m Professor Spectrum. Oberion told me to contact you, as you’re the ones in charge of restoring the AstroLink. Meet me at my laboratory. I will send you the coordinates right now.",
+    "background": "venus_bg_002.png"
+  },
+  {
+    "id": "venus-012",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "Arriving at the designated location, they found the Professor waiting to brief them.",
+    "background": "venus_bg_003.png"
+  },
+  {
+    "id": "venus-013",
+    "type": "dialogue",
+    "speaker": "Professor Spectrum",
+    "text": "We were working when a solar storm suddenly struck Venus. When we rushed outside to check the damage, we discovered our entire planet had been drained into a monochromatic state.",
+    "background": "venus_bg_004.png"
+  },
+  {
+    "id": "venus-014",
+    "type": "dialogue",
+    "speaker": "Professor Spectrum",
+    "text": "We later learned the AstroLink vanished right after the storm hit. Without that device, Venus loses all of its solid colors, and we unfortunately don’t have a backup.",
+    "background": "venus_bg_004.png"
+  },
+  {
+    "id": "venus-015",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "The Professor paused, letting out a heavy sigh before walking over to the laboratory window and pointing outside.",
+    "background": "venus_bg_004.png"
+  },
+  {
+    "id": "venus-016",
+    "type": "dialogue",
+    "speaker": "Professor Spectrum",
+    "text": "What do you observe out there?",
+    "background": "venus_bg_004.png"
+  },
+  {
+    "id": "venus-017",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "Nova shook their head, staring out at a strange, empty void.",
+    "background": "venus_bg_004.png"
+  },
+  {
+    "id": "venus-018",
+    "type": "dialogue",
+    "speaker": "Nova",
+    "text": "We can’t see anything. It looks completely transparent, like a gap in space. Something is definitely missing.",
+    "background": "venus_bg_004.png"
+  },
+  {
+    "id": "venus-019",
+    "type": "dialogue",
+    "speaker": "Professor Spectrum",
+    "text": "Exactly. Without building a prototype that restores the foundational borders and fonts, we won’t be able to visualize the severed connection to repair it. For now, we are going to have to build a replacement from scratch.",
+    "background": "venus_bg_004.png"
+  },
+  {
+    "id": "venus-020",
+    "type": "mission",
+    "mission": "venus-1",
+    "level": 1,
+    "title": "Mini-Game 1: Fix Colors, Borders, and Fonts",
+    "concept": "Basic styling",
+    "objective": "The player uses CSS properties (like color, background-color, border, and font-family) to build the basic visual shell of the prototype and bring the first splash of color back to the lab."
+  },
+  {
+    "id": "venus-021",
+    "type": "dialogue",
+    "speaker": "Professor Spectrum",
+    "text": "Excellent! We have synthesized the colors and borders. However, it is still missing something.",
+    "background": "venus_bg_004.png"
+  },
+  {
+    "id": "venus-022",
+    "type": "dialogue",
+    "speaker": "Operator",
+    "text": "What is it lacking?",
+    "background": "venus_bg_004.png"
+  },
+  {
+    "id": "venus-023",
+    "type": "dialogue",
+    "speaker": "Professor Spectrum",
+    "text": "The issue with this model is that it generates chaotic, disorganized signals. We have the pieces, but the layout is a mess. Our next step is to align them properly so the structure holds.",
+    "background": "venus_bg_004.png"
+  },
+  {
+    "id": "venus-024",
+    "type": "dialogue",
+    "speaker": "Professor Spectrum",
+    "text": "Let’s head to the maintenance room. We must format this prototype before we can plug it into the planet’s main machinery.",
+    "background": "venus_bg_004.png"
+  },
+  {
+    "id": "venus-025",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "Stepping into the sprawling maintenance room, they were greeted by the massive, dormant AstroLink hardware.",
+    "background": "venus_bg_005.png"
+  },
+  {
+    "id": "venus-026",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "Noticing that their newly built prototype looked vastly different from the layout of the original equipment, the pair shot a confused glance at the Professor.",
+    "background": "venus_bg_005.png"
+  },
+  {
+    "id": "venus-027",
+    "type": "dialogue",
+    "speaker": "Professor Spectrum",
+    "text": "Now, do you see what needs to be aligned?",
+    "background": "venus_bg_005.png"
+  },
+  {
+    "id": "venus-028",
+    "type": "mission",
+    "mission": "venus-2",
+    "level": 2,
+    "title": "Mini-Game 2: Formatting the Prototype",
+    "concept": "Layout and alignment",
+    "objective": "The player must use CSS layout techniques (like margin, padding, text-align, or basic display properties) to organize the chaotic signals into a neat, structured format."
+  },
+  {
+    "id": "venus-029",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "After successfully completing the formatting process, a bright notification flashed across the machine’s screen.",
+    "background": "venus_bg_005.png"
+  },
+  {
+    "id": "venus-030",
+    "type": "dialogue",
+    "speaker": "??? (Hue)",
+    "text": "Professor! The AstroLink is back online!",
+    "background": "venus_bg_005.png"
+  },
+  {
+    "id": "venus-031",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "A breathless scientist burst into the maintenance room, pausing in surprise when he spotted the Astronaut and Nova.",
+    "background": "venus_bg_005.png"
+  },
+  {
+    "id": "venus-032",
+    "type": "dialogue",
+    "speaker": "Professor Hue",
+    "text": "Greetings, saviors. I am Professor Hue, a colleague of Professor Spectrum.",
+    "background": "venus_bg_005.png"
+  },
+  {
+    "id": "venus-033",
+    "type": "dialogue",
+    "speaker": "Operator",
+    "text": "Have the planet’s colors fully returned?",
+    "background": "venus_bg_005.png"
+  },
+  {
+    "id": "venus-034",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "They all hurried to the window to inspect the results.",
+    "background": "venus_bg_005.png"
+  },
+  {
+    "id": "venus-035",
+    "type": "dialogue",
+    "speaker": "Professor Hue",
+    "text": "Unfortunately, some sectors are still suffering from a weak connection to Mars.",
+    "background": "venus_bg_005.png"
+  },
+  {
+    "id": "venus-036",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "He pointed toward the horizon, revealing sprawling patches of the landscape that remained stubbornly trapped in stark black and white.",
+    "background": "venus_bg_005.png"
+  },
+  {
+    "id": "venus-037",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "Handing a diagnostic tablet over to Professor Spectrum, Hue hastily excused himself to report the situation to their superiors.",
+    "background": "venus_bg_006.png"
+  },
+  {
+    "id": "venus-038",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "As the remaining trio turned their attention back to the massive machinery, a new alert chimed, confirming an incoming data stream from Mars.",
+    "background": "venus_bg_005.png"
+  },
+  {
+    "id": "venus-039",
+    "type": "dialogue",
+    "speaker": "Professor Spectrum",
+    "text": "We finally have a stable signal. Now, we can fully integrate our newly built CSS prototype with the main HTML AstroLink network. This will amplify the system and give us the ability to tweak those remaining dead zones.",
+    "background": "venus_bg_005.png"
+  },
+  {
+    "id": "venus-040",
+    "type": "mission",
+    "mission": "venus-3",
+    "level": 3,
+    "title": "Mini-Game 3: HTML Integration & The Final Tweaks",
+    "concept": "Linking and tweaking",
+    "objective": "The player must successfully link the CSS stylesheet to the HTML document (using the <link> tag) and write the final specific CSS rules to override the black-and-white \"dead zones.\""
+  },
+  {
+    "id": "venus-041",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "After finalizing the system integration, Nova hurried over to inspect the surveillance footage. The visual changes were dramatic compared to their initial tests.",
+    "background": "venus_bg_007.png"
+  },
+  {
+    "id": "venus-042",
+    "type": "dialogue",
+    "speaker": "Nova",
+    "text": "It looks completely different, the color coverage has improved so much!",
+    "background": "venus_bg_007.png"
+  },
+  {
+    "id": "venus-043",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "Nova cheered, clapping their hands in excitement. Just as the Professor opened his mouth to reply, his main monitor chimed with an incoming video call from the leader of the Moon.",
+    "background": "venus_bg_007.png"
+  },
+  {
+    "id": "venus-044",
+    "type": "dialogue",
+    "speaker": "Oberion",
+    "text": "Professor Spectrum, I received word that Venus has restored its— Oh! Congratulations on a job well done, Chief Operator and Nova.",
+    "background": "venus_bg_007.png"
+  },
+  {
+    "id": "venus-045",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "Oberion paused his report to offer a pleased nod as the duo waved at the screen.",
+    "background": "venus_bg_007.png"
+  },
+  {
+    "id": "venus-046",
+    "type": "dialogue",
+    "speaker": "Professor Spectrum",
+    "text": "Everything is fully operational here, Oberion.",
+    "background": "venus_bg_007.png"
+  },
+  {
+    "id": "venus-047",
+    "type": "dialogue",
+    "speaker": "Oberion",
+    "text": "Good work. They are cleared to proceed to the next planet, which is Mercury.",
+    "background": "venus_bg_007.png"
+  }
+]
+

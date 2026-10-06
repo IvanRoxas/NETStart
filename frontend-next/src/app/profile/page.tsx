@@ -12,6 +12,8 @@ import { allBadges } from '@/lib/badgesData';
 import { getXPDetails } from '@/lib/leveling';
 import { getUnlockedAchievements } from '@/app/actions/achievements';
 import SpaceLoader from '@/components/SpaceLoader';
+import PassportStatsCard from '@/components/PassportStatsCard';
+import ImageCropModal from '@/components/ImageCropModal';
 import DailyTaskTracker from '@/components/DailyTaskTracker';
 import { getUserStorageItem } from '@/lib/userStorage';
 import { getUserInventory } from '@/app/actions/shop';
@@ -284,6 +286,40 @@ export default function ProfilePage() {
   const [statsTab, setStatsTab] = useState<'overview' | 'progress'>('overview');
   const [xp, setXp] = useState(0);
 
+  const [completedMissionIds, setCompletedMissionIds] = useState<string[]>([]);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [cropModalOpen, setCropModalOpen] = useState(false);
+  const [cropImageSrc, setCropImageSrc] = useState('');
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.addEventListener('load', () => {
+        setCropImageSrc(reader.result?.toString() || '');
+        setCropModalOpen(true);
+      });
+      reader.readAsDataURL(file);
+      e.target.value = '';
+    }
+  };
+
+  const handleCropSave = async (base64String: string) => {
+    setProfile((prev: any) => ({ ...prev, image: base64String }));
+    try {
+      const res = await fetch('/api/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: base64String })
+      });
+      if (!res.ok) {
+        console.error('Failed to save avatar');
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   // Compute earned & unlocked titles based on progression, achievements, and level
   const availableTitles = useMemo(() => {
     const userLvl = getXPDetails(xp).level;
@@ -532,6 +568,7 @@ export default function ProfilePage() {
         if (data.stats) {
           setStats(data.stats);
         }
+        setCompletedMissionIds(data.completedMissionIds || []);
         let ongoing = data.missionProgress || [];
         const userId = data.user.id;
         if (typeof window !== 'undefined' && userId) {
@@ -811,13 +848,13 @@ export default function ProfilePage() {
       <TopHeader title="Profile" />
       <div className={`flex-1 overflow-y-auto overflow-x-hidden p-6 lg:p-10 pr-10 lg:pr-16 no-scrollbar @container relative z-10 ${isEditing ? 'pointer-events-none select-none' : ''}`}>
 
-        <div className="max-w-7xl mx-auto w-full flex flex-col gap-10">
+        <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-[1.75fr_1fr] gap-10 items-start">
 
-          {/* TOP ROW: Identification Card (Left) & Level + Achievements (Right) */}
-          <div className="grid grid-cols-1 lg:grid-cols-[1.75fr_1fr] gap-10 items-stretch">
+          {/* LEFT COLUMN: Identification Card & Passport Statistics */}
+          <div className="flex flex-col gap-10 min-w-0">
 
             {/* IDENTIFICATION CARD */}
-            <div className="relative group/id-card flex flex-col h-full">
+            <div className="relative group/id-card flex flex-col w-full">
               {/* Shaded background depth layer */}
               <div className="absolute inset-0 bg-[#090311]/75 rounded-3xl translate-x-2 translate-y-2 z-0 transition-all duration-300 group-hover/id-card:translate-x-3 group-hover/id-card:translate-y-3" />
 
@@ -970,8 +1007,18 @@ export default function ProfilePage() {
               </div>
             </div>
 
+            {/* PASSPORT STATISTICS CARD */}
+            <div className="w-full min-w-0">
+              <PassportStatsCard profile={profile} completedMissionIds={completedMissionIds} />
+            </div>
+
+          </div>
+
+          {/* RIGHT COLUMN: Level & Achievements & Ongoing Missions */}
+          <div className="flex flex-col gap-10 min-w-0">
+
             {/* RIGHT TOP GROUP: Level & XP Bar + Achievements */}
-            <div className="flex flex-col gap-6 h-full justify-between min-w-0">
+            <div className="flex flex-col gap-6 w-full justify-between min-w-0">
               {/* Level Text & XP Bar */}
               <div className="flex items-center gap-4 shrink-0">
                 {/* Dynamic SVG Level Badge */}
@@ -1144,7 +1191,7 @@ export default function ProfilePage() {
             </div>
 
             {/* ONGOING MISSIONS */}
-            <div className="relative group/ongoing-card flex flex-col h-full min-w-0">
+            <div className="relative group/ongoing-card flex flex-col w-full min-w-0">
               {/* Shaded background depth layer */}
               <div className="absolute inset-0 bg-[#090311]/75 rounded-3xl translate-x-2 translate-y-2 z-0 transition-all duration-300 group-hover/ongoing-card:translate-x-3 group-hover/ongoing-card:translate-y-3" />
 
@@ -1239,6 +1286,24 @@ export default function ProfilePage() {
       </div>
 
 
+
+      {/* Crop Modal */}
+      <ImageCropModal
+        isOpen={cropModalOpen}
+        onClose={() => setCropModalOpen(false)}
+        imageSrc={cropImageSrc}
+        aspect={1}
+        title="Crop your Avatar"
+        onSave={handleCropSave}
+      />
+
+      <input 
+        type="file" 
+        ref={fileInputRef} 
+        onChange={handleFileChange} 
+        accept="image/*" 
+        className="hidden" 
+      />
 
       {/* Badge Details Modal */}
       {selectedBadge && (

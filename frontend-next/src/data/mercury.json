@@ -1,0 +1,260 @@
+[
+  {
+    "id": "mercury-001",
+    "type": "divider",
+    "title": "Mercury",
+    "subtitle": "JavaScript"
+  },
+  {
+    "id": "mercury-002",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "Arriving at their next destination, Mercury, the Astronaut immediately noticed an unusual stillness across the planet. As he parked the spaceship, Nova murmured beside him.",
+    "background": "mercury_bg_001.png"
+  },
+  {
+    "id": "mercury-003",
+    "type": "dialogue",
+    "speaker": "Nova",
+    "text": "Did you know that Mercury serves as the central supply hub for every planet?",
+    "background": "mercury_bg_001.png"
+  },
+  {
+    "id": "mercury-004",
+    "type": "dialogue",
+    "speaker": "Y/N",
+    "text": "Is that because they handle all the interplanetary transport and logistics?",
+    "background": "mercury_bg_001.png"
+  },
+  {
+    "id": "mercury-005",
+    "type": "dialogue",
+    "speaker": "Nova",
+    "text": "Exactly. But because of the unexpected AstroLink outage, all transportation between the planets is currently on a strict hiatus. They canâ€™t process or deliver any shipments.",
+    "background": "mercury_bg_001.png"
+  },
+  {
+    "id": "mercury-006",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "As they stepped out to investigate the silent transport bays, a distressed voice echoed from the distance.",
+    "background": "mercury_bg_001.png"
+  },
+  {
+    "id": "mercury-007",
+    "type": "dialogue",
+    "speaker": "Nova",
+    "text": "Huh? Who could that be?",
+    "background": "mercury_bg_001.png"
+  },
+  {
+    "id": "mercury-008",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "Following the commotion, they were greeted by a man dressed in a lab gown, wearing the largest goggles they had ever seen, frantically pacing around a patch of dried, withered plants.",
+    "background": "mercury_bg_002.png"
+  },
+  {
+    "id": "mercury-009",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "Seeing the duo approach, he stopped his panicked muttering and pushed his goggles up onto his forehead.",
+    "background": "mercury_bg_002.png"
+  },
+  {
+    "id": "mercury-010",
+    "type": "dialogue",
+    "speaker": "???",
+    "text": "And you guys are?",
+    "background": "mercury_bg_002.png"
+  },
+  {
+    "id": "mercury-011",
+    "type": "dialogue",
+    "speaker": "Y/N",
+    "text": "Iâ€™m Y/N, and this is my partner Nova. We were sent to help with the AstroLink crisis. Can you tell us what happened over here?",
+    "background": "mercury_bg_002.png"
+  },
+  {
+    "id": "mercury-012",
+    "type": "dialogue",
+    "speaker": "Professor Dominic",
+    "text": "Oh! My goodness! Saviors! Can you guys help me with our biodome terminal? Ohâ€”I forgot my manners! I am Professor Dominic, head botanist of Mercury.",
+    "background": "mercury_bg_002.png"
+  },
+  {
+    "id": "mercury-013",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "He dramatically pointed to a shattered control panel on the ground.",
+    "background": "mercury_bg_002.png"
+  },
+  {
+    "id": "mercury-014",
+    "type": "dialogue",
+    "speaker": "Nova",
+    "text": "Nice to meet you, Professor. What happened to the terminal?",
+    "background": "mercury_bg_002.png"
+  },
+  {
+    "id": "mercury-015",
+    "type": "dialogue",
+    "speaker": "Professor Dominic",
+    "text": "While I was doing my daily inspection, a solar storm struck out of nowhere! It completely fried the Biodomeâ€™s Document Object Model, the DOM terminal that controls the life support for these plants. Without it, the environment is collapsing!",
+    "background": "mercury_bg_002.png"
+  },
+  {
+    "id": "mercury-016",
+    "type": "mission",
+    "mission": "mercury-1",
+    "level": 1,
+    "title": "Mini-Game 1: The Biodome Terminal",
+    "concept": "The DOM (Document Object Model)",
+    "objective": "The player learns how JavaScript targets HTML elements (using getElementById or querySelector) to \"select\" the dying plants and inject life-saving data back into them."
+  },
+  {
+    "id": "mercury-017",
+    "type": "dialogue",
+    "speaker": "Professor Dominic",
+    "text": "Oh, marvelous! The biodome terminal is back!",
+    "background": "mercury_bg_002.png"
+  },
+  {
+    "id": "mercury-018",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "The surrounding flora quickly regained its vibrant color. His celebration was cut short by a frantic buzz from his pocket. Dominic answered, his face suddenly going pale.",
+    "background": "mercury_bg_002.png"
+  },
+  {
+    "id": "mercury-019",
+    "type": "dialogue",
+    "speaker": "Professor Dominic",
+    "text": "I have been informed that the solar storm melted the logic boards on the AstroLink factoryâ€™s main conveyor belt. They have no idea how to route the incoming materials.",
+    "background": "mercury_bg_002.png"
+  },
+  {
+    "id": "mercury-020",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "Grabbing his keys, Dominic quickly escorted the duo to the massive manufacturing facility.",
+    "background": "mercury_bg_002.png"
+  },
+  {
+    "id": "mercury-021",
+    "type": "dialogue",
+    "speaker": "Professor Dominic",
+    "text": "Follow me.",
+    "background": "mercury_bg_003.png"
+  },
+  {
+    "id": "mercury-022",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "He led the duo inside the cavernous factory to the jammed tracks.",
+    "background": "mercury_bg_003.png"
+  },
+  {
+    "id": "mercury-023",
+    "type": "mission",
+    "mission": "mercury-2",
+    "level": 2,
+    "title": "Mini-Game 2: The Conveyor Belt",
+    "concept": "Functions, events, variables and if/else logic",
+    "objective": "The player must write conditional statements to scan the materials (e.g., If material == \"metal\" -> route to Factory, Else -> route to storage), wrap them inside a reusable Function, and trigger that function using an Event Listener (like onItemDetected)."
+  },
+  {
+    "id": "mercury-024",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "Professor Dominic inspected the main communication relay.",
+    "background": "mercury_bg_004.png"
+  },
+  {
+    "id": "mercury-025",
+    "type": "dialogue",
+    "speaker": "Professor Dominic",
+    "text": "The hardware is functioning perfectly. But the transmission is still failing. We canâ€™t receive any incoming data.",
+    "background": "mercury_bg_004.png"
+  },
+  {
+    "id": "mercury-026",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "Nova, who had remained silent, approached the main terminal.",
+    "background": "mercury_bg_004.png"
+  },
+  {
+    "id": "mercury-027",
+    "type": "dialogue",
+    "speaker": "Nova",
+    "text": "It makes no sense for the hardware to work while communication drops.",
+    "background": "mercury_bg_004.png"
+  },
+  {
+    "id": "mercury-028",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "Nova murmured, rapidly analyzing the system. Suddenly, they froze.",
+    "background": "mercury_bg_004.png"
+  },
+  {
+    "id": "mercury-029",
+    "type": "dialogue",
+    "speaker": "Y/N",
+    "text": "What is it, Nova?",
+    "background": "mercury_bg_004.png"
+  },
+  {
+    "id": "mercury-030",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "Nova pointed directly at the blank screen.",
+    "background": "mercury_bg_004.png"
+  },
+  {
+    "id": "mercury-031",
+    "type": "dialogue",
+    "speaker": "Nova",
+    "text": "The solar storm didnâ€™t just damage the physical machinery. The electromagnetic surge completely wiped the front-end software! Mercury isnâ€™t receiving messages because it no longer has an interface to process and display them.",
+    "background": "mercury_bg_004.png"
+  },
+  {
+    "id": "mercury-032",
+    "type": "mission",
+    "mission": "mercury-3",
+    "level": 3,
+    "title": "Mini-Game 3: The Boss Level",
+    "concept": "The full stack (HTML, CSS and JavaScript)",
+    "objective": "The player must combine HTML, CSS, and JS to rebuild the messaging interface from scratch so the communications can finally come through."
+  },
+  {
+    "id": "mercury-033",
+    "type": "dialogue",
+    "speaker": "System",
+    "text": "System Onlineâ€¦ All modules operational.",
+    "background": "mercury_bg_004.png"
+  },
+  {
+    "id": "mercury-034",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "Upon receiving the robotic notification, all of them began to rejoice; finally, they had resolved the issue that Mercury had caused.",
+    "background": "mercury_bg_004.png"
+  },
+  {
+    "id": "mercury-035",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "Professor Dominic, tense moments earlier, looked relieved. The Astronaut felt their phone vibrate and quickly answered the phone.",
+    "background": "mercury_bg_004.png"
+  },
+  {
+    "id": "mercury-036",
+    "type": "dialogue",
+    "speaker": "Oberion",
+    "text": "Chief Y/N, we have received the signals from the three planets. Congratulations on finishing the three planets.",
+    "background": "mercury_bg_004.png"
+  }
+]
+

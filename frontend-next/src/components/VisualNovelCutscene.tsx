@@ -1,0 +1,880 @@
+"use client";
+
+import React, {
+  forwardRef,
+  useImperativeHandle,
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+} from "react";
+import { createPortal } from "react-dom";
+import storySummaries from "@/data/story_summaries.json";
+import { 
+  Volume2, 
+  VolumeX, 
+  FastForward, 
+  User, 
+  ShieldAlert, 
+  Crown, 
+  Radio, 
+  Sparkles,
+  ChevronRight
+} from "lucide-react";
+
+export interface SceneItem {
+  slide?: string;
+  type: "divider" | "dialogue" | "mission";
+  title?: string;
+  subtitle?: string;
+  speaker?: string;
+  text?: string;
+  background?: string;
+  mission?: string;
+  level?: number;
+  concept?: string;
+}
+
+export interface VisualNovelCutsceneProps {
+  scenes: SceneItem[];
+  backgroundBase?: string;
+  username?: string;
+  onMissionGate?: (title: string) => void;
+  onFinished: () => void;
+  summaryText?: string;
+}
+
+export interface VisualNovelCutsceneHandle {
+  resume: () => void;
+}
+
+// Matches divider titles like "HTML - Game 3", "Tutorial Game 2"
+const MISSION_GATE_PATTERN = /game\s*\d/i;
+
+// Speakers who don't get an on-screen character box (narration/system alerts)
+const NO_SPRITE_SPEAKERS = new Set(["Narrator", "System"]);
+
+interface SpeakerMetadata {
+  color: string;
+  border: string;
+  glow: string;
+  badgeBg: string;
+  role: string;
+  pitch: number;
+  icon: "crown" | "alert" | "radio" | "user";
+  image?: string;
+  silhouette?: boolean;
+}
+
+const SPEAKER_PROFILES: Record<string, SpeakerMetadata> = {
+  Oberion: {
+    color: "from-[#111827] via-[#1e1b4b] to-[#0f172a]",
+    border: "border-indigo-400/80",
+    glow: "shadow-[0_0_35px_rgba(99,102,241,0.45)]",
+    badgeBg: "bg-indigo-500/20 text-indigo-300 border-indigo-500/40",
+    role: "MOON AMBASSADOR & LEADER",
+    pitch: 150,
+    icon: "crown",
+    image: "/scenes/characters/OBERION.png",
+  },
+  Employee: {
+    color: "from-[#082f49] via-[#0369a1] to-[#0c4a6e]",
+    border: "border-sky-400/80",
+    glow: "shadow-[0_0_35px_rgba(56,189,248,0.45)]",
+    badgeBg: "bg-sky-500/20 text-sky-300 border-sky-500/40",
+    role: "NETSTART HQ STATION STAFF",
+    pitch: 270,
+    icon: "radio",
+    image: "/scenes/characters/EMPLOYEE.png",
+  },
+  "Higher Head": {
+    color: "from-[#451a03] via-[#9a3412] to-[#3b0764]",
+    border: "border-amber-400/80",
+    glow: "shadow-[0_0_35px_rgba(245,158,11,0.5)]",
+    badgeBg: "bg-amber-500/20 text-amber-300 border-amber-500/40",
+    role: "EXECUTIVE CRISIS DIRECTOR",
+    pitch: 130,
+    icon: "alert",
+    image: "/scenes/characters/HIGHER HEAD.png",
+  },
+  "Director Atlas": {
+    color: "from-[#451a03] via-[#9a3412] to-[#3b0764]",
+    border: "border-amber-400/80",
+    glow: "shadow-[0_0_35px_rgba(245,158,11,0.5)]",
+    badgeBg: "bg-amber-500/20 text-amber-300 border-amber-500/40",
+    role: "NETSTART HQ DIRECTOR",
+    pitch: 130,
+    icon: "alert",
+    image: "/scenes/characters/HIGHER HEAD.png",
+  },
+  "The Architect": {
+    color: "from-[#022c22] via-[#064e3b] to-[#0f172a]",
+    border: "border-emerald-400/80",
+    glow: "shadow-[0_0_40px_rgba(16,185,129,0.5)]",
+    badgeBg: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    role: "ASTROLINK ARCHITECT",
+    pitch: 95,
+    icon: "radio",
+    image: "/scenes/characters/ARCHITECT.png",
+  },
+  Nova: {
+    color: "from-[#042f2e] via-[#0d9488] to-[#134e4a]",
+    border: "border-teal-400/80",
+    glow: "shadow-[0_0_35px_rgba(45,212,191,0.45)]",
+    badgeBg: "bg-teal-500/20 text-teal-300 border-teal-500/40",
+    role: "FLIGHT SPECIALIST",
+    pitch: 240,
+    icon: "user",
+    image: "/scenes/characters/Nova Idle.png",
+  },
+  "Operator": {
+    color: "from-[#311042] via-[#701a75] to-[#1e1b4b]",
+    border: "border-[#ff912d]",
+    glow: "shadow-[0_0_35px_rgba(255,145,45,0.45)]",
+    badgeBg: "bg-[#ff912d]/20 text-[#ff912d] border-[#ff912d]/40",
+    role: "CHIEF ASTRONAUT",
+    pitch: 170,
+    icon: "user",
+  },
+  Mark: {
+    color: "from-[#14532d] via-[#166534] to-[#052e16]",
+    border: "border-green-400/80",
+    glow: "shadow-[0_0_35px_rgba(74,222,128,0.45)]",
+    badgeBg: "bg-green-500/20 text-green-300 border-green-500/40",
+    role: "LOCAL RESIDENT",
+    pitch: 120,
+    icon: "user",
+    image: "/scenes/characters/MARK.png",
+  },
+  "Emma G": {
+    color: "from-[#831843] via-[#be185d] to-[#4c0519]",
+    border: "border-pink-400/80",
+    glow: "shadow-[0_0_35px_rgba(244,114,182,0.45)]",
+    badgeBg: "bg-pink-500/20 text-pink-300 border-pink-500/40",
+    role: "MARS TWIN",
+    pitch: 280,
+    icon: "user",
+    image: "/scenes/characters/EMMA_G.png",
+  },
+  "Penny G": {
+    color: "from-[#831843] via-[#be185d] to-[#4c0519]",
+    border: "border-pink-400/80",
+    glow: "shadow-[0_0_35px_rgba(244,114,182,0.45)]",
+    badgeBg: "bg-pink-500/20 text-pink-300 border-pink-500/40",
+    role: "MARS TWIN",
+    pitch: 280,
+    icon: "user",
+    image: "/scenes/characters/PENNY_G.png",
+  },
+  "Emma G and Penny G": {
+    color: "from-[#831843] via-[#be185d] to-[#4c0519]",
+    border: "border-pink-400/80",
+    glow: "shadow-[0_0_35px_rgba(244,114,182,0.45)]",
+    badgeBg: "bg-pink-500/20 text-pink-300 border-pink-500/40",
+    role: "MARS TWINS",
+    pitch: 280,
+    icon: "user",
+  },
+  "??? (Spectrum)": {
+    color: "from-[#27272a] via-[#3f3f46] to-[#18181b]",
+    border: "border-zinc-500",
+    glow: "shadow-[0_0_35px_rgba(113,113,122,0.45)]",
+    badgeBg: "bg-zinc-500/20 text-zinc-300 border-zinc-500/40",
+    role: "UNKNOWN CALLER",
+    pitch: 100,
+    icon: "user",
+    image: "/scenes/characters/PROF_SPECTRUM.png",
+    silhouette: true
+  },
+  "??? (Hue)": {
+    color: "from-[#27272a] via-[#3f3f46] to-[#18181b]",
+    border: "border-zinc-500",
+    glow: "shadow-[0_0_35px_rgba(113,113,122,0.45)]",
+    badgeBg: "bg-zinc-500/20 text-zinc-300 border-zinc-500/40",
+    role: "UNKNOWN FIGURE",
+    pitch: 110,
+    icon: "user",
+    image: "/scenes/characters/PROF_HUE.png",
+    silhouette: true
+  },
+  "Professor Spectrum": {
+    color: "from-[#172554] via-[#1e3a8a] to-[#1e40af]",
+    border: "border-blue-400/80",
+    glow: "shadow-[0_0_35px_rgba(96,165,250,0.45)]",
+    badgeBg: "bg-blue-500/20 text-blue-300 border-blue-500/40",
+    role: "VENUS HEAD SCIENTIST",
+    pitch: 100,
+    icon: "user",
+    image: "/scenes/characters/PROF_SPECTRUM.png",
+  },
+  "Professor Hue": {
+    color: "from-[#7f1d1d] via-[#991b1b] to-[#b91c1c]",
+    border: "border-red-400/80",
+    glow: "shadow-[0_0_35px_rgba(248,113,113,0.45)]",
+    badgeBg: "bg-red-500/20 text-red-300 border-red-500/40",
+    role: "VENUS COLOR SPECIALIST",
+    pitch: 110,
+    icon: "user",
+    image: "/scenes/characters/PROF_HUE.png",
+  },
+  "Professor Dominic": {
+    color: "from-[#14532d] via-[#166534] to-[#052e16]",
+    border: "border-green-400/80",
+    glow: "shadow-[0_0_35px_rgba(74,222,128,0.45)]",
+    badgeBg: "bg-green-500/20 text-green-300 border-green-500/40",
+    role: "MERCURY BOTANIST",
+    pitch: 90,
+    icon: "user",
+    image: "/scenes/characters/PROF_DOMINIC.png",
+  },
+  "Technician Io": {
+    color: "from-[#9a3412] via-[#c2410c] to-[#7c2d12]",
+    border: "border-orange-400/80",
+    glow: "shadow-[0_0_35px_rgba(251,146,60,0.45)]",
+    badgeBg: "bg-orange-500/20 text-orange-300 border-orange-500/40",
+    role: "JUPITER TECH SUPPORT",
+    pitch: 220,
+    icon: "user",
+    image: "/scenes/characters/TECH_IO.png",
+  },
+  "The Core (Angry)": {
+    color: "from-[#7f1d1d] via-[#991b1b] to-[#450a0a]",
+    border: "border-red-600/90",
+    glow: "shadow-[0_0_40px_rgba(220,38,38,0.6)]",
+    badgeBg: "bg-red-600/30 text-red-200 border-red-500/50",
+    role: "ROGUE AI INSTANCE",
+    pitch: 50,
+    icon: "alert",
+    image: "/scenes/characters/Angry_AI.png",
+  },
+  "The Core (Good)": {
+    color: "from-[#064e3b] via-[#047857] to-[#022c22]",
+    border: "border-emerald-400/80",
+    glow: "shadow-[0_0_40px_rgba(52,211,153,0.5)]",
+    badgeBg: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    role: "ASTROLINK CENTRAL AI",
+    pitch: 160,
+    icon: "crown",
+    image: "/scenes/characters/Good_AI.png",
+  }
+};
+
+const DEFAULT_PROFILE: SpeakerMetadata = {
+  color: "from-[#1e1b4b] via-[#3b0764] to-[#180729]",
+  border: "border-purple-400/70",
+  glow: "shadow-[0_0_35px_rgba(168,85,247,0.4)]",
+  badgeBg: "bg-purple-500/20 text-purple-300 border-purple-500/40",
+  role: "NETSTART OPERATIVE",
+  pitch: 200,
+  icon: "user",
+};
+
+function useProceduralBlip(isMuted: boolean) {
+  const ctxRef = useRef<AudioContext | null>(null);
+
+  const play = useCallback((basePitch = 200) => {
+    if (isMuted || typeof window === "undefined") return;
+    try {
+      if (!ctxRef.current) {
+        const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+        if (!AudioContextClass) return;
+        ctxRef.current = new AudioContextClass();
+      }
+      const ctx = ctxRef.current;
+      if (ctx.state === "suspended") {
+        ctx.resume().catch(() => {});
+      }
+
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "square";
+      osc.frequency.value = basePitch + Math.random() * 30 - 15;
+      gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.08, ctx.currentTime + 0.005);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.04);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.045);
+    } catch {
+      // Audio context might be restricted before interaction
+    }
+  }, [isMuted]);
+
+  return play;
+}
+
+const noop = () => {};
+
+const VisualNovelCutscene = forwardRef<VisualNovelCutsceneHandle, VisualNovelCutsceneProps>(
+  function VisualNovelCutscene(
+    {
+      scenes = [],
+      backgroundBase = "/scenes/backgrounds/",
+      username = "Chief",
+      onMissionGate = noop,
+      onFinished = noop,
+      summaryText,
+    },
+    ref
+  ) {
+    const [index, setIndex] = useState(0);
+    const [shownText, setShownText] = useState("");
+    const [typing, setTyping] = useState(true);
+    const [spriteIn, setSpriteIn] = useState(false);
+    const [gated, setGated] = useState(false);
+    const [muted, setMuted] = useState(false);
+    const [showSummaryModal, setShowSummaryModal] = useState(false);
+
+    const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+    useEffect(() => {
+      if (typeof window !== "undefined") {
+        const soundsEnabled = localStorage.getItem("setting_sounds") !== "false";
+        setMuted(!soundsEnabled);
+      }
+    }, []);
+
+    const playBlip = useProceduralBlip(muted);
+
+    const scene = scenes[index];
+    const isDivider = scene?.type === "divider";
+    const isMissionGate =
+      isDivider && index > 0 && MISSION_GATE_PATTERN.test(scene.title || "");
+    const rawSpeakerName = scene?.speaker || "";
+    const isArchitectLine = rawSpeakerName === "The Architect";
+    const isArchitectTerminalScene = !!(scene?.background?.includes("earth_bg_003") || isArchitectLine);
+    const displaySpeakerName = (rawSpeakerName === "Operator" || rawSpeakerName === "Y/N") ? username : rawSpeakerName.replace(/\s*\(.*?\)/g, "");
+    const profile = SPEAKER_PROFILES[rawSpeakerName] || DEFAULT_PROFILE;
+    const showCharacterCard =
+      !isDivider && !!scene && !NO_SPRITE_SPEAKERS.has(rawSpeakerName) && rawSpeakerName.trim().length > 0;
+      
+    // Pre-process text so both typing and quick-skip use the username correctly
+    const rawText = scene?.text || "";
+    const processedText = rawText
+      .replace(/Operator/g, username)
+      .replace(/Y\/N/g, username);
+
+    const [lastRoomSpeaker, setLastRoomSpeaker] = useState<string>("Director Atlas");
+
+    useEffect(() => {
+      if (rawSpeakerName && rawSpeakerName !== "The Architect" && !NO_SPRITE_SPEAKERS.has(rawSpeakerName)) {
+        setLastRoomSpeaker(rawSpeakerName);
+      }
+    }, [rawSpeakerName]);
+
+    useImperativeHandle(ref, () => ({
+      resume() {
+        setGated(false);
+        setIndex((i) => Math.min(i + 1, scenes.length - 1));
+      },
+    }));
+
+    useEffect(() => {
+      setSpriteIn(false);
+      const t = setTimeout(() => setSpriteIn(true), 60);
+      return () => clearTimeout(t);
+    }, [index]);
+
+    useEffect(() => {
+      if (!scene) return;
+      if (timerRef.current) clearInterval(timerRef.current);
+
+      if (isDivider) {
+        setShownText(scene.title || "");
+        setTyping(false);
+        if (isMissionGate) {
+          setGated(true);
+          onMissionGate(scene.title || "");
+        }
+        return;
+      }
+
+      setShownText("");
+      setTyping(true);
+      let charIdx = 0;
+
+      timerRef.current = setInterval(() => {
+        charIdx += 1;
+        setShownText(processedText.slice(0, charIdx));
+
+        if (charIdx % 2 === 0 && /\S/.test(processedText[charIdx - 1] || "")) {
+          playBlip(profile.pitch);
+        }
+
+        if (charIdx >= processedText.length) {
+          if (timerRef.current) clearInterval(timerRef.current);
+          setTyping(false);
+        }
+      }, 26);
+
+      return () => {
+        if (timerRef.current) clearInterval(timerRef.current);
+      };
+    }, [index, isDivider, isMissionGate, onMissionGate, playBlip, profile.pitch, scene]);
+
+    const handleAdvance = () => {
+      if (gated) return;
+      if (!isDivider && typing) {
+        if (timerRef.current) clearInterval(timerRef.current);
+        setShownText(processedText);
+        setTyping(false);
+        return;
+      }
+      if (index < scenes.length - 1) {
+        setIndex((prev) => prev + 1);
+      } else {
+        onFinished();
+      }
+    };
+
+    const [isMounted, setIsMounted] = useState(false);
+    useEffect(() => setIsMounted(true), []);
+
+    if (!scene || !isMounted) return null;
+
+    const backgroundUrl = scene.background
+      ? `${backgroundBase}${scene.background}`
+      : undefined;
+
+    const content = (
+      <div className="fixed inset-0 z-[9999] w-full h-full bg-black">
+        
+        {/* Stage Container */}
+        <div 
+          onClick={handleAdvance}
+          className="relative w-full h-full overflow-hidden select-none cursor-pointer bg-black"
+        >
+          {/* Background Image Layer & Pinned In-World Elements */}
+          <div className="absolute inset-0 overflow-hidden flex items-center justify-center pointer-events-none">
+            <div 
+              className="relative shrink-0 pointer-events-auto"
+              style={{
+                width: 'max(100vw, calc(100vh * 2716 / 1568))',
+                height: 'max(100vh, calc(100vw * 1568 / 2716))',
+                aspectRatio: '2716 / 1568',
+              }}
+            >
+              {backgroundUrl && (
+                <img
+                  src={backgroundUrl}
+                  alt="Scene Background"
+                  className="absolute inset-0 w-full h-full object-cover select-none pointer-events-none transition-all duration-700"
+                />
+              )}
+
+              {/* Vignette Overlay & Subtle Scanlines */}
+              <div className="absolute inset-0 bg-gradient-to-t from-[#06020f]/80 via-transparent to-black/60 pointer-events-none" />
+              <div 
+                className="absolute inset-0 opacity-[0.04] pointer-events-none"
+                style={{
+                  backgroundImage: "linear-gradient(rgba(255,255,255,0.8) 1px, transparent 1px)",
+                  backgroundSize: "100% 3px"
+                }}
+              />
+
+              {/* The Architect Pinned Directly onto the Left Desk Monitor */}
+              {isArchitectTerminalScene && !isDivider && (
+                <div
+                  className={`absolute transition-all duration-500 flex flex-col items-center justify-center overflow-hidden rounded-xl pointer-events-none ${
+                    spriteIn ? "opacity-100" : "opacity-0"
+                  }`}
+                  style={{
+                    left: '17.2%',
+                    top: '29.5%',
+                    width: '19.0%',
+                    height: '38.0%',
+                  }}
+                >
+                  {/* Glowing Monitor Screen Tint & Active Bezel */}
+                  <div className={`absolute inset-0 rounded-xl transition-all duration-500 ${
+                    isArchitectLine
+                      ? "bg-cyan-950/40 border-2 border-cyan-400 shadow-[0_0_35px_rgba(6,182,212,0.65),inset_0_0_25px_rgba(6,182,212,0.45)]"
+                      : "bg-cyan-950/15 border border-cyan-500/25"
+                  }`} />
+
+                  {/* Telemetry Header inside monitor */}
+                  <div className="absolute top-1 left-2 right-2 z-10 flex items-center justify-between text-[7px] sm:text-[9px] font-mono text-cyan-300 font-bold pointer-events-none">
+                    <span className="bg-black/60 px-1 py-0.5 rounded border border-cyan-500/30">CH: 00_CORE</span>
+                    {isArchitectLine ? (
+                      <span className="animate-pulse text-cyan-300 font-bold flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 inline-block animate-ping" />
+                        TRANSMITTING
+                      </span>
+                    ) : (
+                      <span className="text-cyan-500/70">IDLE</span>
+                    )}
+                  </div>
+
+                  {/* The Architect Sprite INSIDE the Desk Monitor */}
+                  <div className="relative w-full h-full flex items-center justify-center p-1 sm:p-2 z-0">
+                    <img 
+                      src="/scenes/characters/ARCHITECT.png" 
+                      alt="The Architect" 
+                      className={`w-full h-full object-contain transition-all duration-500 ${
+                        isArchitectLine 
+                          ? "opacity-100 scale-100 brightness-110 filter drop-shadow-[0_0_20px_rgba(34,211,238,0.7)]" 
+                          : "opacity-45 scale-95 grayscale-[30%]"
+                      }`} 
+                    />
+                  </div>
+
+                  {/* CRT Scanlines Overlay */}
+                  <div 
+                    className="absolute inset-0 pointer-events-none opacity-30 mix-blend-screen z-10"
+                    style={{
+                      backgroundImage: "linear-gradient(rgba(34,211,238,0.25) 1px, transparent 1px)",
+                      backgroundSize: "100% 3px"
+                    }}
+                  />
+
+                  {/* Telemetry Footer inside monitor */}
+                  <div className="absolute bottom-1 left-2 right-2 z-10 flex items-center justify-between text-[6px] sm:text-[8px] font-mono text-cyan-300/80 pointer-events-none">
+                    <span>THE ARCHITECT</span>
+                    <span className="flex items-center gap-1">
+                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                      ROW_0_LINK
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Top Control Bar (Scene Telemetry, Mute Button, Skip Button) */}
+          <div className="absolute top-4 left-4 right-4 z-40 flex items-center justify-between pointer-events-auto">
+            {/* Progress Badge */}
+            <div className="flex items-center gap-3 px-4 py-2.5 rounded-full bg-black/60 backdrop-blur-md border border-white/15 shadow-lg w-40 sm:w-64">
+              <span className="w-2 h-2 rounded-full bg-[#ff912d] animate-ping flex-shrink-0" />
+              <div className="flex-1 h-1.5 bg-white/20 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-[#ff912d] transition-all duration-300 rounded-full"
+                  style={{ width: `${((index + 1) / scenes.length) * 100}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Quick Actions (Audio Toggle + Skip) */}
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setMuted(!muted);
+                }}
+                className="p-2 rounded-full bg-black/60 backdrop-blur-md border border-white/15 text-white/80 hover:text-white hover:border-[#ff912d]/60 transition-all shadow-lg active:scale-95 cursor-pointer"
+                title={muted ? "Unmute sound" : "Mute sound"}
+              >
+                {muted ? <VolumeX size={15} /> : <Volume2 size={15} />}
+              </button>
+
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowSummaryModal(true);
+                }}
+                className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-[#ff912d]/90 hover:bg-[#ff912d] text-black font-black font-mono text-xs uppercase tracking-wider shadow-[0_0_15px_rgba(255,145,45,0.5)] transition-all active:scale-95 cursor-pointer"
+                title="Skip to Dashboard"
+              >
+                <span>Skip</span>
+                <FastForward size={13} />
+              </button>
+            </div>
+          </div>
+
+          {/* STATE A: Title Card Divider */}
+          {isDivider ? (
+            <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center bg-black/75 backdrop-blur-sm z-30 animate-in fade-in duration-300">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#ff912d]/15 border border-[#ff912d]/40 text-[#ff912d] font-mono text-xs font-bold uppercase tracking-widest mb-4">
+                <Sparkles size={14} /> Mission Chapter
+              </div>
+              <h2 className="text-3xl sm:text-5xl font-black font-display text-white uppercase tracking-wider mb-2 drop-shadow-[0_0_20px_rgba(255,145,45,0.4)]">
+                {scene.title}
+              </h2>
+              {scene.subtitle && (
+                <p className="text-sm sm:text-base font-mono text-purple-200/80 max-w-md">
+                  {scene.subtitle}
+                </p>
+              )}
+              <div className="mt-8 px-5 py-2 rounded-full bg-white/10 border border-white/15 text-xs font-mono text-white/70 animate-pulse flex items-center gap-2">
+                <span>{gated ? "Preparing sector mission..." : "Click anywhere to begin ▸"}</span>
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* STATE B: Character Visual Card (Rectangular Sci-Fi Hologram or Sprite) */}
+              {/* STATE B2: Listener Characters on the side when The Architect is speaking */}
+              {isArchitectLine && (
+                <div
+                  className={`absolute right-6 sm:right-16 bottom-0 z-20 transition-all duration-500 ease-out flex items-end gap-6 ${
+                    spriteIn
+                      ? "opacity-100 translate-y-0"
+                      : "opacity-0 translate-y-8 pointer-events-none"
+                  }`}
+                >
+                  {lastRoomSpeaker === "Nova" ? (
+                    <img 
+                      src={SPEAKER_PROFILES["Nova"]?.image || "/scenes/characters/Nova Idle.png"} 
+                      alt="Nova" 
+                      className="h-[24rem] sm:h-[36rem] object-contain object-bottom drop-shadow-[0_0_40px_rgba(0,0,0,0.6)] mb-[8rem] sm:mb-[10rem] opacity-90 transition-all duration-300" 
+                    />
+                  ) : lastRoomSpeaker === "Operator" ? (
+                    <div className="flex items-end gap-4 mb-[8rem] sm:mb-[10rem]">
+                      {/* Operator Holo-card */}
+                      <div
+                        className={`w-32 sm:w-44 aspect-[3/4] rounded-2xl bg-gradient-to-b ${SPEAKER_PROFILES["Operator"].color} border-2 ${SPEAKER_PROFILES["Operator"].border} p-3 sm:p-4 flex flex-col justify-between relative overflow-hidden backdrop-blur-md mb-[2rem] sm:mb-[3rem] shrink-0 opacity-90`}
+                      >
+                        <div className="flex items-center justify-between text-[8px] font-mono text-white/50">
+                          <span>[HUD_ID]</span>
+                          <span className="text-[#ff912d] animate-pulse">LISTENING</span>
+                        </div>
+                        <div className="flex-1 flex flex-col items-center justify-center my-2">
+                          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-black/40 border border-white/10 flex items-center justify-center shadow-inner relative">
+                            <User size={28} className="text-[#ff912d] drop-shadow-md" />
+                          </div>
+                        </div>
+                        <div className="text-center space-y-1 bg-black/50 border border-white/10 p-2 rounded-xl">
+                          <div className="font-display font-black text-xs sm:text-sm text-white uppercase tracking-wider truncate">
+                            {username}
+                          </div>
+                          <div className="text-[8px] font-mono text-white/60 uppercase tracking-tight truncate">
+                            {SPEAKER_PROFILES["Operator"].role}
+                          </div>
+                        </div>
+                      </div>
+                      {/* Nova Companion */}
+                      <img 
+                        src={SPEAKER_PROFILES["Nova"]?.image || "/scenes/characters/Nova Idle.png"} 
+                        alt="Nova" 
+                        className="h-64 sm:h-[24rem] object-contain object-bottom drop-shadow-2xl shrink-0 opacity-90" 
+                      />
+                    </div>
+                  ) : lastRoomSpeaker === "Oberion" ? (
+                    <img 
+                      src={SPEAKER_PROFILES["Oberion"]?.image} 
+                      alt="Oberion" 
+                      className="h-[28rem] sm:h-[40rem] object-contain object-bottom drop-shadow-[0_0_40px_rgba(0,0,0,0.6)] mb-[8rem] sm:mb-[12rem] opacity-90" 
+                    />
+                  ) : (
+                    /* Default / Director Atlas */
+                    <img 
+                      src={SPEAKER_PROFILES["Director Atlas"]?.image || "/scenes/characters/HIGHER HEAD.png"} 
+                      alt="Director Atlas" 
+                      className="h-[28rem] sm:h-[40rem] object-contain object-bottom drop-shadow-[0_0_40px_rgba(0,0,0,0.6)] mb-[8rem] sm:mb-[12rem] opacity-95 transition-all duration-300" 
+                    />
+                  )}
+                </div>
+              )}
+
+              {/* STATE B3: Standard Active Speaker Card (Non-Architect) */}
+              {showCharacterCard && !isArchitectLine && (
+                <div
+                  className={`absolute right-6 sm:right-16 bottom-0 z-20 transition-all duration-500 ease-out flex items-end gap-6 ${
+                    spriteIn
+                      ? "opacity-100 translate-y-0"
+                      : "opacity-0 translate-y-8 pointer-events-none"
+                  }`}
+                >
+                  {rawSpeakerName === "Operator" ? (
+                    <>
+                      {/* Operator Holo-card */}
+                      <div
+                        className={`w-36 sm:w-48 aspect-[3/4] rounded-2xl bg-gradient-to-b ${profile.color} border-2 ${profile.border} ${profile.glow} p-3.5 sm:p-4 flex flex-col justify-between relative overflow-hidden backdrop-blur-md mb-[10rem] sm:mb-[13rem] shrink-0`}
+                      >
+                        <div className="flex items-center justify-between text-[8px] font-mono text-white/50">
+                          <span>[HUD_ID]</span>
+                          <span className="text-[#ff912d] animate-pulse">LIVE</span>
+                        </div>
+                        <div className="flex-1 flex flex-col items-center justify-center my-2">
+                          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-black/40 border border-white/10 flex items-center justify-center shadow-inner relative group">
+                            <div className="absolute inset-0 bg-[#ff912d]/10 rounded-2xl animate-pulse" />
+                            {profile.icon === "crown" && <Crown size={32} className="text-indigo-400 drop-shadow-md" />}
+                            {profile.icon === "radio" && <Radio size={32} className="text-sky-400 drop-shadow-md" />}
+                            {profile.icon === "alert" && <ShieldAlert size={32} className="text-amber-400 drop-shadow-md" />}
+                            {profile.icon === "user" && <User size={32} className="text-[#ff912d] drop-shadow-md" />}
+                          </div>
+                        </div>
+                        <div className="text-center space-y-1 bg-black/50 border border-white/10 p-2 rounded-xl">
+                          <div className="font-display font-black text-xs sm:text-sm text-white uppercase tracking-wider truncate">
+                            {displaySpeakerName}
+                          </div>
+                          <div className="text-[8px] font-mono text-white/60 uppercase tracking-tight truncate">
+                            {profile.role}
+                          </div>
+                        </div>
+                        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/5 to-transparent pointer-events-none opacity-40 animate-pulse" />
+                      </div>
+                      
+                      {/* Nova Companion Sprite */}
+                      <img 
+                        src={SPEAKER_PROFILES["Nova"]?.image} 
+                        alt="Nova" 
+                        className="h-72 sm:h-[26rem] object-contain object-bottom drop-shadow-2xl mb-[8rem] sm:mb-[10rem] shrink-0" 
+                      />
+                    </>
+                  ) : rawSpeakerName === "Emma G and Penny G" ? (
+                    /* Twins Side-by-Side Sprites */
+                    <div className="flex items-end gap-2 sm:gap-4 mb-[8rem] sm:mb-[12rem]">
+                      <img 
+                        src={SPEAKER_PROFILES["Emma G"]?.image} 
+                        alt="Emma G" 
+                        className="h-[32rem] sm:h-[44rem] object-contain object-bottom drop-shadow-[0_0_40px_rgba(0,0,0,0.6)]" 
+                      />
+                      <img 
+                        src={SPEAKER_PROFILES["Penny G"]?.image} 
+                        alt="Penny G" 
+                        className="h-[32rem] sm:h-[44rem] object-contain object-bottom drop-shadow-[0_0_40px_rgba(0,0,0,0.6)]" 
+                      />
+                    </div>
+                  ) : profile.image ? (
+                    /* Actual Character Sprite */
+                    <img 
+                      src={profile.image} 
+                      alt={displaySpeakerName} 
+                      className={`h-[32rem] sm:h-[44rem] object-contain object-bottom drop-shadow-[0_0_40px_rgba(0,0,0,0.6)] mb-[8rem] sm:mb-[12rem] transition-all duration-[1500ms] ease-in-out ${profile.silhouette ? "brightness-0" : "brightness-100"}`} 
+                    />
+                  ) : (
+                    /* Fallback Holo-card if no image */
+                    <div
+                      className={`w-36 sm:w-48 aspect-[3/4] rounded-2xl bg-gradient-to-b ${profile.color} border-2 ${profile.border} ${profile.glow} p-3.5 sm:p-4 flex flex-col justify-between relative overflow-hidden backdrop-blur-md mb-[10rem] sm:mb-[13rem] shrink-0`}
+                    >
+                      <div className="flex items-center justify-between text-[8px] font-mono text-white/50">
+                        <span>[HUD_ID]</span>
+                        <span className="text-[#ff912d] animate-pulse">LIVE</span>
+                      </div>
+                      <div className="flex-1 flex flex-col items-center justify-center my-2">
+                        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-black/40 border border-white/10 flex items-center justify-center shadow-inner relative group">
+                          <div className="absolute inset-0 bg-[#ff912d]/10 rounded-2xl animate-pulse" />
+                          {profile.icon === "crown" && <Crown size={32} className="text-indigo-400 drop-shadow-md" />}
+                          {profile.icon === "radio" && <Radio size={32} className="text-sky-400 drop-shadow-md" />}
+                          {profile.icon === "alert" && <ShieldAlert size={32} className="text-amber-400 drop-shadow-md" />}
+                          {profile.icon === "user" && <User size={32} className="text-[#ff912d] drop-shadow-md" />}
+                        </div>
+                      </div>
+                      <div className="text-center space-y-1 bg-black/50 border border-white/10 p-2 rounded-xl">
+                        <div className="font-display font-black text-xs sm:text-sm text-white uppercase tracking-wider truncate">
+                          {displaySpeakerName}
+                        </div>
+                        <div className="text-[8px] font-mono text-white/60 uppercase tracking-tight truncate">
+                          {profile.role}
+                        </div>
+                      </div>
+                      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/5 to-transparent pointer-events-none opacity-40 animate-pulse" />
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Dialogue Box Overlay */}
+              <div className="absolute left-4 right-4 bottom-10 sm:left-12 sm:right-12 sm:bottom-16 z-30">
+                {/* Main Dialogue Box */}
+                <div
+                  className={`w-full bg-[#130524]/95 backdrop-blur-xl border-2 border-[#ff912d] rounded-[40px] py-6 px-10 sm:py-8 sm:px-20 shadow-[0_15px_45px_rgba(0,0,0,0.8),0_0_30px_rgba(255,145,45,0.25)] relative transition-all duration-150 ${
+                    typing ? "ring-1 ring-[#ff912d]/50" : ""
+                  }`}
+                >
+                  {/* Speaker Name Box */}
+                  {displaySpeakerName && (
+                    <div 
+                      className="absolute -top-6 sm:-top-7 left-8 sm:left-12 px-6 sm:px-8 py-1.5 sm:py-2 bg-[#130524] border-2 border-[#ff912d] rounded-[20px] text-white font-display font-black text-xl sm:text-2xl uppercase tracking-wider shadow-[0_5px_20px_rgba(0,0,0,0.5)] z-10"
+                    >
+                      {displaySpeakerName}
+                    </div>
+                  )}
+
+                  {/* Typed Text Content */}
+                  <p className="text-white text-xl sm:text-3xl font-medium leading-relaxed font-sans min-h-[80px] sm:min-h-[100px]">
+                    {shownText}
+                    {typing && (
+                      <span className="inline-block w-4 h-8 ml-2 bg-[#ff912d] animate-pulse align-middle" />
+                    )}
+                  </p>
+
+                  {/* Advance Hint */}
+                  <div className="flex items-center justify-end gap-2 text-lg sm:text-xl font-mono text-[#ff912d] mt-6 font-bold tracking-wider">
+                    <span>{typing ? "Click to quick-reveal" : "Click to continue"}</span>
+                    <ChevronRight size={24} className="animate-pulse" />
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Story Summary Modal Overlay */}
+          {showSummaryModal && (
+            <div className="absolute inset-0 z-50 flex items-center justify-center p-4">
+              <style>{`
+                @keyframes wobbleMove {
+                  0%, 100% { transform: translateX(-15px) rotate(-6deg); }
+                  50% { transform: translateX(15px) rotate(6deg); }
+                }
+                .animate-wobble {
+                  animation: wobbleMove 4s ease-in-out infinite;
+                }
+                @keyframes spriteJitter {
+                  0%, 100% { transform: translateY(0); }
+                  25% { transform: translateY(-8px); }
+                  50% { transform: translateY(0); }
+                  75% { transform: translateY(4px); }
+                }
+                .animate-jitter {
+                  animation: spriteJitter 0.12s cubic-bezier(0.36, 0.07, 0.19, 0.97) infinite;
+                }
+              `}</style>
+
+              {/* Blur backdrop overlay */}
+              <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+              
+              {/* Modal Container */}
+              <div className="relative w-full max-w-6xl bg-[#1a0b2e] border-[3px] border-[#ff912d] rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.8)] flex flex-col pt-14 pb-12 px-8 sm:px-12 mt-8">
+                
+                {/* Starry Background (14% Opacity) covering the whole box */}
+                <div 
+                  className="absolute inset-0 opacity-[0.14] pointer-events-none rounded-3xl bg-cover bg-center"
+                  style={{ backgroundImage: "url('/scenes/stars_bg.png')" }}
+                />
+                
+                {/* Overhanging Title Box */}
+                <div className="absolute -top-7 left-1/2 -translate-x-1/2 bg-[#1a0b2e] border-[3px] border-[#ff912d] rounded-xl px-16 py-2 shadow-[0_10px_20px_rgba(0,0,0,0.5)]">
+                  <h2 className="text-4xl font-sans text-white tracking-wide">Story Summary</h2>
+                </div>
+
+                {/* Content Area */}
+                <div className="relative flex flex-col sm:flex-row items-center gap-8 sm:gap-12 z-10 min-h-[350px]">
+
+                  {/* Left: Wobbling Character Image */}
+                  <div className="w-1/3 flex justify-center items-center z-10 shrink-0 relative mt-4 sm:mt-0">
+                    <img 
+                      src="/scenes/Nova_Shrug_Sideways.png" 
+                      alt="Nova"
+                      className="w-full max-w-[240px] object-contain animate-wobble drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]"
+                    />
+                  </div>
+
+                  {/* Right: JSON Summary Text */}
+                  <div className="w-2/3 z-10 text-white/95 text-lg sm:text-[22px] font-sans leading-[1.6] text-justify font-medium tracking-wide">
+                    {summaryText || storySummaries.skip_summary}
+                  </div>
+                </div>
+
+                {/* Overhanging Next Button */}
+                <div className="absolute -bottom-6 right-8 sm:right-16 z-20">
+                  <button
+                    onClick={onFinished}
+                    className="bg-[#ff912d] hover:bg-[#ff912d]/90 text-white font-sans text-3xl px-8 py-2 rounded-2xl flex items-center gap-2 transition-transform hover:scale-105 active:scale-95 shadow-[0_5px_15px_rgba(255,145,45,0.4)]"
+                  >
+                    Next &gt;
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+
+    return createPortal(content, document.body);
+  }
+);
+
+export default VisualNovelCutscene;

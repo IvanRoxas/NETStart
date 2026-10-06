@@ -37,6 +37,8 @@ export default async function ModulesPage() {
       gears: true,
       isVerified: true,
       hasTakenAptitudeTest: true,
+      aptitudeResult: true,
+      recommendedLearningPath: true,
     }
   }) : null;
 
@@ -87,6 +89,8 @@ export default async function ModulesPage() {
           userId={activeUserId}
           isVerified={isVerified} 
           hasTakenAptitudeTest={hasTakenAptitudeTest}
+          aptitudeResult={dbUser?.aptitudeResult}
+          recommendedLearningPath={dbUser?.recommendedLearningPath}
           liveStats={liveStats} 
           completedMissions={completedMissions} 
         />

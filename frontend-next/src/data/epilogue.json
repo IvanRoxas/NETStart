@@ -1,0 +1,44 @@
+[
+  {
+    "id": "epilogue-001",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "The celebration lasted long into the night. Engineers and technicians from every department filled the control room, watching the live map hold steady, planet after planet, without a single flicker.",
+    "background": "epilogue_bg_001.jpg"
+  },
+  {
+    "id": "epilogue-002",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "The Architect couldn’t step out to join them in person, but his voice stayed on the speakers longer than it ever had before. He answered questions, told a dry joke or two, and sounded like someone who wasn’t alone for the first time.",
+    "background": "epilogue_bg_001.jpg"
+  },
+  {
+    "id": "epilogue-003",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "Oberion watched the edges of the map, where the lines faded to a dull gray, after a while.",
+    "background": "epilogue_bg_001.jpg"
+  },
+  {
+    "id": "epilogue-004",
+    "type": "dialogue",
+    "speaker": "Oberion",
+    "text": "Uranus and Neptune are still out there. Waiting.",
+    "background": "epilogue_bg_001.jpg"
+  },
+  {
+    "id": "epilogue-005",
+    "type": "dialogue",
+    "speaker": "Operator",
+    "text": "They can wait a little longer. We’ll get there. We just won’t be doing it alone this time.",
+    "background": "epilogue_bg_001.jpg"
+  },
+  {
+    "id": "epilogue-006",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "Somewhere inside the computer, the soft hum that used to be a man and was now something new seemed to agree.",
+    "background": "epilogue_bg_001.jpg"
+  }
+]

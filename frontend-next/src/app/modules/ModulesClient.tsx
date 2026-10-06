@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
-import { Lock, Rocket, Award, Settings, Zap, Brain, X } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
+import { Lock, Rocket, Award, Settings, Zap, Brain, X, Sparkles } from 'lucide-react';
 import PlanetNode from '@/components/PlanetNode';
 import { getUserStorageItem, setUserStorageItem, removeUserStorageItem } from '@/lib/userStorage';
 import DemoToggle from '@/components/DemoToggle';
@@ -27,6 +28,8 @@ interface ModulesClientProps {
   userId?: string;
   isVerified: boolean;
   hasTakenAptitudeTest?: boolean;
+  aptitudeResult?: any;
+  recommendedLearningPath?: string | null;
   liveStats: LiveStats;
   completedMissions: CompletedMission[];
 }
@@ -41,9 +44,33 @@ const pathSegments = [
   { from: 5, to: 6, x1: 76, y1: 74, x2: 26, y2: 86 },
 ];
 
-export default function ModulesClient({ userId, isVerified, hasTakenAptitudeTest = false, liveStats, completedMissions }: ModulesClientProps) {
+export default function ModulesClient({
+  userId,
+  isVerified,
+  hasTakenAptitudeTest = false,
+  aptitudeResult,
+  recommendedLearningPath,
+  liveStats,
+  completedMissions,
+}: ModulesClientProps) {
   const [activePlanetId, setActivePlanetId] = useState<string | null>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
+  const searchParams = useSearchParams();
+  const fromCutscene = searchParams ? searchParams.get('fromCutscene') === 'true' : false;
+  const [revealOverlay, setRevealOverlay] = useState(fromCutscene);
+  const [fadeOverlay, setFadeOverlay] = useState(false);
+
+  useEffect(() => {
+    if (fromCutscene) {
+      const fadeTimer = setTimeout(() => setFadeOverlay(true), 800);
+      const removeTimer = setTimeout(() => setRevealOverlay(false), 4000);
+      return () => {
+        clearTimeout(fadeTimer);
+        clearTimeout(removeTimer);
+      };
+    }
+  }, [fromCutscene]);
+
 
   // Demo mode: temporarily unlocks all planets for debugging; pauses XP/progression side-effects
   const { isDemoMode } = useDemoMode();
@@ -229,10 +256,12 @@ export default function ModulesClient({ userId, isVerified, hasTakenAptitudeTest
   const mercuryCompleted = getCompletedMissionsCount("mercury") >= 3 || hasCompletedFinal("mercury");
   const jupiterCompleted = getCompletedMissionsCount("jupiter") >= 3 || hasCompletedFinal("jupiter");
   const saturnCompleted = getCompletedMissionsCount("saturn") >= 3 || hasCompletedFinal("saturn");
+  const earthCompleted = getCompletedMissionsCount("earth") >= 3 || hasCompletedFinal("earth");
 
   // Real unlocked index based on server completed missions
   let realUnlockedIndex = 0;
-  if (saturnCompleted) realUnlockedIndex = 6;
+  if (earthCompleted) realUnlockedIndex = 6;
+  else if (saturnCompleted) realUnlockedIndex = 6;
   else if (jupiterCompleted) realUnlockedIndex = 5;
   else if (mercuryCompleted) realUnlockedIndex = 4;
   else if (venusCompleted) realUnlockedIndex = 3;
@@ -473,6 +502,15 @@ export default function ModulesClient({ userId, isVerified, hasTakenAptitudeTest
 
   return (
     <div ref={containerRef} className="relative w-full h-[370vh] min-h-[370vh] pb-96 mb-20 px-4">
+      {/* Reveal Overlay (Only shown when coming from cutscene) */}
+      {revealOverlay && (
+        <div 
+          className={`fixed inset-0 bg-black z-[9999] pointer-events-none transition-opacity duration-[3000ms] ease-in-out ${
+            fadeOverlay ? 'opacity-0' : 'opacity-100'
+          }`}
+        />
+      )}
+
       
       {/* Top Floating Pill-Shaped Telemetry Bar */}
       <div className="sticky top-4 z-40 w-full max-w-[98%] sm:max-w-[96%] mx-auto my-3 bg-[#130927]/95 backdrop-blur-xl border border-[#ff912d]/40 rounded-full px-6 sm:px-8 py-3 shadow-[0_0_35px_rgba(0,0,0,0.7),0_0_20px_rgba(255,145,45,0.25)] flex flex-wrap items-center justify-between gap-4 transition-all">
@@ -491,6 +529,15 @@ export default function ModulesClient({ userId, isVerified, hasTakenAptitudeTest
             </div>
           </div>
         </div>
+
+        {/* Center: Recommended Orbit Learning Path (from Aptitude Assessment) */}
+        {hasTakenAptitudeTest && recommendedLearningPath && (
+          <div className="hidden xl:flex items-center gap-2 bg-[#ff912d]/10 border border-[#ff912d]/30 px-3.5 py-1.5 rounded-full text-xs font-mono font-bold text-[#ff912d]">
+            <Sparkles size={14} />
+            <span className="text-gray-400">RECOMMENDED PATH:</span>
+            <span className="text-white font-sans font-bold">{recommendedLearningPath}</span>
+          </div>
+        )}
 
         {/* Center/Right: Telemetry Metrics Chips (EXP Threshold Bar, Gears, Missions) */}
         <div className="flex items-center gap-3 flex-wrap">
@@ -834,6 +881,20 @@ export default function ModulesClient({ userId, isVerified, hasTakenAptitudeTest
       <div className="fixed bottom-6 left-24 z-50">
         <DemoToggle />
       </div>
+
+      {/* Epilogue Grand Finale Launch Button */}
+      {earthCompleted && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 animate-in fade-in slide-in-from-bottom-6 duration-700">
+          <Link
+            href="/sandbox?missionId=epilogue"
+            className="flex items-center gap-3 px-6 py-3.5 rounded-full bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-600 hover:from-emerald-400 hover:to-indigo-500 text-white font-display font-black text-xs sm:text-sm uppercase tracking-widest shadow-[0_0_35px_rgba(16,185,129,0.6)] border-2 border-emerald-300/80 transition-all hover:scale-105 active:scale-95 cursor-pointer"
+          >
+            <Sparkles size={18} className="animate-spin text-amber-300 shrink-0" />
+            <span>All 7 Planets Restored // Play Epilogue</span>
+            <Rocket size={18} className="shrink-0" />
+          </Link>
+        </div>
+      )}
 
     </div>
   );

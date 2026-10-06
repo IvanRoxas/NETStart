@@ -39,6 +39,10 @@ export default function LoginPage() {
       } else if (params.get('registered') === 'true') {
         showToast("Account created successfully! Please log in.", "success");
         window.history.replaceState({}, '', '/login');
+      } else if (params.get('error')) {
+        const err = params.get('error');
+        showToast(err === 'Callback' ? "Sign-in failed during authentication callback. Please try again." : `Authentication failed: ${err}`, "error");
+        window.history.replaceState({}, '', '/login');
       }
     }
 

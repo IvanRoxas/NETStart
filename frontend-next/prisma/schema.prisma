@@ -59,6 +59,8 @@ model User {
   hasTakenAptitudeTest Boolean @default(false) @map("has_taken_aptitude_test")
   logicScore    Int?      @map("logic_score")
   patternRecognitionScore Int? @map("pattern_recognition_score")
+  taskDecompositionScore  Int? @map("task_decomposition_score")
+  aptitudeResult          Json? @map("aptitude_result")
   recommendedLearningPath String? @map("recommended_learning_path")
   xp            Int       @default(0)
   gears         Int       @default(0)
@@ -77,6 +79,7 @@ model User {
   // Gamification Relations
   userAchievements    UserAchievement[]
   missionProgresses   MissionProgress[]
+  interventionLogs    InterventionLog[]
 
   // Shop Relations
   inventory           UserInventory[]
@@ -115,6 +118,7 @@ model MissionProgress {
   userId        String    @map("user_id")
   missionId     String    @map("mission_id")
   status        String    @default("IN_PROGRESS")
+  failureCount  Int       @default(0) @map("failure_count")
   submittedCode String?   @db.Text @map("submitted_code")
   completedAt   DateTime? @map("completed_at")
   startedAt     DateTime  @default(now()) @map("started_at")
@@ -264,5 +268,22 @@ model Report {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("reports")
+}
+
+model InterventionLog {
+  id            String   @id @default(cuid())
+  userId        String   @map("user_id")
+  missionId     String   @map("mission_id")
+  errorType     String   @map("error_type")
+  hintId        String   @map("hint_id")
+  promptVersion String   @map("prompt_version")
+  confidence    String?
+  fallbackUsed  Boolean  @default(false) @map("fallback_used")
+  timestamp     DateTime @default(now())
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, missionId])
+  @@map("Intervention_Logs")
 }
 

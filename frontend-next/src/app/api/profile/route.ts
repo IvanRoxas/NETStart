@@ -206,7 +206,7 @@ export async function GET(req: Request) {
       backendTrackPercent: backendPct,
     };
 
-    return NextResponse.json({ user, missionProgress, stats });
+    return NextResponse.json({ user, missionProgress, stats, completedMissionIds: completedMissions.map(m => m.missionId) });
   } catch (error) {
     console.error('Error fetching profile:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

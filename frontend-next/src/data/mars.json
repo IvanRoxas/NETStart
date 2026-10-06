@@ -1,0 +1,296 @@
+[
+  {
+    "id": "mars-001",
+    "type": "divider",
+    "title": "Mars",
+    "subtitle": "HTML"
+  },
+  {
+    "id": "mars-002",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "As their spacecraft touched down on the lands of Mars, the Astronaut and Nova descended together. A chaotic scene immediately greeted them; massive planetary billboards lay scattered and disorganized across the landscape.",
+    "background": "bg_001.png"
+  },
+  {
+    "id": "mars-003",
+    "type": "dialogue",
+    "speaker": "Operator and Nova",
+    "text": "Woah... what happened here?",
+    "background": "bg_001.png"
+  },
+  {
+    "id": "mars-004",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "A bit weird that the planet in charge of marketing has their billboards all jumbled up like this.",
+    "background": "bg_002.png"
+  },
+  {
+    "id": "mars-005",
+    "type": "dialogue",
+    "speaker": "???",
+    "text": "Are you the kind souls sent by NETStart to help us?",
+    "background": "bg_002.png"
+  },
+  {
+    "id": "mars-006",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "The pair turned to see a local resident approaching.",
+    "background": "bg_002.png"
+  },
+  {
+    "id": "mars-007",
+    "type": "dialogue",
+    "speaker": "Mark",
+    "text": "Greetings explorers! My name is Mark. I was told you were coming to restore our connection.",
+    "background": "bg_002.png"
+  },
+  {
+    "id": "mars-008",
+    "type": "dialogue",
+    "speaker": "Operator",
+    "text": "As a matter of fact, we are! I’m Operator, and this is my partner, Nova.",
+    "background": "bg_002.png"
+  },
+  {
+    "id": "mars-009",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "The Astronaut replied, gesturing to the chaotic signage.",
+    "background": "bg_002.png"
+  },
+  {
+    "id": "mars-010",
+    "type": "dialogue",
+    "speaker": "Operator",
+    "text": "Could you please tell us what happened here? Must have been a rough day.",
+    "background": "bg_002.png"
+  },
+  {
+    "id": "mars-011",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "Mark sighed, looking at the tangled mess.",
+    "background": "bg_002.png"
+  },
+  {
+    "id": "mars-012",
+    "type": "dialogue",
+    "speaker": "Mark",
+    "text": "When the solar storm hit, the billboards suddenly flickered before going completely blank! We haven’t figured out a solution for this problem yet. That darn solar storm caused some trouble for us all, I tell you!",
+    "background": "bg_002.png"
+  },
+  {
+    "id": "mars-013",
+    "type": "dialogue",
+    "speaker": "Nova",
+    "text": "You heard them! Let’s go investigate and find the problem.",
+    "background": "bg_002.png"
+  },
+  {
+    "id": "mars-014",
+    "type": "mission",
+    "mission": "mars-1",
+    "level": 1,
+    "title": "Mini-Game 1A: Fix Name Billboard",
+    "concept": "Text and headings (<h1> to <h6>, <p>)",
+    "objective": "The player must use heading and paragraph tags to display the correct names and text on the blank billboard."
+  },
+  {
+    "id": "mars-015",
+    "type": "mission",
+    "mission": "mars-1-part2",
+    "level": 1,
+    "title": "Mini-Game 1B: Fix Container Billboard",
+    "concept": "Structure and grouping (<div>)",
+    "objective": "The player must use division tags to properly group the scattered information blocks so they fit neatly on the screen."
+  },
+  {
+    "id": "mars-016",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "Once the billboard was restored, Mark prepared to leave with gratitude.",
+    "background": "bg_002.png"
+  },
+  {
+    "id": "mars-017",
+    "type": "dialogue",
+    "speaker": "Mark",
+    "text": "We’ll make sure you get proper compensation for your kindness.",
+    "background": "bg_002.png"
+  },
+  {
+    "id": "mars-018",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "As they said their goodbyes and walked away, Nova summarized their findings.",
+    "background": "bg_002.png"
+  },
+  {
+    "id": "mars-019",
+    "type": "dialogue",
+    "speaker": "Nova",
+    "text": "So, Mark said a network shutdown caused the billboard blackout.",
+    "background": "bg_002.png"
+  },
+  {
+    "id": "mars-020",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "Surveying the area, they noticed lingering atmospheric disturbances and unusual moisture on the ground, hinting at a recent storm.",
+    "background": "bg_002.png"
+  },
+  {
+    "id": "mars-021",
+    "type": "dialogue",
+    "speaker": "Operator",
+    "text": "Maybe the solar storm is what severed the connection to Mars.",
+    "background": "bg_002.png"
+  },
+  {
+    "id": "mars-022",
+    "type": "dialogue",
+    "speaker": "???",
+    "text": "You are exactly right!",
+    "background": "bg_002.png"
+  },
+  {
+    "id": "mars-023",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "The pair turned to find two identical creatures standing nearby.",
+    "background": "bg_002.png"
+  },
+  {
+    "id": "mars-024",
+    "type": "dialogue",
+    "speaker": "Emma G",
+    "text": "My name is Emma G., and this is my twin, Penny G.",
+    "background": "bg_002.png"
+  },
+  {
+    "id": "mars-025",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "The second creature gave a friendly wave.",
+    "background": "bg_002.png"
+  },
+  {
+    "id": "mars-026",
+    "type": "dialogue",
+    "speaker": "Penny G",
+    "text": "We both saw the storm knock the AstroLink offline. And with that, all our network connections went down too.",
+    "background": "bg_002.png"
+  },
+  {
+    "id": "mars-027",
+    "type": "mission",
+    "mission": "mars-2",
+    "level": 2,
+    "title": "Mini-Game 2A: Fix Images Billboard",
+    "concept": "Image embedding (<img>, src, alt)",
+    "objective": "The player must write the correct image tags and source attributes to restore the missing graphics on the billboard."
+  },
+  {
+    "id": "mars-028",
+    "type": "dialogue",
+    "speaker": "Penny G",
+    "text": "Huh? That’s weird. Why isn’t the embedded video working?",
+    "background": "bg_002.png"
+  },
+  {
+    "id": "mars-029",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "Penny G frowned in confusion as she stared at the billboard.",
+    "background": "bg_002.png"
+  },
+  {
+    "id": "mars-030",
+    "type": "dialogue",
+    "speaker": "Operator",
+    "text": "I believe it’s because the connection is still down.",
+    "background": "bg_002.png"
+  },
+  {
+    "id": "mars-031",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "Nova nodded in agreement. The twins shared a look, scratching their heads in frustration.",
+    "background": "bg_002.png"
+  },
+  {
+    "id": "mars-032",
+    "type": "dialogue",
+    "speaker": "Nova",
+    "text": "Do you know where the AstroLink for Mars is located?",
+    "background": "bg_002.png"
+  },
+  {
+    "id": "mars-033",
+    "type": "dialogue",
+    "speaker": "Emma G and Penny G",
+    "text": "Sure, we can lead the way.",
+    "background": "bg_002.png"
+  },
+  {
+    "id": "mars-034",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "The Astronaut carefully took the replacement parts out of their bag.",
+    "background": "bg_002.png"
+  },
+  {
+    "id": "mars-035",
+    "type": "dialogue",
+    "speaker": "Operator",
+    "text": "Let’s go back and fix the Billboard and the communication device.",
+    "background": "bg_002.png"
+  },
+  {
+    "id": "mars-036",
+    "type": "mission",
+    "mission": "mars-3",
+    "level": 3,
+    "title": "Mini-Game 3A: Final AstroLink Repair",
+    "concept": "Hyperlinks and anchors (<a>, href)",
+    "objective": "The player must write the anchor tags and target the correct href URLs to establish a live network connection between Mars, Earth, and Venus, officially bringing the AstroLink back online."
+  },
+  {
+    "id": "mars-037",
+    "type": "dialogue",
+    "speaker": "Emma G and Penny G",
+    "text": "Thank you for restoring our communication device, Operator and Nova!",
+    "background": "bg_002.png"
+  },
+  {
+    "id": "mars-038",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "Looking around the illuminated plaza, the duo realized their mission on Mars was finally complete. Suddenly, the Astronaut’s communicator began to ring.",
+    "background": "bg_002.png"
+  },
+  {
+    "id": "mars-039",
+    "type": "dialogue",
+    "speaker": "Oberion",
+    "text": "Hello, Chief. Do you read me?",
+    "background": "bg_002.png"
+  },
+  {
+    "id": "mars-040",
+    "type": "dialogue",
+    "speaker": "Operator",
+    "text": "Yes, Sir. We just finished on Mars. The communication network is fully reconnected.",
+    "background": "bg_002.png"
+  },
+  {
+    "id": "mars-041",
+    "type": "dialogue",
+    "speaker": "Oberion",
+    "text": "Good work. Now, proceed to Venus.",
+    "background": "bg_002.png"
+  }
+]

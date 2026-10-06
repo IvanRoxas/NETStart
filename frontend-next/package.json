@@ -3,30 +3,48 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "concurrently \"npx prisma dev --db-port 51214 --shadow-db-port 51215\" \"next dev\"",
+    "dev": "concurrently \"npm run dev:db\" \"powershell -Command \\\"Start-Sleep -Seconds 4\\\" && npm run dev:next\"",
+    "dev:db": "node prisma/clean_locks.js && npx prisma dev --db-port 51224 --shadow-db-port 51225",
+    "dev:next": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "clean": "powershell -Command \"Remove-Item -Recurse -Force .next\""
+    "clean": "powershell -Command \"Remove-Item -Recurse -Force .next\"",
+    "postinstall": "node scripts/copy-pyodide.js"
   },
   "dependencies": {
     "@blockly/field-colour": "^13.3.0",
+    "@codemirror/lang-css": "^6.3.1",
+    "@codemirror/lang-html": "^6.4.12",
+    "@codemirror/lang-javascript": "^6.2.5",
+    "@codemirror/lang-python": "^6.2.1",
+    "@codemirror/language": "^6.12.4",
+    "@codemirror/lint": "^6.9.7",
     "@electric-sql/pglite": "^0.4.1",
+    "@google/genai": "^2.25.0",
+    "@lezer/highlight": "^1.2.5",
     "@next-auth/prisma-adapter": "^1.0.7",
     "@prisma/adapter-pg": "^7.8.0",
+    "@uiw/react-codemirror": "^4.25.12",
+    "acorn": "^8.18.0",
     "bcryptjs": "^3.0.3",
     "blockly": "^13.1.1",
     "date-fns": "^4.4.0",
     "dotenv": "^17.4.2",
+    "html-to-image": "^1.11.13",
+    "html2canvas": "^1.4.1",
     "lucide-react": "^1.24.0",
     "next": "16.2.10",
     "nodemailer": "^7.0.13",
     "pg": "^8.22.0",
     "pglite-prisma-adapter": "^0.7.2",
     "prisma-pglite": "^3.0.0",
+    "pyodide": "^314.0.7",
     "react": "19.2.4",
     "react-dom": "19.2.4",
-    "react-image-crop": "^11.1.2"
+    "react-image-crop": "^11.1.2",
+    "recharts": "^3.10.1",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -41,7 +59,8 @@
     "eslint-config-next": "16.2.10",
     "prisma": "^7.8.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "wait-on": "^9.1.0"
   },
   "prisma": {
     "seed": "node prisma/seed_admin.js"

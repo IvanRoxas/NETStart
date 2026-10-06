@@ -1,0 +1,515 @@
+[
+  {
+    "id": "earth-001",
+    "type": "divider",
+    "title": "Earth",
+    "subtitle": "Python"
+  },
+  {
+    "id": "earth-002",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "After weeks of chasing changing signals across the solar system, the Astronaut’s ship finally broke through Earth’s atmosphere. The wild trip had brought them back, and the ship was now flying down toward the bright towers of their headquarters.",
+    "background": "earth_bg_001.jpg",
+    "when": "pythonLast"
+  },
+  {
+    "id": "earth-003",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "Five signals, which used to be dead, now blinked a steady green on the dashboard. They had lit up in a completely random order, with no pattern at all. Only one light remained a dull, blinking gray: Earth.",
+    "background": "earth_bg_001.jpg",
+    "when": "pythonLast"
+  },
+  {
+    "id": "earth-004",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "Nova frowned, running a quick check on the screen.",
+    "background": "earth_bg_001.jpg",
+    "when": "pythonLast"
+  },
+  {
+    "id": "earth-005",
+    "type": "dialogue",
+    "speaker": "Nova",
+    "text": "That can’t be right. We fixed everywhere else. Why is home still broken?",
+    "background": "earth_bg_001.jpg",
+    "when": "pythonLast"
+  },
+  {
+    "id": "earth-006",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "Before the Astronaut could answer, the screen turned on. It was Oberion. He wasn’t just a fuzzy hologram from the moon anymore. As the ship landed, they saw him standing right there on the landing pad at NETStart headquarters, waving for them to step out.",
+    "background": "earth_bg_001.jpg",
+    "when": "pythonLast"
+  },
+  {
+    "id": "earth-007",
+    "type": "dialogue",
+    "speaker": "Oberion",
+    "text": "Good to see you again in person, Chief.",
+    "background": "earth_bg_001.jpg",
+    "when": "pythonLast"
+  },
+  {
+    "id": "earth-008",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "Oberion joked as they walked up to him. But his smile quickly faded.",
+    "background": "earth_bg_001.jpg",
+    "when": "pythonLast"
+  },
+  {
+    "id": "earth-009",
+    "type": "dialogue",
+    "speaker": "Oberion",
+    "text": "Five worlds, five different starting points, and you still found your way to all of them. I’ve honestly lost track of the order you went in.",
+    "background": "earth_bg_001.jpg",
+    "when": "pythonLast"
+  },
+  {
+    "id": "earth-010",
+    "type": "dialogue",
+    "speaker": "Oberion",
+    "text": "Our records can’t even agree, but you did more in a few weeks than our engineers did in months. I’m afraid, though, that the hardest part of this mission was always going to be right here in the center.",
+    "background": "earth_bg_001.jpg",
+    "when": "pythonLast"
+  },
+  {
+    "id": "earth-011",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "The call from Oberion caught them completely by surprise. He ordered them back to Earth immediately for another emergency.",
+    "background": "earth_bg_001.jpg",
+    "when": "!pythonLast"
+  },
+  {
+    "id": "earth-012",
+    "type": "dialogue",
+    "speaker": "Operator",
+    "text": "What do you think happened?",
+    "background": "earth_bg_001.jpg",
+    "when": "!pythonLast"
+  },
+  {
+    "id": "earth-013",
+    "type": "dialogue",
+    "speaker": "Nova",
+    "text": "I have no idea.",
+    "background": "earth_bg_001.jpg",
+    "when": "!pythonLast"
+  },
+  {
+    "id": "earth-014",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "After landing safely at headquarters, they stepped out of the ship. They quickly spotted Oberion waving at them, motioning for them to hurry. They ran down to meet him without hesitation.",
+    "background": "earth_bg_001.jpg",
+    "when": "!pythonLast"
+  },
+  {
+    "id": "earth-015",
+    "type": "dialogue",
+    "speaker": "Nova",
+    "text": "What happened?",
+    "background": "earth_bg_001.jpg",
+    "when": "!pythonLast"
+  },
+  {
+    "id": "earth-016",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "Oberion didn’t waste time with small talk. He just turned toward the main building and started walking.",
+    "background": "earth_bg_001.jpg",
+    "when": "!pythonLast"
+  },
+  {
+    "id": "earth-017",
+    "type": "dialogue",
+    "speaker": "Oberion",
+    "text": "The Master Ledger went dark. No storm warning, no system alert. It just stopped working less than an hour ago.",
+    "background": "earth_bg_001.jpg",
+    "when": "!pythonLast"
+  },
+  {
+    "id": "earth-018",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "He pushed through the doors of Headquarters, waving them inside.",
+    "background": "earth_bg_001.jpg",
+    "when": "!pythonLast"
+  },
+  {
+    "id": "earth-019",
+    "type": "dialogue",
+    "speaker": "Oberion",
+    "text": "I don’t know how much you’ve finished out there, and right now, it doesn’t matter. If we lose the Ledger, we lose our only record of the repairs you’ve made and those you haven’t yet done.",
+    "background": "earth_bg_001.jpg",
+    "when": "!pythonLast"
+  },
+  {
+    "id": "earth-020",
+    "type": "dialogue",
+    "speaker": "Operator",
+    "text": "So this issue isn’t connected to the storm damage on the other planets?",
+    "background": "earth_bg_001.jpg",
+    "when": "!pythonLast"
+  },
+  {
+    "id": "earth-021",
+    "type": "dialogue",
+    "speaker": "Oberion",
+    "text": "We don’t know yet. And that’s precisely what worries me.",
+    "background": "earth_bg_001.jpg",
+    "when": "!pythonLast"
+  },
+  {
+    "id": "earth-022",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "Oberion led them into the main NETStart control room. It was a giant space lined with monitors, but every screen was showing static.",
+    "background": "earth_bg_002.jpg"
+  },
+  {
+    "id": "earth-023",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "Sitting at the main desk was a familiar face, Director Atlas. The head of operations was typing frantically, his voice tight with stress, but none of his commands were clearing the static.",
+    "background": "earth_bg_002.jpg"
+  },
+  {
+    "id": "earth-024",
+    "type": "dialogue",
+    "speaker": "Director Atlas",
+    "text": "Chief Operator. Good timing. We built the Master Ledger to display every planet’s status clearly in one place. But ever since the solar storm hit our telemetry relays, the data stream’s become a complete disaster.",
+    "background": "earth_bg_002.jpg"
+  },
+  {
+    "id": "earth-025",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "The Astronaut leaned over the massive central screen. Rows of incoming transmissions rolled past — planet names, statuses, and signal numbers, all jumbled together and completely unreadable.",
+    "background": "earth_bg_002.jpg"
+  },
+  {
+    "id": "earth-026",
+    "type": "dialogue",
+    "speaker": "Nova",
+    "text": "The core messages are still intact. They’re just trapped in the wrong kind of signal — numbers reading as words, truths reading as nonsense. We just need to put everything back in its right type.",
+    "background": "earth_bg_002.jpg"
+  },
+  {
+    "id": "earth-027",
+    "type": "dialogue",
+    "speaker": "Director Atlas",
+    "text": "Exactly. We slice away the junk and set every piece of data back the right way: planet names as text, statuses as true or false, signal strength as actual numbers. Then the Ledger can finally read what’s happening out there.",
+    "background": "earth_bg_002.jpg"
+  },
+  {
+    "id": "earth-028",
+    "type": "dialogue",
+    "speaker": "Operator",
+    "text": "Let’s clean it up. Nova, boot up the laser rails — we’re cutting the junk out and rebuilding this, line by line.",
+    "background": "earth_bg_002.jpg"
+  },
+  {
+    "id": "earth-029",
+    "type": "mission",
+    "mission": "earth-1",
+    "level": 1,
+    "title": "Mini-Game 1: The Central Ledger",
+    "concept": "Variables and data types",
+    "objective": "The player must assign the scrambled data to the correct Python variable types: strings (str) for planet names, booleans (bool) for active statuses, and integers (int) for signal strength."
+  },
+  {
+    "id": "earth-030",
+    "type": "dialogue",
+    "speaker": "Director Atlas",
+    "text": "Alright. You’ve earned the full picture, and honestly, we could use your help.",
+    "background": "earth_bg_002.jpg"
+  },
+  {
+    "id": "earth-031",
+    "type": "dialogue",
+    "speaker": "Director Atlas",
+    "text": "We have all these facts scattered across a dozen different systems, statuses, locations, and connection histories. But none of it is organized in one place where we can actually search for it.",
+    "background": "earth_bg_002.jpg"
+  },
+  {
+    "id": "earth-032",
+    "type": "dialogue",
+    "speaker": "Operator",
+    "text": "So... You want a map?",
+    "background": "earth_bg_002.jpg"
+  },
+  {
+    "id": "earth-033",
+    "type": "dialogue",
+    "speaker": "Director Atlas",
+    "text": "We want a structure. A single file where every planet’s information lives together. One record per planet. Everything stored right where we can look it up instantly instead of hunting through a dozen screens.",
+    "background": "earth_bg_002.jpg"
+  },
+  {
+    "id": "earth-034",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "Together, they built it: a clear file for every planet, sorted by name, holding its status, its signal strength, and its last contact time, all in one place.",
+    "background": "earth_bg_002.jpg"
+  },
+  {
+    "id": "earth-035",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "When the setup was finally finished, the Astronaut typed in that odd entry from Row zero, expecting nothing.",
+    "background": "earth_bg_002.jpg"
+  },
+  {
+    "id": "earth-036",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "An answer popped up on the screen.",
+    "background": "earth_bg_002.jpg"
+  },
+  {
+    "id": "earth-037",
+    "type": "dialogue",
+    "speaker": "System",
+    "text": "Location: Earth. Status: Active. Name: The Architect’s Wing.",
+    "background": "earth_bg_002.jpg"
+  },
+  {
+    "id": "earth-038",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "The room went silent.",
+    "background": "earth_bg_002.jpg"
+  },
+  {
+    "id": "earth-039",
+    "type": "dialogue",
+    "speaker": "Oberion",
+    "text": "There’s a wing of this building that hasn’t been on any map since before NETStart even existed. It was sealed the day the Architect disappeared. We assumed whatever was in there went dead right along with him.",
+    "background": "earth_bg_002.jpg"
+  },
+  {
+    "id": "earth-040",
+    "type": "mission",
+    "mission": "earth-2",
+    "level": 2,
+    "title": "Mini-Game 2: The Planetary Archive",
+    "concept": "Lists and dictionaries",
+    "objective": "The player must assign each planet’s data into a Dictionary (e.g., {'name': 'Mars', 'status': True}), and append them all into a master List so the system can organize and search the records."
+  },
+  {
+    "id": "earth-041",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "The Archive finished compiling; every planet was finally accounted for in one searchable place, except one door still waiting to be opened.",
+    "background": "earth_bg_002.jpg"
+  },
+  {
+    "id": "earth-042",
+    "type": "dialogue",
+    "speaker": "Director Atlas",
+    "text": "He’s been sending data this whole time. Not receiving. Sending.",
+    "background": "earth_bg_002.jpg"
+  },
+  {
+    "id": "earth-043",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "Nova turned to the Astronaut.",
+    "background": "earth_bg_002.jpg"
+  },
+  {
+    "id": "earth-044",
+    "type": "dialogue",
+    "speaker": "Nova",
+    "text": "I think it’s time we went and asked him why.",
+    "background": "earth_bg_002.jpg"
+  },
+  {
+    "id": "earth-045",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "The sealed door recognized the fixed Ledger and finally opened. It revealed a small, quiet room lit by a single computer screen.",
+    "background": "earth_bg_003.jpg"
+  },
+  {
+    "id": "earth-046",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "There was no Architect waiting behind a desk. There was only a soft, steady hum and a voice that sounded like it had been waiting a very long time to speak.",
+    "background": "earth_bg_003.jpg"
+  },
+  {
+    "id": "earth-047",
+    "type": "dialogue",
+    "speaker": "The Architect",
+    "text": "Hello, Operator. I hoped someone would finally fix what was lost.",
+    "background": "earth_bg_003.jpg"
+  },
+  {
+    "id": "earth-048",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "The Astronaut looked around, but there was no sign of the creator anywhere.",
+    "background": "earth_bg_003.jpg"
+  },
+  {
+    "id": "earth-049",
+    "type": "dialogue",
+    "speaker": "Operator",
+    "text": "Where is the Architect?",
+    "background": "earth_bg_003.jpg"
+  },
+  {
+    "id": "earth-050",
+    "type": "dialogue",
+    "speaker": "The Architect",
+    "text": "You’re speaking to him. Or what’s left of him, anyway. Years ago, I realized I couldn’t keep watching over the planets and still be a person. So, I stopped trying.",
+    "background": "earth_bg_003.jpg"
+  },
+  {
+    "id": "earth-051",
+    "type": "dialogue",
+    "speaker": "The Architect",
+    "text": "Instead, I focused my mind on this network. Somewhere along the way, I stopped being the man who built AstroLink and just became the system that runs it.",
+    "background": "earth_bg_003.jpg"
+  },
+  {
+    "id": "earth-052",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "Nova’s voice was gentle.",
+    "background": "earth_bg_003.jpg"
+  },
+  {
+    "id": "earth-053",
+    "type": "dialogue",
+    "speaker": "Nova",
+    "text": "That’s why you never worked like a normal computer. You’ve been thinking for yourself this whole time, not just following the code someone else wrote.",
+    "background": "earth_bg_003.jpg"
+  },
+  {
+    "id": "earth-054",
+    "type": "dialogue",
+    "speaker": "The Architect",
+    "text": "And when the storm hit, a small part of me panicked. I tried to connect to Uranus and Neptune too early, before the network was strong enough to hold that many connections at once.",
+    "background": "earth_bg_003.jpg"
+  },
+  {
+    "id": "earth-055",
+    "type": "dialogue",
+    "speaker": "The Architect",
+    "text": "The strain broke everything: Mars, Venus, Mercury, Jupiter, Saturn, and nearly myself along with it. I’ve been quietly trying to hold what was left together, hoping the rest of NETStart could fix the pieces I broke without ever having to find this room.",
+    "background": "earth_bg_003.jpg"
+  },
+  {
+    "id": "earth-056",
+    "type": "dialogue",
+    "speaker": "Operator",
+    "text": "You could have just asked for help.",
+    "background": "earth_bg_003.jpg",
+    "when": "pythonLast"
+  },
+  {
+    "id": "earth-057",
+    "type": "dialogue",
+    "speaker": "The Architect",
+    "text": "I built this organization so no one else would have to give up their life the way I did. Asking for help felt like admitting my plan failed.",
+    "background": "earth_bg_003.jpg",
+    "when": "pythonLast"
+  },
+  {
+    "id": "earth-058",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "Atlas stepped forward.",
+    "background": "earth_bg_003.jpg",
+    "when": "pythonLast"
+  },
+  {
+    "id": "earth-059",
+    "type": "dialogue",
+    "speaker": "Director Atlas",
+    "text": "It didn’t fail. Look who came back to fix it.",
+    "background": "earth_bg_003.jpg",
+    "when": "pythonLast"
+  },
+  {
+    "id": "earth-060",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "For a long moment, the room was silent. Finally, the voice spoke again.",
+    "background": "earth_bg_003.jpg",
+    "when": "pythonLast"
+  },
+  {
+    "id": "earth-061",
+    "type": "dialogue",
+    "speaker": "The Architect",
+    "text": "I have one program left that I never finished writing. One process that brings together every repair you’ve made: Mars’s structure, Venus’s colors, Mercury’s logic, Jupiter’s data types, and Saturn’s math.",
+    "background": "earth_bg_003.jpg",
+    "when": "pythonLast"
+  },
+  {
+    "id": "earth-062",
+    "type": "dialogue",
+    "speaker": "The Architect",
+    "text": "No matter what order you fixed them in, it ties them all together into a single, complete connection. I was afraid to run it alone. Would you run it with me?",
+    "background": "earth_bg_003.jpg",
+    "when": "pythonLast"
+  },
+  {
+    "id": "earth-063",
+    "type": "dialogue",
+    "speaker": "Operator",
+    "text": "Every time.",
+    "background": "earth_bg_003.jpg",
+    "when": "pythonLast"
+  },
+  {
+    "id": "earth-064",
+    "type": "mission",
+    "mission": "earth-3",
+    "level": 3,
+    "title": "Mini-Game 3: The Master Reboot",
+    "concept": "Functions and modules",
+    "objective": "The ultimate grand finale. The player must write a master function that imports the modules from the previous levels (import mars, import venus, import mercury, etc.) and calls their specific repair functions inside one unified block to bring the entire solar system online at once."
+  },
+  {
+    "id": "earth-065",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "The final function executed, calling each planet’s repaired module in turn, one line pulling the next, until every connection across the solar system locked into place at once.",
+    "background": "earth_bg_003.jpg",
+    "when": "pythonLast"
+  },
+  {
+    "id": "earth-066",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "Every gray light in the control room turned green, all at the same time. The first fully connected map NETStart had ever displayed.",
+    "background": "earth_bg_003.jpg",
+    "when": "pythonLast"
+  },
+  {
+    "id": "earth-073",
+    "type": "dialogue",
+    "speaker": "Narrator",
+    "text": "The final program ran, calling each planet’s fixed system one by one. One line of code triggered the next, until every connection across the solar system locked into place all at once.",
+    "background": "earth_bg_003.jpg",
+    "when": "!pythonLast"
+  },
+  {
+    "id": "earth-074",
+    "type": "dialogue",
+    "speaker": "The Architect",
+    "text": "Good job, Operator. You’ve finally fixed Earth. Now, it’s time for you to finish the rest of your mission.",
+    "background": "earth_bg_003.jpg",
+    "when": "!pythonLast"
+  }
+]
