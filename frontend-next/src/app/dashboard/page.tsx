@@ -803,20 +803,20 @@ export default async function DashboardPage() {
                         </div>
                       </div>
 
-                      {/* Reward Chips & Launch Button Row */}
-                      <div className="flex flex-wrap items-center justify-between gap-3 pt-1 mt-auto">
-                        <div className="flex flex-wrap items-center gap-2.5 mx-auto sm:mx-0">
-                          <span className="text-sm sm:text-base font-mono font-black bg-[#ff912d]/20 text-[#ff912d] px-4 py-2 rounded-xl border-2 border-[#ff912d]/50 shadow-sm flex items-center gap-1.5">
-                            +{dailyGeneratedLevel.xpReward} XP Reward
+                      {/* Reward Chips & Launch Button Row (Single Row Layout) */}
+                      <div className="flex items-center justify-between gap-2 sm:gap-3 pt-1 mt-auto w-full">
+                        <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                          <span className="text-xs sm:text-sm font-mono font-bold bg-[#ff912d]/15 text-[#ff912d] px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl border border-[#ff912d]/40 shadow-sm whitespace-nowrap">
+                            +{dailyGeneratedLevel.xpReward} XP
                           </span>
-                          <span className="text-sm sm:text-base font-mono font-black bg-[#ff912d]/20 text-[#ff912d] px-4 py-2 rounded-xl border-2 border-[#ff912d]/50 shadow-sm flex items-center gap-1.5">
+                          <span className="text-xs sm:text-sm font-mono font-bold bg-[#ff912d]/15 text-[#ff912d] px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl border border-[#ff912d]/40 shadow-sm whitespace-nowrap">
                             +{dailyGeneratedLevel.gearsReward} Gears
                           </span>
                         </div>
 
                         <Link 
                           href={dailyGeneratedLevel.link}
-                          className={`w-full sm:w-auto px-6 py-2.5 font-sans font-black text-sm uppercase tracking-wider rounded-xl shadow-lg transition-all duration-200 hover:scale-105 active:scale-95 flex items-center justify-center gap-2 ${
+                          className={`flex-shrink-0 px-3.5 sm:px-5 py-2 font-sans font-black text-xs sm:text-sm uppercase tracking-wider rounded-xl shadow-lg transition-all duration-200 hover:scale-105 active:scale-95 flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer ${
                             isDailyLevelCompleted 
                               ? "bg-emerald-500 hover:bg-emerald-400 text-black" 
                               : "bg-[#ff912d] hover:bg-orange-400 text-black"
@@ -828,11 +828,11 @@ export default async function DashboardPage() {
                             </>
                           ) : isDailyLevelStarted ? (
                             <>
-                              <Play size={14} className="fill-black" /> CONTINUE CHALLENGE
+                              <Play size={13} className="fill-black" /> CONTINUE CHALLENGE
                             </>
                           ) : (
                             <>
-                              <Play size={14} className="fill-black" /> START CHALLENGE
+                              <Play size={13} className="fill-black" /> START CHALLENGE
                             </>
                           )}
                         </Link>
