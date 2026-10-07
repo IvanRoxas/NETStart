@@ -46,7 +46,9 @@ export async function getShopItems() {
       items = await prisma.shopItem.findMany();
     }
 
-    const catalogIds = new Set(SHOP_CATALOG.map((c) => c.id));
+    const catalogIds = new Set(
+      SHOP_CATALOG.filter((c) => !c.isDefaultOutfit).map((c) => c.id)
+    );
     const validItems = items.filter((item) => catalogIds.has(item.id));
 
     // Attach tag, title, and description from catalog or defaults
@@ -64,7 +66,7 @@ export async function getShopItems() {
   } catch (error) {
     console.error("Failed to fetch shop items:", error);
     // Fallback directly to catalog if database query fails or during dev sync
-    return { success: true, items: SHOP_CATALOG };
+    return { success: true, items: SHOP_CATALOG.filter((c) => !c.isDefaultOutfit) };
   }
 }
 
@@ -124,14 +126,17 @@ export async function purchaseItem(itemId: string) {
 
     const userId = (session.user as any).id;
 
+    const catItem = getCatalogItemById(itemId);
+    if (catItem?.isDefaultOutfit || itemId === "top-astro-suit" || itemId === "bot-astro-pants" || itemId === "shoe-astro-boots") {
+      return { success: false, error: "This item is part of the default astronaut gear and is already unlocked for everyone." };
+    }
+
     // Use a transaction to ensure atomicity
     const result = await prisma.$transaction(async (tx) => {
       // Ensure item exists in DB if from catalog
       let item = await tx.shopItem.findUnique({
         where: { id: itemId },
       });
-
-      const catItem = getCatalogItemById(itemId);
 
       if (!item) {
         if (catItem) {

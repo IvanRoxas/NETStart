@@ -25,6 +25,9 @@ export const DEFAULT_AVATAR_LAYERS: AvatarLayers = {
   skin: '/assets/global/shop/avatar/base/Skin%201%20Faceless.svg',
   face: '/assets/global/shop/avatar/base/Full%20Face.svg',
   underwear: '/assets/global/shop/avatar/base/Underwear%20(Default).svg',
+  top: '/assets/global/shop/avatar/tops/AstroSuit.svg',
+  bottom: '/assets/global/shop/avatar/bottoms/AstroPants.svg',
+  shoes: '/assets/global/shop/avatar/shoes/AstroBoots.svg',
 };
 
 export default function AvatarDisplay({

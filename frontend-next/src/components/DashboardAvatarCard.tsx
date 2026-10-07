@@ -94,10 +94,10 @@ export default function DashboardAvatarCard({
 
           {/* Header: User Display Name at the Top */}
           <div className="relative z-10 w-full flex items-center justify-between border-b border-white/10 pb-2">
-            <h3 className="text-white font-display font-black text-base tracking-wide truncate max-w-[190px]">
+            <h3 className="text-white font-display font-black text-lg sm:text-xl tracking-wide truncate max-w-[200px]">
               {userDisplayName}
             </h3>
-            <span className="text-[10px] font-mono font-bold text-[#ff912d] bg-[#ff912d]/15 px-2 py-0.5 rounded border border-[#ff912d]/30">
+            <span className="text-[11px] sm:text-xs font-mono font-bold text-[#ff912d] bg-[#ff912d]/15 px-2.5 py-0.5 rounded-md border border-[#ff912d]/40 shadow-sm tracking-wider">
               AVATAR
             </span>
           </div>

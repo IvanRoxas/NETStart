@@ -8,6 +8,7 @@ export interface ShopCatalogItem {
   imageUrl: string;
   tag: string;
   description: string;
+  isDefaultOutfit?: boolean;
 }
 
 /**
@@ -1402,10 +1403,11 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Tops",
-    price: 60,
+    price: 0,
     imageUrl: "/assets/global/shop/avatar/tops/AstroSuit.svg",
     tag: "Top",
-    description: "A state-of-the-art EVA pressurized suit engineered for deep space travel."
+    description: "A state-of-the-art EVA pressurized suit engineered for deep space travel. Default astronaut attire.",
+    isDefaultOutfit: true,
   },
   {
     id: "top-black-jacket",
@@ -1744,10 +1746,11 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Bottoms",
-    price: 60,
+    price: 0,
     imageUrl: "/assets/global/shop/avatar/bottoms/AstroPants.svg",
     tag: "Bottom",
-    description: "Reinforced pressure trousers matching the legendary AstroSuit."
+    description: "Reinforced pressure trousers matching the legendary AstroSuit. Default astronaut attire.",
+    isDefaultOutfit: true,
   },
   {
     id: "bot-black-pants",
@@ -2139,10 +2142,11 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Shoes",
-    price: 40,
+    price: 0,
     imageUrl: "/assets/global/shop/avatar/shoes/AstroBoots.svg",
     tag: "Shoes",
-    description: "Magnetic traction boots engineered for zero-G spacewalks."
+    description: "Magnetic traction boots engineered for zero-G spacewalks. Default astronaut attire.",
+    isDefaultOutfit: true,
   },
   {
     id: "shoe-sneakers",

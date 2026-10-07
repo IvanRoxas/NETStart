@@ -224,8 +224,21 @@ export default function AvatarCustomizeModal({
   // Reset all to default baseline
   const handleResetAll = () => {
     setSelectedSkin(BASE_SKINS[0].url);
-    setEquippedItems({});
-    setToastMessage({ text: 'Reset avatar to default appearance.', type: 'success' });
+    const defaultTop = inventory.find(
+      (inv) => inv.shopItemId === 'top-astro-suit' || inv.item.imageUrl.includes('AstroSuit')
+    );
+    const defaultBottom = inventory.find(
+      (inv) => inv.shopItemId === 'bot-astro-pants' || inv.item.imageUrl.includes('AstroPants')
+    );
+    const defaultShoes = inventory.find(
+      (inv) => inv.shopItemId === 'shoe-astro-boots' || inv.item.imageUrl.includes('AstroBoots')
+    );
+    const newEquipped: typeof equippedItems = {};
+    if (defaultTop) newEquipped.top = defaultTop;
+    if (defaultBottom) newEquipped.bottom = defaultBottom;
+    if (defaultShoes) newEquipped.shoes = defaultShoes;
+    setEquippedItems(newEquipped);
+    setToastMessage({ text: 'Reset avatar to default astronaut outfit.', type: 'success' });
   };
 
   // Save changes to backend & update dashboard
@@ -481,31 +494,8 @@ export default function AvatarCustomizeModal({
               </div>
             </div>
 
-            {/* Showcase Bottom Controls: Active Gear Badges & Save Button */}
-            <div className="w-full z-10 shrink-0 flex flex-col sm:flex-row items-center justify-between gap-2.5 pt-2.5 border-t border-white/10">
-              <div className="flex items-center gap-1.5 flex-wrap">
-                {equippedItems.hair && (
-                  <span className="text-[10px] font-mono font-bold bg-[#ff912d]/20 text-[#ff912d] px-2 py-0.5 rounded border border-[#ff912d]/40">
-                    Hair: {equippedItems.hair.item.title.split(' ')[0]}
-                  </span>
-                )}
-                {equippedItems.top && (
-                  <span className="text-[10px] font-mono font-bold bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded border border-purple-500/40">
-                    Top: {equippedItems.top.item.title.split(' ')[0]}
-                  </span>
-                )}
-                {equippedItems.bottom && (
-                  <span className="text-[10px] font-mono font-bold bg-cyan-500/20 text-cyan-300 px-2 py-0.5 rounded border border-cyan-500/40">
-                    Bottom: {equippedItems.bottom.item.title.split(' ')[0]}
-                  </span>
-                )}
-                {equippedItems.accessory && (
-                  <span className="text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded border border-emerald-500/40">
-                    Accessory
-                  </span>
-                )}
-              </div>
-
+            {/* Showcase Bottom Controls: Save Button */}
+            <div className="w-full z-10 shrink-0 flex items-center justify-end pt-2.5 border-t border-white/10">
               <button
                 onClick={handleSave}
                 disabled={saving}

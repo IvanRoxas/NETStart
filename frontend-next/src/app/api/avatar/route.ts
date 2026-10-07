@@ -8,6 +8,39 @@ export const dynamic = 'force-dynamic';
 const DEFAULT_SKIN = '/assets/global/shop/avatar/base/Skin 1 Faceless.svg';
 const DEFAULT_FACE = '/assets/global/shop/avatar/base/Full Face.svg';
 const DEFAULT_UNDERWEAR = '/assets/global/shop/avatar/base/Underwear (Default).svg';
+const DEFAULT_TOP = '/assets/global/shop/avatar/tops/AstroSuit.svg';
+const DEFAULT_BOTTOM = '/assets/global/shop/avatar/bottoms/AstroPants.svg';
+const DEFAULT_SHOES = '/assets/global/shop/avatar/shoes/AstroBoots.svg';
+
+const DEFAULT_AVATAR_ITEMS = [
+  {
+    id: 'top-astro-suit',
+    title: 'Galactic AstroSuit',
+    type: 'AVATAR',
+    category: 'AVATAR',
+    subCategory: 'Tops',
+    price: 0,
+    imageUrl: DEFAULT_TOP,
+  },
+  {
+    id: 'bot-astro-pants',
+    title: 'Galactic AstroPants',
+    type: 'AVATAR',
+    category: 'AVATAR',
+    subCategory: 'Bottoms',
+    price: 0,
+    imageUrl: DEFAULT_BOTTOM,
+  },
+  {
+    id: 'shoe-astro-boots',
+    title: 'Galactic AstroBoots',
+    type: 'AVATAR',
+    category: 'AVATAR',
+    subCategory: 'Shoes',
+    price: 0,
+    imageUrl: DEFAULT_SHOES,
+  },
+];
 
 export async function GET() {
   try {
@@ -24,20 +57,122 @@ export async function GET() {
     });
 
     let activeSkin = DEFAULT_SKIN;
+    let customStatus: any = {};
     if (user?.status) {
       try {
         const parsed = JSON.parse(user.status);
+        customStatus = parsed;
         if (parsed?.skin) activeSkin = parsed.skin;
       } catch {
         if (user.status.startsWith('/assets/')) activeSkin = user.status;
       }
     }
 
+    // Ensure default items exist in database
+    for (const defItem of DEFAULT_AVATAR_ITEMS) {
+      await prisma.shopItem.upsert({
+        where: { id: defItem.id },
+        update: {
+          title: defItem.title,
+          type: defItem.type,
+          category: defItem.category,
+          subCategory: defItem.subCategory,
+          imageUrl: defItem.imageUrl,
+        },
+        create: {
+          id: defItem.id,
+          title: defItem.title,
+          type: defItem.type,
+          category: defItem.category,
+          subCategory: defItem.subCategory,
+          price: 0,
+          imageUrl: defItem.imageUrl,
+        },
+      });
+    }
+
     // 2. Fetch inventory items with equipped state
-    const userInventory = await prisma.userInventory.findMany({
+    let userInventory = await prisma.userInventory.findMany({
       where: { userId },
       include: { shopItem: true },
     });
+
+    const isFirstTime = !customStatus?.avatarCustomized;
+    const hasSuit = userInventory.some((i) => i.shopItemId === 'top-astro-suit');
+    const hasPants = userInventory.some((i) => i.shopItemId === 'bot-astro-pants');
+    const hasBoots = userInventory.some((i) => i.shopItemId === 'shoe-astro-boots');
+
+    if (!hasSuit || !hasPants || !hasBoots) {
+      if (!hasSuit) {
+        await prisma.userInventory.create({
+          data: {
+            userId,
+            shopItemId: 'top-astro-suit',
+            isEquipped: isFirstTime,
+          },
+        }).catch(() => {});
+      }
+      if (!hasPants) {
+        await prisma.userInventory.create({
+          data: {
+            userId,
+            shopItemId: 'bot-astro-pants',
+            isEquipped: isFirstTime,
+          },
+        }).catch(() => {});
+      }
+      if (!hasBoots) {
+        await prisma.userInventory.create({
+          data: {
+            userId,
+            shopItemId: 'shoe-astro-boots',
+            isEquipped: isFirstTime,
+          },
+        }).catch(() => {});
+      }
+      userInventory = await prisma.userInventory.findMany({
+        where: { userId },
+        include: { shopItem: true },
+      });
+    } else if (isFirstTime) {
+      const anyTopEquipped = userInventory.some(
+        (i) => i.isEquipped && (i.shopItem?.subCategory || '').toLowerCase() === 'tops'
+      );
+      const anyBottomEquipped = userInventory.some(
+        (i) => i.isEquipped && (i.shopItem?.subCategory || '').toLowerCase() === 'bottoms'
+      );
+      const anyShoesEquipped = userInventory.some(
+        (i) => i.isEquipped && (i.shopItem?.subCategory || '').toLowerCase() === 'shoes'
+      );
+      let needsRefresh = false;
+      if (!anyTopEquipped) {
+        await prisma.userInventory.updateMany({
+          where: { userId, shopItemId: 'top-astro-suit' },
+          data: { isEquipped: true },
+        });
+        needsRefresh = true;
+      }
+      if (!anyBottomEquipped) {
+        await prisma.userInventory.updateMany({
+          where: { userId, shopItemId: 'bot-astro-pants' },
+          data: { isEquipped: true },
+        });
+        needsRefresh = true;
+      }
+      if (!anyShoesEquipped) {
+        await prisma.userInventory.updateMany({
+          where: { userId, shopItemId: 'shoe-astro-boots' },
+          data: { isEquipped: true },
+        });
+        needsRefresh = true;
+      }
+      if (needsRefresh) {
+        userInventory = await prisma.userInventory.findMany({
+          where: { userId },
+          include: { shopItem: true },
+        });
+      }
+    }
 
     // Match each inventory item with shopCatalog if needed
     const enrichedInventory = userInventory.map((inv) => {
@@ -94,6 +229,13 @@ export async function GET() {
       }
     }
 
+    // Default outfit fallback if user hasn't customized yet
+    if (isFirstTime) {
+      if (!layers.top) layers.top = DEFAULT_TOP;
+      if (!layers.bottom) layers.bottom = DEFAULT_BOTTOM;
+      if (!layers.shoes) layers.shoes = DEFAULT_SHOES;
+    }
+
     return NextResponse.json({
       success: true,
       skin: activeSkin,
@@ -125,24 +267,23 @@ export async function POST(req: Request) {
     };
 
     await prisma.$transaction(async (tx) => {
-      // 1. Persist skin in user.status
-      if (skin) {
-        let existingStatusObj: any = {};
-        const u = await tx.user.findUnique({
-          where: { id: userId },
-          select: { status: true },
-        });
-        if (u?.status) {
-          try {
-            existingStatusObj = JSON.parse(u.status);
-          } catch {}
-        }
-        existingStatusObj.skin = skin;
-        await tx.user.update({
-          where: { id: userId },
-          data: { status: JSON.stringify(existingStatusObj) },
-        });
+      // 1. Persist skin and record avatarCustomized in user.status
+      let existingStatusObj: any = {};
+      const u = await tx.user.findUnique({
+        where: { id: userId },
+        select: { status: true },
+      });
+      if (u?.status) {
+        try {
+          existingStatusObj = JSON.parse(u.status);
+        } catch {}
       }
+      if (skin) existingStatusObj.skin = skin;
+      existingStatusObj.avatarCustomized = true;
+      await tx.user.update({
+        where: { id: userId },
+        data: { status: JSON.stringify(existingStatusObj) },
+      });
 
       // 2. Update equipped items
       if (Array.isArray(equippedItemIds)) {
