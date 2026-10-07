@@ -36,7 +36,11 @@ export default async function ModulesPage() {
         isVerified: true,
         isBanned: true,
         hasTakenAptitudeTest: true,
+        aptitudeResult: true,
         recommendedLearningPath: true,
+        pathOrder: true,
+        planetReasons: true,
+        isFallback: true,
         canUseDemoMode: true,
       }
     });
@@ -50,7 +54,11 @@ export default async function ModulesPage() {
         isVerified: true,
         isBanned: true,
         hasTakenAptitudeTest: true,
+        aptitudeResult: true,
         recommendedLearningPath: true,
+        pathOrder: true,
+        planetReasons: true,
+        isFallback: true,
       }
     });
     if (dbUser) {
@@ -85,10 +93,9 @@ export default async function ModulesPage() {
   const gears = dbUser.gears || 0;
   const { level, progress, nextThreshold, levelCurrentXp, levelRequiredXp, isMaxLevel } = getXPDetails(xp);
 
-  const completedMissions = await prisma.missionProgress.findMany({
+  const allUserMissions = await prisma.missionProgress.findMany({
     where: {
       userId: activeUserId,
-      status: "COMPLETED",
       NOT: {
         missionId: {
           startsWith: "daily-",
@@ -97,8 +104,11 @@ export default async function ModulesPage() {
     },
     select: {
       missionId: true,
+      status: true,
     },
   });
+
+  const completedMissions = allUserMissions.filter(m => m.status === 'COMPLETED');
 
   const liveStats = {
     level,
@@ -119,10 +129,15 @@ export default async function ModulesPage() {
           userId={activeUserId}
           isVerified={isVerified} 
           hasTakenAptitudeTest={hasTakenAptitudeTest}
+          aptitudeResult={dbUser?.aptitudeResult}
           recommendedLearningPath={recommendedLearningPath}
+          pathOrder={dbUser?.pathOrder}
+          planetReasons={dbUser?.planetReasons}
           liveStats={liveStats} 
           completedMissions={completedMissions}
+          allUserMissions={allUserMissions} 
           canUseDemoMode={canUseDemoMode}
+          isFallback={dbUser?.isFallback}
         />
       </div>
     </main>

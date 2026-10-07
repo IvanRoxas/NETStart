@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, ThinkingLevel } from "@google/genai";
 import { z } from "zod";
 
 const aiMockEnabled = process.env.AI_MOCK === "true";
@@ -56,7 +56,8 @@ export async function generateStructuredResponse<T>(
   zodSchema: z.ZodSchema<T>,
   jsonSchema: any,
   fallbackFn: () => T,
-  mockFn?: () => T
+  mockFn?: () => T,
+  temperature: number = 0
 ): Promise<{ data: T; source: AISource; confidence?: string }> {
   const isMock = aiMockEnabled && !!mockFn;
 
@@ -82,8 +83,9 @@ export async function generateStructuredResponse<T>(
 
   const tryCall = async (): Promise<T> => {
     let timer: NodeJS.Timeout;
+    const timeoutSeconds = parseInt(process.env.GEMINI_TIMEOUT_SECONDS || "10", 10);
     const timeoutPromise = new Promise<never>((_, reject) => {
-      timer = setTimeout(() => reject(new Error("request timed out (8s limit)")), 8000);
+      timer = setTimeout(() => reject(new Error(`request timed out (${timeoutSeconds}s limit)`)), timeoutSeconds * 1000);
     });
 
     const callPromise = (async () => {
@@ -92,9 +94,12 @@ export async function generateStructuredResponse<T>(
         contents: promptText,
         config: {
           systemInstruction: systemInstruction,
-          temperature: 0,
+          temperature: temperature,
           responseMimeType: "application/json",
           responseSchema: jsonSchema,
+          thinkingConfig: {
+            thinkingLevel: (process.env.GEMINI_THINKING_LEVEL as any) || ThinkingLevel.MINIMAL
+          }
         },
       });
 

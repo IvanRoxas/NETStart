@@ -10,84 +10,84 @@
     "type": "dialogue",
     "speaker": "Narrator",
     "text": "Arriving at the celestial ringworld, the duo immediately noticed something unusual. Nova murmured, gazing out the window at the completely motionless rings.",
-    "background": "saturn_bg_001.jpg"
+    "background": "saturn_bg_001.png"
   },
   {
     "id": "saturn-003",
     "type": "dialogue",
     "speaker": "Nova",
-    "text": "That’s weird...",
-    "background": "saturn_bg_001.jpg"
+    "text": "That's weird...",
+    "background": "saturn_bg_001.png"
   },
   {
     "id": "saturn-004",
     "type": "dialogue",
     "speaker": "Narrator",
     "text": "They kept the ship in orbit to discuss their mission before heading inside.",
-    "background": "saturn_bg_001.jpg"
+    "background": "saturn_bg_001.png"
   },
   {
     "id": "saturn-005",
     "type": "dialogue",
     "speaker": "Operator",
     "text": "Oberion mentioned this ahead of time. However, the details are still completely unclear.",
-    "background": "saturn_bg_001.jpg"
+    "background": "saturn_bg_001.png"
   },
   {
     "id": "saturn-006",
     "type": "dialogue",
     "speaker": "Nova",
     "text": "I can check the system! Look! I found the main control panel for the iconic rings! We can head over there and investigate.",
-    "background": "saturn_bg_001.jpg"
+    "background": "saturn_bg_001.png"
   },
   {
     "id": "saturn-007",
     "type": "dialogue",
     "speaker": "Narrator",
     "text": "As they landed and approached the main control panel, a worn-out person ran up to meet them.",
-    "background": "saturn_bg_002.jpg"
+    "background": "saturn_bg_002.png"
   },
   {
     "id": "saturn-008",
     "type": "dialogue",
     "speaker": "Engineer Titan",
-    "text": "Please tell me NETStart sent you? I’m Engineer Titan, lead systems technician here.",
-    "background": "saturn_bg_002.jpg"
+    "text": "Please tell me NETStart sent you? I'm Engineer Titan, lead systems technician here.",
+    "background": "saturn_bg_002.png"
   },
   {
     "id": "saturn-009",
     "type": "dialogue",
     "speaker": "Operator",
-    "text": "That’s us! I’m Operator, and this is Nova. What’s going on with your instruments?",
-    "background": "saturn_bg_002.jpg"
+    "text": "That's us! I'm Operator, and this is Nova. What's going on with your instruments?",
+    "background": "saturn_bg_002.png"
   },
   {
     "id": "saturn-010",
     "type": "dialogue",
     "speaker": "Engineer Titan",
-    "text": "Ever since the solar storm hit, our sensor array has been feeding garbage into the system, and it tripped the station’s failover logic.",
-    "background": "saturn_bg_002.jpg"
+    "text": "Ever since the solar storm hit, our sensor array has been feeding garbage into the system, and it tripped the station's failover logic.",
+    "background": "saturn_bg_002.png"
   },
   {
     "id": "saturn-011",
     "type": "dialogue",
     "speaker": "Engineer Titan",
     "text": "We need to manually input the power routing commands, but the terminal is storing the data in the wrong containers. Words are stored where numbers should be, and vice versa.",
-    "background": "saturn_bg_002.jpg"
+    "background": "saturn_bg_002.png"
   },
   {
     "id": "saturn-012",
     "type": "dialogue",
     "speaker": "Nova",
     "text": "So we need to declare the expected data types correctly from the start, and write the Input/Output commands so the station knows how to read the situation.",
-    "background": "saturn_bg_002.jpg"
+    "background": "saturn_bg_002.png"
   },
   {
     "id": "saturn-013",
     "type": "dialogue",
     "speaker": "Nova",
     "text": "We can do that!",
-    "background": "saturn_bg_002.jpg"
+    "background": "saturn_bg_002.png"
   },
   {
     "id": "saturn-014",
@@ -103,70 +103,70 @@
     "type": "dialogue",
     "speaker": "Narrator",
     "text": "With the power restored, Engineer Titan led the Astronaut and Nova to the observation deck overlooking the ring plane.",
-    "background": "saturn_bg_003.jpg"
+    "background": "saturn_bg_003.png"
   },
   {
     "id": "saturn-016",
     "type": "dialogue",
     "speaker": "Engineer Titan",
     "text": "The power is stable, but the rings are completely jammed. The storm knocked thousands of loose debris fragments into the path: ice chunks, rock, and scrap metal.",
-    "background": "saturn_bg_003.jpg"
+    "background": "saturn_bg_003.png"
   },
   {
     "id": "saturn-017",
     "type": "dialogue",
     "speaker": "Operator",
-    "text": "Can’t we just clear it out and press a button to start the rings?",
-    "background": "saturn_bg_003.jpg"
+    "text": "Can't we just clear it out and press a button to start the rings?",
+    "background": "saturn_bg_003.png"
   },
   {
     "id": "saturn-018",
     "type": "dialogue",
     "speaker": "Engineer Titan",
     "text": "I wish. Different materials require different handling. Ice needs to be melted. Rock needs to be crushed. Metal has to be magnetically redirected.",
-    "background": "saturn_bg_003.jpg"
+    "background": "saturn_bg_003.png"
   },
   {
     "id": "saturn-019",
     "type": "dialogue",
     "speaker": "Engineer Titan",
     "text": "Furthermore, there are thousands of individual ring sectors that need a push command to start moving.",
-    "background": "saturn_bg_003.jpg"
+    "background": "saturn_bg_003.png"
   },
   {
     "id": "saturn-020",
     "type": "dialogue",
     "speaker": "Engineer Titan",
     "text": "Doing all of that one by one would take forever, and chaining together an if, then an else if, then another else if just to check each material type gets messy fast.",
-    "background": "saturn_bg_003.jpg"
+    "background": "saturn_bg_003.png"
   },
   {
     "id": "saturn-021",
     "type": "dialogue",
     "speaker": "Nova",
-    "text": "We don’t need to do it one by one. We just write a command that loops through the entire ring system. As it checks each sector, it uses a clean matching system to identify the material, sort it, and jumpstart the sector immediately after.",
-    "background": "saturn_bg_003.jpg"
+    "text": "We don't need to do it one by one. We just write a command that loops through the entire ring system. As it checks each sector, it uses a clean matching system to identify the material, sort it, and jumpstart the sector immediately after.",
+    "background": "saturn_bg_003.png"
   },
   {
     "id": "saturn-022",
     "type": "dialogue",
     "speaker": "Narrator",
-    "text": "Titan’s eyes lit up as the idea clicked.",
-    "background": "saturn_bg_003.jpg"
+    "text": "Titan's eyes lit up as the idea clicked.",
+    "background": "saturn_bg_003.png"
   },
   {
     "id": "saturn-023",
     "type": "dialogue",
     "speaker": "Engineer Titan",
     "text": "Ah! A loop to repeat the action, and a switch-case to handle the specific materials without the messy if-statements!",
-    "background": "saturn_bg_003.jpg"
+    "background": "saturn_bg_003.png"
   },
   {
     "id": "saturn-024",
     "type": "dialogue",
     "speaker": "Operator",
-    "text": "Exactly. Let’s do it!",
-    "background": "saturn_bg_003.jpg"
+    "text": "Exactly. Let's do it!",
+    "background": "saturn_bg_003.png"
   },
   {
     "id": "saturn-025",
@@ -182,28 +182,28 @@
     "type": "dialogue",
     "speaker": "Narrator",
     "text": "One by one, the massive ring sectors began to shudder. Slowly at first, then gaining speed, they finally returned to their majestic, spinning orbit. Engineer Titan stared out the viewport, momentarily speechless.",
-    "background": "saturn_bg_003.jpg"
+    "background": "saturn_bg_003.png"
   },
   {
     "id": "saturn-027",
     "type": "dialogue",
     "speaker": "Engineer Titan",
-    "text": "They’re... they’re actually spinning!",
-    "background": "saturn_bg_003.jpg"
+    "text": "They're... they're actually spinning!",
+    "background": "saturn_bg_003.png"
   },
   {
     "id": "saturn-028",
     "type": "dialogue",
     "speaker": "Operator",
     "text": "We did it!",
-    "background": "saturn_bg_003.jpg"
+    "background": "saturn_bg_003.png"
   },
   {
     "id": "saturn-029",
     "type": "dialogue",
     "speaker": "Narrator",
-    "text": "But the celebration was short-lived. A shrill alarm blared across the console. Titan’s smile vanished.",
-    "background": "saturn_bg_003.jpg",
+    "text": "But the celebration was short-lived. A shrill alarm blared across the console. Titan's smile vanished.",
+    "background": "saturn_bg_003.png",
     "fx": "alert"
   },
   {
@@ -211,49 +211,49 @@
     "type": "dialogue",
     "speaker": "Engineer Titan",
     "text": "W-what?! The sensors, the power routing, the debris handling. Everything is crashing again!",
-    "background": "saturn_bg_003.jpg"
+    "background": "saturn_bg_003.png"
   },
   {
     "id": "saturn-031",
     "type": "dialogue",
     "speaker": "Narrator",
-    "text": "Panic crept into the Engineer’s voice. Nova, however, stared intently at the terminal.",
-    "background": "saturn_bg_003.jpg"
+    "text": "Panic crept into the Engineer's voice. Nova, however, stared intently at the terminal.",
+    "background": "saturn_bg_003.png"
   },
   {
     "id": "saturn-032",
     "type": "dialogue",
     "speaker": "Nova",
-    "text": "It’s a memory leak. Everything we just fixed is about to lock up.",
-    "background": "saturn_bg_003.jpg"
+    "text": "It's a memory leak. Everything we just fixed is about to lock up.",
+    "background": "saturn_bg_003.png"
   },
   {
     "id": "saturn-033",
     "type": "dialogue",
     "speaker": "Narrator",
-    "text": "Engineer Titan led them in a sprint down to the station’s core processing bay. The cramped room was dominated by a single, overworked mainframe, its cooling fans screaming under the heavy load.",
-    "background": "saturn_bg_004.jpg"
+    "text": "Engineer Titan led them in a sprint down to the station's core processing bay. The cramped room was dominated by a single, overworked mainframe, its cooling fans screaming under the heavy load.",
+    "background": "saturn_bg_004.png"
   },
   {
     "id": "saturn-034",
     "type": "dialogue",
     "speaker": "Engineer Titan",
-    "text": "Every system we restarted today borrows memory to do its job. That’s normal. What’s not normal is that none of it is ever being given back. It just stays reserved forever.",
-    "background": "saturn_bg_004.jpg"
+    "text": "Every system we restarted today borrows memory to do its job. That's normal. What's not normal is that none of it is ever being given back. It just stays reserved forever.",
+    "background": "saturn_bg_004.png"
   },
   {
     "id": "saturn-035",
     "type": "dialogue",
     "speaker": "Nova",
     "text": "We build it properly this time. Reserve it, use it, and return it. No shortcuts, no exceptions.",
-    "background": "saturn_bg_004.jpg"
+    "background": "saturn_bg_004.png"
   },
   {
     "id": "saturn-036",
     "type": "dialogue",
     "speaker": "Engineer Titan",
     "text": "Every process on this station routes through the same handful of core functions. Fix the pattern there, and it fixes everything all at once.",
-    "background": "saturn_bg_004.jpg"
+    "background": "saturn_bg_004.png"
   },
   {
     "id": "saturn-037",
@@ -262,102 +262,103 @@
     "level": 3,
     "title": "Mini-Game 3: The Hollow Process",
     "concept": "Pointers and memory management (new / delete)",
-    "objective": "The player must use pointers to allocate memory for the station’s functions, and crucially, write the delete commands to free the memory and stop the leak."
+    "objective": "The player must use pointers to allocate memory for the station's functions, and crucially, write the delete commands to free the memory and stop the leak."
   },
   {
     "id": "saturn-038",
     "type": "dialogue",
     "speaker": "Narrator",
     "text": "The moment the new code rolled out, the memory readout stopped its dangerous climb. It hovered for a second, then finally dropped down to a safe, stable line for the first time since the storm.",
-    "background": "saturn_bg_004.jpg"
+    "background": "saturn_bg_004.png"
   },
   {
     "id": "saturn-039",
     "type": "dialogue",
     "speaker": "Narrator",
-    "text": "The screaming mainframe fans quieted down to a gentle hum. Engineer Titan stood completely frozen, staring at the screen in disbelief. It was actually working! The Astronaut let out a breath they didn’t realize they were holding.",
-    "background": "saturn_bg_004.jpg"
+    "text": "The screaming mainframe fans quieted down to a gentle hum. Engineer Titan stood completely frozen, staring at the screen in disbelief. It was actually working! The Astronaut let out a breath they didn't realize they were holding.",
+    "background": "saturn_bg_004.png"
   },
   {
     "id": "saturn-040",
     "type": "dialogue",
     "speaker": "Operator",
     "text": "No more leaks.",
-    "background": "saturn_bg_004.jpg"
+    "background": "saturn_bg_004.png"
   },
   {
     "id": "saturn-041",
     "type": "dialogue",
     "speaker": "Engineer Titan",
-    "text": "No more leaks. You have no idea how long I’ve been chasing shadows! I couldn’t figure out why this station kept grinding to a halt no matter what I fixed. It wasn’t just one thing breaking; it was everything, quietly, all at once!",
-    "background": "saturn_bg_004.jpg"
+    "text": "No more leaks. You have no idea how long I've been chasing shadows! I couldn't figure out why this station kept grinding to a halt no matter what I fixed. It wasn't just one thing breaking; it was everything, quietly, all at once!",
+    "background": "saturn_bg_004.png"
   },
   {
     "id": "saturn-042",
     "type": "dialogue",
     "speaker": "Narrator",
-    "text": "The quiet triumph in the room was interrupted by the sudden buzz of the Astronaut’s communicator.",
-    "background": "saturn_bg_004.jpg"
+    "text": "The quiet triumph in the room was interrupted by the sudden buzz of the Astronaut's communicator.",
+    "background": "saturn_bg_004.png"
   },
   {
     "id": "saturn-043",
     "type": "dialogue",
     "speaker": "Oberion",
     "text": "Operator, Nova, do you read me? We are getting a full, stable signal from Saturn. The rings are back to normal.",
-    "background": "saturn_bg_004.jpg"
+    "background": "saturn_bg_004.png"
   },
   {
     "id": "saturn-044",
     "type": "dialogue",
     "speaker": "Operator",
     "text": "Loud and clear, sir. We just finished the tasks here.",
-    "background": "saturn_bg_004.jpg"
+    "background": "saturn_bg_004.png"
   },
   {
     "id": "saturn-045",
     "type": "dialogue",
     "speaker": "Narrator",
     "text": "They smiled, glancing back at a very relaxed Engineer Titan. Mission accomplished.",
-    "background": "saturn_bg_004.jpg"
+    "background": "saturn_bg_004.png"
   },
   {
     "id": "saturn-046",
     "type": "dialogue",
     "speaker": "Narrator",
-    "text": "However, despite the good news, an uneasy feeling hung in the air; something felt off, unlike their previous missions. Oberion’s tone over the communicator wasn’t his usual steady self.",
-    "background": "saturn_bg_004.jpg",
+    "text": "However, despite the good news, an uneasy feeling hung in the air; something felt off, unlike their previous missions. Oberion's tone over the communicator wasn't his usual steady self.",
+    "background": "saturn_bg_004.png",
     "when": "pythonLast"
   },
   {
     "id": "saturn-047",
     "type": "dialogue",
     "speaker": "Nova",
-    "text": "What’s happening?",
-    "background": "saturn_bg_004.jpg",
+    "text": "What's happening?",
+    "background": "saturn_bg_004.png",
     "when": "pythonLast"
   },
   {
     "id": "saturn-048",
     "type": "dialogue",
     "speaker": "Narrator",
-    "text": "A knot of anxiety tightened in Nova’s chest.",
-    "background": "saturn_bg_004.jpg",
+    "text": "A knot of anxiety tightened in Nova's chest.",
+    "background": "saturn_bg_004.png",
     "when": "pythonLast"
   },
   {
     "id": "saturn-049",
     "type": "dialogue",
     "speaker": "Oberion",
-    "text": "I’m sorry to drop this on you, but you need to head back to Earth immediately. Just get back here, and you’ll see the problem for yourself.",
-    "background": "saturn_bg_004.jpg",
+    "text": "I'm sorry to drop this on you, but you need to head back to Earth immediately. Just get back here, and you'll see the problem for yourself.",
+    "background": "saturn_bg_004.png",
     "when": "pythonLast"
   },
   {
     "id": "saturn-050",
     "type": "dialogue",
     "speaker": "Oberion",
-    "text": "Great job, Chief and Nova! Whenever you’re ready, you can proceed to your next mission. Good luck.",
-    "background": "saturn_bg_004.jpg",
+    "text": "Great job, Chief and Nova! Whenever you're ready, you can proceed to your next mission. Good luck.",
+    "background": "saturn_bg_004.png",
     "when": "!pythonLast"
   }
 ]
+

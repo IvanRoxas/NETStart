@@ -1,0 +1,284 @@
+[
+  {
+    "profile": "Web-strong",
+    "scores": "5/3/1",
+    "track": "WEB",
+    "summary": "Great telemetry on your opening diagnostic, highlighting strong pattern awareness and a natural launch path toward web architecture.",
+    "planets": [
+      {
+        "planet": "MARS",
+        "affinity": 92,
+        "reason": "Exceptional pattern recognition provides a fantastic foundation for exploring structure and hyperlinks."
+      },
+      {
+        "planet": "VENUS",
+        "affinity": 88,
+        "reason": "Strong visual pattern skills offer great momentum for discovering styling and layout."
+      },
+      {
+        "planet": "MERCURY",
+        "affinity": 81,
+        "reason": "Solid decomposition abilities create a helpful baseline for navigating DOM and events."
+      },
+      {
+        "planet": "EARTH",
+        "affinity": 54,
+        "reason": "Lists and dictionaries represent an exciting next frontier to build upon step-by-step."
+      },
+      {
+        "planet": "SATURN",
+        "affinity": 46,
+        "reason": "Loops and pointers offer fresh territory for new practice and discovery."
+      },
+      {
+        "planet": "JUPITER",
+        "affinity": 42,
+        "reason": "Exceptions and classes are ready as an intriguing future area to explore."
+      }
+    ],
+    "pathOrder": [
+      "MOON",
+      "MARS",
+      "VENUS",
+      "MERCURY",
+      "JUPITER",
+      "SATURN",
+      "EARTH"
+    ]
+  },
+  {
+    "profile": "Logic-strong",
+    "scores": "1/3/5",
+    "track": "LOGIC",
+    "summary": "Your telemetry highlights remarkable strengths in logical deduction alongside solid problem-solving steps. You are well-positioned for an exciting journey through core programming systems.",
+    "planets": [
+      {
+        "planet": "JUPITER",
+        "affinity": 95,
+        "reason": "Strong logical deduction provides an ideal base for exploring Exceptions and Classes."
+      },
+      {
+        "planet": "SATURN",
+        "affinity": 92,
+        "reason": "Excellent reasoning skills make discovering Loops and Pointers a great next step."
+      },
+      {
+        "planet": "EARTH",
+        "affinity": 90,
+        "reason": "Step-by-step thinking supports rapid growth with Dictionaries and Lists."
+      },
+      {
+        "planet": "MARS",
+        "affinity": 58,
+        "reason": "Breaking steps down offers a solid starting point for Structure and Hyperlinks."
+      },
+      {
+        "planet": "MERCURY",
+        "affinity": 55,
+        "reason": "Logical skills present clear discovery areas within DOM and Events."
+      },
+      {
+        "planet": "VENUS",
+        "affinity": 52,
+        "reason": "Fresh visual challenges offer exciting opportunities to explore Styling and Layout."
+      }
+    ],
+    "pathOrder": [
+      "MOON",
+      "JUPITER",
+      "SATURN",
+      "EARTH",
+      "MARS",
+      "VENUS",
+      "MERCURY"
+    ]
+  },
+  {
+    "profile": "Balanced",
+    "scores": "4/4/4",
+    "track": "BALANCED",
+    "summary": "Telemetry indicates steady, balanced diagnostic data across all mission systems. Exploration can proceed smoothly in any direction.",
+    "planets": [
+      {
+        "planet": "MARS",
+        "affinity": 82,
+        "reason": "Strong pattern and decomposition metrics make structure and hyperlinks a natural starting point."
+      },
+      {
+        "planet": "VENUS",
+        "affinity": 79,
+        "reason": "Solid pattern recognition provides a helpful baseline for styling and layout concepts."
+      },
+      {
+        "planet": "MERCURY",
+        "affinity": 81,
+        "reason": "Balanced decomposition and logic support work with DOM and events."
+      },
+      {
+        "planet": "JUPITER",
+        "affinity": 80,
+        "reason": "Consistent reasoning scores show steady readiness for exceptions and classes."
+      },
+      {
+        "planet": "SATURN",
+        "affinity": 83,
+        "reason": "High logic telemetry creates a strong launchpad for loops and pointers."
+      },
+      {
+        "planet": "EARTH",
+        "affinity": 78,
+        "reason": "Decomposition and logic provide a reliable foundation for dictionaries and lists."
+      }
+    ],
+    "pathOrder": [
+      "MOON",
+      "MARS",
+      "VENUS",
+      "MERCURY",
+      "JUPITER",
+      "SATURN",
+      "EARTH"
+    ]
+  },
+  {
+    "profile": "Near-tie",
+    "scores": "4/3/3",
+    "track": "BALANCED",
+    "summary": "Great telemetry across all flight sectors, showing a steady foundation ready for broad exploration.",
+    "planets": [
+      {
+        "planet": "MARS",
+        "affinity": 78,
+        "reason": "Solid pattern skills create a natural launchpad for mastering structure and hyperlinks."
+      },
+      {
+        "planet": "VENUS",
+        "affinity": 74,
+        "reason": "Recognizing visual patterns provides an exciting opportunity to explore styling and layout."
+      },
+      {
+        "planet": "MERCURY",
+        "affinity": 70,
+        "reason": "Decomposition practice supports fresh discovery with the DOM and interactive events."
+      },
+      {
+        "planet": "EARTH",
+        "affinity": 68,
+        "reason": "Steady logical reasoning offers a clear path toward organizing dictionaries and lists."
+      },
+      {
+        "planet": "SATURN",
+        "affinity": 65,
+        "reason": "Step-by-step thinking provides a great starting point for loops and pointers."
+      },
+      {
+        "planet": "JUPITER",
+        "affinity": 62,
+        "reason": "Growing analytical skills set up an inspiring gateway into exceptions and classes."
+      }
+    ],
+    "pathOrder": [
+      "MOON",
+      "MARS",
+      "VENUS",
+      "MERCURY",
+      "JUPITER",
+      "SATURN",
+      "EARTH"
+    ]
+  },
+  {
+    "profile": "All low",
+    "scores": "1/1/1",
+    "track": "BALANCED",
+    "summary": "Welcome aboard! Your initial telemetry shows a steady, open horizon across all flight systems, ready for exciting discoveries.",
+    "planets": [
+      {
+        "planet": "MARS",
+        "affinity": 42,
+        "reason": "A fresh starting point to explore foundation systems with Structure and Hyperlinks."
+      },
+      {
+        "planet": "VENUS",
+        "affinity": 40,
+        "reason": "A creative discovery area focused on building with Styling and Layout."
+      },
+      {
+        "planet": "MERCURY",
+        "affinity": 39,
+        "reason": "An inviting pathway ready for new concepts in DOM and Events."
+      },
+      {
+        "planet": "EARTH",
+        "affinity": 43,
+        "reason": "A solid base to begin organizing data with Dictionaries and Lists."
+      },
+      {
+        "planet": "SATURN",
+        "affinity": 41,
+        "reason": "An engaging route to discover sequence control through Loops and Pointers."
+      },
+      {
+        "planet": "JUPITER",
+        "affinity": 38,
+        "reason": "A wonderful growth sector to investigate Exceptions and Classes."
+      }
+    ],
+    "pathOrder": [
+      "MOON",
+      "MARS",
+      "VENUS",
+      "MERCURY",
+      "JUPITER",
+      "SATURN",
+      "EARTH"
+    ]
+  },
+  {
+    "profile": "All high",
+    "scores": "5/5/5",
+    "track": "BALANCED",
+    "summary": "Telemetry shows outstanding readiness across every mission sector, opening flight paths to all destinations.",
+    "planets": [
+      {
+        "planet": "MARS",
+        "affinity": 96,
+        "reason": "Superb pattern recognition builds a strong base for structure and hyperlinks."
+      },
+      {
+        "planet": "VENUS",
+        "affinity": 94,
+        "reason": "Sharp breakdown skills offer smooth navigation into styling and layout missions."
+      },
+      {
+        "planet": "MERCURY",
+        "affinity": 95,
+        "reason": "High analytical precision prepares for active discovery in DOM and events."
+      },
+      {
+        "planet": "JUPITER",
+        "affinity": 97,
+        "reason": "Flawless reasoning signals exciting opportunities to explore exceptions and classes."
+      },
+      {
+        "planet": "SATURN",
+        "affinity": 93,
+        "reason": "Strong systemic analysis sets up clear focus for loops and pointers."
+      },
+      {
+        "planet": "EARTH",
+        "affinity": 95,
+        "reason": "Great decomposition readiness supports quick mastery of dictionaries and lists."
+      }
+    ],
+    "pathOrder": [
+      "MOON",
+      "MARS",
+      "VENUS",
+      "MERCURY",
+      "JUPITER",
+      "SATURN",
+      "EARTH"
+    ]
+  }
+]

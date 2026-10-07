@@ -218,6 +218,7 @@ export default async function ModuleMissionsPage({ params }: { params: Promise<P
   const mercuryCompleted = getCompletedCount("mercury") >= 3 || hasCompletedFinal("mercury");
   const jupiterCompleted = getCompletedCount("jupiter") >= 3 || hasCompletedFinal("jupiter");
   const saturnCompleted = getCompletedCount("saturn") >= 3 || hasCompletedFinal("saturn");
+  const earthCompleted = getCompletedCount("earth") >= 3 || hasCompletedFinal("earth");
 
   const isModuleLocked = () => {
     if (isDemoMode) return false;

@@ -87,49 +87,49 @@
     "type": "dialogue",
     "speaker": "Professor Spectrum",
     "text": "We were working when a solar storm suddenly struck Venus. When we rushed outside to check the damage, we discovered our entire planet had been drained into a monochromatic state.",
-    "background": "venus_bg_004_bw.png"
+    "background": "venus_bg_004.png"
   },
   {
     "id": "venus-014",
     "type": "dialogue",
     "speaker": "Professor Spectrum",
     "text": "We later learned the AstroLink vanished right after the storm hit. Without that device, Venus loses all of its solid colors, and we unfortunately don’t have a backup.",
-    "background": "venus_bg_004_bw.png"
+    "background": "venus_bg_004.png"
   },
   {
     "id": "venus-015",
     "type": "dialogue",
     "speaker": "Narrator",
     "text": "The Professor paused, letting out a heavy sigh before walking over to the laboratory window and pointing outside.",
-    "background": "venus_bg_004_bw.png"
+    "background": "venus_bg_004.png"
   },
   {
     "id": "venus-016",
     "type": "dialogue",
     "speaker": "Professor Spectrum",
     "text": "What do you observe out there?",
-    "background": "venus_bg_004_bw.png"
+    "background": "venus_bg_004.png"
   },
   {
     "id": "venus-017",
     "type": "dialogue",
     "speaker": "Narrator",
     "text": "Nova shook their head, staring out at a strange, empty void.",
-    "background": "venus_bg_004_bw.png"
+    "background": "venus_bg_004.png"
   },
   {
     "id": "venus-018",
     "type": "dialogue",
     "speaker": "Nova",
     "text": "We can’t see anything. It looks completely transparent, like a gap in space. Something is definitely missing.",
-    "background": "venus_bg_004_bw.png"
+    "background": "venus_bg_004.png"
   },
   {
     "id": "venus-019",
     "type": "dialogue",
     "speaker": "Professor Spectrum",
     "text": "Exactly. Without building a prototype that restores the foundational borders and fonts, we won’t be able to visualize the severed connection to repair it. For now, we are going to have to build a replacement from scratch.",
-    "background": "venus_bg_004_bw.png"
+    "background": "venus_bg_004.png"
   },
   {
     "id": "venus-020",

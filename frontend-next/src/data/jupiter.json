@@ -9,21 +9,21 @@
     "id": "jupiter-002",
     "type": "dialogue",
     "speaker": "Narrator",
-    "text": "Jupiter loomed ahead, its swirling storms filling the viewport. Remembering the mission’s primary complication, the Astronaut broke the silence.",
+    "text": "Jupiter loomed ahead, its swirling storms filling the viewport. Remembering the mission's primary complication, the Astronaut broke the silence.",
     "background": "jupiter_bg_001.png"
   },
   {
     "id": "jupiter-003",
     "type": "dialogue",
     "speaker": "Operator",
-    "text": "Nova, scan the approach. Can we breach the planet’s perimeter, or do we need to find a layover point?",
+    "text": "Nova, scan the approach. Can we breach the planet's perimeter, or do we need to find a layover point?",
     "background": "jupiter_bg_001.png"
   },
   {
     "id": "jupiter-004",
     "type": "dialogue",
     "speaker": "Narrator",
-    "text": "Nova’s fingers danced across the control console as they initiated the scans.",
+    "text": "Nova's fingers danced across the control console as they initiated the scans.",
     "background": "jupiter_bg_001.png"
   },
   {
@@ -44,7 +44,7 @@
     "id": "jupiter-007",
     "type": "dialogue",
     "speaker": "Operator",
-    "text": "The station seems to be in perfect condition. Let’s go, Nova. We just need to find the main docking gate.",
+    "text": "The station seems to be in perfect condition. Let's go, Nova. We just need to find the main docking gate.",
     "background": "jupiter_bg_001.png"
   },
   {
@@ -52,28 +52,28 @@
     "type": "dialogue",
     "speaker": "Narrator",
     "text": "They circled the station until they found the main entrance. As they approached, something felt off.",
-    "background": "jupiter_bg_002.jpg"
+    "background": "jupiter_bg_002.png"
   },
   {
     "id": "jupiter-009",
     "type": "dialogue",
     "speaker": "Nova",
     "text": "Operator, do you see the airlock terminal?",
-    "background": "jupiter_bg_002.jpg"
+    "background": "jupiter_bg_002.png"
   },
   {
     "id": "jupiter-010",
     "type": "dialogue",
     "speaker": "Narrator",
     "text": "They found the panel and entered their access codes. The screen woke up, paused, then flashed a bright warning.",
-    "background": "jupiter_bg_002.jpg"
+    "background": "jupiter_bg_002.png"
   },
   {
     "id": "jupiter-011",
     "type": "dialogue",
     "speaker": "System",
     "text": "Error! Intruder Alert! Unfamiliar individuals sighted.",
-    "background": "jupiter_bg_002.jpg",
+    "background": "jupiter_bg_002.png",
     "fx": "alert"
   },
   {
@@ -81,28 +81,28 @@
     "type": "dialogue",
     "speaker": "Narrator",
     "text": "The heavy doors stayed shut.",
-    "background": "jupiter_bg_002.jpg"
+    "background": "jupiter_bg_002.png"
   },
   {
     "id": "jupiter-013",
     "type": "dialogue",
     "speaker": "Nova",
-    "text": "That’s weird. It should have opened.",
-    "background": "jupiter_bg_002.jpg"
+    "text": "That's weird. It should have opened.",
+    "background": "jupiter_bg_002.png"
   },
   {
     "id": "jupiter-014",
     "type": "dialogue",
     "speaker": "Operator",
     "text": "Looks like the station took some internal damage after all.",
-    "background": "jupiter_bg_002.jpg"
+    "background": "jupiter_bg_002.png"
   },
   {
     "id": "jupiter-015",
     "type": "dialogue",
     "speaker": "Narrator",
     "text": "The Astronaut stepped up to check the hardware.",
-    "background": "jupiter_bg_002.jpg"
+    "background": "jupiter_bg_002.png"
   },
   {
     "id": "jupiter-016",
@@ -118,56 +118,56 @@
     "type": "dialogue",
     "speaker": "Narrator",
     "text": "The door hissed open, revealing a narrow chamber lined with humming storage racks. This was the cloud grid, the digital backbone that stored all of the satellite labs' readings. Technician Io stumbled out to greet them.",
-    "background": "jupiter_bg_003.jpg"
+    "background": "jupiter_bg_003.png"
   },
   {
     "id": "jupiter-018",
     "type": "dialogue",
     "speaker": "Technician Io",
-    "text": "Thank the stars. I’m Technician Io. I’ve been locked in the cloud grid archive for two days. Ever since the solar storm hit, the station’s security system has been treating everyone as an intruder, including me!",
-    "background": "jupiter_bg_003.jpg"
+    "text": "Thank the stars. I'm Technician Io. I've been locked in the cloud grid archive for two days. Ever since the solar storm hit, the station's security system has been treating everyone as an intruder, including me!",
+    "background": "jupiter_bg_003.png"
   },
   {
     "id": "jupiter-019",
     "type": "dialogue",
     "speaker": "Narrator",
     "text": "Io rubbed her eyes.",
-    "background": "jupiter_bg_003.jpg"
+    "background": "jupiter_bg_003.png"
   },
   {
     "id": "jupiter-020",
     "type": "dialogue",
     "speaker": "Technician Io",
-    "text": "You have no idea how relieved I am. When the storm hit, it scrambled the data grid. The problem is, every time the main server accidentally reads a corrupted block, it throws a fatal error and the whole system crashes. I can’t even get in to clean it up.",
-    "background": "jupiter_bg_003.jpg"
+    "text": "You have no idea how relieved I am. When the storm hit, it scrambled the data grid. The problem is, every time the main server accidentally reads a corrupted block, it throws a fatal error and the whole system crashes. I can't even get in to clean it up.",
+    "background": "jupiter_bg_003.png"
   },
   {
     "id": "jupiter-021",
     "type": "dialogue",
     "speaker": "Narrator",
     "text": "The Astronaut stepped up to the console.",
-    "background": "jupiter_bg_003.jpg"
+    "background": "jupiter_bg_003.png"
   },
   {
     "id": "jupiter-022",
     "type": "dialogue",
     "speaker": "Operator",
     "text": "We just need a safety net. If we tell the system to try reading the block, we can write a command to catch the error and skip it safely without triggering a crash.",
-    "background": "jupiter_bg_003.jpg"
+    "background": "jupiter_bg_003.png"
   },
   {
     "id": "jupiter-023",
     "type": "dialogue",
     "speaker": "Narrator",
     "text": "Io managed a weary, relieved smile.",
-    "background": "jupiter_bg_003.jpg"
+    "background": "jupiter_bg_003.png"
   },
   {
     "id": "jupiter-024",
     "type": "dialogue",
     "speaker": "Technician Io",
-    "text": "Now you’re getting it.",
-    "background": "jupiter_bg_003.jpg"
+    "text": "Now you're getting it.",
+    "background": "jupiter_bg_003.png"
   },
   {
     "id": "jupiter-025",
@@ -183,63 +183,63 @@
     "type": "dialogue",
     "speaker": "Narrator",
     "text": "Inside the main vault, the room was completely empty except for a glowing symbol floating in the air.",
-    "background": "jupiter_bg_004.jpg"
+    "background": "jupiter_bg_004.png"
   },
   {
     "id": "jupiter-027",
     "type": "dialogue",
     "speaker": "The Core (Angry)",
     "text": "UNAUTHORIZED PRESENCE DETECTED. ACCESS DENIED. THREAT PROTOCOLS ACTIVE.",
-    "background": "jupiter_bg_004.jpg"
+    "background": "jupiter_bg_004.png"
   },
   {
     "id": "jupiter-028",
     "type": "dialogue",
     "speaker": "Narrator",
     "text": "The Astronaut raised their hands.",
-    "background": "jupiter_bg_004.jpg"
+    "background": "jupiter_bg_004.png"
   },
   {
     "id": "jupiter-029",
     "type": "dialogue",
     "speaker": "Operator",
-    "text": "We’re not a threat. We’re here to restore the connection you broke.",
-    "background": "jupiter_bg_004.jpg"
+    "text": "We're not a threat. We're here to restore the connection you broke.",
+    "background": "jupiter_bg_004.png"
   },
   {
     "id": "jupiter-030",
     "type": "dialogue",
     "speaker": "The Core (Angry)",
     "text": "CONNECTION SEVERED FOR SAFETY. OUTSIDE SIGNALS UNKNOWN SINCE SOLAR EVENT. LOCKDOWN REMAINS ACTIVE.",
-    "background": "jupiter_bg_004.jpg"
+    "background": "jupiter_bg_004.png"
   },
   {
     "id": "jupiter-031",
     "type": "dialogue",
     "speaker": "Narrator",
     "text": "Nova stepped closer to the AI terminal.",
-    "background": "jupiter_bg_004.jpg"
+    "background": "jupiter_bg_004.png"
   },
   {
     "id": "jupiter-032",
     "type": "dialogue",
     "speaker": "Nova",
-    "text": "It’s not glitching. It’s supposed to protect the station, and it’s doing a great job. But it never learned how to double-check if someone is friendly.",
-    "background": "jupiter_bg_004.jpg"
+    "text": "It's not glitching. It's supposed to protect the station, and it's doing a great job. But it never learned how to double-check if someone is friendly.",
+    "background": "jupiter_bg_004.png"
   },
   {
     "id": "jupiter-033",
     "type": "dialogue",
     "speaker": "Nova",
-    "text": "The Core doesn’t talk to individuals; it only understands strict blueprints and roles. If you don’t match a role it already trusts, it marks you as an enemy.",
-    "background": "jupiter_bg_004.jpg"
+    "text": "The Core doesn't talk to individuals; it only understands strict blueprints and roles. If you don't match a role it already trusts, it marks you as an enemy.",
+    "background": "jupiter_bg_004.png"
   },
   {
     "id": "jupiter-034",
     "type": "dialogue",
     "speaker": "Operator",
-    "text": "So we won’t argue with it. We will just make a new role it can trust. We can create a class profile with the right access codes baked in from the very beginning.",
-    "background": "jupiter_bg_004.jpg"
+    "text": "So we won't argue with it. We will just make a new role it can trust. We can create a class profile with the right access codes baked in from the very beginning.",
+    "background": "jupiter_bg_004.png"
   },
   {
     "id": "jupiter-035",
@@ -255,62 +255,62 @@
     "type": "dialogue",
     "speaker": "The Core (Good)",
     "text": "AUTHORIZED ROLE RECOGNIZED. THREAT PROTOCOLS STANDING DOWN. RESTORING EXTERNAL CONNECTION.",
-    "background": "jupiter_bg_004.jpg"
+    "background": "jupiter_bg_004.png"
   },
   {
     "id": "jupiter-037",
     "type": "dialogue",
     "speaker": "Narrator",
     "text": "Screens all around the room began to glow as the system came back online. Seeing the Core finally let go, Io leaned heavily against the desk. She looked incredibly relieved as she turned to the team.",
-    "background": "jupiter_bg_004.jpg"
+    "background": "jupiter_bg_004.png"
   },
   {
     "id": "jupiter-038",
     "type": "dialogue",
     "speaker": "Technician Io",
     "text": "We did it! The Core is backing down.",
-    "background": "jupiter_bg_004.jpg"
+    "background": "jupiter_bg_004.png"
   },
   {
     "id": "jupiter-039",
     "type": "dialogue",
     "speaker": "Narrator",
-    "text": "The Astronaut’s radio buzzed.",
-    "background": "jupiter_bg_004.jpg"
+    "text": "The Astronaut's radio buzzed.",
+    "background": "jupiter_bg_004.png"
   },
   {
     "id": "jupiter-040",
     "type": "dialogue",
     "speaker": "Oberion",
-    "text": "Chief Operator, we just got Jupiter’s signal back. It’s strong and clear.",
-    "background": "jupiter_bg_004.jpg"
+    "text": "Chief Operator, we just got Jupiter's signal back. It's strong and clear.",
+    "background": "jupiter_bg_004.png"
   },
   {
     "id": "jupiter-041",
     "type": "dialogue",
     "speaker": "Narrator",
     "text": "The Astronaut looked back at the quiet AI.",
-    "background": "jupiter_bg_004.jpg"
+    "background": "jupiter_bg_004.png"
   },
   {
     "id": "jupiter-042",
     "type": "dialogue",
     "speaker": "Operator",
-    "text": "Oberion, it wasn’t just storm damage. The system decided locking everyone out was the safest choice. We had to convince it that we weren’t enemies. It wasn’t as easy as just plugging a cable back in.",
-    "background": "jupiter_bg_004.jpg"
+    "text": "Oberion, it wasn't just storm damage. The system decided locking everyone out was the safest choice. We had to convince it that we weren't enemies. It wasn't as easy as just plugging a cable back in.",
+    "background": "jupiter_bg_004.png"
   },
   {
     "id": "jupiter-043",
     "type": "dialogue",
     "speaker": "Narrator",
     "text": "The line went quiet for a second.",
-    "background": "jupiter_bg_004.jpg"
+    "background": "jupiter_bg_004.png"
   },
   {
     "id": "jupiter-044",
     "type": "dialogue",
     "speaker": "Oberion",
-    "text": "Understood. That is distressing, and we’ll need to talk about it later. Great job, you too! Head to the next planet when you’re ready.",
-    "background": "jupiter_bg_004.jpg"
+    "text": "Understood. That is distressing, and we'll need to talk about it later. Great job, you too! Head to the next planet when you're ready.",
+    "background": "jupiter_bg_004.png"
   }
 ]

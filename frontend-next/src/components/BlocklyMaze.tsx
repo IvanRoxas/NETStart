@@ -6,6 +6,7 @@ import 'blockly/blocks';
 import * as En from 'blockly/msg/en';
 import { javascriptGenerator } from 'blockly/javascript';
 import '@/lib/customblocks';
+import { patchBlocklyFocus } from '@/lib/patchBlocklyFocus';
 import { generatePlainEnglishPseudocode } from '@/lib/customblocks';
 import PlainEnglishCodeViewer from '@/components/PlainEnglishCodeViewer';
 import { useNavigationGuard } from '@/context/NavigationGuardContext';
@@ -1457,7 +1458,8 @@ export const getToolboxForMission = (
   sectionIndex = 0,
   themeId = 'welcome',
   earth2Tab: 'tab1' | 'tab2' = 'tab1',
-  jupiter2Wave: Jupiter2Wave = 1
+  jupiter2Wave: Jupiter2Wave = 1,
+  venus3Tab: Venus3TabId = 'main'
 ) => {
   const m = (missionId || '').toLowerCase();
   if (m.startsWith('daily') || m.includes('daily')) {
@@ -1489,10 +1491,11 @@ export const getToolboxForMission = (
     return getVenusLevel2Toolbox(1);
   }
   if (m === 'venus-3' || m === 'css-3-venus') {
-    let savedTab: any = 'main';
+    let savedTab: any = venus3Tab || 'main';
     try {
-      if (typeof window !== 'undefined' && window.localStorage) {
-        savedTab = window.localStorage.getItem('netstart_venus3_active_tab') || 'main';
+      if (typeof window !== 'undefined' && window.localStorage && (!venus3Tab || venus3Tab === 'main')) {
+        const stored = window.localStorage.getItem(`netstart_venus3_active_tab_${missionId}`) || window.localStorage.getItem('netstart_venus3_active_tab');
+        if (stored) savedTab = stored;
       }
     } catch { }
     return getVenusLevel3Toolbox(savedTab);
@@ -1858,6 +1861,8 @@ export default function BlocklyMaze() {
 
   // Venus Level 3 State (4-Tab Instance Management)
   const [venus3ActiveTab, setVenus3ActiveTab] = useState<Venus3TabId>('main');
+  const venus3ActiveTabRef = useRef<Venus3TabId>('main');
+  venus3ActiveTabRef.current = venus3ActiveTab;
   const venus3WorkspaceStates = useRef<Record<Venus3TabId, any>>({
     main: null,
     alpha: null,
@@ -2038,17 +2043,18 @@ export default function BlocklyMaze() {
   }, [userId]);
 
   const handleVenus3TabChange = useCallback((newTab: Venus3TabId) => {
-    if (newTab === venus3ActiveTab) return;
+    if (newTab === venus3ActiveTabRef.current) return;
     if (workspace.current) {
       try {
         const dom = Blockly.Xml.workspaceToDom(workspace.current);
         const xmlText = Blockly.Xml.domToText(dom);
-        venus3WorkspaceStates.current[venus3ActiveTab] = xmlText;
-        setNetstartItem(`netstart_venus3_tab_${missionId}_${venus3ActiveTab}`, xmlText);
+        const currentActive = venus3ActiveTabRef.current;
+        venus3WorkspaceStates.current[currentActive] = xmlText;
+        setNetstartItem(`netstart_venus3_tab_${missionId}_${currentActive}`, xmlText);
 
-        const curParse = parseVenusLevel3Workspace(workspace.current, venus3ActiveTab);
-        if (venus3ActiveTab !== 'main') {
-          venus3StylesRef.current[venus3ActiveTab] = curParse.styles;
+        const curParse = parseVenusLevel3Workspace(workspace.current, currentActive);
+        if (currentActive !== 'main') {
+          venus3StylesRef.current[currentActive] = curParse.styles;
           setVenus3SectorStyles({ ...venus3StylesRef.current });
         } else {
           setVenus3LinkedStylesheets(curParse.linkedStylesheets);
@@ -2063,6 +2069,7 @@ export default function BlocklyMaze() {
       }
 
       FieldColorWheel.activeSector = newTab;
+      venus3ActiveTabRef.current = newTab;
       setVenus3ActiveTab(newTab);
       setVenus3FailedSectors([]);
       setClipboardXml(null);
@@ -2147,6 +2154,8 @@ export default function BlocklyMaze() {
             }
           }
         }
+        const currentKey = `${newTab}:${Array.from(seenTypes).sort().join(',')}`;
+        lastVenus3ToolboxKeyRef.current = currentKey;
         try {
           workspace.current.updateToolbox(getVenusLevel3Toolbox(newTab, seenTypes));
         } catch (e) { }
@@ -2198,9 +2207,11 @@ export default function BlocklyMaze() {
         }, 150);
       }
     } else {
+      FieldColorWheel.activeSector = newTab;
+      venus3ActiveTabRef.current = newTab;
       setVenus3ActiveTab(newTab);
     }
-  }, [venus3ActiveTab, missionId, getNetstartItem, setNetstartItem]);
+  }, [missionId, getNetstartItem, setNetstartItem]);
 
   const handleMercury3TabChange = useCallback((newTab: Mercury3TabId) => {
     if (newTab === mercury3ActiveTabRef.current) return;
@@ -2484,6 +2495,7 @@ export default function BlocklyMaze() {
         venus3StylesRef.current = {};
         setVenus3SectorStyles({});
         setVenus3SolvedSectors({ alpha: false, beta: false, gamma: false });
+        venus3ActiveTabRef.current = 'main';
         setVenus3ActiveTab('main');
         setVenus3LinkedStylesheets([]);
         setVenus3InlineStyles({});
@@ -2505,9 +2517,12 @@ export default function BlocklyMaze() {
       const savedTab = (getNetstartItem(`netstart_venus3_active_tab_${missionId}`) || getNetstartItem('netstart_venus3_active_tab')) as Venus3TabId;
       if (savedTab && (savedTab === 'main' || savedTab === 'alpha' || savedTab === 'beta' || savedTab === 'gamma')) {
         FieldColorWheel.activeSector = savedTab;
+        venus3ActiveTabRef.current = savedTab;
         setVenus3ActiveTab(savedTab);
       } else {
         FieldColorWheel.activeSector = 'main';
+        venus3ActiveTabRef.current = 'main';
+        setVenus3ActiveTab('main');
       }
 
       // 1. Restore cached styles
@@ -3118,6 +3133,108 @@ export default function BlocklyMaze() {
   const executionIdRef = useRef<number>(0);
   const hasHydratedSavedSection = useRef<string | null>(null);
 
+  // Nova AI Hint State & Telemetry Integration
+  const [aiHint, setAiHint] = useState<{
+    show: boolean;
+    text: string;
+    hintId?: string | null;
+    isLoading: boolean;
+  }>({
+    show: false,
+    text: '',
+    hintId: null,
+    isLoading: false,
+  });
+  const lastAiEvaluateRequestTime = useRef<number>(0);
+
+  const requestAiHintEvaluation = useCallback(async (failureReason: string) => {
+    const now = Date.now();
+    // 3-second client-side cooldown check
+    if (now - lastAiEvaluateRequestTime.current < 3000) {
+      return;
+    }
+    lastAiEvaluateRequestTime.current = now;
+
+    setAiHint({
+      show: true,
+      text: 'Nova is analyzing your code telemetry to formulate guidance...',
+      hintId: null,
+      isLoading: true,
+    });
+
+    try {
+      const currentPlainCode = plainEnglishCode || (workspace.current ? generatePlainEnglishPseudocode(workspace.current) : '');
+      let currentJs = jsCode;
+      if (!currentJs && workspace.current) {
+        try {
+          const startBlock = workspace.current.getBlocksByType('event_start', false)[0];
+          const firstExec = startBlock?.getNextBlock();
+          if (firstExec) {
+            currentJs = javascriptGenerator.blockToCode(firstExec) as string;
+          }
+        } catch (e) {}
+      }
+
+      const res = await fetch('/api/ai/evaluate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          missionId: missionId || 'moon-1',
+          currentSection: currentSection + 1,
+          plainEnglishCode: currentPlainCode || '',
+          generatedJs: currentJs || '',
+          errorMessage: failureReason,
+          simulationState: {
+            steppedOnBomb: steppedOnBomb.current,
+            section: currentSection,
+          },
+          previousErrorTypes: [],
+        }),
+      });
+
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => null);
+        console.warn('[AI_EVALUATE_RESPONSE_STATUS]', res.status, errJson);
+        setAiHint(prev => ({
+          ...prev,
+          isLoading: false,
+          text: 'Nova suggests reviewing the mission directives on the left panel to verify your next move.',
+        }));
+        return;
+      }
+
+      const data = await res.json();
+      if (data?.hint_text) {
+        setAiHint({
+          show: true,
+          isLoading: false,
+          text: data.hint_text,
+          hintId: data.hint_id,
+        });
+      }
+    } catch (err) {
+      console.warn('[AI_EVALUATE_EXCEPTION]', err);
+      // AI failure must never break the UI
+      setAiHint(prev => ({
+        ...prev,
+        isLoading: false,
+        text: 'Nova suggests reviewing the mission directives on the left panel to verify your next move.',
+      }));
+    }
+  }, [currentSection, jsCode, missionId, plainEnglishCode]);
+
+  useEffect(() => {
+    if (showErrorToast && errorToastMessage) {
+      requestAiHintEvaluation(errorToastMessage);
+    }
+  }, [showErrorToast, errorToastMessage, requestAiHintEvaluation]);
+
+  useEffect(() => {
+    if (isRunning) {
+      setAiHint(prev => ({ ...prev, show: false }));
+    }
+  }, [isRunning]);
+
   // Check replay mode and restore saved state once userId is ready
   useEffect(() => {
     if (!userId || hasHydratedSavedSection.current === `${userId}_${missionId}`) return;
@@ -3277,6 +3394,7 @@ export default function BlocklyMaze() {
         } catch (e) { }
         if (isVenusLevel3) {
           setVenus3SolvedSectors({ alpha: false, beta: false, gamma: false });
+          venus3ActiveTabRef.current = 'main';
           setVenus3ActiveTab('main');
           setVenus3SectorStyles({});
           venus3StylesRef.current = {};
@@ -3459,6 +3577,7 @@ export default function BlocklyMaze() {
         } catch (e) { }
         if (isVenusLevel3) {
           setVenus3SolvedSectors({ alpha: false, beta: false, gamma: false });
+          venus3ActiveTabRef.current = 'main';
           setVenus3ActiveTab('main');
           setVenus3SectorStyles({});
           venus3StylesRef.current = {};
@@ -3534,7 +3653,7 @@ export default function BlocklyMaze() {
         xmlText: isMercuryLevel3
           ? (mercury3WorkspaceStates.current[mercury3ActiveTabRef.current] || getNetstartItem(`netstart_mercury3_tab_${missionId}_${mercury3ActiveTabRef.current}`) || '')
           : isVenusLevel3
-            ? (venus3WorkspaceStates.current[venus3ActiveTab] || getNetstartItem(`netstart_venus3_tab_${missionId}_${venus3ActiveTab}`) || '')
+            ? (venus3WorkspaceStates.current[venus3ActiveTabRef.current] || getNetstartItem(`netstart_venus3_tab_${missionId}_${venus3ActiveTabRef.current}`) || '')
           : isEarthLevel2
             ? (earth2WorkspaceStates.current[earth2ActiveTabRef.current] || getNetstartItem(`netstart_earth2_tab_${missionId}_${earth2ActiveTabRef.current}`) || '')
             : isJupiterLevel2
@@ -3672,10 +3791,11 @@ export default function BlocklyMaze() {
           }
         }
         if (isVenusLevel3) {
-          setNetstartItem(`netstart_venus3_tab_${missionId}_${venus3ActiveTab}`, xmlText);
+          const activeTab = venus3ActiveTabRef.current;
+          setNetstartItem(`netstart_venus3_tab_${missionId}_${activeTab}`, xmlText);
           setNetstartItem(`netstart_venus3_styles_${missionId}`, JSON.stringify(venus3StylesRef.current));
-          setNetstartItem(`netstart_venus3_active_tab_${missionId}`, venus3ActiveTab);
-          venus3WorkspaceStates.current[venus3ActiveTab] = xmlText;
+          setNetstartItem(`netstart_venus3_active_tab_${missionId}`, activeTab);
+          venus3WorkspaceStates.current[activeTab] = xmlText;
         }
         if (isMercuryLevel3) {
           const activeTab = mercury3ActiveTabRef.current;
@@ -3762,16 +3882,17 @@ export default function BlocklyMaze() {
             }
           }
           if (isVenusLevel3) {
-            removeNetstartItem(`netstart_venus3_tab_${missionId}_${venus3ActiveTab}`);
+            const activeTab = venus3ActiveTabRef.current;
+            removeNetstartItem(`netstart_venus3_tab_${missionId}_${activeTab}`);
             if (venus3WorkspaceStates.current) {
-              venus3WorkspaceStates.current[venus3ActiveTab] = '';
+              venus3WorkspaceStates.current[activeTab] = '';
             }
-            if (venus3ActiveTab === 'main') {
+            if (activeTab === 'main') {
               setVenus3LinkedStylesheets([]);
               setVenus3InlineStyles({});
               venus3InlineStylesRef.current = {};
             } else {
-              delete venus3StylesRef.current[venus3ActiveTab];
+              delete venus3StylesRef.current[activeTab];
               setVenus3SectorStyles({ ...venus3StylesRef.current });
               setNetstartItem(`netstart_venus3_styles_${missionId}`, JSON.stringify(venus3StylesRef.current));
             }
@@ -3907,7 +4028,7 @@ export default function BlocklyMaze() {
       }
 
       if (!loaded) {
-        if (isVenusLevel3 && venus3ActiveTab === 'main') {
+        if (isVenusLevel3 && venus3ActiveTabRef.current === 'main') {
           const defaultMainXml = '<xml xmlns="https://developers.google.com/blockly/xml"><block type="venus3_html_head" x="50" y="50"></block></xml>';
           const dom = Blockly.utils.xml.textToDom(defaultMainXml);
           Blockly.Xml.domToWorkspace(dom, ws);
@@ -4055,9 +4176,10 @@ export default function BlocklyMaze() {
           }));
         }
       } else if (isVenusLevel3) {
-        const parseRes = parseVenusLevel3Workspace(ws, venus3ActiveTab);
-        if (venus3ActiveTab !== 'main') {
-          venus3StylesRef.current[venus3ActiveTab] = parseRes.styles;
+        const activeTab = venus3ActiveTabRef.current;
+        const parseRes = parseVenusLevel3Workspace(ws, activeTab);
+        if (activeTab !== 'main') {
+          venus3StylesRef.current[activeTab] = parseRes.styles;
           setVenus3SectorStyles({ ...venus3StylesRef.current });
         } else {
           setVenus3LinkedStylesheets(parseRes.linkedStylesheets);
@@ -4071,11 +4193,11 @@ export default function BlocklyMaze() {
 
         const isSecDone = completedSections.includes(activeSec);
         if (!isSecDone) {
-          const linked = venus3ActiveTab === 'main' ? parseRes.linkedStylesheets : venus3LinkedStylesheets;
-          const currInline = venus3ActiveTab === 'main' && parseRes.inlineStyles ? parseRes.inlineStyles : venus3InlineStylesRef.current;
-          const alphaHasStyles = (venus3StylesRef.current.alpha && Object.keys(venus3StylesRef.current.alpha).length >= 1) || (venus3ActiveTab === 'alpha' && Object.keys(parseRes.styles).length >= 1);
-          const betaHasStyles = (venus3StylesRef.current.beta && Object.keys(venus3StylesRef.current.beta).length >= 1) || (venus3ActiveTab === 'beta' && Object.keys(parseRes.styles).length >= 1);
-          const gammaHasStyles = (venus3StylesRef.current.gamma && Object.keys(venus3StylesRef.current.gamma).length >= 1) || (venus3ActiveTab === 'gamma' && Object.keys(parseRes.styles).length >= 1);
+          const linked = activeTab === 'main' ? parseRes.linkedStylesheets : venus3LinkedStylesheets;
+          const currInline = activeTab === 'main' && parseRes.inlineStyles ? parseRes.inlineStyles : venus3InlineStylesRef.current;
+          const alphaHasStyles = (venus3StylesRef.current.alpha && Object.keys(venus3StylesRef.current.alpha).length >= 1) || (activeTab === 'alpha' && Object.keys(parseRes.styles).length >= 1);
+          const betaHasStyles = (venus3StylesRef.current.beta && Object.keys(venus3StylesRef.current.beta).length >= 1) || (activeTab === 'beta' && Object.keys(parseRes.styles).length >= 1);
+          const gammaHasStyles = (venus3StylesRef.current.gamma && Object.keys(venus3StylesRef.current.gamma).length >= 1) || (activeTab === 'gamma' && Object.keys(parseRes.styles).length >= 1);
 
           const obj1Met = Boolean(alphaHasStyles);
           const obj2Met = Boolean(betaHasStyles);
@@ -4093,7 +4215,8 @@ export default function BlocklyMaze() {
         const allBlocks = ws.getAllBlocks(false);
         const foreignBlocks: Blockly.Block[] = [];
         for (const b of allBlocks) {
-          if (!isBlockAllowedInTab(b.type, venus3ActiveTab)) {
+          if ((b as any).isInsertionMarker && (b as any).isInsertionMarker()) continue;
+          if (!isBlockAllowedInTab(b.type, activeTab)) {
             foreignBlocks.push(b);
           }
         }
@@ -4103,7 +4226,7 @@ export default function BlocklyMaze() {
 
         const validBlocks = ws.getAllBlocks(false);
         const seenTypes = new Set<string>();
-        if (venus3ActiveTab === 'main') {
+        if (activeTab === 'main') {
           for (const b of validBlocks) {
             if (b.type === 'venus3_inline_tower' || b.type === 'venus3_inline_background' || b.type === 'venus3_html_head') {
               seenTypes.add(b.type);
@@ -4116,8 +4239,10 @@ export default function BlocklyMaze() {
             }
           }
         }
+        const currentKey = `${activeTab}:${Array.from(seenTypes).sort().join(',')}`;
+        lastVenus3ToolboxKeyRef.current = currentKey;
         try {
-          ws.updateToolbox(getVenusLevel3Toolbox(venus3ActiveTab, seenTypes));
+          ws.updateToolbox(getVenusLevel3Toolbox(activeTab, seenTypes));
         } catch (e) { }
       } else if (isMercuryLevel1) {
         const parseRes = parseMercuryLevel1Workspace(ws);
@@ -4392,9 +4517,10 @@ export default function BlocklyMaze() {
           }
         };
         findTypes(dom);
-        const foreignType = blockTypes.find(t => !isBlockAllowedInTab(t, venus3ActiveTab));
+        const activeTab = venus3ActiveTabRef.current;
+        const foreignType = blockTypes.find(t => !isBlockAllowedInTab(t, activeTab));
         if (foreignType) {
-          const tabName = venus3ActiveTab === 'main' ? 'index.html' : `${venus3ActiveTab}.css`;
+          const tabName = activeTab === 'main' ? 'index.html' : `${activeTab}.css`;
           showToast(`Cannot paste blocks from another sector into ${tabName}! Each sector has its own target selectors.`, { duration: 4000 });
           return;
         }
@@ -6622,9 +6748,38 @@ export default function BlocklyMaze() {
     }
   }, [plainEnglishCode, jsCode, venus2ActivePanel, venus2SolvedPanels, markObjectiveComplete, recordSectionCompleted, setShowPopup, missionId, isReplayMode, addXp, triggerMissionCompletion]);
 
+  const resetWorkspaceRef = useRef(resetWorkspaceToDefaultStart);
+  resetWorkspaceRef.current = resetWorkspaceToDefaultStart;
+
+  const setupContextMenuRef = useRef(setupCustomContextMenu);
+  setupContextMenuRef.current = setupCustomContextMenu;
+
+  const showToastRef = useRef(showToast);
+  showToastRef.current = showToast;
+
+  const currentSectionRef = useRef(currentSection);
+  currentSectionRef.current = currentSection;
+
+  const completedSectionsRef = useRef(completedSections);
+  completedSectionsRef.current = completedSections;
+
+  const userIdRef = useRef(userId);
+  userIdRef.current = userId;
+
+  const displayTitleRef = useRef(displayTitle);
+  displayTitleRef.current = displayTitle;
+
+  const planetIconRef = useRef(planetIcon);
+  planetIconRef.current = planetIcon;
+
+  const isDailyRef = useRef(isDaily);
+  isDailyRef.current = isDaily;
+
   // Inject Blockly
   useEffect(() => {
     if (blocklyDiv.current && !workspace.current) {
+      patchBlocklyFocus();
+
       const netStartTheme = Blockly.Theme.defineTheme('netstart_space', {
         name: 'netstart_space',
         base: Blockly.Themes.Classic,
@@ -6668,7 +6823,7 @@ export default function BlocklyMaze() {
       registerEarthLevel3Blocks();
 
       const ws = Blockly.inject(blocklyDiv.current, {
-        toolbox: getToolboxForMission(missionId, currentSection, 'welcome', earth2ActiveTabRef.current),
+        toolbox: getToolboxForMission(missionId, currentSectionRef.current, 'welcome', earth2ActiveTabRef.current, jupiter2ActiveWaveRef.current, venus3ActiveTabRef.current),
         collapse: true,
         comments: true,
         scrollbars: true,
@@ -6698,11 +6853,11 @@ export default function BlocklyMaze() {
         },
       });
 
-      (ws as any).currentSectionIndex = currentSection;
+      (ws as any).currentSectionIndex = currentSectionRef.current;
       (ws as any).dailySectionName = dailySection?.name;
       (ws as any).missionId = missionId;
       if (typeof window !== 'undefined') {
-        (window as any).__NETSTART_CURRENT_SECTION__ = currentSection;
+        (window as any).__NETSTART_CURRENT_SECTION__ = currentSectionRef.current;
         (window as any).__NETSTART_DAILY_SECTION_NAME__ = dailySection?.name;
         (window as any).__NETSTART_MISSION_ID__ = missionId;
       }
@@ -6744,8 +6899,8 @@ export default function BlocklyMaze() {
         return false;
       };
 
-      resetWorkspaceToDefaultStart(ws);
-      setupCustomContextMenu();
+      resetWorkspaceRef.current(ws);
+      setupContextMenuRef.current();
 
       const updateCodeLive = () => {
         if (!workspace.current || isRestoringWorkspaceRef.current) return;
@@ -6777,7 +6932,7 @@ export default function BlocklyMaze() {
             setPlainEnglishCode(parseRes.htmlCode);
             setJsCode(parseRes.htmlCode);
             setMars2Validation(parseRes.validation);
-            const isSecDone = completedSections.includes(currentSection);
+            const isSecDone = completedSectionsRef.current.includes(currentSectionRef.current);
             const captionCount = parseRes.validation.customizations?.filter(c => c.caption || c.headline)?.length || 0;
             const allContainersPopulated = parseRes.validation.totalContainers === 5 && parseRes.validation.assignedImages?.every(img => img !== null) && !parseRes.validation.hasErrors;
             const obj1Met = captionCount >= 2;
@@ -6792,9 +6947,9 @@ export default function BlocklyMaze() {
                 return obj;
               }));
 
-              const goalKey1 = `${missionId}_sec${currentSection}_goal1`;
-              const goalKey2 = `${missionId}_sec${currentSection}_goal2`;
-              const goalKey3 = `${missionId}_sec${currentSection}_goal3`;
+              const goalKey1 = `${missionId}_sec${currentSectionRef.current}_goal1`;
+              const goalKey2 = `${missionId}_sec${currentSectionRef.current}_goal2`;
+              const goalKey3 = `${missionId}_sec${currentSectionRef.current}_goal3`;
 
               try {
                 let completedGoals: string[] = JSON.parse(getNetstartItem(`netstart_completed_goals_${missionId}`) || '[]');
@@ -6821,7 +6976,7 @@ export default function BlocklyMaze() {
             setPlainEnglishCode(parseRes.htmlCode);
             setJsCode(parseRes.htmlCode);
             setMars3Validation(parseRes.validation);
-            const isSecDone = completedSections.includes(currentSection);
+            const isSecDone = completedSectionsRef.current.includes(currentSectionRef.current);
             const obj1Met = !!parseRes.validation.hasTitle;
             const obj2Met = mars3StatusOpened;
             const obj3Met = mars3MercuryPinged && mars3VenusPinged;
@@ -6839,9 +6994,9 @@ export default function BlocklyMaze() {
                 return obj;
               }));
 
-              const goalKey1 = `${missionId}_sec${currentSection}_goal1`;
-              const goalKey2 = `${missionId}_sec${currentSection}_goal2`;
-              const goalKey3 = `${missionId}_sec${currentSection}_goal3`;
+              const goalKey1 = `${missionId}_sec${currentSectionRef.current}_goal1`;
+              const goalKey2 = `${missionId}_sec${currentSectionRef.current}_goal2`;
+              const goalKey3 = `${missionId}_sec${currentSectionRef.current}_goal3`;
 
               try {
                 let completedGoals: string[] = JSON.parse(getNetstartItem(`netstart_completed_goals_${missionId}`) || '[]');
@@ -6956,11 +7111,12 @@ export default function BlocklyMaze() {
               } catch (e) { }
             }
           } else if (isVenusLevel3) {
-            const parseRes = parseVenusLevel3Workspace(workspace.current, venus3ActiveTab);
+            const activeTab = venus3ActiveTabRef.current;
+            const parseRes = parseVenusLevel3Workspace(workspace.current, activeTab);
             setPlainEnglishCode(parseRes.code);
             setJsCode(parseRes.code);
-            if (venus3ActiveTab !== 'main') {
-              venus3StylesRef.current[venus3ActiveTab] = parseRes.styles;
+            if (activeTab !== 'main') {
+              venus3StylesRef.current[activeTab] = parseRes.styles;
               setVenus3SectorStyles({ ...venus3StylesRef.current });
             } else {
               setVenus3LinkedStylesheets(parseRes.linkedStylesheets);
@@ -6970,11 +7126,11 @@ export default function BlocklyMaze() {
               }
             }
             const isSecDone = completedSections.includes(currentSection);
-            const linked = venus3ActiveTab === 'main' ? parseRes.linkedStylesheets : venus3LinkedStylesheets;
-            const currInline = venus3ActiveTab === 'main' && parseRes.inlineStyles ? parseRes.inlineStyles : venus3InlineStylesRef.current;
-            const alphaHasStyles = (venus3StylesRef.current.alpha && Object.keys(venus3StylesRef.current.alpha).length >= 1) || (venus3ActiveTab === 'alpha' && Object.keys(parseRes.styles).length >= 1);
-            const betaHasStyles = (venus3StylesRef.current.beta && Object.keys(venus3StylesRef.current.beta).length >= 1) || (venus3ActiveTab === 'beta' && Object.keys(parseRes.styles).length >= 1);
-            const gammaHasStyles = (venus3StylesRef.current.gamma && Object.keys(venus3StylesRef.current.gamma).length >= 1) || (venus3ActiveTab === 'gamma' && Object.keys(parseRes.styles).length >= 1);
+            const linked = activeTab === 'main' ? parseRes.linkedStylesheets : venus3LinkedStylesheets;
+            const currInline = activeTab === 'main' && parseRes.inlineStyles ? parseRes.inlineStyles : venus3InlineStylesRef.current;
+            const alphaHasStyles = (venus3StylesRef.current.alpha && Object.keys(venus3StylesRef.current.alpha).length >= 1) || (activeTab === 'alpha' && Object.keys(parseRes.styles).length >= 1);
+            const betaHasStyles = (venus3StylesRef.current.beta && Object.keys(venus3StylesRef.current.beta).length >= 1) || (activeTab === 'beta' && Object.keys(parseRes.styles).length >= 1);
+            const gammaHasStyles = (venus3StylesRef.current.gamma && Object.keys(venus3StylesRef.current.gamma).length >= 1) || (activeTab === 'gamma' && Object.keys(parseRes.styles).length >= 1);
 
             const obj1Met = Boolean(alphaHasStyles);
             const obj2Met = Boolean(betaHasStyles);
@@ -7273,7 +7429,7 @@ export default function BlocklyMaze() {
             const xmlText = Blockly.Xml.domToText(xmlDom);
             const blockCount = workspace.current.getAllBlocks(false).length;
             if (
-              userId &&
+              userIdRef.current &&
               hasHydratedSavedSection.current &&
               !isRestoringWorkspaceRef.current &&
               blockCount > 0 &&
@@ -7296,7 +7452,7 @@ export default function BlocklyMaze() {
                 setNetstartItem(`netstart_jupiter2_active_wave_${missionId}`, String(waveKey));
                 setNetstartItem('netstart_jupiter2_active_wave', String(waveKey));
               } else if (!isVenusLevel3 && !isMercuryLevel3) {
-                setNetstartItem(`netstart_saved_workspace_${missionId}_${currentSection}`, xmlText);
+                setNetstartItem(`netstart_saved_workspace_${missionId}_${currentSectionRef.current}`, xmlText);
                 if (isJupiterLevel3) {
                   setNetstartItem('netstart_saved_workspace_jupiter-3_0', xmlText);
                   setNetstartItem('netstart_saved_workspace_java-3_0', xmlText);
@@ -7311,9 +7467,10 @@ export default function BlocklyMaze() {
                 }
               }
               if (isVenusLevel3) {
-                setNetstartItem(`netstart_venus3_tab_${missionId}_${venus3ActiveTab}`, xmlText);
+                const activeTab = venus3ActiveTabRef.current;
+                setNetstartItem(`netstart_venus3_tab_${missionId}_${activeTab}`, xmlText);
                 setNetstartItem(`netstart_venus3_styles_${missionId}`, JSON.stringify(venus3StylesRef.current));
-                venus3WorkspaceStates.current[venus3ActiveTab] = xmlText;
+                venus3WorkspaceStates.current[activeTab] = xmlText;
               }
               if (isMercuryLevel3) {
                 setNetstartItem(`netstart_mercury3_tab_${missionId}_${mercury3ActiveTab}`, xmlText);
@@ -7326,19 +7483,19 @@ export default function BlocklyMaze() {
 
               const saveState = {
                 missionId,
-                sectionIndex: currentSection,
+                sectionIndex: currentSectionRef.current,
                 xmlText,
-                title: displayTitle,
+                title: displayTitleRef.current,
                 completedGoals,
                 timestamp: Date.now()
               };
               setNetstartItem('netstart_active_saved_level', JSON.stringify(saveState));
               setNetstartItem('netstart_active_level', JSON.stringify({
                 missionId,
-                title: displayTitle,
-                module: getMissionModuleForMission(missionId, isDaily),
-                icon: planetIcon,
-                desc: getMissionDescForMission(missionId, isDaily),
+                title: displayTitleRef.current,
+                module: getMissionModuleForMission(missionId, isDailyRef.current),
+                icon: planetIconRef.current,
+                desc: getMissionDescForMission(missionId, isDailyRef.current),
                 startedAt: new Date().toISOString()
               }));
             } else if (
@@ -7413,19 +7570,26 @@ export default function BlocklyMaze() {
           if (!workspace.current || workspace.current !== targetWs) return;
           if ((targetWs as any).isDragging?.()) return;
 
+          const activeTab = venus3ActiveTabRef.current;
           const allBlocks = targetWs.getAllBlocks(false);
           const invalidBlocks: Blockly.Block[] = [];
           for (const b of allBlocks) {
-            if (!isBlockAllowedInTab(b.type, venus3ActiveTab)) {
+            if ((b as any).isInsertionMarker && (b as any).isInsertionMarker()) continue;
+            if (!isBlockAllowedInTab(b.type, activeTab)) {
               invalidBlocks.push(b);
             }
           }
 
           if (invalidBlocks.length > 0) {
-            invalidBlocks.forEach(inv => {
-              try { inv.dispose(false); } catch (e) { }
-            });
-            const tabName = venus3ActiveTab === 'main' ? 'index.html' : `${venus3ActiveTab}.css`;
+            try {
+              if (Blockly.Events?.disable) Blockly.Events.disable();
+              invalidBlocks.forEach(inv => {
+                try { inv.dispose(false); } catch (e) { }
+              });
+            } finally {
+              if (Blockly.Events?.enable) Blockly.Events.enable();
+            }
+            const tabName = activeTab === 'main' ? 'index.html' : `${activeTab}.css`;
             showToast(`Those blocks belong to another sector and cannot be used in ${tabName}!`, { duration: 4000 });
           }
 
@@ -7433,7 +7597,7 @@ export default function BlocklyMaze() {
           const seenTypes = new Set<string>();
           const duplicateBlocks: any[] = [];
 
-          if (venus3ActiveTab === 'main') {
+          if (activeTab === 'main') {
             for (const b of validBlocks) {
               if (b.type === 'venus3_inline_tower' || b.type === 'venus3_inline_background' || b.type === 'venus3_html_head') {
                 if (seenTypes.has(b.type)) {
@@ -7465,10 +7629,10 @@ export default function BlocklyMaze() {
             }
           }
 
-          const currentKey = `${venus3ActiveTab}:${Array.from(seenTypes).sort().join(',')}`;
+          const currentKey = `${activeTab}:${Array.from(seenTypes).sort().join(',')}`;
           if (currentKey !== lastVenus3ToolboxKeyRef.current) {
             lastVenus3ToolboxKeyRef.current = currentKey;
-            targetWs.updateToolbox(getVenusLevel3Toolbox(venus3ActiveTab, seenTypes));
+            targetWs.updateToolbox(getVenusLevel3Toolbox(activeTab, seenTypes));
           }
         }, 80);
       };
@@ -7558,7 +7722,7 @@ export default function BlocklyMaze() {
       const onWorkspaceChange = (e: any) => {
         if (!isRestoringWorkspaceRef.current && e && (e.type === Blockly.Events.BLOCK_DELETE || e.type === (Blockly.Events as any).DELETE)) {
           if (e && !(e as any).isUiEvent && ((e as any).blockId || (e as any).ids)) {
-            showToast("Block deleted", {
+            showToastRef.current("Block deleted", {
               onUndo: () => {
                 if (workspace.current) workspace.current.undo(false);
               },
@@ -7602,7 +7766,7 @@ export default function BlocklyMaze() {
             const selected = Blockly.getSelected();
             if (selected && typeof (selected as any).dispose === 'function' && (selected as any).type !== 'event_start' && (selected as any).isDeletable?.()) {
               (selected as any).dispose(true);
-              showToast("Block deleted", {
+              showToastRef.current("Block deleted", {
                 onUndo: () => {
                   if (workspace.current) workspace.current.undo(false);
                 },
@@ -7653,12 +7817,19 @@ export default function BlocklyMaze() {
           clearTimeout(mars2ToolboxTimeoutRef.current);
         }
         if (workspace.current) {
-          workspace.current.dispose();
+          try {
+            workspace.current.dispose();
+          } catch (e) {
+            console.warn("Workspace disposal warning:", e);
+          }
           workspace.current = null;
+        }
+        if (blocklyDiv.current) {
+          blocklyDiv.current.innerHTML = '';
         }
       };
     }
-  }, [missionId, resetWorkspaceToDefaultStart, setupCustomContextMenu, showToast]);
+  }, [missionId]);
 
   // Sync Venus Level 2 toolbox with activePanel changes
   useEffect(() => {
@@ -8070,6 +8241,7 @@ export default function BlocklyMaze() {
 
     if (isVenusLevel3) {
       setVenus3SolvedSectors({ alpha: false, beta: false, gamma: false });
+      venus3ActiveTabRef.current = 'main';
       setVenus3ActiveTab('main');
       setVenus3SectorStyles({});
       venus3StylesRef.current = {};
@@ -8843,10 +9015,11 @@ export default function BlocklyMaze() {
     // =========================================================================
     if (isVenusLevel3) {
       clearAllBlockHighlights(workspace.current);
-      const parseRes = parseVenusLevel3Workspace(workspace.current, venus3ActiveTab);
+      const activeTab = venus3ActiveTabRef.current;
+      const parseRes = parseVenusLevel3Workspace(workspace.current, activeTab);
 
-      if (venus3ActiveTab !== 'main') {
-        venus3StylesRef.current[venus3ActiveTab] = parseRes.styles;
+      if (activeTab !== 'main') {
+        venus3StylesRef.current[activeTab] = parseRes.styles;
         setVenus3SectorStyles({ ...venus3StylesRef.current });
       } else {
         setVenus3LinkedStylesheets(parseRes.linkedStylesheets);
@@ -8860,7 +9033,7 @@ export default function BlocklyMaze() {
       setJsCode(parseRes.code);
 
       // Return to overview pie so the player can watch the sectors scan
-      if (venus3ActiveTab !== 'main') {
+      if (activeTab !== 'main') {
         handleVenus3TabChange('main');
       }
 
@@ -8878,16 +9051,16 @@ export default function BlocklyMaze() {
       setVenus3FailedSectors([]);
       setIsRunning(true);
 
-      const alphaHasStyles = (venus3StylesRef.current.alpha && Object.keys(venus3StylesRef.current.alpha).length >= 1) || (venus3ActiveTab === 'alpha' && Object.keys(parseRes.styles).length >= 1);
-      const betaHasStyles = (venus3StylesRef.current.beta && Object.keys(venus3StylesRef.current.beta).length >= 1) || (venus3ActiveTab === 'beta' && Object.keys(parseRes.styles).length >= 1);
-      const gammaHasStyles = (venus3StylesRef.current.gamma && Object.keys(venus3StylesRef.current.gamma).length >= 1) || (venus3ActiveTab === 'gamma' && Object.keys(parseRes.styles).length >= 1);
+      const alphaHasStyles = (venus3StylesRef.current.alpha && Object.keys(venus3StylesRef.current.alpha).length >= 1) || (activeTab === 'alpha' && Object.keys(parseRes.styles).length >= 1);
+      const betaHasStyles = (venus3StylesRef.current.beta && Object.keys(venus3StylesRef.current.beta).length >= 1) || (activeTab === 'beta' && Object.keys(parseRes.styles).length >= 1);
+      const gammaHasStyles = (venus3StylesRef.current.gamma && Object.keys(venus3StylesRef.current.gamma).length >= 1) || (activeTab === 'gamma' && Object.keys(parseRes.styles).length >= 1);
 
       const alphaPass = Boolean(alphaHasStyles);
       const betaPass = Boolean(betaHasStyles);
       const gammaPass = Boolean(gammaHasStyles);
 
-      const linked = venus3ActiveTab === 'main' ? parseRes.linkedStylesheets : venus3LinkedStylesheets;
-      const currInline = venus3ActiveTab === 'main' && parseRes.inlineStyles ? parseRes.inlineStyles : venus3InlineStylesRef.current;
+      const linked = activeTab === 'main' ? parseRes.linkedStylesheets : venus3LinkedStylesheets;
+      const currInline = activeTab === 'main' && parseRes.inlineStyles ? parseRes.inlineStyles : venus3InlineStylesRef.current;
       const hasInlineTower = Boolean(currInline?.tower);
       const hasInlineBg = Boolean(currInline?.background);
 
@@ -11621,10 +11794,15 @@ export default function BlocklyMaze() {
           setShowEndToast(true);
           endToastTimer.current = setTimeout(() => setShowEndToast(false), 5500);
         }
+      } else {
+        requestAiHintEvaluation("Rover completed instructions without reaching the target landing marker.");
       }
     } catch (e: any) {
       if (currentExecutingBlockId && workspace.current && e?.message !== 'SIMULATION_CANCELLED') {
         markBlockError(workspace.current, currentExecutingBlockId);
+      }
+      if (e?.message !== 'SIMULATION_CANCELLED') {
+        requestAiHintEvaluation(e?.message || 'Execution error');
       }
       if (
         e.message !== "System Overload" &&
@@ -12810,9 +12988,11 @@ export default function BlocklyMaze() {
                 onResetSimulation={() => setIsRunning(false)}
                 onItemSorted={(count) => {
                   if (count >= 20) {
-                    if (mercury2Validation.objective2Variable) markObjectiveComplete(1);
-                    if (mercury2Validation.objective3Logic) markObjectiveComplete(2);
-                    markObjectiveComplete(3);
+                    setTimeout(() => {
+                      if (mercury2Validation.objective2Variable) markObjectiveComplete(1);
+                      if (mercury2Validation.objective3Logic) markObjectiveComplete(2);
+                      markObjectiveComplete(3);
+                    }, 0);
                   }
                 }}
               />
@@ -13808,6 +13988,40 @@ export default function BlocklyMaze() {
                 onClick={() => setShowErrorToast(false)}
                 className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors shrink-0 cursor-pointer"
                 title="Dismiss"
+              >
+                <X size={16} />
+              </button>
+            </div>
+          )}
+
+          {/* Nova AI Hint Panel (Supplements failure toasts) */}
+          {aiHint.show && (
+            <div className="mx-4 mb-3 p-3.5 bg-gradient-to-r from-[#0c1f38] to-[#12284c] border border-cyan-500/60 text-white rounded-2xl shadow-2xl flex items-start justify-between gap-3 animate-in slide-in-from-bottom-2 duration-200 shrink-0">
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-full bg-cyan-500/20 border border-cyan-400 flex items-center justify-center text-cyan-300 shrink-0 shadow-inner mt-0.5">
+                  <Sparkles size={18} className="text-cyan-300" />
+                </div>
+                <div className="text-left">
+                  <div className="flex items-center gap-2">
+                    <p className="text-xs sm:text-sm font-black text-cyan-300 font-sans leading-tight">
+                      Nova AI Tactical Hint
+                    </p>
+                    {aiHint.isLoading && (
+                      <span className="flex items-center gap-1 text-[10px] text-cyan-400 font-mono">
+                        <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping inline-block" />
+                        Analyzing telemetry...
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-cyan-100/90 font-sans mt-1 leading-snug">
+                    {aiHint.text}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setAiHint(prev => ({ ...prev, show: false }))}
+                className="p-1.5 rounded-lg text-cyan-400/70 hover:text-white hover:bg-cyan-500/20 transition-colors shrink-0 cursor-pointer"
+                title="Dismiss Hint"
               >
                 <X size={16} />
               </button>

@@ -43,6 +43,7 @@ export async function middleware(req: NextRequest) {
                            req.nextUrl.pathname.startsWith('/settings') || 
                            req.nextUrl.pathname.startsWith('/notifications') || 
                            req.nextUrl.pathname.startsWith('/aptitude-test') || 
+                           req.nextUrl.pathname.startsWith('/code-sandbox') ||
                            isRestrictedRoute;
                            
   if (isProtectedRoute) {
@@ -71,6 +72,7 @@ export const config = {
     '/sandbox/:path*', 
     '/code-sandbox/:path*', 
     '/modules/:path*', 
+    '/missions/:path*',
     '/profile/:path*', 
     '/shop/:path*', 
     '/achievements/:path*', 

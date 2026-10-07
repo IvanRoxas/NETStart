@@ -2,13 +2,14 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
 import { Lock, Rocket, Award, Settings, Zap, Brain, X, Sparkles, Film } from 'lucide-react';
 import PlanetNode from '@/components/PlanetNode';
 import { getUserStorageItem, setUserStorageItem, removeUserStorageItem } from '@/lib/userStorage';
 import DemoToggle from '@/components/DemoToggle';
 import { useDemoMode } from '@/lib/demoMode';
 import StoryArchiveModal from '@/components/StoryArchiveModal';
+import { mapMissionIdToPlanet } from '@/lib/missionMapper';
+import { computeUnlockStatus } from '@/lib/unlockLogic';
 
 interface LiveStats {
   level: number;
@@ -21,6 +22,11 @@ interface LiveStats {
   levelRequiredXp?: number;
 }
 
+interface MissionProgressRow {
+  missionId: string;
+  status: string;
+}
+
 interface CompletedMission {
   missionId: string;
 }
@@ -29,10 +35,15 @@ interface ModulesClientProps {
   userId?: string;
   isVerified: boolean;
   hasTakenAptitudeTest?: boolean;
-  recommendedLearningPath?: string;
+  aptitudeResult?: any;
+  recommendedLearningPath?: string | null;
+  pathOrder?: string[] | null;
+  planetReasons?: any;
   liveStats: LiveStats;
-  completedMissions: CompletedMission[];
+  completedMissions?: CompletedMission[];
+  allUserMissions?: MissionProgressRow[];
   canUseDemoMode?: boolean;
+  isFallback?: boolean;
 }
 
 // Constellation path segments connecting all 7 planets
@@ -45,14 +56,19 @@ const pathSegments = [
   { from: 5, to: 6, x1: 76, y1: 74, x2: 26, y2: 86 },
 ];
 
-export default function ModulesClient({ 
-  userId, 
-  isVerified, 
-  hasTakenAptitudeTest = false, 
-  recommendedLearningPath, 
-  liveStats, 
-  completedMissions,
+export default function ModulesClient({
+  userId,
+  isVerified,
+  hasTakenAptitudeTest = false,
+  aptitudeResult,
+  recommendedLearningPath,
+  pathOrder,
+  planetReasons,
+  liveStats,
+  completedMissions = [],
+  allUserMissions = [],
   canUseDemoMode = false,
+  isFallback,
 }: ModulesClientProps) {
   const [activePlanetId, setActivePlanetId] = useState<string | null>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
@@ -72,6 +88,15 @@ export default function ModulesClient({
       };
     }
   }, [fromCutscene]);
+
+  useEffect(() => {
+    if (isFallback) {
+      // Trigger background silent retry
+      fetch('/api/aptitude/retry', { method: 'POST' }).catch(err => {
+        console.warn('Silent fallback retry failed:', err);
+      });
+    }
+  }, [isFallback]);
 
   // Demo mode: temporarily unlocks all planets for debugging; pauses XP/progression side-effects
   const { isDemoMode } = useDemoMode();
@@ -104,7 +129,7 @@ export default function ModulesClient({
   }`;
 
   // Winding learning path configuration for 7 Solar System Planets with balanced wide spacing
-  const pathNodes = [
+  const defaultPathNodes = [
     { 
       id: "moon", 
       name: "The Moon", 
@@ -212,62 +237,57 @@ export default function ModulesClient({
     }
   ];
 
-  // Combine server completed missions with user-scoped storage
-  const allCompletedMissions = useMemo(() => {
-    const list: { missionId: string }[] = completedMissions.filter(m => !m.missionId.startsWith('daily-'));
+  const pathNodes = useMemo(() => {
+    let order = pathOrder;
+    if (!order || order.length === 0) {
+      order = defaultPathNodes.map(n => n.id.toUpperCase());
+    }
+
+    return order.map((planetId, index) => {
+      const slot = defaultPathNodes[index];
+      const data = defaultPathNodes.find(n => n.id.toLowerCase() === planetId.toLowerCase());
+      
+      const reasonObj = planetReasons?.find((r: any) => r.planet.toLowerCase() === planetId.toLowerCase());
+      const reason = reasonObj ? reasonObj.reason : undefined;
+
+      return {
+        ...data!,
+        top: slot.top,
+        left: slot.left,
+        sizeClass: slot.sizeClass,
+        imgScale: slot.imgScale,
+        rotationSpeed: slot.rotationSpeed,
+        reverse: slot.reverse,
+        aiReason: reason
+      };
+    });
+  }, [pathOrder, planetReasons]);
+
+  // Combine server ALL missions with user-scoped storage completed missions
+  const computedUserMissions = useMemo(() => {
+    const list: MissionProgressRow[] = allUserMissions.filter(m => !m.missionId.startsWith('daily-'));
     if (typeof window !== 'undefined' && userId) {
       try {
         const localList: string[] = JSON.parse(getUserStorageItem('completed_missions', userId) || '[]');
         localList.forEach(id => {
           if (!id.startsWith('daily-') && !list.some(m => m.missionId.toLowerCase() === id.toLowerCase())) {
-            list.push({ missionId: id });
+            list.push({ missionId: id, status: 'COMPLETED' });
           }
         });
       } catch (e) {}
     }
     return list;
-  }, [completedMissions, userId]);
+  }, [allUserMissions, userId]);
 
-  // Map user completed count per module
-  const getCompletedMissionsCount = (moduleId: string) => {
-    return allCompletedMissions.filter(m => {
-      const id = m.missionId.toLowerCase();
-      if (moduleId === 'moon') return id.startsWith('moon');
-      if (moduleId === 'mars') return id.startsWith('mars') || id.startsWith('html');
-      if (moduleId === 'venus') return id.startsWith('venus') || id.startsWith('css');
-      if (moduleId === 'mercury') return id.startsWith('mercury') || id.startsWith('javascript') || id.startsWith('js');
-      if (moduleId === 'jupiter') return id.startsWith('jupiter') || id.startsWith('java');
-      if (moduleId === 'saturn') return id.startsWith('saturn') || id.startsWith('cpp');
-      if (moduleId === 'earth') return id.startsWith('earth') || id.startsWith('python');
-      return id.startsWith(moduleId.toLowerCase());
-    }).length;
-  };
+  const pathOrderArray = useMemo(() => pathNodes.map(n => n.id), [pathNodes]);
 
-  // Determine path completion indicators (3 levels per planet)
-  const hasCompletedFinal = (planetId: string) => {
-    return allCompletedMissions.some(m => {
-      const mid = m.missionId.toLowerCase();
-      return mid === `${planetId}-3` || mid === `html-3-${planetId}` || mid === `css-3-${planetId}`;
-    });
-  };
+  const unlockInfo = useMemo(() => {
+    return computeUnlockStatus(pathOrderArray, computedUserMissions);
+  }, [pathOrderArray, computedUserMissions]);
 
-  const moonCompleted = getCompletedMissionsCount("moon") >= 3 || hasCompletedFinal("moon");
-  const marsCompleted = getCompletedMissionsCount("mars") >= 3 || hasCompletedFinal("mars");
-  const venusCompleted = getCompletedMissionsCount("venus") >= 3 || hasCompletedFinal("venus");
-  const mercuryCompleted = getCompletedMissionsCount("mercury") >= 3 || hasCompletedFinal("mercury");
-  const jupiterCompleted = getCompletedMissionsCount("jupiter") >= 3 || hasCompletedFinal("jupiter");
-  const saturnCompleted = getCompletedMissionsCount("saturn") >= 3 || hasCompletedFinal("saturn");
-  const earthCompleted = getCompletedMissionsCount("earth") >= 3 || hasCompletedFinal("earth");
-
-  // Real unlocked index based on server completed missions
-  let realUnlockedIndex = 0;
-  if (saturnCompleted) realUnlockedIndex = 6;
-  else if (jupiterCompleted) realUnlockedIndex = 5;
-  else if (mercuryCompleted) realUnlockedIndex = 4;
-  else if (venusCompleted) realUnlockedIndex = 3;
-  else if (marsCompleted) realUnlockedIndex = 2;
-  else if (moonCompleted) realUnlockedIndex = 1;
-  else realUnlockedIndex = 0;
+  const realUnlockedIndex = unlockInfo.sequentialUnlockedIndex;
+  const venusCompleted = unlockInfo.planetStatuses['venus'] === 'COMPLETED';
+  const earthCompleted = unlockInfo.planetStatuses['earth'] === 'COMPLETED';
 
   // Travel animation state
   const [animState, setAnimState] = useState<{
@@ -483,23 +503,20 @@ export default function ModulesClient({
     const nodeIndex = pathNodes.findIndex(n => n.id === id);
     if (nodeIndex === -1) return 'LOCKED';
 
-    // Demo mode: treat every planet as CURRENT so it renders as clickable/unlocked
     if (isDemoMode) return nodeIndex < pathNodes.length - 1 ? 'COMPLETED' : 'CURRENT';
+    if (activePlanetId === id) return 'CURRENT';
 
-    // Planets completed in the progression track are permanently COMPLETED (preserving their checkmark even when replaying)
-    if (nodeIndex < animState.unlockedIndex) return 'COMPLETED';
-
-    // The active campaign frontier planet is CURRENT (or COMPLETED if the final planet, Earth, is completed)
-    if (nodeIndex === animState.unlockedIndex) {
-      if (id === 'earth' && earthCompleted) return 'COMPLETED';
-      return 'CURRENT';
+    // Handle animation override
+    if (animState.isAnimating) {
+       if (nodeIndex === animState.unlockedIndex) return 'LOCKED'; // the target of the flight
+       if (nodeIndex < animState.unlockedIndex) return 'COMPLETED';
     }
 
-    return 'LOCKED';
+    return unlockInfo.statuses[nodeIndex] as 'LOCKED' | 'COMPLETED' | 'CURRENT';
   };
 
   const totalCurriculumMissions = pathNodes.reduce((acc, n) => acc + n.totalMissions, 0);
-  const completedCurriculumCount = pathNodes.reduce((sum, node) => sum + getCompletedMissionsCount(node.id), 0);
+  const completedCurriculumCount = pathNodes.reduce((sum, node) => sum + (unlockInfo.completedCounts[node.id.toLowerCase()] || 0), 0);
 
   // Active track node
   const currentTrackNode = pathNodes[animState.unlockedIndex] || pathNodes[0];
@@ -532,6 +549,15 @@ export default function ModulesClient({
             </div>
           </div>
         </div>
+
+        {/* Center: Recommended Orbit Learning Path (from Aptitude Assessment) */}
+        {hasTakenAptitudeTest && recommendedLearningPath && (
+          <div className="hidden xl:flex items-center gap-2 bg-[#ff912d]/10 border border-[#ff912d]/30 px-3.5 py-1.5 rounded-full text-xs font-mono font-bold text-[#ff912d]">
+            <Sparkles size={14} />
+            <span className="text-gray-400">RECOMMENDED PATH:</span>
+            <span className="text-white font-sans font-bold">{recommendedLearningPath}</span>
+          </div>
+        )}
 
         {/* Center/Right: Telemetry Metrics Chips (EXP Threshold Bar, Gears, Missions) */}
         <div className="flex items-center gap-3 flex-wrap">
@@ -795,7 +821,7 @@ export default function ModulesClient({
 
         {/* Render Planet Nodes dynamically */}
         {pathNodes.map((node) => {
-          const completedCount = getCompletedMissionsCount(node.id);
+          const completedCount = unlockInfo.completedCounts[node.id.toLowerCase()] || 0;
           const status = getStatusForModule(node.id);
           const isCheckpointPlanet = !animState.isAnimating && node.id === pathNodes[animState.unlockedIndex]?.id;
           
@@ -818,6 +844,7 @@ export default function ModulesClient({
               totalCount={node.totalMissions}
               languageBadge={node.languageBadge}
               hasCheckpoint={isCheckpointPlanet}
+              aiReason={node.aiReason}
             />
           );
         })}
@@ -912,6 +939,20 @@ export default function ModulesClient({
         completedMissions={completedMissions}
         isDemoMode={isDemoMode}
       />
+
+      {/* Epilogue Grand Finale Launch Button */}
+      {earthCompleted && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 animate-in fade-in slide-in-from-bottom-6 duration-700">
+          <Link
+            href="/sandbox?missionId=epilogue"
+            className="flex items-center gap-3 px-6 py-3.5 rounded-full bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-600 hover:from-emerald-400 hover:to-indigo-500 text-white font-display font-black text-xs sm:text-sm uppercase tracking-widest shadow-[0_0_35px_rgba(16,185,129,0.6)] border-2 border-emerald-300/80 transition-all hover:scale-105 active:scale-95 cursor-pointer"
+          >
+            <Sparkles size={18} className="animate-spin text-amber-300 shrink-0" />
+            <span>All 7 Planets Restored // Play Epilogue</span>
+            <Rocket size={18} className="shrink-0" />
+          </Link>
+        </div>
+      )}
 
     </div>
   );

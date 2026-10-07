@@ -14,7 +14,15 @@ export function mockEvaluateResponse(hintIdChoices: string[]): EvaluateResult {
 
 export function mockAptitudeResponse(): AptitudeResult {
   return {
+    track: "BALANCED",
     summary: "Mock AI Summary: Outstanding pattern recognition.",
-    advice: "Mock AI Advice: Keep focusing on loops and decomposition.",
+    planets: [
+      { planet: "MARS", affinity: 80, reason: "Mock reason" },
+      { planet: "VENUS", affinity: 75, reason: "Mock reason" },
+      { planet: "MERCURY", affinity: 70, reason: "Mock reason" },
+      { planet: "JUPITER", affinity: 65, reason: "Mock reason" },
+      { planet: "SATURN", affinity: 60, reason: "Mock reason" },
+      { planet: "EARTH", affinity: 55, reason: "Mock reason" }
+    ]
   };
 }

@@ -91,7 +91,6 @@ export default function PlaygroundClient({ isMock }: { isMock: boolean }) {
   const [errorMessage, setErrorMessage] = useState(PRESET_TEST_CASES[0].errorMessage);
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<PlaygroundTestResult | null>(null);
-  const [runError, setRunError] = useState<string | null>(null);
 
   const applyTestCase = (tc: TestCase) => {
     setMissionId(tc.missionId);
@@ -103,7 +102,6 @@ export default function PlaygroundClient({ isMock }: { isMock: boolean }) {
   const handleRun = async () => {
     setIsLoading(true);
     setResult(null);
-    setRunError(null);
     try {
       const res = await runPlaygroundEvaluation({
         missionId,
@@ -113,7 +111,7 @@ export default function PlaygroundClient({ isMock }: { isMock: boolean }) {
       });
       setResult(res);
     } catch (err: any) {
-      setRunError(err.message || String(err));
+      alert("Error running evaluation: " + (err.message || String(err)));
     } finally {
       setIsLoading(false);
     }
@@ -139,13 +137,6 @@ export default function PlaygroundClient({ isMock }: { isMock: boolean }) {
           ))}
         </div>
       </div>
-
-      {runError && (
-        <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-sm flex items-center justify-between">
-          <span><strong>Error:</strong> {runError}</span>
-          <button type="button" onClick={() => setRunError(null)} className="text-red-400 hover:text-red-300 ml-4 font-bold">✕</button>
-        </div>
-      )}
 
       {/* Input Form */}
       <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl space-y-4">
