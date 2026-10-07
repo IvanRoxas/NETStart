@@ -3,7 +3,9 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export async function middleware(req: NextRequest) {
-  const isRestrictedRoute = req.nextUrl.pathname.startsWith('/missions') || req.nextUrl.pathname.startsWith('/sandbox');
+  const isRestrictedRoute = req.nextUrl.pathname.startsWith('/modules') || 
+                           req.nextUrl.pathname.startsWith('/sandbox') || 
+                           req.nextUrl.pathname.startsWith('/code-sandbox');
   const isAdminRoute = req.nextUrl.pathname.startsWith('/admin') && !req.nextUrl.pathname.startsWith('/admin-login');
 
   // Admin Route Protection
@@ -36,6 +38,11 @@ export async function middleware(req: NextRequest) {
   // Normal Protected Routes
   const isProtectedRoute = req.nextUrl.pathname.startsWith('/dashboard') || 
                            req.nextUrl.pathname.startsWith('/profile') || 
+                           req.nextUrl.pathname.startsWith('/shop') || 
+                           req.nextUrl.pathname.startsWith('/achievements') || 
+                           req.nextUrl.pathname.startsWith('/settings') || 
+                           req.nextUrl.pathname.startsWith('/notifications') || 
+                           req.nextUrl.pathname.startsWith('/aptitude-test') || 
                            isRestrictedRoute;
                            
   if (isProtectedRoute) {
@@ -59,5 +66,17 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/sandbox/:path*', '/missions/:path*', '/profile/:path*', '/admin/:path*'],
+  matcher: [
+    '/dashboard/:path*', 
+    '/sandbox/:path*', 
+    '/code-sandbox/:path*', 
+    '/modules/:path*', 
+    '/profile/:path*', 
+    '/shop/:path*', 
+    '/achievements/:path*', 
+    '/settings/:path*', 
+    '/notifications/:path*', 
+    '/aptitude-test/:path*', 
+    '/admin/:path*'
+  ],
 };

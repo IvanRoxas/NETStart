@@ -243,20 +243,26 @@ export async function claimVerificationReward() {
     if (!user || !user.isVerified) {
       return { success: false, claimed: false, amount: 0, error: "User not verified" };
     }
+    if (user.verifiedRewardClaimed) {
+      return { success: true, claimed: false, amount: 0 };
+    }
 
     const result = await prisma.$transaction(async (tx) => {
-      const existing = await tx.notification.findFirst({
-        where: { userId, notificationType: 'system_verify_reward' }
+      const updatedUser = await tx.user.updateMany({
+        where: {
+          id: userId,
+          isVerified: true,
+          verifiedRewardClaimed: false,
+        },
+        data: {
+          gears: { increment: 225 },
+          verifiedRewardClaimed: true,
+        },
       });
 
-      if (existing) {
+      if (updatedUser.count === 0) {
         return { success: true, claimed: false, amount: 0 };
       }
-
-      await tx.user.update({
-        where: { id: userId },
-        data: { gears: { increment: 225 } }
-      });
 
       await tx.notification.create({
         data: {

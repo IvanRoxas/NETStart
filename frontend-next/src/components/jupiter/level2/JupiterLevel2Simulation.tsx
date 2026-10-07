@@ -2969,10 +2969,12 @@ export default function JupiterLevel2Simulation({
             <div className="w-full max-w-md bg-gradient-to-b from-[#0b1a34] to-[#060c18] border-2 border-cyan-400/60 rounded-3xl p-6 shadow-[0_0_40px_rgba(6,182,212,0.4)] flex flex-col gap-4 text-left">
               {/* Speaker Header */}
               <div className="flex items-center gap-3 pb-3 border-b border-white/10">
-                <div className="w-14 h-14 rounded-2xl bg-cyan-950 border-2 border-cyan-400 p-1 flex items-center justify-center shrink-0 shadow-lg">
-                  <div className="w-full h-full rounded-xl bg-gradient-to-tr from-cyan-600 to-blue-500 flex items-center justify-center text-white font-display font-black text-xl">
-                    IO
-                  </div>
+                <div className="w-14 h-14 rounded-2xl bg-cyan-950 border-2 border-cyan-400 p-0.5 overflow-hidden flex items-center justify-center shrink-0 shadow-lg">
+                  <img
+                    src="/scenes/characters/TECH_IO.png"
+                    alt="Technician Io"
+                    className="w-full h-full object-cover rounded-xl"
+                  />
                 </div>
                 <div>
                   <span className="text-[10px] font-black uppercase tracking-widest text-cyan-400 bg-cyan-950/90 px-2 py-0.5 rounded border border-cyan-400/30">

@@ -71,6 +71,17 @@ export async function verifyCode(email: string, code: string) {
     }
 
     // Code is valid and not expired, verify the user
+    const existingUser = await prisma.user.findUnique({
+      where: { email },
+      select: { id: true, isVerified: true }
+    });
+
+    if (!existingUser) {
+      return { success: false, error: "User not found." };
+    }
+
+    const wasAlreadyVerified = existingUser.isVerified;
+
     const updatedUser = await prisma.user.update({
       where: { email },
       data: { 
@@ -78,11 +89,13 @@ export async function verifyCode(email: string, code: string) {
       }
     });
     
-    const { addXPAndCheckLevelUp } = await import('@/lib/xp');
-    await addXPAndCheckLevelUp(updatedUser.id, 50);
+    if (!wasAlreadyVerified) {
+      const { addXPAndCheckLevelUp } = await import('@/lib/xp');
+      await addXPAndCheckLevelUp(updatedUser.id, 50);
 
-    // Unlock 'Verified Explorer' achievement
-    await unlockAchievement('B_VERIFY_ACCOUNT');
+      // Unlock 'Verified Explorer' achievement
+      await unlockAchievement('B_VERIFY_ACCOUNT');
+    }
 
     // Delete the used code
     await prisma.verificationCode.delete({

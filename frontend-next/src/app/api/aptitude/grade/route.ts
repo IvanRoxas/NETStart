@@ -32,6 +32,26 @@ export async function POST(req: Request) {
     }
 
     const userId = session.user.id;
+
+    const existingUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { hasTakenAptitudeTest: true, isBanned: true }
+    });
+
+    if (existingUser?.isBanned) {
+      return NextResponse.json(
+        { success: false, message: "Account suspended." },
+        { status: 403 }
+      );
+    }
+
+    if (existingUser?.hasTakenAptitudeTest) {
+      return NextResponse.json(
+        { success: false, message: "Aptitude diagnostic test has already been completed." },
+        { status: 400 }
+      );
+    }
+
     const body = await req.json().catch(() => ({}));
     const rawAnswers = body.answers || body;
 

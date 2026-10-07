@@ -219,8 +219,18 @@ export async function GET(req: Request) {
       backendTrackPercent: backendPct,
     };
 
+    const userToReturn = user ? { ...user } : null;
+    if (userToReturn?.status) {
+      try {
+        const parsed = JSON.parse(userToReturn.status);
+        if (parsed && typeof parsed === 'object') {
+          userToReturn.status = parsed.userStatus || '';
+        }
+      } catch {}
+    }
+
     return NextResponse.json({ 
-      user, 
+      user: userToReturn, 
       missionProgress, 
       stats, 
       completedMissionIds: completedMissions.map(m => m.missionId) 
@@ -329,13 +339,30 @@ export async function PUT(req: Request) {
       }
     }
 
+    let cleanStatus: string | undefined = undefined;
+    if (status !== undefined) {
+      cleanStatus = typeof status === 'string' ? status.trim() : status;
+      try {
+        const currentU = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { status: true },
+        });
+        if (currentU?.status) {
+          const parsed = JSON.parse(currentU.status);
+          if (parsed && typeof parsed === 'object') {
+            cleanStatus = JSON.stringify({ ...parsed, userStatus: cleanStatus });
+          }
+        }
+      } catch {}
+    }
+
     try {
       await prisma.user.update({
         where: { id: userId },
         data: {
           ...(cleanName !== undefined && { name: cleanName }),
           ...(cleanDisplayName !== undefined && { displayName: cleanDisplayName }),
-          ...(status !== undefined && { status }),
+          ...(cleanStatus !== undefined && { status: cleanStatus }),
           ...(cleanBio !== undefined && { bio: cleanBio }),
           ...(image !== undefined && { image }),
           ...(banner !== undefined && { banner }),
@@ -351,7 +378,7 @@ export async function PUT(req: Request) {
           data: {
             ...(cleanName !== undefined && { name: cleanName }),
             ...(cleanDisplayName !== undefined && { displayName: cleanDisplayName }),
-            ...(status !== undefined && { status }),
+            ...(cleanStatus !== undefined && { status: cleanStatus }),
             ...(cleanBio !== undefined && { bio: cleanBio }),
             ...(image !== undefined && { image }),
             ...(banner !== undefined && { banner }),
@@ -492,7 +519,17 @@ export async function PUT(req: Request) {
       }
     }
 
-    return NextResponse.json({ user: finalUser });
+    const returnUser = finalUser ? { ...finalUser } : null;
+    if (returnUser?.status) {
+      try {
+        const parsed = JSON.parse(returnUser.status);
+        if (parsed && typeof parsed === 'object') {
+          returnUser.status = parsed.userStatus || '';
+        }
+      } catch {}
+    }
+
+    return NextResponse.json({ user: returnUser });
   } catch (error: any) {
     console.error('Error updating profile:', error);
     if (error?.code === 'P2002') {

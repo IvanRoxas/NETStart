@@ -25,6 +25,7 @@ export default async function AptitudeTestPage() {
       id: true,
       name: true,
       isVerified: true,
+      isBanned: true,
       hasTakenAptitudeTest: true,
       logicScore: true,
       patternRecognitionScore: true,
@@ -36,6 +37,10 @@ export default async function AptitudeTestPage() {
 
   if (!dbUser) {
     redirect("/login");
+  }
+
+  if (dbUser.isBanned) {
+    redirect("/login?error=suspended");
   }
 
   return (

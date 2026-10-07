@@ -14,8 +14,18 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { missionId, submittedCode } = body;
 
-    if (!missionId) {
-      return NextResponse.json({ error: "Missing missionId" }, { status: 400 });
+    if (!missionId || typeof missionId !== "string") {
+      return NextResponse.json({ error: "Missing or invalid missionId" }, { status: 400 });
+    }
+
+    const VALID_MISSION_PREFIXES = ['moon', 'mars', 'venus', 'mercury', 'jupiter', 'saturn', 'earth', 'html', 'css', 'js', 'javascript', 'java', 'cpp', 'python'];
+    const lowerMission = missionId.trim().toLowerCase();
+    const isValidMission = lowerMission.startsWith('daily') || 
+                           lowerMission.startsWith('epilogue') || 
+                           VALID_MISSION_PREFIXES.some(p => new RegExp(`^${p}[-_]?[1-3]`, 'i').test(lowerMission));
+
+    if (!isValidMission) {
+      return NextResponse.json({ error: "Invalid or unrecognized missionId" }, { status: 400 });
     }
 
     // Start transaction to secure updates and prevent concurrent double-rewards

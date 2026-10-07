@@ -104,6 +104,19 @@ export async function submitAptitudeTest(userAnswers: Record<string, number | st
 
   const userId = session.user.id;
 
+  const userRecord = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { hasTakenAptitudeTest: true, isBanned: true }
+  });
+
+  if (userRecord?.isBanned) {
+    throw new Error("Account suspended.");
+  }
+
+  if (userRecord?.hasTakenAptitudeTest) {
+    throw new Error("Aptitude diagnostic test has already been completed.");
+  }
+
   const dbQuestions = await prisma.aptitudeQuestion.findMany({
     where: { isActive: true },
     select: {

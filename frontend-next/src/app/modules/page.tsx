@@ -34,6 +34,7 @@ export default async function ModulesPage() {
         xp: true,
         gears: true,
         isVerified: true,
+        isBanned: true,
         hasTakenAptitudeTest: true,
         recommendedLearningPath: true,
         canUseDemoMode: true,
@@ -47,6 +48,7 @@ export default async function ModulesPage() {
         xp: true,
         gears: true,
         isVerified: true,
+        isBanned: true,
         hasTakenAptitudeTest: true,
         recommendedLearningPath: true,
       }
@@ -63,6 +65,10 @@ export default async function ModulesPage() {
 
   if (!dbUser) {
     redirect("/login");
+  }
+
+  if (dbUser.isBanned) {
+    redirect("/login?error=suspended");
   }
 
   const cookieStore = await cookies();

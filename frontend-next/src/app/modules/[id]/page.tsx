@@ -132,6 +132,7 @@ export default async function ModuleMissionsPage({ params }: { params: Promise<P
       where: userId ? { id: userId } : { email: userEmail },
       select: {
         id: true,
+        isBanned: true,
         canUseDemoMode: true,
       }
     });
@@ -140,6 +141,7 @@ export default async function ModuleMissionsPage({ params }: { params: Promise<P
       where: userId ? { id: userId } : { email: userEmail },
       select: {
         id: true,
+        isBanned: true,
       }
     });
     if (dbUser) {
@@ -154,6 +156,10 @@ export default async function ModuleMissionsPage({ params }: { params: Promise<P
 
   if (!dbUser) {
     redirect("/login");
+  }
+
+  if (dbUser.isBanned) {
+    redirect("/login?error=suspended");
   }
 
   const cookieStore = await cookies();
