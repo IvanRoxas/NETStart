@@ -58,25 +58,25 @@ export const MISSION_PREVIEW_IMAGES: Record<string, string> = {
 
   // 5. Jupiter (Java)
   // Level 1: Blast Gate 4 / Airlock perimeter security barrier
-  "jupiter-1": "/scenes/backgrounds/jupiter_bg_002.jpg",
-  "java-1": "/scenes/backgrounds/jupiter_bg_002.jpg",
+  "jupiter-1": "/scenes/backgrounds/jupiter_bg_002.png",
+  "java-1": "/scenes/backgrounds/jupiter_bg_002.png",
   // Level 2: Cloud Grid archive server room with Technician Io
-  "jupiter-2": "/scenes/backgrounds/jupiter_bg_003.jpg",
-  "java-2": "/scenes/backgrounds/jupiter_bg_003.jpg",
+  "jupiter-2": "/scenes/backgrounds/jupiter_bg_003.png",
+  "java-2": "/scenes/backgrounds/jupiter_bg_003.png",
   // Level 3: AI Core lockdown vault terminal
-  "jupiter-3": "/scenes/backgrounds/jupiter_bg_004.jpg",
-  "java-3": "/scenes/backgrounds/jupiter_bg_004.jpg",
+  "jupiter-3": "/scenes/backgrounds/jupiter_bg_004.png",
+  "java-3": "/scenes/backgrounds/jupiter_bg_004.png",
 
   // 6. Saturn (C++)
   // Level 1: Station control panel diagnostics with Engineer Titan
-  "saturn-1": "/scenes/backgrounds/saturn_bg_002.jpg",
-  "cpp-1": "/scenes/backgrounds/saturn_bg_002.jpg",
+  "saturn-1": "/scenes/backgrounds/saturn_bg_002.png",
+  "cpp-1": "/scenes/backgrounds/saturn_bg_002.png",
   // Level 2: Observation deck overlooking the jammed ring plane
-  "saturn-2": "/scenes/backgrounds/saturn_bg_003.jpg",
-  "cpp-2": "/scenes/backgrounds/saturn_bg_003.jpg",
+  "saturn-2": "/scenes/backgrounds/saturn_bg_003.png",
+  "cpp-2": "/scenes/backgrounds/saturn_bg_003.png",
   // Level 3: Mainframe core processing bay / memory leak containment
-  "saturn-3": "/scenes/backgrounds/saturn_bg_004.jpg",
-  "cpp-3": "/scenes/backgrounds/saturn_bg_004.jpg",
+  "saturn-3": "/scenes/backgrounds/saturn_bg_004.png",
+  "cpp-3": "/scenes/backgrounds/saturn_bg_004.png",
 
   // 7. Earth (Python)
   // Level 1: NETStart HQ exterior arrival / Central Ledger landing pad
@@ -117,14 +117,14 @@ export const PLANET_DEFAULT_PREVIEWS: Record<string, string[]> = {
     "/scenes/backgrounds/mercury_bg_004.png",
   ],
   jupiter: [
-    "/scenes/backgrounds/jupiter_bg_002.jpg",
-    "/scenes/backgrounds/jupiter_bg_003.jpg",
-    "/scenes/backgrounds/jupiter_bg_004.jpg",
+    "/scenes/backgrounds/jupiter_bg_002.png",
+    "/scenes/backgrounds/jupiter_bg_003.png",
+    "/scenes/backgrounds/jupiter_bg_004.png",
   ],
   saturn: [
-    "/scenes/backgrounds/saturn_bg_002.jpg",
-    "/scenes/backgrounds/saturn_bg_003.jpg",
-    "/scenes/backgrounds/saturn_bg_004.jpg",
+    "/scenes/backgrounds/saturn_bg_002.png",
+    "/scenes/backgrounds/saturn_bg_003.png",
+    "/scenes/backgrounds/saturn_bg_004.png",
   ],
   earth: [
     "/scenes/backgrounds/earth_bg_001.jpg",
