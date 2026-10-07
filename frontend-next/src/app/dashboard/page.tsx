@@ -75,7 +75,7 @@ export default async function DashboardPage() {
 
   // Planetary progression order and total levels (3 levels per planet)
   const PLANET_TRACKS = [
-    { id: "moon", name: "The Moon", subtitle: "Tutorial", totalLevels: 3, prefix: "moon" },
+    { id: "moon", name: "The Moon", subtitle: "Basics", totalLevels: 3, prefix: "moon" },
     { id: "mars", name: "Mars", subtitle: "HTML5", totalLevels: 3, prefix: "mars" },
     { id: "venus", name: "Venus", subtitle: "CSS", totalLevels: 3, prefix: "venus" },
     { id: "mercury", name: "Mercury", subtitle: "JavaScript", totalLevels: 3, prefix: "mercury" },

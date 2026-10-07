@@ -331,13 +331,16 @@ export default function PassportStatsCard({ profile, completedMissionIds, avatar
         </button>
       )}
 
-      <div className="p-3 sm:p-3.5 lg:p-4 pb-2 sm:pb-2.5 lg:pb-3 flex-1 flex flex-col justify-between relative z-10 bg-black/15">
+      <div className={`flex-1 flex flex-col justify-between relative z-10 bg-black/15 ${isModal ? 'p-3 sm:p-3.5 lg:p-4 pb-2 sm:pb-2.5' : 'p-3 sm:p-3.5 lg:p-4 pb-2 sm:pb-2.5 lg:pb-3'}`}>
 
         {/* Top Section */}
-        <div className="flex gap-2 sm:gap-2.5 lg:gap-3 items-center mt-2 sm:mt-2.5 lg:mt-3">
+        <div className={`flex items-center ${isModal ? 'gap-2.5 sm:gap-3.5 lg:gap-4 mt-1 sm:mt-1.5' : 'gap-2 sm:gap-2.5 lg:gap-3 mt-2 sm:mt-2.5 lg:mt-3'}`}>
 
           {/* Left: Avatar Box showing student's customized avatar */}
-          <div className="w-[108px] h-[138px] sm:w-[122px] sm:h-[152px] lg:w-[136px] lg:h-[166px] shrink-0 border-2 border-[#ff912d] shadow-[0_0_18px_rgba(255,145,45,0.45)] rounded-2xl bg-gradient-to-b from-[#240c3a]/95 via-[#130522]/95 to-[#080210] relative flex flex-col items-center justify-between overflow-hidden p-1.5">
+          <div className={`${isModal
+              ? 'w-[98px] h-[128px] sm:w-[110px] sm:h-[140px] lg:w-[118px] lg:h-[150px]'
+              : 'w-[108px] h-[138px] sm:w-[122px] sm:h-[152px] lg:w-[136px] lg:h-[166px]'
+            } shrink-0 border-2 border-[#ff912d] shadow-[0_0_18px_rgba(255,145,45,0.45)] rounded-2xl bg-gradient-to-b from-[#240c3a]/95 via-[#130522]/95 to-[#080210] relative flex flex-col items-center justify-between overflow-hidden p-1.5`}>
             {/* Ambient cybernetic grid and radial spotlight */}
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(255,145,45,0.25),transparent_70%)] pointer-events-none" />
             <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:10px_10px] pointer-events-none opacity-40" />
@@ -351,7 +354,7 @@ export default function PassportStatsCard({ profile, completedMissionIds, avatar
               <AvatarDisplay
                 layers={layers}
                 className="w-full h-full"
-                scale={1.20}
+                scale={isModal ? 1.15 : 1.20}
                 showShadow={false}
                 offsetYClass="translate-y-1.5 sm:translate-y-2"
               />
@@ -359,33 +362,33 @@ export default function PassportStatsCard({ profile, completedMissionIds, avatar
 
             {/* Pilot Name Tag Footer */}
             <div className="w-full py-0.5 sm:py-1 bg-black/80 backdrop-blur-md rounded-lg text-center z-20 border border-[#ff912d]/30 shadow-md">
-              <span className="text-[7.5px] sm:text-[8.5px] font-mono font-bold text-white uppercase tracking-wider block truncate px-1 drop-shadow">
+              <span className="text-[7px] sm:text-[8px] font-mono font-bold text-white uppercase tracking-wider block truncate px-1 drop-shadow">
                 {profile?.displayName || profile?.name || 'EXPLORER'}
               </span>
             </div>
           </div>
 
           {/* Middle: Details & Proficiency Bars */}
-          <div className={`shrink-0 flex flex-col pt-0.5 justify-center ${!hideDetails ? 'flex-1 min-w-0 mt-2 lg:mt-4' : ''}`}>
+          <div className={`shrink-0 flex flex-col justify-center ${!hideDetails ? 'flex-1 min-w-0' : ''}`}>
 
             {/* User Details (Modal view) */}
             {!hideDetails && (
-              <div className="flex flex-col gap-1 lg:gap-2">
+              <div className="flex flex-col gap-0.5 sm:gap-1 mb-1.5 sm:mb-2">
                 <div className="min-w-0">
-                  <div className="text-[#ff912d] font-sans font-semibold text-[9px] lg:text-[10px] tracking-widest uppercase mb-0.5 drop-shadow-md">Display Name</div>
-                  <div className="text-white font-bold text-base lg:text-xl uppercase tracking-wider leading-none drop-shadow-md truncate">
+                  <div className="text-[#ff912d] font-sans font-semibold text-[7.5px] sm:text-[8px] lg:text-[8.5px] tracking-widest uppercase leading-tight drop-shadow-md">Display Name</div>
+                  <div className="text-white font-bold text-xs sm:text-sm lg:text-base uppercase tracking-wider leading-none drop-shadow-md truncate">
                     {profile?.displayName || profile?.name || 'Explorer'}
                   </div>
                 </div>
                 <div className="min-w-0">
-                  <div className="text-[#ff912d] font-sans font-semibold text-[9px] lg:text-[10px] tracking-widest uppercase mb-0.5 drop-shadow-md">Title</div>
-                  <div className="text-white font-bold text-sm lg:text-lg uppercase tracking-wider leading-none drop-shadow-md truncate">
+                  <div className="text-[#ff912d] font-sans font-semibold text-[7.5px] sm:text-[8px] lg:text-[8.5px] tracking-widest uppercase leading-tight drop-shadow-md">Title</div>
+                  <div className="text-white font-bold text-[11px] sm:text-xs lg:text-sm uppercase tracking-wider leading-none drop-shadow-md truncate">
                     {profile?.title || 'Novice Explorer'}
                   </div>
                 </div>
                 <div className="min-w-0">
-                  <div className="text-[#ff912d] font-sans font-semibold text-[9px] lg:text-[10px] tracking-widest uppercase mb-0.5 drop-shadow-md">Joined Date</div>
-                  <div className="text-white font-bold text-sm lg:text-lg tracking-wider leading-none drop-shadow-md truncate">
+                  <div className="text-[#ff912d] font-sans font-semibold text-[7.5px] sm:text-[8px] lg:text-[8.5px] tracking-widest uppercase leading-tight drop-shadow-md">Joined Date</div>
+                  <div className="text-white font-bold text-[11px] sm:text-xs lg:text-sm tracking-wider leading-none drop-shadow-md truncate">
                     {joinedDate}
                   </div>
                 </div>
@@ -393,16 +396,16 @@ export default function PassportStatsCard({ profile, completedMissionIds, avatar
             )}
 
             {/* Cognitive Aptitude Bars */}
-            <div className={`flex flex-col gap-2 sm:gap-2.5 ${!hideDetails ? 'mt-4 lg:mt-5' : ''} ${isModal ? 'max-w-[320px] sm:max-w-[360px] lg:max-w-[420px]' : ''}`}>
-              <div className="text-[#ff912d] font-sans font-bold text-[9px] sm:text-[10px] tracking-widest uppercase mb-0.5 drop-shadow-md">
+            <div className={`flex flex-col gap-1 sm:gap-1.5 ${isModal ? 'max-w-[270px] sm:max-w-[300px] lg:max-w-[320px]' : ''}`}>
+              <div className="text-[#ff912d] font-sans font-bold text-[7.5px] sm:text-[8px] lg:text-[8.5px] tracking-widest uppercase leading-tight drop-shadow-md">
                 Cognitive Aptitude
               </div>
 
               {/* Logic Bar */}
               <div className="flex items-center gap-1 sm:gap-1.5">
-                <div className="w-[88px] sm:w-[94px] lg:w-[96px] shrink-0 text-white/90 font-mono text-[9px] sm:text-[9.5px] lg:text-[10px] tracking-normal uppercase drop-shadow-md whitespace-nowrap">Logic</div>
+                <div className="w-[74px] sm:w-[80px] lg:w-[84px] shrink-0 text-white/90 font-mono text-[8px] sm:text-[8.5px] lg:text-[9px] tracking-normal uppercase drop-shadow-md whitespace-nowrap">Logic</div>
                 <div className="text-white/50 text-xs mr-0.5 drop-shadow-md">:</div>
-                <div className="w-[120px] sm:w-[138px] lg:w-[150px] shrink-0 flex h-[13px] sm:h-[14px] gap-1 border border-[#ff912d]/60 p-0.5 bg-black/40 rounded-sm">
+                <div className="w-[105px] sm:w-[118px] lg:w-[126px] shrink-0 flex h-[10px] sm:h-[11px] lg:h-[12px] gap-1 border border-[#ff912d]/60 p-0.5 bg-black/40 rounded-sm">
                   {Array.from({ length: 10 }).map((_, i) => (
                     <div key={i} className={`flex-1 rounded-sm ${i < (logicPercent / 10) ? 'bg-[#00ffcc] shadow-[0_0_5px_rgba(0,255,204,0.6)]' : 'bg-transparent'}`} />
                   ))}
@@ -411,9 +414,9 @@ export default function PassportStatsCard({ profile, completedMissionIds, avatar
 
               {/* Pattern Recognition Bar */}
               <div className="flex items-center gap-1 sm:gap-1.5">
-                <div className="w-[88px] sm:w-[94px] lg:w-[96px] shrink-0 text-white/90 font-mono text-[9px] sm:text-[9.5px] lg:text-[10px] tracking-normal uppercase drop-shadow-md whitespace-nowrap">Pattern</div>
+                <div className="w-[74px] sm:w-[80px] lg:w-[84px] shrink-0 text-white/90 font-mono text-[8px] sm:text-[8.5px] lg:text-[9px] tracking-normal uppercase drop-shadow-md whitespace-nowrap">Pattern</div>
                 <div className="text-white/50 text-xs mr-0.5 drop-shadow-md">:</div>
-                <div className="w-[120px] sm:w-[138px] lg:w-[150px] shrink-0 flex h-[13px] sm:h-[14px] gap-1 border border-[#ff912d]/60 p-0.5 bg-black/40 rounded-sm">
+                <div className="w-[105px] sm:w-[118px] lg:w-[126px] shrink-0 flex h-[10px] sm:h-[11px] lg:h-[12px] gap-1 border border-[#ff912d]/60 p-0.5 bg-black/40 rounded-sm">
                   {Array.from({ length: 10 }).map((_, i) => (
                     <div key={i} className={`flex-1 rounded-sm ${i < (patternPercent / 10) ? 'bg-[#ff00ff] shadow-[0_0_5px_rgba(255,0,255,0.6)]' : 'bg-transparent'}`} />
                   ))}
@@ -422,9 +425,9 @@ export default function PassportStatsCard({ profile, completedMissionIds, avatar
 
               {/* Task Decomposition Bar */}
               <div className="flex items-center gap-1 sm:gap-1.5">
-                <div className="w-[88px] sm:w-[94px] lg:w-[96px] shrink-0 text-white/90 font-mono text-[9px] sm:text-[9.5px] lg:text-[10px] tracking-normal uppercase drop-shadow-md whitespace-nowrap">Decomposition</div>
+                <div className="w-[74px] sm:w-[80px] lg:w-[84px] shrink-0 text-white/90 font-mono text-[8px] sm:text-[8.5px] lg:text-[9px] tracking-normal uppercase drop-shadow-md whitespace-nowrap">Decomposition</div>
                 <div className="text-white/50 text-xs mr-0.5 drop-shadow-md">:</div>
-                <div className="w-[120px] sm:w-[138px] lg:w-[150px] shrink-0 flex h-[13px] sm:h-[14px] gap-1 border border-[#ff912d]/60 p-0.5 bg-black/40 rounded-sm">
+                <div className="w-[105px] sm:w-[118px] lg:w-[126px] shrink-0 flex h-[10px] sm:h-[11px] lg:h-[12px] gap-1 border border-[#ff912d]/60 p-0.5 bg-black/40 rounded-sm">
                   {Array.from({ length: 10 }).map((_, i) => (
                     <div key={i} className={`flex-1 rounded-sm ${i < (decompPercent / 10) ? 'bg-[#00ffff] shadow-[0_0_5px_rgba(0,255,255,0.6)]' : 'bg-transparent'}`} />
                   ))}
@@ -433,9 +436,9 @@ export default function PassportStatsCard({ profile, completedMissionIds, avatar
 
               {/* Overall Cognitive Readiness Bar */}
               <div className="flex items-center gap-1.5">
-                <div className="w-[88px] sm:w-[94px] lg:w-[96px] shrink-0 text-white/90 font-mono text-[9px] sm:text-[9.5px] lg:text-[10px] tracking-normal uppercase drop-shadow-md whitespace-nowrap">Overall</div>
+                <div className="w-[74px] sm:w-[80px] lg:w-[84px] shrink-0 text-white/90 font-mono text-[8px] sm:text-[8.5px] lg:text-[9px] tracking-normal uppercase drop-shadow-md whitespace-nowrap">Overall</div>
                 <div className="text-white/50 text-xs mr-0.5 drop-shadow-md">:</div>
-                <div className="w-[120px] sm:w-[138px] lg:w-[150px] shrink-0 flex h-[13px] sm:h-[14px] gap-1 border border-[#ff912d]/60 p-0.5 bg-black/40 rounded-sm">
+                <div className="w-[105px] sm:w-[118px] lg:w-[126px] shrink-0 flex h-[10px] sm:h-[11px] lg:h-[12px] gap-1 border border-[#ff912d]/60 p-0.5 bg-black/40 rounded-sm">
                   {Array.from({ length: 10 }).map((_, i) => (
                     <div key={i} className={`flex-1 rounded-sm ${i < (overallPercent / 10) ? 'bg-[#ff912d] shadow-[0_0_5px_rgba(255,145,45,0.6)]' : 'bg-transparent'}`} />
                   ))}
@@ -446,36 +449,36 @@ export default function PassportStatsCard({ profile, completedMissionIds, avatar
 
           {/* Right: Hexagon Web */}
           <div className={`ml-auto shrink-0 flex items-center justify-center ${isModal
-              ? 'w-[260px] h-[260px] sm:w-[320px] sm:h-[320px] lg:w-[360px] lg:h-[360px]'
+              ? 'w-[180px] h-[180px] sm:w-[200px] sm:h-[200px] lg:w-[220px] lg:h-[220px]'
               : 'w-[155px] h-[155px] sm:w-[175px] sm:h-[175px] lg:w-[195px] lg:h-[195px]'
             }`}>
-            <HexagonStatsWeb data={radarData} outerRadius={isModal ? "75%" : "65%"} />
+            <HexagonStatsWeb data={radarData} outerRadius={isModal ? "58%" : "65%"} />
           </div>
 
         </div>
 
         {/* Bottom Section: Intuitive Planet Journey Progression */}
-        <div className="mt-1.5 sm:mt-2 lg:mt-2.5 mb-1 sm:mb-1.5 lg:mb-2">
+        <div className="mt-auto pt-1 sm:pt-1.5 shrink-0">
 
           {/* Flight Log Header */}
-          <div className="flex items-center border-b border-[#ff912d]/25 pb-1 mb-2 sm:mb-2.5">
+          <div className="flex items-center border-b border-[#ff912d]/25 pb-0.5 sm:pb-1 mb-1.5 sm:mb-2">
             <div className="flex items-center gap-1.5 sm:gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-[#ff912d] animate-ping" />
-              <span className="text-[#ff912d] font-sans font-bold text-[9px] sm:text-[10px] lg:text-[11px] tracking-[0.2em] uppercase drop-shadow">
+              <span className="text-[#ff912d] font-sans font-bold text-[8px] sm:text-[9px] lg:text-[10px] tracking-[0.2em] uppercase drop-shadow">
                 EXPEDITION FLIGHT LOG
               </span>
             </div>
           </div>
 
           {/* Connected Celestial Progression Track */}
-          <div className="relative px-2 sm:px-4 flex justify-between items-center min-h-[58px] sm:min-h-[64px]">
+          <div className="relative px-2 sm:px-4 flex justify-between items-center min-h-[48px] sm:min-h-[54px] lg:min-h-[58px]">
 
             {/* Background trajectory baseline */}
-            <div className="absolute top-[18px] sm:top-[20px] lg:top-[24px] left-6 right-6 h-[2px] -translate-y-1/2 z-0 bg-white/10 rounded-full" />
+            <div className="absolute top-[16px] sm:top-[18px] lg:top-[20px] left-6 right-6 h-[2px] -translate-y-1/2 z-0 bg-white/10 rounded-full" />
 
             {/* Glowing active flight beam up to current active frontier */}
             <div
-              className="absolute top-[18px] sm:top-[20px] lg:top-[24px] left-6 h-[2px] -translate-y-1/2 z-0 bg-gradient-to-r from-[#ff912d] via-[#00ffcc] to-[#ff912d] shadow-[0_0_8px_rgba(255,145,45,0.85)] transition-all duration-700 ease-out rounded-full"
+              className="absolute top-[16px] sm:top-[18px] lg:top-[20px] left-6 h-[2px] -translate-y-1/2 z-0 bg-gradient-to-r from-[#ff912d] via-[#00ffcc] to-[#ff912d] shadow-[0_0_8px_rgba(255,145,45,0.85)] transition-all duration-700 ease-out rounded-full"
               style={{
                 width: completedPlanetsCount === planets.length
                   ? 'calc(100% - 48px)'
@@ -506,7 +509,11 @@ export default function PassportStatsCard({ profile, completedMissionIds, avatar
 
                   {/* Planet Celestial Node with Real SVG - Fully Opaque (non-transparent) */}
                   <div
-                    className={`relative w-9 h-9 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-full flex items-center justify-center transition-all duration-300 group-hover:scale-110 ${isCompleted
+                    className={`relative rounded-full flex items-center justify-center transition-all duration-300 group-hover:scale-110 ${
+                      isModal
+                        ? 'w-8 h-8 sm:w-8.5 sm:h-8.5 lg:w-9.5 lg:h-9.5'
+                        : 'w-9 h-9 sm:w-10 sm:h-10 lg:w-12 lg:h-12'
+                    } ${isCompleted
                         ? 'drop-shadow-[0_0_10px_rgba(0,255,180,0.8)]'
                         : isActive
                           ? 'scale-105 drop-shadow-[0_0_12px_rgba(255,145,45,0.7)] ring-2 ring-[#ff912d] ring-offset-2 ring-offset-[#1e0a2d]'
@@ -526,17 +533,17 @@ export default function PassportStatsCard({ profile, completedMissionIds, avatar
 
                     {/* Status Badge overlay at bottom-right corner of planet */}
                     {isCompleted ? (
-                      <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-emerald-500 border-2 border-[#1e0a2d] flex items-center justify-center shadow-[0_0_8px_#10b981] z-20">
-                        <svg className="w-2 h-2 sm:w-2.5 sm:h-2.5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="absolute -bottom-1 -right-1 w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-emerald-500 border-2 border-[#1e0a2d] flex items-center justify-center shadow-[0_0_8px_#10b981] z-20">
+                        <svg className="w-2 h-2 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7" />
                         </svg>
                       </div>
                     ) : isActive ? (
-                      <div className="absolute -bottom-1 -right-1 px-1.5 py-0.2 rounded-full bg-[#ff912d] border border-white/40 flex items-center justify-center shadow-[0_0_6px_#ff912d] z-20 font-mono font-black text-[7px] sm:text-[7.5px] text-black">
+                      <div className="absolute -bottom-1 -right-1 px-1 py-0.2 rounded-full bg-[#ff912d] border border-white/40 flex items-center justify-center shadow-[0_0_6px_#ff912d] z-20 font-mono font-black text-[6.5px] sm:text-[7px] text-black">
                         {planet.completedCount}/3
                       </div>
                     ) : (
-                      <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-black/80 border border-white/20 flex items-center justify-center z-20">
+                      <div className="absolute -bottom-1 -right-1 w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-black/80 border border-white/20 flex items-center justify-center z-20">
                         <Lock className="w-2 h-2 text-white/60" />
                       </div>
                     )}
@@ -544,11 +551,11 @@ export default function PassportStatsCard({ profile, completedMissionIds, avatar
 
                   {/* Planet Name & Tech Badge */}
                   <div className="flex flex-col items-center mt-0.5 min-w-0">
-                    <span className={`font-sans font-bold text-[8px] sm:text-[9px] lg:text-[10px] tracking-wider uppercase truncate drop-shadow-md ${isCompleted ? 'text-white' : isActive ? 'text-[#ff912d]' : 'text-white/60'
+                    <span className={`font-sans font-bold text-[7.5px] sm:text-[8px] lg:text-[8.5px] tracking-wider uppercase truncate drop-shadow-md ${isCompleted ? 'text-white' : isActive ? 'text-[#ff912d]' : 'text-white/60'
                       }`}>
                       {planet.name}
                     </span>
-                    <span className={`font-mono text-[6px] sm:text-[7px] lg:text-[7.5px] uppercase tracking-wider px-1.5 py-0.5 rounded mt-0.5 whitespace-nowrap leading-tight ${isCompleted
+                    <span className={`font-mono text-[5.5px] sm:text-[6px] lg:text-[6.5px] uppercase tracking-wider px-1 py-0.2 rounded mt-0.5 whitespace-nowrap leading-tight ${isCompleted
                         ? 'bg-emerald-950/70 text-emerald-300 border border-emerald-500/30'
                         : isActive
                           ? 'bg-[#ff912d]/25 text-[#ff912d] border border-[#ff912d]/50 font-bold'
@@ -607,7 +614,7 @@ export default function PassportStatsCard({ profile, completedMissionIds, avatar
 
           {/* Modal Card Content Container */}
           <div
-            className="relative w-full max-w-4xl aspect-[16/9] max-h-[85vh] shadow-[0_0_50px_rgba(0,0,0,0.9)]"
+            className="relative w-full max-w-4xl max-w-[calc(80vh*16/9)] aspect-[16/9] shadow-[0_0_50px_rgba(0,0,0,0.9)] flex flex-col mx-auto"
             onClick={(e) => e.stopPropagation()}
           >
             {renderCard(false, true)}

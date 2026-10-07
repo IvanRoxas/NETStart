@@ -43,20 +43,37 @@ export function clearLegacyUnscopedData(): void {
       'netstart_active_level',
       'netstart_last_animated_planet_idx',
       'netstart_planet_unlock_pending',
-      'netstart_sound_enabled',
       'netstart_avatar_layers',
-      'netstart_remember_password',
     ];
     keysToRemove.forEach(k => localStorage.removeItem(k));
 
     for (let i = localStorage.length - 1; i >= 0; i--) {
       const key = localStorage.key(i);
+      if (!key) continue;
+
+      // DO NOT delete user audio preferences, general app settings, or auth data
       if (
-        key &&
-        key.startsWith('netstart_') &&
-        !key.startsWith('netstart_u_') &&
-        !key.startsWith('netstart_remember_') &&
-        !key.startsWith('netstart_in_level')
+        key.startsWith('netstart_bgm_') ||
+        key.startsWith('netstart_remember_') ||
+        key.startsWith('netstart_in_level') ||
+        key.startsWith('netstart_demo_mode') ||
+        key.startsWith('netstart_solution_timer_') ||
+        key.startsWith('netstart_u_') ||
+        key.startsWith('setting_')
+      ) {
+        continue;
+      }
+
+      // Only purge old un-scoped gameplay progress and workspace XML keys
+      if (
+        key.startsWith('netstart_saved_workspace_') ||
+        key.startsWith('netstart_completed_sections_') ||
+        key.startsWith('netstart_completed_goals_') ||
+        key.startsWith('netstart_venus3_') ||
+        key.startsWith('netstart_mercury3_') ||
+        key.startsWith('netstart_earth2_') ||
+        key.startsWith('netstart_jupiter2_') ||
+        key.startsWith('netstart_saturn_')
       ) {
         localStorage.removeItem(key);
       }

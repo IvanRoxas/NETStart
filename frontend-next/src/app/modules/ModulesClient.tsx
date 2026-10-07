@@ -118,7 +118,7 @@ export default function ModulesClient({
       rotationSpeed: 30, 
       reverse: true, 
       totalMissions: 3,
-      languageBadge: { label: "Tutorial", color: "#ff912d" }
+      languageBadge: { label: "Intro", color: "#ff912d" }
     },
     { 
       id: "mars", 

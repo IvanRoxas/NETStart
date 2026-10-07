@@ -79,7 +79,7 @@ export default function PlanetNode({
       : subtitle
         ? subtitle.split(',').map(s => s.trim()).filter(Boolean)
         : [])
-  ];
+  ].map(tag => tag.toLowerCase() === 'tutorial' ? 'Intro' : tag);
 
   // Uppercase the name in JS so the browser calculates widths based on capital letters
   const upperName = name.toUpperCase();

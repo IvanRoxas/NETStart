@@ -90,7 +90,7 @@ MODULE_MISSIONS['cpp'] = MODULE_MISSIONS['saturn'];
 MODULE_MISSIONS['python'] = MODULE_MISSIONS['earth'];
 
 const MODULE_META: Record<string, { title: string; category: string; desc: string }> = {
-  moon: { title: "The Moon (Tutorial)", category: "Tutorial", desc: "Calibrate your rover algorithms and master orientation puzzles on the lunar surface." },
+  moon: { title: "The Moon (Basics)", category: "Basics", desc: "Calibrate your rover algorithms and master orientation puzzles on the lunar surface." },
   mars: { title: "Mars (HTML)", category: "Hypertext Markup Language (HTML)", desc: "Construct semantic habitats and environmental sensors across the red Martian landscape." },
   venus: { title: "Venus (CSS)", category: "Atmospheric Styling Track", desc: "Shield against the intense Venusian atmosphere with responsive stylesheets and grid layouts." },
   mercury: { title: "Mercury (JavaScript)", category: "Dynamic Scripting Track", desc: "Harness rapid orbital mechanics with variables, conditional loops, and DOM manipulation." },

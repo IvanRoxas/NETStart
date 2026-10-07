@@ -64,6 +64,43 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     return DEFAULT_VOLUME;
   });
 
+  // Keep state in sync with localStorage and across tabs
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const savedMuted = localStorage.getItem('netstart_bgm_muted');
+      if (savedMuted !== null) {
+        setIsMutedState(savedMuted === 'true');
+      }
+      const savedVol = localStorage.getItem('netstart_bgm_volume');
+      if (savedVol !== null) {
+        const val = parseFloat(savedVol);
+        if (!isNaN(val) && val >= 0 && val <= 1) {
+          setVolumeState(val);
+          if (dashboardAudioRef.current) dashboardAudioRef.current.volume = val;
+          if (cutsceneAudioRef.current) cutsceneAudioRef.current.volume = val;
+          if (levelAudioRef.current) levelAudioRef.current.volume = val;
+        }
+      }
+    } catch {}
+
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'netstart_bgm_muted') {
+        setIsMutedState(e.newValue === 'true');
+      } else if (e.key === 'netstart_bgm_volume' && e.newValue !== null) {
+        const val = parseFloat(e.newValue);
+        if (!isNaN(val) && val >= 0 && val <= 1) {
+          setVolumeState(val);
+          if (dashboardAudioRef.current) dashboardAudioRef.current.volume = val;
+          if (cutsceneAudioRef.current) cutsceneAudioRef.current.volume = val;
+          if (levelAudioRef.current) levelAudioRef.current.volume = val;
+        }
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
+
   const [cutsceneState, setCutsceneStateInternal] = useState<{
     active: boolean;
     missionId?: string | null;

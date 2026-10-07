@@ -16,6 +16,11 @@ export default function MusicToggleButton({
   size = 'md',
 }: MusicToggleButtonProps) {
   const { isMuted, toggleMute, setMuted, volume, setVolume, isPlaying } = useMusic();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const [isHovered, setIsHovered] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -129,7 +134,9 @@ export default function MusicToggleButton({
     toggleMute();
   };
 
-  const effectiveVolume = isMuted ? 0 : volume;
+  const displayMuted = mounted ? isMuted : false;
+  const displayPlaying = mounted ? isPlaying : false;
+  const effectiveVolume = displayMuted ? 0 : volume;
 
   return (
     <div
@@ -140,11 +147,12 @@ export default function MusicToggleButton({
       <button
         type="button"
         onClick={handleToggleClick}
+        suppressHydrationWarning
         className={`relative ${shapeClass} ${sizeClasses} bg-white/5 border border-white/10 text-white/70 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all cursor-pointer active:scale-95 flex items-center justify-center shrink-0 shadow-sm group ${className}`}
-        title={isMuted ? "Unmute Music (Hover for Volume)" : "Mute Music (Hover for Volume)"}
-        aria-label={isMuted ? "Unmute Music" : "Mute Music"}
+        title={displayMuted ? "Unmute Music (Hover for Volume)" : "Mute Music (Hover for Volume)"}
+        aria-label={displayMuted ? "Unmute Music" : "Mute Music"}
       >
-        {isMuted ? (
+        {displayMuted ? (
           <VolumeX
             size={iconSize}
             className="text-rose-400/80 group-hover:text-rose-300 transition-colors"
@@ -155,7 +163,7 @@ export default function MusicToggleButton({
               size={iconSize}
               className="text-emerald-400/90 group-hover:text-emerald-300 transition-colors"
             />
-            {isPlaying && (
+            {displayPlaying && (
               <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_6px_#34d399]" />
             )}
           </div>

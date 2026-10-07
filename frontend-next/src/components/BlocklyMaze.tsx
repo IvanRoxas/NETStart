@@ -26,6 +26,7 @@ import {
   Settings,
   Target,
   Sparkles,
+  Lightbulb,
   Menu,
   Crosshair,
   Plus,
@@ -63,6 +64,7 @@ import { useProgression } from '@/context/ProgressionContext';
 import { getUserStorageItem, setUserStorageItem, removeUserStorageItem } from '@/lib/userStorage';
 import { XP_REWARDS } from '@/lib/leveling';
 import { isDemoModeActive } from '@/lib/demoMode';
+import LevelSolutionGuideModal from '@/components/LevelSolutionGuideModal';
 import {
   getSectionConveyorQueue,
   validateConveyorVictory,
@@ -2727,6 +2729,57 @@ export default function BlocklyMaze() {
       setToastUndoAction(null);
     }, duration);
   }, []);
+
+  // Solution Guide 3-Minute Timer States
+  const [solutionSecondsLeft, setSolutionSecondsLeft] = useState<number>(180);
+  const [isSolutionGuideUnlocked, setIsSolutionGuideUnlocked] = useState<boolean>(false);
+  const [showSolutionModal, setShowSolutionModal] = useState<boolean>(false);
+  const [isLightbulbHovered, setIsLightbulbHovered] = useState<boolean>(false);
+
+  // 3-Minute Solution Timer effect
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const timerKey = `netstart_solution_timer_${missionId}`;
+    let startTimeStr = sessionStorage.getItem(timerKey);
+    if (!startTimeStr) {
+      startTimeStr = Date.now().toString();
+      try {
+        sessionStorage.setItem(timerKey, startTimeStr);
+      } catch (e) {}
+    }
+    const startTime = parseInt(startTimeStr, 10) || Date.now();
+
+    const updateTimer = () => {
+      const elapsedSec = Math.floor((Date.now() - startTime) / 1000);
+      const remaining = Math.max(0, 180 - elapsedSec);
+      setSolutionSecondsLeft(remaining);
+      if (remaining <= 0) {
+        setIsSolutionGuideUnlocked(true);
+      }
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+    return () => {
+      clearInterval(interval);
+      // Reset timer whenever exiting the level
+      try {
+        sessionStorage.removeItem(timerKey);
+      } catch (e) {}
+    };
+  }, [missionId]);
+
+  const handleLightbulbClick = useCallback((e: React.MouseEvent) => {
+    if (isSolutionGuideUnlocked || isDemoModeActive() || e.shiftKey || e.altKey) {
+      setIsSolutionGuideUnlocked(true);
+      setShowSolutionModal(true);
+    } else {
+      const mins = Math.floor(solutionSecondsLeft / 60);
+      const secs = solutionSecondsLeft % 60;
+      const timeStr = mins > 0 ? `${mins}m ${secs.toString().padStart(2, '0')}s` : `${secs}s`;
+      showToast(`Nova is calculating the solution... Guide unlocks in ${timeStr}. Give it your best shot first! 💡`);
+    }
+  }, [isSolutionGuideUnlocked, solutionSecondsLeft, showToast]);
 
   // Hydrate Level 2, Level 3, and Mars Level 1 State & Toolbox on section change
   useEffect(() => {
@@ -7795,6 +7848,15 @@ export default function BlocklyMaze() {
       bombDamageTimerRef.current = null;
     }
 
+    // Reset Solution Guide 3-minute timer on restart
+    try {
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem(`netstart_solution_timer_${missionId}`, Date.now().toString());
+      }
+    } catch (e) {}
+    setSolutionSecondsLeft(180);
+    setIsSolutionGuideUnlocked(false);
+
     let isAlreadyCompletedMission = false;
     try {
       const completedMissions: string[] = JSON.parse(getNetstartItem('netstart_completed_missions') || '[]');
@@ -11940,14 +12002,83 @@ export default function BlocklyMaze() {
           {/* Background Music Mute / Unmute Toggle Button */}
           <MusicToggleButton variant="rounded" size="md" />
 
-          {/* AI Assist Button */}
-          <button
-            className="p-2.5 bg-purple-900/50 hover:bg-purple-600/60 border border-purple-500/50 rounded-xl transition-all group cursor-pointer shadow-lg active:scale-95 flex items-center justify-center"
-            title="Gemini AI Assist - Offline"
-            aria-label="Gemini AI Assist - Offline"
+          {/* Solution Guide Lightbulb Button */}
+          <div
+            className="relative"
+            onMouseEnter={() => setIsLightbulbHovered(true)}
+            onMouseLeave={() => setIsLightbulbHovered(false)}
           >
-            <Sparkles className="w-5 h-5 text-purple-200 group-hover:text-white transition-colors" />
-          </button>
+            <button
+              onClick={handleLightbulbClick}
+              className={`p-2.5 rounded-xl border transition-all duration-300 group cursor-pointer shadow-lg active:scale-95 flex items-center justify-center relative ${
+                isSolutionGuideUnlocked
+                  ? 'bg-gradient-to-r from-amber-500/25 via-yellow-500/30 to-amber-600/25 hover:from-amber-500/40 hover:to-yellow-500/40 border-yellow-400 text-yellow-300 shadow-[0_0_20px_rgba(250,204,21,0.55)] animate-pulse'
+                  : 'bg-purple-900/40 hover:bg-purple-800/60 border-purple-500/40 text-purple-300 hover:text-white'
+              }`}
+              title={
+                isSolutionGuideUnlocked
+                  ? "Solution Guide Ready! Click to view step-by-step instructions."
+                  : `Solution Guide unlocks in ${Math.floor(solutionSecondsLeft / 60)}:${(solutionSecondsLeft % 60).toString().padStart(2, '0')}`
+              }
+              aria-label="Level Solution Guide"
+            >
+              {/* Pulsing Flare Glow Dot when Unlocked */}
+              {isSolutionGuideUnlocked && (
+                <>
+                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full animate-ping pointer-events-none" />
+                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-400 rounded-full border border-black pointer-events-none" />
+                </>
+              )}
+
+              <Lightbulb
+                className={`w-5 h-5 transition-transform duration-300 group-hover:scale-110 ${
+                  isSolutionGuideUnlocked
+                    ? 'text-yellow-300 fill-yellow-400/80 drop-shadow-[0_0_10px_rgba(250,204,21,0.9)]'
+                    : 'text-purple-200 group-hover:text-yellow-300'
+                }`}
+              />
+            </button>
+
+            {/* Hover Countdown / Status Flyout Tooltip */}
+            {isLightbulbHovered && (
+              <div className="absolute right-0 top-full mt-2.5 z-50 w-56 p-3 rounded-xl bg-[#100727]/95 border border-purple-500/40 shadow-2xl backdrop-blur-md text-white text-xs pointer-events-none animate-in fade-in zoom-in-95 duration-150">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <div className={`p-1 rounded-lg ${isSolutionGuideUnlocked ? 'bg-yellow-500/20 text-yellow-300' : 'bg-purple-900/50 text-purple-300'}`}>
+                    <Lightbulb size={14} className={isSolutionGuideUnlocked ? 'fill-yellow-400/50' : ''} />
+                  </div>
+                  <span className="font-bold font-sans">
+                    {isSolutionGuideUnlocked ? 'Solution Guide Ready!' : 'Solution Guide'}
+                  </span>
+                </div>
+
+                {isSolutionGuideUnlocked ? (
+                  <p className="text-[11px] text-yellow-200/90 leading-tight">
+                    Click to view the exact step-by-step instructions on how to solve this level.
+                  </p>
+                ) : (
+                  <div>
+                    <div className="flex items-center justify-between text-[11px] font-mono text-gray-300 mb-1">
+                      <span>Unlocks in:</span>
+                      <span className="text-yellow-300 font-bold">
+                        {Math.floor(solutionSecondsLeft / 60)}:
+                        {(solutionSecondsLeft % 60).toString().padStart(2, '0')}
+                      </span>
+                    </div>
+                    {/* Progress bar */}
+                    <div className="w-full h-1.5 bg-black/40 rounded-full overflow-hidden border border-white/10">
+                      <div
+                        className="h-full bg-gradient-to-r from-purple-500 to-yellow-400 transition-all duration-1000"
+                        style={{ width: `${Math.max(0, Math.min(100, ((180 - solutionSecondsLeft) / 180) * 100))}%` }}
+                      />
+                    </div>
+                    <p className="text-[10px] text-gray-400 mt-1.5 leading-snug">
+                      Try solving it on your own first! Nova will unlock the steps when time expires.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
@@ -14166,6 +14297,9 @@ export default function BlocklyMaze() {
                   ) : (
                     <button
                       onClick={() => {
+                        try {
+                          sessionStorage.removeItem(`netstart_solution_timer_${missionId}`);
+                        } catch (e) {}
                         setShowPopup(false);
                         const returnPath = isDaily ? '/dashboard' : `/modules/${getMissionPlanetSlug(missionId, isDaily)}`;
                         router.push(returnPath);
@@ -14223,6 +14357,9 @@ export default function BlocklyMaze() {
 
               <button
                 onClick={() => {
+                  try {
+                    sessionStorage.removeItem(`netstart_solution_timer_${missionId}`);
+                  } catch (e) {}
                   setIsPaused(false);
                   const returnPath = isDaily ? '/dashboard' : `/modules/${getMissionPlanetSlug(missionId, isDaily)}`;
                   requestNavigation(returnPath);
@@ -14286,6 +14423,15 @@ export default function BlocklyMaze() {
         title={markDialogue.title}
         message={markDialogue.message}
         onClose={() => setMarkDialogue(prev => ({ ...prev, isOpen: false }))}
+      />
+
+      {/* Solution Guide Modal */}
+      <LevelSolutionGuideModal
+        isOpen={showSolutionModal}
+        onClose={() => setShowSolutionModal(false)}
+        missionId={missionId}
+        currentSectionIndex={currentSection}
+        missionTitle={displayTitle}
       />
 
     </div>
