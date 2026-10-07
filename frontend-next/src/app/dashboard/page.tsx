@@ -9,6 +9,8 @@ import { getXPDetails } from "@/lib/leveling";
 import { XP_REWARDS } from "@/lib/xpEconomy";
 import { Zap, Settings, Rocket, Award, ShieldCheck, Compass, ArrowRight, Lock, CheckCircle2, Circle, Sparkles, Play, Gift, Clock, Flame, Brain, Check } from "lucide-react";
 import DashboardAvatarCard from "@/components/DashboardAvatarCard";
+import { computeUnlockStatus } from "@/lib/unlockLogic";
+import { mapMissionIdToPlanet } from "@/lib/missionMapper";
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
@@ -38,6 +40,7 @@ export default async function DashboardPage() {
       gears: true,
       isVerified: true,
       hasTakenAptitudeTest: true,
+      pathOrder: true,
     }
   });
 
@@ -84,21 +87,38 @@ export default async function DashboardPage() {
     { id: "earth", name: "Earth (HQ)", subtitle: "Python", totalLevels: 3, prefix: "earth" },
   ];
 
-  const getPlanetCompletedCount = (prefix: string) => {
-    return campaignCompletedMissions.filter(m => {
-      const mid = m.missionId.toLowerCase();
-      return mid.startsWith(prefix);
-    }).length;
+  const getPlanetCompletedCount = (planetName: string) => {
+    const target = planetName.toLowerCase();
+    const completedLevels = new Set<number>();
+    
+    campaignCompletedMissions.forEach(m => {
+      const p = mapMissionIdToPlanet(m.missionId);
+      if (p === target) {
+        const match = m.missionId.match(/(\d+)/);
+        if (match) {
+          completedLevels.add(parseInt(match[1], 10));
+        } else {
+          completedLevels.add(completedLevels.size + 1);
+        }
+      }
+    });
+
+    return Math.min(3, completedLevels.size);
   };
 
   // Find active planet (first planet where completed < totalLevels)
   let currentPlanet = PLANET_TRACKS[0];
+  let allPlanetsCompleted = true;
   for (const planet of PLANET_TRACKS) {
     const completed = getPlanetCompletedCount(planet.prefix);
     if (completed < planet.totalLevels) {
       currentPlanet = planet;
+      allPlanetsCompleted = false;
       break;
     }
+  }
+  if (allPlanetsCompleted) {
+    currentPlanet = PLANET_TRACKS[PLANET_TRACKS.length - 1];
   }
 
   const currentPlanetCompleted = getPlanetCompletedCount(currentPlanet.prefix);
@@ -108,8 +128,24 @@ export default async function DashboardPage() {
   const completedMoonLevels = getPlanetCompletedCount("moon");
   const isTutorialComplete = completedMoonLevels >= 3;
 
-  // Web Development Track (HTML Mars + CSS Venus + JS Mercury = 9 levels / 3 courses)
-  // Only unlocks / accumulates progress once tutorial is cleared
+  // Path order and unlock status computation
+  const userPathOrder = (dbUser?.pathOrder && dbUser.pathOrder.length > 0)
+    ? dbUser.pathOrder
+    : ["MOON", "MARS", "VENUS", "MERCURY", "JUPITER", "SATURN", "EARTH"];
+
+  const missionProgressRows = campaignCompletedMissions.map(m => ({
+    missionId: m.missionId,
+    status: "COMPLETED",
+  }));
+
+  const unlockInfo = computeUnlockStatus(userPathOrder, missionProgressRows);
+
+  const planetIndexMap: Record<string, number> = {};
+  userPathOrder.forEach((p, idx) => {
+    planetIndexMap[p.toLowerCase()] = idx;
+  });
+
+  // Track 1: Web Development Track (HTML Mars + CSS Venus + JS Mercury = 9 levels / 3 courses)
   const marsCompleted = getPlanetCompletedCount("mars");
   const venusCompleted = getPlanetCompletedCount("venus");
   const mercuryCompleted = getPlanetCompletedCount("mercury");
@@ -118,6 +154,33 @@ export default async function DashboardPage() {
   const TOTAL_WEB_LEVELS = 9;
   const webProgress = isWebDevActive ? Math.min(100, Math.round((webLevelsCompleted / TOTAL_WEB_LEVELS) * 100)) : 0;
   const webProgressLabel = `${webLevelsCompleted} / ${TOTAL_WEB_LEVELS} Modules`;
+
+  // Track 2: Python Track (Earth = 3 levels)
+  const earthCompleted = getPlanetCompletedCount("earth");
+  const TOTAL_PYTHON_LEVELS = 3;
+  const isEarthStatusUnlocked = planetIndexMap['earth'] !== undefined && unlockInfo.statuses[planetIndexMap['earth']] !== 'LOCKED';
+  const isPythonActive = earthCompleted > 0 || isEarthStatusUnlocked;
+  const pythonLevelsCompleted = isPythonActive ? earthCompleted : 0;
+  const pythonProgress = isPythonActive ? Math.min(100, Math.round((pythonLevelsCompleted / TOTAL_PYTHON_LEVELS) * 100)) : 0;
+  const pythonProgressLabel = `${pythonLevelsCompleted} / ${TOTAL_PYTHON_LEVELS} Modules`;
+
+  // Track 3: C++ Track (Saturn = 3 levels)
+  const saturnCompleted = getPlanetCompletedCount("saturn");
+  const TOTAL_CPP_LEVELS = 3;
+  const isSaturnStatusUnlocked = planetIndexMap['saturn'] !== undefined && unlockInfo.statuses[planetIndexMap['saturn']] !== 'LOCKED';
+  const isCppActive = saturnCompleted > 0 || isSaturnStatusUnlocked;
+  const cppLevelsCompleted = isCppActive ? saturnCompleted : 0;
+  const cppProgress = isCppActive ? Math.min(100, Math.round((cppLevelsCompleted / TOTAL_CPP_LEVELS) * 100)) : 0;
+  const cppProgressLabel = `${cppLevelsCompleted} / ${TOTAL_CPP_LEVELS} Modules`;
+
+  // Track 4: Java Track (Jupiter = 3 levels)
+  const jupiterCompleted = getPlanetCompletedCount("jupiter");
+  const TOTAL_JAVA_LEVELS = 3;
+  const isJupiterStatusUnlocked = planetIndexMap['jupiter'] !== undefined && unlockInfo.statuses[planetIndexMap['jupiter']] !== 'LOCKED';
+  const isJavaActive = jupiterCompleted > 0 || isJupiterStatusUnlocked;
+  const javaLevelsCompleted = isJavaActive ? jupiterCompleted : 0;
+  const javaProgress = isJavaActive ? Math.min(100, Math.round((javaLevelsCompleted / TOTAL_JAVA_LEVELS) * 100)) : 0;
+  const javaProgressLabel = `${javaLevelsCompleted} / ${TOTAL_JAVA_LEVELS} Modules`;
 
   // Determine user's expertise sector
   const isHtmlExpert = level <= 2;
@@ -609,7 +672,7 @@ export default async function DashboardPage() {
                         <div className="font-display font-black text-lg tracking-tight">Web Development</div>
                         {isWebDevActive ? (
                           <span className="bg-[#1e0a2d]/80 text-white text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border border-white/10 flex items-center gap-1.5 shadow-sm">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> Active
+                            <span className={`w-1.5 h-1.5 rounded-full ${webProgress === 100 ? 'bg-emerald-400' : 'bg-emerald-400 animate-ping'}`}></span> {webProgress === 100 ? 'Completed' : 'Active'}
                           </span>
                         ) : (
                           <span className="bg-black/40 text-white/80 text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border border-white/10 flex items-center gap-1">
@@ -642,70 +705,121 @@ export default async function DashboardPage() {
                     </div>
                   </div>
 
-                  {/* Track 2: Python (Upcoming) */}
+                  {/* Track 2: Python */}
                   <div className="relative group/track-card">
                     <div className="absolute inset-0 bg-[#090311]/75 rounded-2xl translate-x-2 translate-y-2 z-0 transition-all duration-300 group-hover/track-card:translate-x-3 group-hover/track-card:translate-y-3" />
                     <div className="relative z-10 bg-gradient-to-br from-[#ff912d] to-[#e67e22] text-white p-5 rounded-2xl transition-all duration-300 shadow-xl group-hover/track-card:-translate-x-1 group-hover/track-card:-translate-y-1 flex flex-col justify-between gap-5 border border-white/20">
                       <div className="flex items-center justify-between">
                         <div className="font-display font-black text-lg tracking-tight">Python</div>
-                        <span className="bg-black/40 text-white/80 text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border border-white/10 flex items-center gap-1">
-                          <Lock size={9} /> Sector Locked
-                        </span>
+                        {isPythonActive ? (
+                          <span className="bg-[#1e0a2d]/80 text-white text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border border-white/10 flex items-center gap-1.5 shadow-sm">
+                            <span className={`w-1.5 h-1.5 rounded-full ${pythonProgress === 100 ? 'bg-emerald-400' : 'bg-emerald-400 animate-ping'}`}></span> {pythonProgress === 100 ? 'Completed' : 'Active'}
+                          </span>
+                        ) : (
+                          <span className="bg-black/40 text-white/80 text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border border-white/10 flex items-center gap-1">
+                            <Lock size={9} /> Sector Locked
+                          </span>
+                        )}
                       </div>
 
                       <div className="space-y-2">
                         <div className="flex justify-between items-baseline">
-                          <span className="text-3xl font-black font-display tracking-tight">0%</span>
-                          <span className="text-xs font-bold text-white/90">0 / 3 Modules</span>
+                          <span className={`${isPythonActive ? 'text-[#361d57]' : 'text-white'} font-black text-3xl font-display tracking-tight`}>
+                            {pythonProgress}%
+                          </span>
+                          <span className={`text-xs ${isPythonActive ? 'font-black text-[#361d57]' : 'font-bold text-white/90'}`}>
+                            {pythonProgressLabel}
+                          </span>
                         </div>
                         <div className="h-3 w-full bg-[#1e0a2d]/60 rounded-full overflow-hidden p-0.5 border border-black/20">
-                          <div className="h-full bg-white/20 rounded-full w-0" />
+                          {isPythonActive ? (
+                            <div 
+                              className="h-full bg-white rounded-full transition-all duration-500 shadow-sm"
+                              style={{ width: `${pythonProgress}%` }}
+                            />
+                          ) : (
+                            <div className="h-full bg-white/20 rounded-full w-0" />
+                          )}
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Track 3: C++ (Upcoming) */}
+                  {/* Track 3: C++ */}
                   <div className="relative group/track-card">
                     <div className="absolute inset-0 bg-[#090311]/75 rounded-2xl translate-x-2 translate-y-2 z-0 transition-all duration-300 group-hover/track-card:translate-x-3 group-hover/track-card:translate-y-3" />
                     <div className="relative z-10 bg-gradient-to-br from-[#ff912d] to-[#e67e22] text-white p-5 rounded-2xl transition-all duration-300 shadow-xl group-hover/track-card:-translate-x-1 group-hover/track-card:-translate-y-1 flex flex-col justify-between gap-5 border border-white/20">
                       <div className="flex items-center justify-between">
                         <div className="font-display font-black text-lg tracking-tight">C++</div>
-                        <span className="bg-black/40 text-white/80 text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border border-white/10 flex items-center gap-1">
-                          <Lock size={9} /> Sector Locked
-                        </span>
+                        {isCppActive ? (
+                          <span className="bg-[#1e0a2d]/80 text-white text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border border-white/10 flex items-center gap-1.5 shadow-sm">
+                            <span className={`w-1.5 h-1.5 rounded-full ${cppProgress === 100 ? 'bg-emerald-400' : 'bg-emerald-400 animate-ping'}`}></span> {cppProgress === 100 ? 'Completed' : 'Active'}
+                          </span>
+                        ) : (
+                          <span className="bg-black/40 text-white/80 text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border border-white/10 flex items-center gap-1">
+                            <Lock size={9} /> Sector Locked
+                          </span>
+                        )}
                       </div>
 
                       <div className="space-y-2">
                         <div className="flex justify-between items-baseline">
-                          <span className="text-3xl font-black font-display tracking-tight">0%</span>
-                          <span className="text-xs font-bold text-white/90">0 / 3 Modules</span>
+                          <span className={`${isCppActive ? 'text-[#361d57]' : 'text-white'} font-black text-3xl font-display tracking-tight`}>
+                            {cppProgress}%
+                          </span>
+                          <span className={`text-xs ${isCppActive ? 'font-black text-[#361d57]' : 'font-bold text-white/90'}`}>
+                            {cppProgressLabel}
+                          </span>
                         </div>
                         <div className="h-3 w-full bg-[#1e0a2d]/60 rounded-full overflow-hidden p-0.5 border border-black/20">
-                          <div className="h-full bg-white/20 rounded-full w-0" />
+                          {isCppActive ? (
+                            <div 
+                              className="h-full bg-white rounded-full transition-all duration-500 shadow-sm"
+                              style={{ width: `${cppProgress}%` }}
+                            />
+                          ) : (
+                            <div className="h-full bg-white/20 rounded-full w-0" />
+                          )}
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Track 4: Java (Upcoming) */}
+                  {/* Track 4: Java */}
                   <div className="relative group/track-card">
                     <div className="absolute inset-0 bg-[#090311]/75 rounded-2xl translate-x-2 translate-y-2 z-0 transition-all duration-300 group-hover/track-card:translate-x-3 group-hover/track-card:translate-y-3" />
                     <div className="relative z-10 bg-gradient-to-br from-[#ff912d] to-[#e67e22] text-white p-5 rounded-2xl transition-all duration-300 shadow-xl group-hover/track-card:-translate-x-1 group-hover/track-card:-translate-y-1 flex flex-col justify-between gap-5 border border-white/20">
                       <div className="flex items-center justify-between">
                         <div className="font-display font-black text-lg tracking-tight">Java</div>
-                        <span className="bg-black/40 text-white/80 text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border border-white/10 flex items-center gap-1">
-                          <Lock size={9} /> Sector Locked
-                        </span>
+                        {isJavaActive ? (
+                          <span className="bg-[#1e0a2d]/80 text-white text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border border-white/10 flex items-center gap-1.5 shadow-sm">
+                            <span className={`w-1.5 h-1.5 rounded-full ${javaProgress === 100 ? 'bg-emerald-400' : 'bg-emerald-400 animate-ping'}`}></span> {javaProgress === 100 ? 'Completed' : 'Active'}
+                          </span>
+                        ) : (
+                          <span className="bg-black/40 text-white/80 text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border border-white/10 flex items-center gap-1">
+                            <Lock size={9} /> Sector Locked
+                          </span>
+                        )}
                       </div>
 
                       <div className="space-y-2">
                         <div className="flex justify-between items-baseline">
-                          <span className="text-3xl font-black font-display tracking-tight">0%</span>
-                          <span className="text-xs font-bold text-white/90">0 / 3 Modules</span>
+                          <span className={`${isJavaActive ? 'text-[#361d57]' : 'text-white'} font-black text-3xl font-display tracking-tight`}>
+                            {javaProgress}%
+                          </span>
+                          <span className={`text-xs ${isJavaActive ? 'font-black text-[#361d57]' : 'font-bold text-white/90'}`}>
+                            {javaProgressLabel}
+                          </span>
                         </div>
                         <div className="h-3 w-full bg-[#1e0a2d]/60 rounded-full overflow-hidden p-0.5 border border-black/20">
-                          <div className="h-full bg-white/20 rounded-full w-0" />
+                          {isJavaActive ? (
+                            <div 
+                              className="h-full bg-white rounded-full transition-all duration-500 shadow-sm"
+                              style={{ width: `${javaProgress}%` }}
+                            />
+                          ) : (
+                            <div className="h-full bg-white/20 rounded-full w-0" />
+                          )}
                         </div>
                       </div>
                     </div>
