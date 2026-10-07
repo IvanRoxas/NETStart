@@ -249,14 +249,16 @@ export default function MercuryLevel2Conveyor({
                     const tSuccessChute = setTimeout(() => {
                       setChuteValidation(null);
                       setTravelingItem(null);
-                      setCargoSorted(prev => {
-                        const newCount = prev + 1;
-                        if (onItemSortedRef.current) onItemSortedRef.current(newCount);
-                        return newCount;
-                      });
 
-                      setActiveItemIndex(prev => prev + 1);
+                      const newCount = itemIndex + 1;
+                      setCargoSorted(newCount);
+                      setActiveItemIndex(newCount);
                       setCurrentItem(null);
+
+                      if (onItemSortedRef.current) {
+                        onItemSortedRef.current(newCount);
+                      }
+
                       processItemStep(itemIndex + 1);
                     }, 500);
                     timersRef.current.push(tSuccessChute);

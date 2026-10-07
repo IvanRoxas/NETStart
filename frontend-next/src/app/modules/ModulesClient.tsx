@@ -8,6 +8,8 @@ import PlanetNode from '@/components/PlanetNode';
 import { getUserStorageItem, setUserStorageItem, removeUserStorageItem } from '@/lib/userStorage';
 import DemoToggle from '@/components/DemoToggle';
 import { useDemoMode } from '@/lib/demoMode';
+import { mapMissionIdToPlanet } from '@/lib/missionMapper';
+import { computeUnlockStatus } from '@/lib/unlockLogic';
 
 interface LiveStats {
   level: number;
@@ -20,8 +22,9 @@ interface LiveStats {
   levelRequiredXp?: number;
 }
 
-interface CompletedMission {
+interface MissionProgressRow {
   missionId: string;
+  status: string;
 }
 
 interface ModulesClientProps {
@@ -30,8 +33,11 @@ interface ModulesClientProps {
   hasTakenAptitudeTest?: boolean;
   aptitudeResult?: any;
   recommendedLearningPath?: string | null;
+  pathOrder?: string[] | null;
+  planetReasons?: any;
   liveStats: LiveStats;
-  completedMissions: CompletedMission[];
+  allUserMissions: MissionProgressRow[];
+  isFallback?: boolean;
 }
 
 // Constellation path segments connecting all 7 planets
@@ -50,8 +56,11 @@ export default function ModulesClient({
   hasTakenAptitudeTest = false,
   aptitudeResult,
   recommendedLearningPath,
+  pathOrder,
+  planetReasons,
   liveStats,
-  completedMissions,
+  allUserMissions,
+  isFallback,
 }: ModulesClientProps) {
   const [activePlanetId, setActivePlanetId] = useState<string | null>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
@@ -70,6 +79,15 @@ export default function ModulesClient({
       };
     }
   }, [fromCutscene]);
+
+  useEffect(() => {
+    if (isFallback) {
+      // Trigger background silent retry
+      fetch('/api/aptitude/retry', { method: 'POST' }).catch(err => {
+        console.warn('Silent fallback retry failed:', err);
+      });
+    }
+  }, [isFallback]);
 
 
   // Demo mode: temporarily unlocks all planets for debugging; pauses XP/progression side-effects
@@ -103,7 +121,7 @@ export default function ModulesClient({
   }`;
 
   // Winding learning path configuration for 7 Solar System Planets with balanced wide spacing
-  const pathNodes = [
+  const defaultPathNodes = [
     { 
       id: "moon", 
       name: "The Moon", 
@@ -211,63 +229,55 @@ export default function ModulesClient({
     }
   ];
 
-  // Combine server completed missions with user-scoped storage
-  const allCompletedMissions = useMemo(() => {
-    const list: { missionId: string }[] = completedMissions.filter(m => !m.missionId.startsWith('daily-'));
+  const pathNodes = useMemo(() => {
+    let order = pathOrder;
+    if (!order || order.length === 0) {
+      order = defaultPathNodes.map(n => n.id.toUpperCase());
+    }
+
+    return order.map((planetId, index) => {
+      const slot = defaultPathNodes[index];
+      const data = defaultPathNodes.find(n => n.id.toLowerCase() === planetId.toLowerCase());
+      
+      const reasonObj = planetReasons?.find((r: any) => r.planet.toLowerCase() === planetId.toLowerCase());
+      const reason = reasonObj ? reasonObj.reason : undefined;
+
+      return {
+        ...data!,
+        top: slot.top,
+        left: slot.left,
+        sizeClass: slot.sizeClass,
+        imgScale: slot.imgScale,
+        rotationSpeed: slot.rotationSpeed,
+        reverse: slot.reverse,
+        aiReason: reason
+      };
+    });
+  }, [pathOrder, planetReasons]);
+
+  // Combine server ALL missions with user-scoped storage completed missions
+  const computedUserMissions = useMemo(() => {
+    const list: MissionProgressRow[] = allUserMissions.filter(m => !m.missionId.startsWith('daily-'));
     if (typeof window !== 'undefined' && userId) {
       try {
         const localList: string[] = JSON.parse(getUserStorageItem('completed_missions', userId) || '[]');
         localList.forEach(id => {
           if (!id.startsWith('daily-') && !list.some(m => m.missionId.toLowerCase() === id.toLowerCase())) {
-            list.push({ missionId: id });
+            list.push({ missionId: id, status: 'COMPLETED' });
           }
         });
       } catch (e) {}
     }
     return list;
-  }, [completedMissions, userId]);
+  }, [allUserMissions, userId]);
 
-  // Map user completed count per module
-  const getCompletedMissionsCount = (moduleId: string) => {
-    return allCompletedMissions.filter(m => {
-      const id = m.missionId.toLowerCase();
-      if (moduleId === 'moon') return id.startsWith('moon');
-      if (moduleId === 'mars') return id.startsWith('mars') || id.startsWith('html');
-      if (moduleId === 'venus') return id.startsWith('venus') || id.startsWith('css');
-      if (moduleId === 'mercury') return id.startsWith('mercury') || id.startsWith('javascript') || id.startsWith('js');
-      if (moduleId === 'jupiter') return id.startsWith('jupiter') || id.startsWith('java');
-      if (moduleId === 'saturn') return id.startsWith('saturn') || id.startsWith('cpp');
-      if (moduleId === 'earth') return id.startsWith('earth') || id.startsWith('python');
-      return id.startsWith(moduleId.toLowerCase());
-    }).length;
-  };
+  const pathOrderArray = useMemo(() => pathNodes.map(n => n.id), [pathNodes]);
 
-  // Determine path completion indicators (3 levels per planet)
-  const hasCompletedFinal = (planetId: string) => {
-    return allCompletedMissions.some(m => {
-      const mid = m.missionId.toLowerCase();
-      return mid === `${planetId}-3` || mid === `html-3-${planetId}` || mid === `css-3-${planetId}`;
-    });
-  };
+  const unlockInfo = useMemo(() => {
+    return computeUnlockStatus(pathOrderArray, computedUserMissions);
+  }, [pathOrderArray, computedUserMissions]);
 
-  const moonCompleted = getCompletedMissionsCount("moon") >= 3 || hasCompletedFinal("moon");
-  const marsCompleted = getCompletedMissionsCount("mars") >= 3 || hasCompletedFinal("mars");
-  const venusCompleted = getCompletedMissionsCount("venus") >= 3 || hasCompletedFinal("venus");
-  const mercuryCompleted = getCompletedMissionsCount("mercury") >= 3 || hasCompletedFinal("mercury");
-  const jupiterCompleted = getCompletedMissionsCount("jupiter") >= 3 || hasCompletedFinal("jupiter");
-  const saturnCompleted = getCompletedMissionsCount("saturn") >= 3 || hasCompletedFinal("saturn");
-  const earthCompleted = getCompletedMissionsCount("earth") >= 3 || hasCompletedFinal("earth");
-
-  // Real unlocked index based on server completed missions
-  let realUnlockedIndex = 0;
-  if (earthCompleted) realUnlockedIndex = 6;
-  else if (saturnCompleted) realUnlockedIndex = 6;
-  else if (jupiterCompleted) realUnlockedIndex = 5;
-  else if (mercuryCompleted) realUnlockedIndex = 4;
-  else if (venusCompleted) realUnlockedIndex = 3;
-  else if (marsCompleted) realUnlockedIndex = 2;
-  else if (moonCompleted) realUnlockedIndex = 1;
-  else realUnlockedIndex = 0;
+  const realUnlockedIndex = unlockInfo.sequentialUnlockedIndex;
 
   // Travel animation state
   const [animState, setAnimState] = useState<{
@@ -483,19 +493,20 @@ export default function ModulesClient({
     const nodeIndex = pathNodes.findIndex(n => n.id === id);
     if (nodeIndex === -1) return 'LOCKED';
 
-    // Demo mode: treat every planet as CURRENT so it renders as clickable/unlocked
     if (isDemoMode) return nodeIndex < pathNodes.length - 1 ? 'COMPLETED' : 'CURRENT';
-
-    // If this planet contains the active saved level progress, it is always accessible
     if (activePlanetId === id) return 'CURRENT';
 
-    if (nodeIndex < animState.unlockedIndex) return 'COMPLETED';
-    if (nodeIndex === animState.unlockedIndex) return 'CURRENT';
-    return 'LOCKED';
+    // Handle animation override
+    if (animState.isAnimating) {
+       if (nodeIndex === animState.unlockedIndex) return 'LOCKED'; // the target of the flight
+       if (nodeIndex < animState.unlockedIndex) return 'COMPLETED';
+    }
+
+    return unlockInfo.statuses[nodeIndex] as 'LOCKED' | 'COMPLETED' | 'CURRENT';
   };
 
   const totalCurriculumMissions = pathNodes.reduce((acc, n) => acc + n.totalMissions, 0);
-  const completedCurriculumCount = pathNodes.reduce((sum, node) => sum + getCompletedMissionsCount(node.id), 0);
+  const completedCurriculumCount = pathNodes.reduce((sum, node) => sum + (unlockInfo.completedCounts[node.id.toLowerCase()] || 0), 0);
 
   // Active track node
   const currentTrackNode = pathNodes[animState.unlockedIndex] || pathNodes[0];
@@ -790,7 +801,7 @@ export default function ModulesClient({
 
         {/* Render Planet Nodes dynamically */}
         {pathNodes.map((node) => {
-          const completedCount = getCompletedMissionsCount(node.id);
+          const completedCount = unlockInfo.completedCounts[node.id.toLowerCase()] || 0;
           const status = getStatusForModule(node.id);
           const isCheckpointPlanet = !animState.isAnimating && node.id === pathNodes[animState.unlockedIndex]?.id;
           
@@ -813,6 +824,7 @@ export default function ModulesClient({
               totalCount={node.totalMissions}
               languageBadge={node.languageBadge}
               hasCheckpoint={isCheckpointPlanet}
+              aiReason={node.aiReason}
             />
           );
         })}

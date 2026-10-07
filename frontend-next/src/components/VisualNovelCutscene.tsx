@@ -105,7 +105,17 @@ const SPEAKER_PROFILES: Record<string, SpeakerMetadata> = {
     role: "NETSTART HQ DIRECTOR",
     pitch: 130,
     icon: "alert",
-    image: "/scenes/characters/HIGHER HEAD.png",
+    image: "/scenes/characters/ATLAS.png",
+  },
+  Atlas: {
+    color: "from-[#451a03] via-[#9a3412] to-[#3b0764]",
+    border: "border-amber-400/80",
+    glow: "shadow-[0_0_35px_rgba(245,158,11,0.5)]",
+    badgeBg: "bg-amber-500/20 text-amber-300 border-amber-500/40",
+    role: "NETSTART HQ DIRECTOR",
+    pitch: 130,
+    icon: "alert",
+    image: "/scenes/characters/ATLAS.png",
   },
   "The Architect": {
     color: "from-[#022c22] via-[#064e3b] to-[#0f172a]",
@@ -146,6 +156,17 @@ const SPEAKER_PROFILES: Record<string, SpeakerMetadata> = {
     icon: "user",
     image: "/scenes/characters/MARK.png",
   },
+  "??? (Mark)": {
+    color: "from-[#27272a] via-[#3f3f46] to-[#18181b]",
+    border: "border-zinc-500",
+    glow: "shadow-[0_0_35px_rgba(113,113,122,0.45)]",
+    badgeBg: "bg-zinc-500/20 text-zinc-300 border-zinc-500/40",
+    role: "UNKNOWN RESIDENT",
+    pitch: 120,
+    icon: "user",
+    image: "/scenes/characters/MARK.png",
+    silhouette: true,
+  },
   "Emma G": {
     color: "from-[#831843] via-[#be185d] to-[#4c0519]",
     border: "border-pink-400/80",
@@ -174,6 +195,16 @@ const SPEAKER_PROFILES: Record<string, SpeakerMetadata> = {
     role: "MARS TWINS",
     pitch: 280,
     icon: "user",
+  },
+  "??? (Emma G and Penny G)": {
+    color: "from-[#27272a] via-[#3f3f46] to-[#18181b]",
+    border: "border-zinc-500",
+    glow: "shadow-[0_0_35px_rgba(113,113,122,0.45)]",
+    badgeBg: "bg-zinc-500/20 text-zinc-300 border-zinc-500/40",
+    role: "UNKNOWN TWINS",
+    pitch: 280,
+    icon: "user",
+    silhouette: true,
   },
   "??? (Spectrum)": {
     color: "from-[#27272a] via-[#3f3f46] to-[#18181b]",
@@ -236,6 +267,26 @@ const SPEAKER_PROFILES: Record<string, SpeakerMetadata> = {
     pitch: 220,
     icon: "user",
     image: "/scenes/characters/TECH_IO.png",
+  },
+  "Engineer Titan": {
+    color: "from-[#78350f] via-[#b45309] to-[#451a03]",
+    border: "border-amber-400/80",
+    glow: "shadow-[0_0_35px_rgba(251,191,36,0.45)]",
+    badgeBg: "bg-amber-500/20 text-amber-300 border-amber-500/40",
+    role: "SATURN LEAD SYSTEMS TECH",
+    pitch: 130,
+    icon: "user",
+    image: "/scenes/characters/TITAN.png",
+  },
+  Titan: {
+    color: "from-[#78350f] via-[#b45309] to-[#451a03]",
+    border: "border-amber-400/80",
+    glow: "shadow-[0_0_35px_rgba(251,191,36,0.45)]",
+    badgeBg: "bg-amber-500/20 text-amber-300 border-amber-500/40",
+    role: "SATURN LEAD SYSTEMS TECH",
+    pitch: 130,
+    icon: "user",
+    image: "/scenes/characters/TITAN.png",
   },
   "The Core (Angry)": {
     color: "from-[#7f1d1d] via-[#991b1b] to-[#450a0a]",
@@ -310,13 +361,18 @@ const VisualNovelCutscene = forwardRef<VisualNovelCutsceneHandle, VisualNovelCut
     {
       scenes = [],
       backgroundBase = "/scenes/backgrounds/",
-      username = "Chief",
+      username = "Operator",
       onMissionGate = noop,
       onFinished = noop,
       summaryText,
     },
     ref
   ) {
+    const effectiveUsername =
+      username && username.trim().length > 0 && username !== "Chief"
+        ? username.trim()
+        : "Operator";
+
     const [index, setIndex] = useState(0);
     const [shownText, setShownText] = useState("");
     const [typing, setTyping] = useState(true);
@@ -343,16 +399,97 @@ const VisualNovelCutscene = forwardRef<VisualNovelCutsceneHandle, VisualNovelCut
     const rawSpeakerName = scene?.speaker || "";
     const isArchitectLine = rawSpeakerName === "The Architect";
     const isArchitectTerminalScene = !!(scene?.background?.includes("earth_bg_003") || isArchitectLine);
-    const displaySpeakerName = (rawSpeakerName === "Operator" || rawSpeakerName === "Y/N") ? username : rawSpeakerName.replace(/\s*\(.*?\)/g, "");
+    const displaySpeakerName = (rawSpeakerName === "Operator" || rawSpeakerName === "Y/N") ? effectiveUsername : rawSpeakerName.replace(/\s*\(.*?\)/g, "");
     const profile = SPEAKER_PROFILES[rawSpeakerName] || DEFAULT_PROFILE;
+    const isTwinSpeaker = (name?: string) => {
+      if (!name) return false;
+      return (
+        name === "Emma G and Penny G" ||
+        name === "Emma G" ||
+        name === "Penny G" ||
+        name === "??? (Emma G and Penny G)"
+      );
+    };
+
+    const isCurrentTwinSpeaker = isTwinSpeaker(rawSpeakerName) || (rawSpeakerName === "???" && (scene as any)?.id === "mars-022");
+    const prevScene = index > 0 ? scenes[index - 1] : null;
+    const isPrevTwinSpeaker = Boolean(
+      prevScene && (isTwinSpeaker(prevScene.speaker) || (prevScene.speaker === "???" && (prevScene as any)?.id === "mars-022"))
+    );
+
+    const isRetainedTwinScene = rawSpeakerName === "Narrator" && isPrevTwinSpeaker;
+    const showTwins = isCurrentTwinSpeaker || isRetainedTwinScene;
+
+    const isTwinBlackout = 
+      rawSpeakerName === "??? (Emma G and Penny G)" || 
+      (rawSpeakerName === "???" && (scene as any)?.id === "mars-022") ||
+      (isRetainedTwinScene && (prevScene?.speaker === "??? (Emma G and Penny G)" || (prevScene?.speaker === "???" && (prevScene as any)?.id === "mars-022")));
+
+    const isMarkSpeaker = (name?: string) => {
+      if (!name) return false;
+      return name === "Mark" || name === "??? (Mark)";
+    };
+
+    const isCurrentMarkSpeaker = isMarkSpeaker(rawSpeakerName) || (rawSpeakerName === "???" && (scene as any)?.id === "mars-005");
+    const isPrevMarkSpeaker = Boolean(
+      prevScene && (isMarkSpeaker(prevScene.speaker) || (prevScene.speaker === "???" && (prevScene as any)?.id === "mars-005"))
+    );
+
+    const isRetainedMarkScene = rawSpeakerName === "Narrator" && isPrevMarkSpeaker;
+    const showMark = isCurrentMarkSpeaker || isRetainedMarkScene;
+
+    const isMarkBlackout = 
+      rawSpeakerName === "??? (Mark)" || 
+      (rawSpeakerName === "???" && (scene as any)?.id === "mars-005") ||
+      (isRetainedMarkScene && (prevScene?.speaker === "??? (Mark)" || (prevScene?.speaker === "???" && (prevScene as any)?.id === "mars-005")));
+
+    const isSpectrumSpeaker = (name?: string) => {
+      if (!name) return false;
+      return name === "Professor Spectrum" || name === "??? (Spectrum)";
+    };
+
+    const isCurrentSpectrumSpeaker = isSpectrumSpeaker(rawSpeakerName) || (rawSpeakerName === "???" && (scene as any)?.id === "venus-008");
+    const isPrevSpectrumSpeaker = Boolean(
+      prevScene && (isSpectrumSpeaker(prevScene.speaker) || (prevScene.speaker === "???" && (prevScene as any)?.id === "venus-008"))
+    );
+
+    const isRetainedSpectrumScene = 
+      ((scene as any)?.id === "venus-009" || (scene as any)?.id === "venus-010") || 
+      (rawSpeakerName === "Narrator" && isPrevSpectrumSpeaker);
+    const showSpectrum = isCurrentSpectrumSpeaker || isRetainedSpectrumScene;
+
+    const isSpectrumBlackout = 
+      rawSpeakerName === "??? (Spectrum)" || 
+      (rawSpeakerName === "???" && (scene as any)?.id === "venus-008") ||
+      (scene as any)?.id === "venus-009" ||
+      (scene as any)?.id === "venus-010";
+
+    const isHueSpeaker = (name?: string) => {
+      if (!name) return false;
+      return name === "Professor Hue" || name === "??? (Hue)";
+    };
+
+    const isCurrentHueSpeaker = isHueSpeaker(rawSpeakerName) || (rawSpeakerName === "???" && (scene as any)?.id === "venus-030");
+    const isPrevHueSpeaker = Boolean(
+      prevScene && (isHueSpeaker(prevScene.speaker) || (prevScene.speaker === "???" && (prevScene as any)?.id === "venus-030"))
+    );
+
+    const isRetainedHueScene = rawSpeakerName === "Narrator" && isPrevHueSpeaker;
+    const showHue = isCurrentHueSpeaker || isRetainedHueScene;
+
+    const isHueBlackout = 
+      rawSpeakerName === "??? (Hue)" || 
+      (rawSpeakerName === "???" && (scene as any)?.id === "venus-030") ||
+      (isRetainedHueScene && (prevScene?.speaker === "??? (Hue)" || (prevScene?.speaker === "???" && (prevScene as any)?.id === "venus-030")));
+
     const showCharacterCard =
-      !isDivider && !!scene && !NO_SPRITE_SPEAKERS.has(rawSpeakerName) && rawSpeakerName.trim().length > 0;
+      !isDivider && !!scene && ((!NO_SPRITE_SPEAKERS.has(rawSpeakerName) && rawSpeakerName.trim().length > 0) || showTwins || showMark || showSpectrum || showHue);
       
-    // Pre-process text so both typing and quick-skip use the username correctly
+    // Pre-process text so both typing and quick-skip use the player's account username, falling back to Operator
     const rawText = scene?.text || "";
     const processedText = rawText
-      .replace(/Operator/g, username)
-      .replace(/Y\/N/g, username);
+      .replace(/Operator/g, effectiveUsername)
+      .replace(/Y\/N/g, effectiveUsername);
 
     const [lastRoomSpeaker, setLastRoomSpeaker] = useState<string>("Director Atlas");
 
@@ -369,11 +506,21 @@ const VisualNovelCutscene = forwardRef<VisualNovelCutsceneHandle, VisualNovelCut
       },
     }));
 
+    const isTwinContinuing = showTwins && isPrevTwinSpeaker;
+    const isMarkContinuing = showMark && isPrevMarkSpeaker;
+    const isSpectrumContinuing = showSpectrum && (isPrevSpectrumSpeaker || (prevScene as any)?.id === "venus-008" || (prevScene as any)?.id === "venus-009");
+    const isHueContinuing = showHue && isPrevHueSpeaker;
+    const isSpriteContinuing = isTwinContinuing || isMarkContinuing || isSpectrumContinuing || isHueContinuing;
+
     useEffect(() => {
+      if (isSpriteContinuing) {
+        setSpriteIn(true);
+        return;
+      }
       setSpriteIn(false);
       const t = setTimeout(() => setSpriteIn(true), 60);
       return () => clearTimeout(t);
-    }, [index]);
+    }, [index, isSpriteContinuing]);
 
     useEffect(() => {
       if (!scene) return;
@@ -635,7 +782,7 @@ const VisualNovelCutscene = forwardRef<VisualNovelCutsceneHandle, VisualNovelCut
                         </div>
                         <div className="text-center space-y-1 bg-black/50 border border-white/10 p-2 rounded-xl">
                           <div className="font-display font-black text-xs sm:text-sm text-white uppercase tracking-wider truncate">
-                            {username}
+                            {effectiveUsername}
                           </div>
                           <div className="text-[8px] font-mono text-white/60 uppercase tracking-tight truncate">
                             {SPEAKER_PROFILES["Operator"].role}
@@ -658,7 +805,7 @@ const VisualNovelCutscene = forwardRef<VisualNovelCutsceneHandle, VisualNovelCut
                   ) : (
                     /* Default / Director Atlas */
                     <img 
-                      src={SPEAKER_PROFILES["Director Atlas"]?.image || "/scenes/characters/HIGHER HEAD.png"} 
+                      src={SPEAKER_PROFILES["Director Atlas"]?.image || "/scenes/characters/ATLAS.png"} 
                       alt="Director Atlas" 
                       className="h-[28rem] sm:h-[40rem] object-contain object-bottom drop-shadow-[0_0_40px_rgba(0,0,0,0.6)] mb-[8rem] sm:mb-[12rem] opacity-95 transition-all duration-300" 
                     />
@@ -675,7 +822,7 @@ const VisualNovelCutscene = forwardRef<VisualNovelCutsceneHandle, VisualNovelCut
                       : "opacity-0 translate-y-8 pointer-events-none"
                   }`}
                 >
-                  {rawSpeakerName === "Operator" ? (
+                  {rawSpeakerName === "Operator" && !showSpectrum ? (
                     <>
                       {/* Operator Holo-card */}
                       <div
@@ -712,20 +859,69 @@ const VisualNovelCutscene = forwardRef<VisualNovelCutsceneHandle, VisualNovelCut
                         className="h-72 sm:h-[26rem] object-contain object-bottom drop-shadow-2xl mb-[8rem] sm:mb-[10rem] shrink-0" 
                       />
                     </>
-                  ) : rawSpeakerName === "Emma G and Penny G" ? (
-                    /* Twins Side-by-Side Sprites */
-                    <div className="flex items-end gap-2 sm:gap-4 mb-[8rem] sm:mb-[12rem]">
+                  ) : showTwins ? (
+                    /* Mars Twins Pair (Always side-by-side, supporting blackout & individual highlight) */
+                    <div className="flex items-end gap-2 sm:gap-4 mb-[8rem] sm:mb-[12rem] transition-all duration-700">
                       <img 
                         src={SPEAKER_PROFILES["Emma G"]?.image} 
                         alt="Emma G" 
-                        className="h-[32rem] sm:h-[44rem] object-contain object-bottom drop-shadow-[0_0_40px_rgba(0,0,0,0.6)]" 
+                        className={`h-[32rem] sm:h-[44rem] object-contain object-bottom transition-all duration-700 ease-in-out ${
+                          isTwinBlackout 
+                            ? "brightness-0 opacity-90 drop-shadow-[0_0_30px_rgba(0,0,0,0.9)]" 
+                            : rawSpeakerName === "Emma G"
+                              ? "brightness-100 scale-100 opacity-100 drop-shadow-[0_0_40px_rgba(244,114,182,0.65)] z-10"
+                              : rawSpeakerName === "Penny G"
+                                ? "brightness-95 scale-[0.97] opacity-80 drop-shadow-[0_0_25px_rgba(0,0,0,0.5)] z-0"
+                                : "brightness-100 scale-100 opacity-95 drop-shadow-[0_0_35px_rgba(244,114,182,0.5)] z-10"
+                        }`} 
                       />
                       <img 
                         src={SPEAKER_PROFILES["Penny G"]?.image} 
                         alt="Penny G" 
-                        className="h-[32rem] sm:h-[44rem] object-contain object-bottom drop-shadow-[0_0_40px_rgba(0,0,0,0.6)]" 
+                        className={`h-[32rem] sm:h-[44rem] object-contain object-bottom transition-all duration-700 ease-in-out ${
+                          isTwinBlackout 
+                            ? "brightness-0 opacity-90 drop-shadow-[0_0_30px_rgba(0,0,0,0.9)]" 
+                            : rawSpeakerName === "Penny G"
+                              ? "brightness-100 scale-100 opacity-100 drop-shadow-[0_0_40px_rgba(244,114,182,0.65)] z-10"
+                              : rawSpeakerName === "Emma G"
+                                ? "brightness-95 scale-[0.97] opacity-80 drop-shadow-[0_0_25px_rgba(0,0,0,0.5)] z-0"
+                                : "brightness-100 scale-100 opacity-95 drop-shadow-[0_0_35px_rgba(244,114,182,0.5)] z-10"
+                        }`} 
                       />
                     </div>
+                  ) : showMark ? (
+                    /* Mark Sprite (supporting blackout silhouette & smooth reveal) */
+                    <img 
+                      src={SPEAKER_PROFILES["Mark"]?.image || "/scenes/characters/MARK.png"} 
+                      alt="Mark" 
+                      className={`h-[32rem] sm:h-[44rem] object-contain object-bottom drop-shadow-[0_0_40px_rgba(0,0,0,0.6)] mb-[8rem] sm:mb-[12rem] transition-all duration-700 ease-in-out ${
+                        isMarkBlackout 
+                          ? "brightness-0 opacity-90 drop-shadow-[0_0_30px_rgba(0,0,0,0.9)]" 
+                          : "brightness-100 opacity-100 drop-shadow-[0_0_40px_rgba(74,222,128,0.6)]"
+                      }`} 
+                    />
+                  ) : showSpectrum ? (
+                    /* Professor Spectrum Sprite (supporting blackout silhouette & smooth reveal) */
+                    <img 
+                      src={SPEAKER_PROFILES["Professor Spectrum"]?.image || "/scenes/characters/PROF_SPECTRUM.png"} 
+                      alt="Professor Spectrum" 
+                      className={`h-[32rem] sm:h-[44rem] object-contain object-bottom drop-shadow-[0_0_40px_rgba(0,0,0,0.6)] mb-[8rem] sm:mb-[12rem] transition-all duration-700 ease-in-out ${
+                        isSpectrumBlackout 
+                          ? "brightness-0 opacity-90 drop-shadow-[0_0_30px_rgba(0,0,0,0.9)]" 
+                          : "brightness-100 opacity-100 drop-shadow-[0_0_40px_rgba(96,165,250,0.6)]"
+                      }`} 
+                    />
+                  ) : showHue ? (
+                    /* Professor Hue Sprite (supporting blackout silhouette & smooth reveal) */
+                    <img 
+                      src={SPEAKER_PROFILES["Professor Hue"]?.image || "/scenes/characters/PROF_HUE.png"} 
+                      alt="Professor Hue" 
+                      className={`h-[32rem] sm:h-[44rem] object-contain object-bottom drop-shadow-[0_0_40px_rgba(0,0,0,0.6)] mb-[8rem] sm:mb-[12rem] transition-all duration-700 ease-in-out ${
+                        isHueBlackout 
+                          ? "brightness-0 opacity-90 drop-shadow-[0_0_30px_rgba(0,0,0,0.9)]" 
+                          : "brightness-100 opacity-100 drop-shadow-[0_0_40px_rgba(248,113,113,0.6)]"
+                      }`} 
+                    />
                   ) : profile.image ? (
                     /* Actual Character Sprite */
                     <img 

@@ -39,6 +39,9 @@ export default async function ModulesPage() {
       hasTakenAptitudeTest: true,
       aptitudeResult: true,
       recommendedLearningPath: true,
+      pathOrder: true,
+      planetReasons: true,
+      isFallback: true,
     }
   }) : null;
 
@@ -54,10 +57,9 @@ export default async function ModulesPage() {
   const gears = dbUser?.gears || 0;
   const { level, progress, nextThreshold, levelCurrentXp, levelRequiredXp, isMaxLevel } = getXPDetails(xp);
 
-  const completedMissions = dbUser ? await prisma.missionProgress.findMany({
+  const allUserMissions = dbUser ? await prisma.missionProgress.findMany({
     where: {
       userId: activeUserId,
-      status: "COMPLETED",
       NOT: {
         missionId: {
           startsWith: "daily-",
@@ -66,6 +68,7 @@ export default async function ModulesPage() {
     },
     select: {
       missionId: true,
+      status: true,
     }
   }) : [];
 
@@ -91,8 +94,11 @@ export default async function ModulesPage() {
           hasTakenAptitudeTest={hasTakenAptitudeTest}
           aptitudeResult={dbUser?.aptitudeResult}
           recommendedLearningPath={dbUser?.recommendedLearningPath}
+          pathOrder={dbUser?.pathOrder}
+          planetReasons={dbUser?.planetReasons}
           liveStats={liveStats} 
-          completedMissions={completedMissions} 
+          allUserMissions={allUserMissions} 
+          isFallback={dbUser?.isFallback}
         />
       </div>
     </main>

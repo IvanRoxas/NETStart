@@ -22,7 +22,7 @@
   {
     "id": "mercury-004",
     "type": "dialogue",
-    "speaker": "Y/N",
+    "speaker": "Operator",
     "text": "Is that because they handle all the interplanetary transport and logistics?",
     "background": "mercury_bg_001.png"
   },
@@ -30,7 +30,7 @@
     "id": "mercury-005",
     "type": "dialogue",
     "speaker": "Nova",
-    "text": "Exactly. But because of the unexpected AstroLink outage, all transportation between the planets is currently on a strict hiatus. They canâ€™t process or deliver any shipments.",
+    "text": "Exactly. But because of the unexpected AstroLink outage, all transportation between the planets is currently on a strict hiatus. They can't process or deliver any shipments.",
     "background": "mercury_bg_001.png"
   },
   {
@@ -71,15 +71,15 @@
   {
     "id": "mercury-011",
     "type": "dialogue",
-    "speaker": "Y/N",
-    "text": "Iâ€™m Y/N, and this is my partner Nova. We were sent to help with the AstroLink crisis. Can you tell us what happened over here?",
+    "speaker": "Operator",
+    "text": "I am Operator, and this is my partner Nova. We were sent to help with the AstroLink crisis. Can you tell us what happened over here?",
     "background": "mercury_bg_002.png"
   },
   {
     "id": "mercury-012",
     "type": "dialogue",
     "speaker": "Professor Dominic",
-    "text": "Oh! My goodness! Saviors! Can you guys help me with our biodome terminal? Ohâ€”I forgot my manners! I am Professor Dominic, head botanist of Mercury.",
+    "text": "Oh! My goodness! Saviors! Can you guys help me with our biodome terminal? Oh—I forgot my manners! I am Professor Dominic, head botanist of Mercury.",
     "background": "mercury_bg_002.png"
   },
   {
@@ -100,7 +100,7 @@
     "id": "mercury-015",
     "type": "dialogue",
     "speaker": "Professor Dominic",
-    "text": "While I was doing my daily inspection, a solar storm struck out of nowhere! It completely fried the Biodomeâ€™s Document Object Model, the DOM terminal that controls the life support for these plants. Without it, the environment is collapsing!",
+    "text": "While I was doing my daily inspection, a solar storm struck out of nowhere! It completely fried the Biodome's Document Object Model, the DOM terminal that controls the life support for these plants. Without it, the environment is collapsing!",
     "background": "mercury_bg_002.png"
   },
   {
@@ -130,7 +130,7 @@
     "id": "mercury-019",
     "type": "dialogue",
     "speaker": "Professor Dominic",
-    "text": "I have been informed that the solar storm melted the logic boards on the AstroLink factoryâ€™s main conveyor belt. They have no idea how to route the incoming materials.",
+    "text": "I have been informed that the solar storm melted the logic boards on the AstroLink factory's main conveyor belt. They have no idea how to route the incoming materials.",
     "background": "mercury_bg_002.png"
   },
   {
@@ -174,7 +174,7 @@
     "id": "mercury-025",
     "type": "dialogue",
     "speaker": "Professor Dominic",
-    "text": "The hardware is functioning perfectly. But the transmission is still failing. We canâ€™t receive any incoming data.",
+    "text": "The hardware is functioning perfectly. But the transmission is still failing. We can't receive any incoming data.",
     "background": "mercury_bg_004.png"
   },
   {
@@ -201,7 +201,7 @@
   {
     "id": "mercury-029",
     "type": "dialogue",
-    "speaker": "Y/N",
+    "speaker": "Operator",
     "text": "What is it, Nova?",
     "background": "mercury_bg_004.png"
   },
@@ -216,7 +216,7 @@
     "id": "mercury-031",
     "type": "dialogue",
     "speaker": "Nova",
-    "text": "The solar storm didnâ€™t just damage the physical machinery. The electromagnetic surge completely wiped the front-end software! Mercury isnâ€™t receiving messages because it no longer has an interface to process and display them.",
+    "text": "The solar storm didn't just damage the physical machinery. The electromagnetic surge completely wiped the front-end software! Mercury isn't receiving messages because it no longer has an interface to process and display them.",
     "background": "mercury_bg_004.png"
   },
   {
@@ -232,7 +232,7 @@
     "id": "mercury-033",
     "type": "dialogue",
     "speaker": "System",
-    "text": "System Onlineâ€¦ All modules operational.",
+    "text": "System Online... All modules operational.",
     "background": "mercury_bg_004.png"
   },
   {
@@ -253,8 +253,7 @@
     "id": "mercury-036",
     "type": "dialogue",
     "speaker": "Oberion",
-    "text": "Chief Y/N, we have received the signals from the three planets. Congratulations on finishing the three planets.",
+    "text": "Chief Operator, we have received the signals from the three planets. Congratulations on finishing the three planets.",
     "background": "mercury_bg_004.png"
   }
 ]
-

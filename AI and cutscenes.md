@@ -82,15 +82,15 @@ The monolithic `frontend-next/src/lib/gemini.ts` was retired in favor of a clean
   * Staged planet backgrounds often shared generic filenames (such as `bg_001.png`).
   * Migrated all files with planet-specific namespaces to prevent overwriting assets from Moon, Mars, or Venus:
     * **Mercury:** `mercury_bg_001.png`, `mercury_bg_002.png`, `mercury_bg_003.png`, `mercury_bg_004.png`
-    * **Saturn:** `saturn_bg_001.jpg`, `saturn_bg_002.jpg`, `saturn_bg_003.jpg`, `saturn_bg_004.jpg`
-    * **Jupiter:** `jupiter_bg_001.png`, `jupiter_bg_002.jpg`, `jupiter_bg_003.jpg`, `jupiter_bg_004.jpg`
+    * **Saturn:** `saturn_bg_001.png`, `saturn_bg_002.png`, `saturn_bg_003.png`, `saturn_bg_004.png`
+    * **Jupiter:** `jupiter_bg_001.png`, `jupiter_bg_002.png`, `jupiter_bg_003.png`, `jupiter_bg_004.png`
 * **Character Sprites (`frontend-next/public/scenes/characters/`)**:
   * Migrated character portraits from `staging/` with sanitized underscore filenames:
     * `PROF_DOMINIC.png` (Professor Dominic)
     * `TECH_IO.png` (Technician Io)
     * `Angry_AI.png` (The Core - Corrupted Rogue State)
     * `Good_AI.png` (The Core - Purified Restored State)
-    * Additional staged assets: `EMMA G.png`, `PENNY G.png`, `PROF HUE.png`, `PROF SPECTRUM.png`.
+    * Additional staged assets: `EMMA G.png`, `PENNY G.png`, `PROF HUE.png`, `PROF SPECTRUM.png`, `TITAN.png` (Engineer Titan), `ATLAS.png` (Director Atlas).
 
 ---
 

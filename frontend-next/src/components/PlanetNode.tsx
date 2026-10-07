@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Lock, Check, Rocket } from 'lucide-react';
+import { Lock, Check, Rocket, Sparkles } from 'lucide-react';
 
 interface LanguageBadge {
   iconUrl?: string; // CDN URL for the language SVG icon (optional — omit to use Rocket fallback)
@@ -32,6 +32,7 @@ interface PlanetNodeProps {
   languageBadge?: LanguageBadge;
   hasCheckpoint?: boolean;
   tooltipSide?: 'left' | 'right';
+  aiReason?: string;
 }
 
 export default function PlanetNode({
@@ -53,7 +54,8 @@ export default function PlanetNode({
   totalCount = 5,
   languageBadge,
   hasCheckpoint = false,
-  tooltipSide
+  tooltipSide,
+  aiReason
 }: PlanetNodeProps) {
   const [isFocused, setIsFocused] = useState(false);
   const [iconImgError, setIconImgError] = useState(false);
@@ -298,6 +300,18 @@ export default function PlanetNode({
                 <p className="text-white/90 text-sm font-medium mt-2.5 leading-snug">
                   {description}
                 </p>
+              )}
+
+              {/* AI Reason (Gemini) */}
+              {aiReason && (
+                <div className="mt-3 bg-indigo-500/10 border border-indigo-400/30 rounded-lg p-2.5 flex gap-2">
+                  <div className="shrink-0 pt-0.5">
+                    <Sparkles className="w-4 h-4 text-indigo-400" />
+                  </div>
+                  <p className="text-indigo-200 text-[11px] font-medium leading-snug italic">
+                    {aiReason}
+                  </p>
+                </div>
               )}
             </div>
           </div>
