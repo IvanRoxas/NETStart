@@ -8,10 +8,12 @@ import Image from 'next/image';
 import TopHeader from '@/components/TopHeader';
 import { createPortal } from 'react-dom';
 import SpaceLoader from '@/components/SpaceLoader';
+import { useMusic } from '@/context/MusicContext';
 
 export default function SettingsPage() {
   const { data: session, status, update } = useSession();
   const router = useRouter();
+  const { isMuted, setMuted, volume, setVolume } = useMusic();
 
   const [activeTab, setActiveTab] = useState('General');
   const [username, setUsername] = useState('');
@@ -304,6 +306,28 @@ export default function SettingsPage() {
             {activeTab === 'General' && (
               <div className="flex flex-col">
                 <h2 className="font-display text-2xl font-bold text-[#ff912d] mb-4 mt-2">Preferences</h2>
+                <SettingItem
+                  title="Background Music"
+                  description="Enable or mute background music across the platform and levels."
+                  control={<Toggle checked={!isMuted} onChange={(v) => setMuted(!v)} />}
+                />
+                <SettingItem
+                  title="Music Volume"
+                  description="Adjust the playback volume of background music."
+                  control={
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs font-mono text-white/60 w-9 text-right">{Math.round(volume * 100)}%</span>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={Math.round(volume * 100)}
+                        onChange={(e) => setVolume(Number(e.target.value) / 100)}
+                        className="w-32 h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-[#ff912d]"
+                      />
+                    </div>
+                  }
+                />
                 <SettingItem
                   title="Sound Effects"
                   description="Play sounds for interactions and incoming messages."

@@ -17,7 +17,7 @@ interface DailyCommissionClaimButtonProps {
 export default function DailyCommissionClaimButton({
   completedTasksCount,
   totalTasksCount = 4,
-  bonusGears = 50,
+  bonusGears = 100,
   bonusXP = XP_REWARDS.DAILY_COMMISSIONS.COMPLETION_BONUS,
   initialIsClaimed = false,
 }: DailyCommissionClaimButtonProps) {
@@ -55,22 +55,22 @@ export default function DailyCommissionClaimButton({
 
   return (
     <>
-      <div className="bg-[#1e0a2d]/90 border border-white/15 rounded-2xl p-3 flex flex-col gap-2.5 shadow-inner">
+      <div className="bg-[#1e0a2d]/90 border border-white/15 rounded-2xl p-3 sm:p-3.5 flex flex-col gap-2.5 shadow-inner">
         {/* Row 1: Tasks Completed Label & 4 Genshin-style Diamonds */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-white/90">Tasks completed</span>
-            <span className="text-xs font-black font-display text-[#ff912d] tracking-wider">
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs sm:text-[13px] font-bold text-white/90">Tasks completed</span>
+            <span className="text-xs sm:text-[13px] font-black font-display text-[#ff912d] tracking-wider ml-0.5">
               {completedTasksCount}/{totalTasksCount}
             </span>
           </div>
 
           {/* 4 Genshin-style Diamonds */}
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             {[0, 1, 2, 3].map((idx) => (
               <div
                 key={idx}
-                className={`w-3.5 h-3.5 rotate-45 rounded-xs transition-all duration-300 ${
+                className={`w-4 h-4 rotate-45 rounded-xs transition-all duration-300 ${
                   idx < completedTasksCount
                     ? 'bg-gradient-to-br from-[#ff912d] to-yellow-400 shadow-[0_0_8px_rgba(255,145,45,0.8)]'
                     : 'bg-black/50 border border-white/20'
@@ -87,7 +87,7 @@ export default function DailyCommissionClaimButton({
             <span className="text-xs font-mono font-black bg-[#ff912d]/20 text-[#ff912d] px-2.5 py-1 rounded-lg border border-[#ff912d]/35">
               +{bonusXP} XP
             </span>
-            <span className="text-xs font-mono font-black bg-purple-500/20 text-[#a855f7] px-2.5 py-1 rounded-lg border border-purple-500/35">
+            <span className="text-xs font-mono font-black bg-purple-500/20 text-[#c084fc] px-2.5 py-1 rounded-lg border border-purple-500/35">
               +{bonusGears} Gears
             </span>
           </div>

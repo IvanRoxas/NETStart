@@ -3,13 +3,23 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, ShieldAlert, CheckCircle, Ban, Zap, Star, Trophy, Package, Target, Users as UsersIcon, X, Check, RefreshCcw, History, Trash2, Brain } from 'lucide-react';
+import { ArrowLeft, ShieldAlert, CheckCircle, Ban, Zap, Star, Trophy, Package, Target, Users as UsersIcon, X, Check, RefreshCcw, History, Trash2, Brain, GraduationCap, Unlock, Lock, Sparkles } from 'lucide-react';
 import Image from 'next/image';
-import { editGamificationStats, deleteUser, adminResetAptitudeTest, adminSetAptitudeStatus } from '@/app/admin/actions';
+import { editGamificationStats, deleteUser, adminResetAptitudeTest, adminSetAptitudeStatus, assignStudentToSection, removeStudentFromSection, toggleUserDemoModePrivilege } from '@/app/admin/actions';
 import AdminToast from '@/components/AdminToast';
-import { getXPDetails } from '@/lib/leveling';
+import ConfirmModal from '@/components/ConfirmModal';
+import { getXPDetails, LEVEL_THRESHOLDS } from '@/lib/leveling';
+import TitleBadge from '@/components/TitleBadge';
 
-export default function UserDetailsClientWrapper({ user: initialUser }: { user: any }) {
+export default function UserDetailsClientWrapper({ 
+  user: initialUser,
+  sections = [],
+  currentUserRole = 'SUPER_ADMIN'
+}: { 
+  user: any;
+  sections?: any[];
+  currentUserRole?: string;
+}) {
   const router = useRouter();
   const [user, setUser] = useState(initialUser);
   const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
@@ -21,11 +31,43 @@ export default function UserDetailsClientWrapper({ user: initialUser }: { user: 
   const [editAction, setEditAction] = useState<'ADD' | 'REMOVE' | 'SET'>('ADD');
   const [editValue, setEditValue] = useState<number>(0);
   const [loading, setLoading] = useState(false);
+  const [showResetAptitudeModal, setShowResetAptitudeModal] = useState(false);
+  const [showDeleteUserModal, setShowDeleteUserModal] = useState(false);
+
+  // Section Assignment Modal State
+  const [showAssignSectionModal, setShowAssignSectionModal] = useState(false);
+  const [selectedSectionId, setSelectedSectionId] = useState<string>(initialUser?.sectionId || '');
+  const [isAssigningSection, setIsAssigningSection] = useState(false);
+
+  // Demo Mode Privilege Modal State
+  const [showDemoPrivilegeModal, setShowDemoPrivilegeModal] = useState(false);
+  const [isUpdatingDemoPrivilege, setIsUpdatingDemoPrivilege] = useState(false);
+
+  const handleToggleDemoPrivilege = async () => {
+    setShowDemoPrivilegeModal(false);
+    try {
+      setIsUpdatingDemoPrivilege(true);
+      const res = await toggleUserDemoModePrivilege(user.id, user.canUseDemoMode);
+      setUser((prev: any) => ({
+        ...prev,
+        canUseDemoMode: res.canUseDemoMode
+      }));
+      setToast({
+        message: `Demo Mode privilege ${res.canUseDemoMode ? 'granted' : 'revoked'} successfully.`,
+        type: 'success'
+      });
+    } catch (err: any) {
+      console.error(err);
+      setToast({ message: err.message || "Failed to update demo mode privilege.", type: 'error' });
+    } finally {
+      setIsUpdatingDemoPrivilege(false);
+    }
+  };
   
   const { level, progress: progressPercentage, nextThreshold, xpToNextLevel } = getXPDetails(user.xp);
 
   const handleResetAptitudeTest = async () => {
-    if (!confirm("Are you sure you want to reset this user's Aptitude Test status and scores?")) return;
+    setShowResetAptitudeModal(false);
     try {
       setLoading(true);
       await adminResetAptitudeTest(user.id);
@@ -74,10 +116,25 @@ export default function UserDetailsClientWrapper({ user: initialUser }: { user: 
       setModalOpen(false);
       setToast({ message: `Successfully updated ${editTarget}.`, type: 'success' });
       
-      // Simple reload to get updated stats and level correctly
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
+      // Update local state without full-page reload
+      setUser((prev: any) => {
+        let newXp = prev.xp;
+        let newGears = prev.gears;
+        if (editTarget === 'XP') {
+          if (editAction === 'ADD') newXp = prev.xp + editValue;
+          else if (editAction === 'REMOVE') newXp = Math.max(0, prev.xp - editValue);
+          else if (editAction === 'SET') newXp = editValue;
+        } else if (editTarget === 'GEARS') {
+          if (editAction === 'ADD') newGears = prev.gears + editValue;
+          else if (editAction === 'REMOVE') newGears = Math.max(0, prev.gears - editValue);
+          else if (editAction === 'SET') newGears = editValue;
+        } else if (editTarget === 'LEVEL') {
+          if (editValue <= 1) newXp = 0;
+          else if (editValue >= 10) newXp = LEVEL_THRESHOLDS[8].cumulativeXp;
+          else newXp = LEVEL_THRESHOLDS[editValue - 2].cumulativeXp;
+        }
+        return { ...prev, xp: newXp, gears: newGears };
+      });
     } catch (err: any) {
       console.error(err);
       setToast({ message: err.message || "Failed to update stats.", type: 'error' });
@@ -87,7 +144,7 @@ export default function UserDetailsClientWrapper({ user: initialUser }: { user: 
   };
 
   const handleDeleteUser = async () => {
-    if (!confirm("Are you sure you want to PERMANENTLY delete this user? This action cannot be undone.")) return;
+    setShowDeleteUserModal(false);
     try {
       setLoading(true);
       await deleteUser(user.id);
@@ -96,6 +153,42 @@ export default function UserDetailsClientWrapper({ user: initialUser }: { user: 
       console.error(err);
       setToast({ message: "Failed to delete user.", type: 'error' });
       setLoading(false);
+    }
+  };
+
+  const handleSaveSection = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setIsAssigningSection(true);
+      if (selectedSectionId) {
+        await assignStudentToSection(user.id, selectedSectionId);
+        const assignedSec = sections.find(s => s.id === selectedSectionId);
+        setUser((prev: any) => ({
+          ...prev,
+          sectionId: selectedSectionId,
+          section: assignedSec ? {
+            id: assignedSec.id,
+            name: assignedSec.name,
+            gradeLevel: assignedSec.gradeLevel,
+            strand: assignedSec.strand,
+            schoolYear: assignedSec.schoolYear
+          } : prev.section
+        }));
+        setToast({ message: "Student assigned to section successfully.", type: 'success' });
+      } else {
+        await removeStudentFromSection(user.id);
+        setUser((prev: any) => ({
+          ...prev,
+          sectionId: null,
+          section: null
+        }));
+        setToast({ message: "Student removed from section.", type: 'success' });
+      }
+      setShowAssignSectionModal(false);
+    } catch (err: any) {
+      setToast({ message: err.message || "Failed to update section.", type: 'error' });
+    } finally {
+      setIsAssigningSection(false);
     }
   };
 
@@ -117,14 +210,16 @@ export default function UserDetailsClientWrapper({ user: initialUser }: { user: 
             <History size={16} />
             User Logs
           </Link>
-          <button 
-            onClick={handleDeleteUser}
-            disabled={loading}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500/20 font-bold transition-colors border border-red-500/20 text-sm disabled:opacity-50"
-          >
-            {loading ? <RefreshCcw className="animate-spin" size={16} /> : <Trash2 size={16} />}
-            Delete User
-          </button>
+          {currentUserRole === 'SUPER_ADMIN' && (
+            <button 
+              onClick={() => setShowDeleteUserModal(true)}
+              disabled={loading}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500/20 font-bold transition-colors border border-red-500/20 text-sm disabled:opacity-50 cursor-pointer"
+            >
+              {loading ? <RefreshCcw className="animate-spin" size={16} /> : <Trash2 size={16} />}
+              Delete User
+            </button>
+          )}
         </div>
       </div>
 
@@ -158,7 +253,7 @@ export default function UserDetailsClientWrapper({ user: initialUser }: { user: 
               </h1>
               <p className="text-gray-400 font-medium">{user.email}</p>
               
-              <div className="flex items-center gap-3 mt-3">
+              <div className="flex flex-wrap items-center gap-3 mt-3">
                 <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
                   user.isVerified ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'
                 }`}>
@@ -172,11 +267,36 @@ export default function UserDetailsClientWrapper({ user: initialUser }: { user: 
                   {user.isBanned ? <Ban size={14} /> : <CheckCircle size={14} />}
                   {user.isBanned ? 'Banned' : 'Active'}
                 </span>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedSectionId(user.sectionId || '');
+                    setShowAssignSectionModal(true);
+                  }}
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer bg-purple-500/15 text-purple-300 border border-purple-500/30 hover:bg-purple-500/25"
+                  title="Click to assign or change section"
+                >
+                  <GraduationCap size={14} />
+                  {user.section ? `Section: ${user.section.name} (Gr ${user.section.gradeLevel})` : 'Assign Section'}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowDemoPrivilegeModal(true)}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                    user.canUseDemoMode
+                      ? 'bg-amber-500/15 text-amber-300 border border-amber-500/30 hover:bg-amber-500/25'
+                      : 'bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10 hover:text-white'
+                  }`}
+                  title="Click to toggle Demo Mode privilege"
+                >
+                  {user.canUseDemoMode ? <Unlock size={14} className="text-amber-400" /> : <Lock size={14} className="text-gray-400" />}
+                  {user.canUseDemoMode ? 'Demo Mode: Allowed' : 'Demo Mode: Disabled'}
+                </button>
                 
                 {user.activeTitle && (
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
-                    Title: {user.activeTitle}
-                  </span>
+                  <TitleBadge title={user.activeTitle} size="sm" />
                 )}
               </div>
             </div>
@@ -198,7 +318,7 @@ export default function UserDetailsClientWrapper({ user: initialUser }: { user: 
       </div>
 
       {/* Gamification Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
         <div className="bg-[#1e0a2d] border border-white/5 rounded-3xl shadow-xl flex flex-col overflow-hidden">
           <div className="p-6 flex items-center gap-4 flex-1">
             <div className="w-14 h-14 rounded-full bg-blue-500/20 border-2 border-blue-500/30 flex items-center justify-center">
@@ -215,7 +335,7 @@ export default function UserDetailsClientWrapper({ user: initialUser }: { user: 
           </div>
           <button 
             onClick={() => { setModalMode('XP_LEVEL'); setEditTarget('XP'); setEditAction('ADD'); setEditValue(0); setModalOpen(true); }} 
-            className="w-full py-3 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 font-bold text-sm transition-colors border-t border-blue-500/20"
+            className="w-full py-3 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 font-bold text-sm transition-colors border-t border-blue-500/20 cursor-pointer"
           >
             Edit XP/Level
           </button>
@@ -236,7 +356,7 @@ export default function UserDetailsClientWrapper({ user: initialUser }: { user: 
           </div>
           <button 
             onClick={() => { setModalMode('GEARS'); setEditTarget('GEARS'); setEditAction('ADD'); setEditValue(0); setModalOpen(true); }} 
-            className="w-full py-3 bg-[#ff912d]/10 hover:bg-[#ff912d]/20 text-[#ff912d] font-bold text-sm transition-colors border-t border-[#ff912d]/20"
+            className="w-full py-3 bg-[#ff912d]/10 hover:bg-[#ff912d]/20 text-[#ff912d] font-bold text-sm transition-colors border-t border-[#ff912d]/20 cursor-pointer"
           >
             Edit Currency
           </button>
@@ -269,7 +389,7 @@ export default function UserDetailsClientWrapper({ user: initialUser }: { user: 
           </div>
           <div className="grid grid-cols-2 border-t border-white/5 text-center">
             <button 
-              onClick={handleResetAptitudeTest}
+              onClick={() => setShowResetAptitudeModal(true)}
               disabled={loading}
               className="py-3 bg-red-500/10 hover:bg-red-500/20 text-red-400 font-bold text-xs transition-colors border-r border-white/5 cursor-pointer disabled:opacity-50"
             >
@@ -283,6 +403,47 @@ export default function UserDetailsClientWrapper({ user: initialUser }: { user: 
               {user.hasTakenAptitudeTest ? 'Set Pending' : 'Set Completed'}
             </button>
           </div>
+        </div>
+
+        {/* Demo Mode Privilege Management Card */}
+        <div className="bg-[#1e0a2d] border border-white/5 rounded-3xl shadow-xl flex flex-col overflow-hidden">
+          <div className="p-6 flex items-center gap-4 flex-1">
+            <div className={`w-14 h-14 rounded-full border-2 flex items-center justify-center shrink-0 ${
+              user.canUseDemoMode
+                ? 'bg-amber-500/20 border-amber-500/40 text-amber-400'
+                : 'bg-white/5 border-white/10 text-gray-500'
+            }`}>
+              {user.canUseDemoMode ? <Unlock size={24} /> : <Lock size={24} />}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-gray-400 font-bold text-xs uppercase tracking-wider">Demo Privilege</h3>
+                <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded ${
+                  user.canUseDemoMode
+                    ? 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
+                    : 'bg-white/5 text-gray-400 border border-white/10'
+                }`}>
+                  {user.canUseDemoMode ? 'GRANTED' : 'DISABLED'}
+                </span>
+              </div>
+              <div className="text-xs text-gray-300 mt-1 line-clamp-2">
+                {user.canUseDemoMode
+                  ? 'Student can use the Demo toggle to explore missions.'
+                  : 'Normal progression. Student cannot access Demo Mode.'}
+              </div>
+            </div>
+          </div>
+          <button
+            onClick={() => setShowDemoPrivilegeModal(true)}
+            disabled={isUpdatingDemoPrivilege}
+            className={`w-full py-3 font-bold text-xs transition-colors border-t cursor-pointer disabled:opacity-50 ${
+              user.canUseDemoMode
+                ? 'bg-red-500/10 hover:bg-red-500/20 text-red-400 border-red-500/20'
+                : 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border-amber-500/20'
+            }`}
+          >
+            {user.canUseDemoMode ? 'Revoke Demo Privilege' : 'Grant Demo Privilege'}
+          </button>
         </div>
       </div>
 
@@ -433,6 +594,107 @@ export default function UserDetailsClientWrapper({ user: initialUser }: { user: 
                   }`}
                 >
                   {loading ? <RefreshCcw className="animate-spin" size={20} /> : 'Save Changes'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Modals */}
+      <ConfirmModal
+        isOpen={showDeleteUserModal}
+        title="Delete User Permanently?"
+        message="Are you sure you want to PERMANENTLY delete this user? This action cannot be undone."
+        confirmLabel="Delete User"
+        cancelLabel="Cancel"
+        variant="danger"
+        loading={loading}
+        onConfirm={handleDeleteUser}
+        onCancel={() => setShowDeleteUserModal(false)}
+      />
+
+      <ConfirmModal
+        isOpen={showResetAptitudeModal}
+        title="Reset Aptitude Test?"
+        message="Are you sure you want to reset this user's Aptitude Test status and scores?"
+        confirmLabel="Reset Test"
+        cancelLabel="Cancel"
+        variant="warning"
+        loading={loading}
+        onConfirm={handleResetAptitudeTest}
+        onCancel={() => setShowResetAptitudeModal(false)}
+      />
+
+      <ConfirmModal
+        isOpen={showDemoPrivilegeModal}
+        title={user.canUseDemoMode ? "Revoke Demo Mode Privilege?" : "Grant Demo Mode Privilege?"}
+        message={user.canUseDemoMode 
+          ? `Are you sure you want to revoke Demo Mode access for ${user.displayName || user.email}? The user will immediately lose the ability to preview locked sectors and test modules.`
+          : `Grant Demo Mode access to ${user.displayName || user.email}? The user will gain the ability to toggle Demo Mode on modules and sector overviews.`}
+        confirmLabel={user.canUseDemoMode ? "Revoke Access" : "Grant Access"}
+        cancelLabel="Cancel"
+        variant={user.canUseDemoMode ? "warning" : "primary"}
+        loading={isUpdatingDemoPrivilege}
+        onConfirm={handleToggleDemoPrivilege}
+        onCancel={() => setShowDemoPrivilegeModal(false)}
+      />
+
+      {/* Assign Section Modal */}
+      {showAssignSectionModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+          <div className="bg-[#1e0a2d] border border-white/10 rounded-2xl w-full max-w-md p-6 shadow-2xl relative">
+            <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-4">
+              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                <GraduationCap className="text-[#ff912d]" size={20} />
+                Assign Student Section
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowAssignSectionModal(false)}
+                className="text-gray-400 hover:text-white p-1 rounded-lg"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <p className="text-sm text-gray-300 mb-4">
+              Select a section for <span className="font-bold text-white">{user.displayName || user.email}</span>.
+            </p>
+
+            <form onSubmit={handleSaveSection} className="flex flex-col gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-1.5">
+                  Section
+                </label>
+                <select
+                  value={selectedSectionId}
+                  onChange={(e) => setSelectedSectionId(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-black/20 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-[#ff912d] cursor-pointer"
+                >
+                  <option value="" className="bg-[#1e0a2d]">-- Unassigned (No Section) --</option>
+                  {sections.map(sec => (
+                    <option key={sec.id} value={sec.id} className="bg-[#1e0a2d]">
+                      {sec.name} • Grade {sec.gradeLevel} ({sec.strand})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 mt-4 pt-4 border-t border-white/10">
+                <button
+                  type="button"
+                  onClick={() => setShowAssignSectionModal(false)}
+                  className="px-4 py-2 text-sm font-semibold text-gray-400 hover:text-white transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isAssigningSection}
+                  className="px-5 py-2 text-sm font-bold bg-[#ff912d] hover:bg-[#ff912d]/90 text-white rounded-xl transition-all shadow-lg shadow-[#ff912d]/20 disabled:opacity-50 cursor-pointer"
+                >
+                  {isAssigningSection ? "Saving..." : "Save Assignment"}
                 </button>
               </div>
             </form>

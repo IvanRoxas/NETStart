@@ -5,6 +5,7 @@ import {
   EARTH_1_SECTION_SPECS,
   EARTH_1_MAX_CHARS,
   type Earth1ReplaceOp,
+  type Earth1SectionSpec,
   type Earth1ValidationResult,
   type Earth1WorkspaceState,
   formatOutputDisplay,
@@ -23,6 +24,7 @@ interface EarthLevel1LabProps {
   validation: Earth1ValidationResult;
   workspaceState: Earth1WorkspaceState;
   isRunning: boolean;
+  sectionSpecs?: Earth1SectionSpec[];
   onSimulationComplete?: (success: boolean, failureReason?: string) => void;
   onAdvanceSection?: () => void;
 }
@@ -45,9 +47,10 @@ export default function EarthLevel1Lab({
   validation,
   workspaceState,
   isRunning,
+  sectionSpecs,
   onSimulationComplete,
 }: EarthLevel1LabProps) {
-  const spec = EARTH_1_SECTION_SPECS[sectionIndex] || EARTH_1_SECTION_SPECS[0];
+  const spec = (sectionSpecs || EARTH_1_SECTION_SPECS)[sectionIndex] || (sectionSpecs || EARTH_1_SECTION_SPECS)[0];
 
   // Visual Tiles State on the Lab Table
   const [tiles, setTiles] = useState<TileItem[]>([]);
@@ -76,7 +79,39 @@ export default function EarthLevel1Lab({
 
   // Responsive, comfortable block dimensions (no thin/squished tiles)
   const initialLen = spec.corruptedData.length;
-  const tileWidth = initialLen <= 11 ? 32 : initialLen <= 14 ? 26 : 23;
+  const tileWidth =
+    initialLen <= 11
+      ? 32
+      : initialLen <= 14
+      ? 26
+      : initialLen <= 16
+      ? 23
+      : initialLen <= 20
+      ? 19
+      : initialLen <= 25
+      ? 17
+      : 15;
+
+  const counterMaxWidth =
+    initialLen >= 22
+      ? 'max-w-[480px] sm:max-w-[530px] md:max-w-[560px]'
+      : initialLen >= 17
+      ? 'max-w-[420px] sm:max-w-[460px]'
+      : 'max-w-[375px] sm:max-w-[415px]';
+
+  const stageMaxWidth =
+    initialLen >= 22
+      ? 'max-w-[440px] sm:max-w-[490px] md:max-w-[520px]'
+      : initialLen >= 17
+      ? 'max-w-[380px] sm:max-w-[420px]'
+      : 'max-w-[330px] sm:max-w-[370px]';
+
+  const signMaxWidth =
+    initialLen >= 22
+      ? 'max-w-[340px] sm:max-w-[380px]'
+      : initialLen >= 17
+      ? 'max-w-[290px] sm:max-w-[330px]'
+      : 'max-w-[240px] sm:max-w-[275px]';
 
   // Geometry references to anchor lasers & crane permanently to the ceiling rail
   const containerRef = useRef<HTMLDivElement>(null);
@@ -1199,7 +1234,7 @@ export default function EarthLevel1Lab({
 
         {/* 3D LABORATORY TESTING COUNTER STRUCTURE */}
         <div
-          className={`w-full max-w-[375px] sm:max-w-[415px] flex flex-col items-center relative z-20 pointer-events-auto transition-transform duration-300 ${
+          className={`w-full ${counterMaxWidth} flex flex-col items-center relative z-20 pointer-events-auto transition-transform duration-300 ${
             isCounterRumbling ? 'animate-[shake_0.4s_ease-in-out]' : ''
           }`}
         >
@@ -1217,7 +1252,7 @@ export default function EarthLevel1Lab({
             {/* WORD STRIP STAGE (ROBUST, COMFORTABLE BLOCKS OR FORMED PHRASE)        */}
             {/* Near end of simulation, remaining characters form together into phrase*/}
             {/* ===================================================================== */}
-            <div className="relative w-full max-w-[330px] sm:max-w-[370px] py-0.5 flex justify-center items-center">
+            <div className={`relative w-full ${stageMaxWidth} py-0.5 flex justify-center items-center`}>
               {formedPhrase ? (
                 /* FORMED UNIFIED PHRASE BADGE: REMAINING BLOCKS FUSE INTO ONE PHRASE */
                 <div
@@ -1376,7 +1411,7 @@ export default function EarthLevel1Lab({
 
             {/* THE SIGN BELOW THE COUNTER (TARGET PHRASE AND LIVE MATCH STATUS) */}
             <div
-              className={`w-full max-w-[240px] sm:max-w-[275px] py-1.5 px-3 rounded flex flex-col items-center justify-center mt-1 transition-all duration-500 border-2 ${
+              className={`w-full ${signMaxWidth} py-1.5 px-3 rounded flex flex-col items-center justify-center mt-1 transition-all duration-500 border-2 ${
                 isMatchSuccess === true
                   ? 'bg-emerald-950/90 border-emerald-400 shadow-[0_0_25px_#10b981]'
                   : isMatchSuccess === false

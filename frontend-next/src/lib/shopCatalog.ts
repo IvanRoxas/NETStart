@@ -17,7 +17,7 @@ export interface ShopCatalogItem {
 export function getBorderScale(borderNameOrUrl?: string | null): string {
   if (!borderNameOrUrl) return '126%';
   const lower = borderNameOrUrl.toLowerCase();
-  
+
   if (lower.includes('balcony') || lower.includes('austere')) return '144%';
   if (lower.includes('bee') || lower.includes('busy')) return '140%';
   if (lower.includes('flower') || lower.includes('blossom')) return '136%';
@@ -47,7 +47,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: 'BACKGROUND',
     category: 'PROFILE',
     subCategory: 'Background',
-    price: 250,
+    price: 150,
     imageUrl: '/assets/global/shop/backgrounds/Alien Landspace Background.jpg',
     tag: 'Background',
     description: 'A glowing exoplanet with shiny crystals under two bright suns!'
@@ -58,7 +58,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: 'BACKGROUND',
     category: 'PROFILE',
     subCategory: 'Background',
-    price: 300,
+    price: 150,
     imageUrl: '/assets/global/shop/backgrounds/Alien Planet Background.jpg',
     tag: 'Background',
     description: 'A beautiful planet with shiny rings glowing in outer space.'
@@ -69,7 +69,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: 'BACKGROUND',
     category: 'PROFILE',
     subCategory: 'Background',
-    price: 350,
+    price: 150,
     imageUrl: '/assets/global/shop/backgrounds/Alien Space Background.jpg',
     tag: 'Background',
     description: 'A colorful cloud of space dust where new stars are born.'
@@ -80,7 +80,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: 'BACKGROUND',
     category: 'PROFILE',
     subCategory: 'Background',
-    price: 400,
+    price: 150,
     imageUrl: '/assets/global/shop/backgrounds/Alien Spaceship Background.jpg',
     tag: 'Background',
     description: 'The giant docking bay inside a friendly alien flagship.'
@@ -91,7 +91,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: 'BACKGROUND',
     category: 'PROFILE',
     subCategory: 'Background',
-    price: 300,
+    price: 150,
     imageUrl: '/assets/global/shop/backgrounds/City Background.jpg',
     tag: 'Background',
     description: 'A futuristic city protected by energy shields and flying cars.'
@@ -102,7 +102,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: 'BACKGROUND',
     category: 'PROFILE',
     subCategory: 'Background',
-    price: 320,
+    price: 150,
     imageUrl: '/assets/global/shop/backgrounds/Galaxy Background.jpg',
     tag: 'Background',
     description: 'A giant spinning galaxy filled with billions of shining stars!'
@@ -113,7 +113,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: 'BACKGROUND',
     category: 'PROFILE',
     subCategory: 'Background',
-    price: 200,
+    price: 150,
     imageUrl: '/assets/global/shop/backgrounds/Isolated Space Background.jpg',
     tag: 'Background',
     description: 'A calm, peaceful view of twinkling stars in deep space.'
@@ -124,7 +124,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: 'BACKGROUND',
     category: 'PROFILE',
     subCategory: 'Background',
-    price: 350,
+    price: 150,
     imageUrl: '/assets/global/shop/backgrounds/Mars Background.jpg',
     tag: 'Background',
     description: 'The red hills of Mars under a peaceful starry blue sunset.'
@@ -135,7 +135,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: 'BACKGROUND',
     category: 'PROFILE',
     subCategory: 'Background',
-    price: 280,
+    price: 150,
     imageUrl: '/assets/global/shop/backgrounds/Meteor Background.jpg',
     tag: 'Background',
     description: 'A fast shower of bright shooting meteors flying past!'
@@ -146,7 +146,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: 'BACKGROUND',
     category: 'PROFILE',
     subCategory: 'Background',
-    price: 320,
+    price: 150,
     imageUrl: '/assets/global/shop/backgrounds/Purple Galaxy Background.jpg',
     tag: 'Background',
     description: 'A bright purple space cloud that lights up the dark sky.'
@@ -157,7 +157,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: 'BACKGROUND',
     category: 'PROFILE',
     subCategory: 'Background',
-    price: 260,
+    price: 150,
     imageUrl: '/assets/global/shop/backgrounds/Satellites Background.jpg',
     tag: 'Background',
     description: 'Friendly space satellites sending messages between planets!'
@@ -168,7 +168,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: 'BACKGROUND',
     category: 'PROFILE',
     subCategory: 'Background',
-    price: 220,
+    price: 150,
     imageUrl: '/assets/global/shop/backgrounds/Space Game Background.jpg',
     tag: 'Background',
     description: 'A fun retro pixel-style world used in cadet training games.'
@@ -179,7 +179,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: 'BACKGROUND',
     category: 'PROFILE',
     subCategory: 'Background',
-    price: 380,
+    price: 150,
     imageUrl: '/assets/global/shop/backgrounds/Space Platform Background.jpg',
     tag: 'Background',
     description: 'An observation deck where rocket ships refuel and rest.'
@@ -190,7 +190,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: 'BACKGROUND',
     category: 'PROFILE',
     subCategory: 'Background',
-    price: 420,
+    price: 150,
     imageUrl: '/assets/global/shop/backgrounds/Spaceship Background.jpg',
     tag: 'Background',
     description: 'The main cockpit of a big cruiser heading to outer planets.'
@@ -201,7 +201,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: 'BACKGROUND',
     category: 'PROFILE',
     subCategory: 'Background',
-    price: 450,
+    price: 150,
     imageUrl: '/assets/global/shop/backgrounds/Travel Wallpaper.jpg',
     tag: 'Background',
     description: 'Zooming super fast across galaxies through warp speed!'
@@ -216,7 +216,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: 'ICON',
     category: 'PROFILE',
     subCategory: 'Icons',
-    price: 150,
+    price: 100,
     imageUrl: '/assets/global/shop/avatars/Astronaut Portrait_3.png',
     tag: 'Profile Icon',
     description: 'A bright red space helmet ready for rocket launches and space walks.'
@@ -227,7 +227,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: 'ICON',
     category: 'PROFILE',
     subCategory: 'Icons',
-    price: 180,
+    price: 100,
     imageUrl: '/assets/global/shop/avatars/Astronaut Portrait_5.png',
     tag: 'Profile Icon',
     description: 'A cool blue astronaut suit made for floating around space stations.'
@@ -238,7 +238,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: 'ICON',
     category: 'PROFILE',
     subCategory: 'Icons',
-    price: 220,
+    price: 100,
     imageUrl: '/assets/global/shop/avatars/Astronaut Portrait_14.png',
     tag: 'Profile Icon',
     description: 'A shiny golden helmet that shields your eyes from bright solar flares.'
@@ -249,32 +249,32 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: 'ICON',
     category: 'PROFILE',
     subCategory: 'Icons',
-    price: 250,
+    price: 100,
     imageUrl: '/assets/global/shop/avatars/Astronaut Portrait_15.png',
     tag: 'Profile Icon',
     description: 'A trusted space explorer who has traveled all across the solar system.'
   },
   {
     id: 'icon-fox-explorer',
-    title: 'Clever Fox',
+    title: 'Clever Squirrel',
     type: 'ICON',
     category: 'PROFILE',
     subCategory: 'Icons',
-    price: 180,
+    price: 100,
     imageUrl: '/assets/global/shop/avatars/Animal Portrait_6.png',
     tag: 'Profile Icon',
-    description: 'A curious and speedy little fox looking for hidden space treasures.'
+    description: 'A curious and speedy little squirrel looking for hidden space treasures.'
   },
   {
     id: 'icon-wolf-scout',
-    title: 'Brave Wolf Scout',
+    title: 'Brave Cat Scout',
     type: 'ICON',
     category: 'PROFILE',
     subCategory: 'Icons',
-    price: 180,
+    price: 100,
     imageUrl: '/assets/global/shop/avatars/Anthropomorphic_9.png',
     tag: 'Profile Icon',
-    description: 'A loyal canine scout who loves exploring rocky moon trails.'
+    description: 'A nimble feline scout who loves exploring rocky moon trails.'
   },
   {
     id: 'icon-cyber-panda',
@@ -282,7 +282,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: 'ICON',
     category: 'PROFILE',
     subCategory: 'Icons',
-    price: 200,
+    price: 100,
     imageUrl: '/assets/global/shop/avatars/Panda Portrait_7.png',
     tag: 'Profile Icon',
     description: 'A calm and friendly panda wearing futuristic goggles.'
@@ -293,7 +293,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: 'ICON',
     category: 'PROFILE',
     subCategory: 'Icons',
-    price: 200,
+    price: 100,
     imageUrl: '/assets/global/shop/avatars/Penguin Portrait_3.png',
     tag: 'Profile Icon',
     description: 'A cheerful penguin bundled up and ready to slide on icy planets.'
@@ -304,7 +304,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: 'ICON',
     category: 'PROFILE',
     subCategory: 'Icons',
-    price: 140,
+    price: 100,
     imageUrl: '/assets/global/shop/avatars/gameboy portrait_3.png',
     tag: 'Profile Icon',
     description: 'A classic green pixel astronaut straight out of a handheld video game.'
@@ -315,7 +315,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: 'ICON',
     category: 'PROFILE',
     subCategory: 'Icons',
-    price: 140,
+    price: 100,
     imageUrl: '/assets/global/shop/avatars/gameboy portrait_6.png',
     tag: 'Profile Icon',
     description: 'A warm amber pixel astronaut glowing like an old computer screen.'
@@ -326,7 +326,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: 'ICON',
     category: 'PROFILE',
     subCategory: 'Icons',
-    price: 150,
+    price: 100,
     imageUrl: '/assets/global/shop/avatars/Little Girl Portrait_2.png',
     tag: 'Profile Icon',
     description: 'A smiling young space cadet excited to learn how to code.'
@@ -337,7 +337,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: 'ICON',
     category: 'PROFILE',
     subCategory: 'Icons',
-    price: 220,
+    price: 100,
     imageUrl: '/assets/global/shop/avatars/Blacksmith Portrait_2.png',
     tag: 'Profile Icon',
     description: 'A strong workshop mechanic who loves building engines and fixing tools.'
@@ -348,7 +348,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: 'ICON',
     category: 'PROFILE',
     subCategory: 'Icons',
-    price: 200,
+    price: 100,
     imageUrl: '/assets/global/shop/avatars/Blond Villager Women_4.png',
     tag: 'Profile Icon',
     description: 'A cheerful space colonist who greets every new visitor with a big smile.'
@@ -359,7 +359,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: 'ICON',
     category: 'PROFILE',
     subCategory: 'Icons',
-    price: 180,
+    price: 100,
     imageUrl: '/assets/global/shop/avatars/Peasant portrait_3.png',
     tag: 'Profile Icon',
     description: 'A helpful pilot who drives rovers across bumpy craters.'
@@ -370,7 +370,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: 'ICON',
     category: 'PROFILE',
     subCategory: 'Icons',
-    price: 180,
+    price: 100,
     imageUrl: '/assets/global/shop/avatars/Women Baker Portrait5.png',
     tag: 'Profile Icon',
     description: 'Bakes the yummiest space cookies and treats for hungry astronauts.'
@@ -381,7 +381,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: 'ICON',
     category: 'PROFILE',
     subCategory: 'Icons',
-    price: 190,
+    price: 100,
     imageUrl: '/assets/global/shop/avatars/Women Peasant_1.png',
     tag: 'Profile Icon',
     description: 'Loves growing fresh vegetables and colorful flowers in orbital greenhouses.'
@@ -392,7 +392,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: 'ICON',
     category: 'PROFILE',
     subCategory: 'Icons',
-    price: 240,
+    price: 100,
     imageUrl: '/assets/global/shop/avatars/Man Mafia_13.png',
     tag: 'Profile Icon',
     description: 'A slick investigator in a hat who solves secrets across spaceports.'
@@ -403,7 +403,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: 'ICON',
     category: 'PROFILE',
     subCategory: 'Icons',
-    price: 240,
+    price: 100,
     imageUrl: '/assets/global/shop/avatars/Elf_4.png',
     tag: 'Profile Icon',
     description: 'A swift elf with sharp eyes who never misses a target.'
@@ -414,7 +414,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: 'ICON',
     category: 'PROFILE',
     subCategory: 'Icons',
-    price: 260,
+    price: 100,
     imageUrl: '/assets/global/shop/avatars/Elf_6.png',
     tag: 'Profile Icon',
     description: 'A magical elf who reads star maps and casts glowing light spells.'
@@ -425,7 +425,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: 'ICON',
     category: 'PROFILE',
     subCategory: 'Icons',
-    price: 230,
+    price: 100,
     imageUrl: '/assets/global/shop/avatars/Elf_10.png',
     tag: 'Profile Icon',
     description: 'A gentle friend to alien creatures and glowing space plants.'
@@ -436,7 +436,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: 'ICON',
     category: 'PROFILE',
     subCategory: 'Icons',
-    price: 250,
+    price: 100,
     imageUrl: '/assets/global/shop/avatars/Elf_14.png',
     tag: 'Profile Icon',
     description: 'A brave silver-haired protector watching over quiet starry skies.'
@@ -447,7 +447,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: 'ICON',
     category: 'PROFILE',
     subCategory: 'Icons',
-    price: 260,
+    price: 100,
     imageUrl: '/assets/global/shop/avatars/Elf_20.png',
     tag: 'Profile Icon',
     description: 'A calm and thoughtful guide who knows all about distant galaxies.'
@@ -458,7 +458,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: 'ICON',
     category: 'PROFILE',
     subCategory: 'Icons',
-    price: 270,
+    price: 100,
     imageUrl: '/assets/global/shop/avatars/Magic Heroes by Captainskeleto 1_9.png',
     tag: 'Profile Icon',
     description: 'A mysterious wizard dressed in purple with sparkling magic energy.'
@@ -469,7 +469,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: 'ICON',
     category: 'PROFILE',
     subCategory: 'Icons',
-    price: 270,
+    price: 100,
     imageUrl: '/assets/global/shop/avatars/Magic Heroes by Captainskeleto 1_12.png',
     tag: 'Profile Icon',
     description: 'A valiant knight wearing shiny green armor to keep space stations safe.'
@@ -480,7 +480,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: 'ICON',
     category: 'PROFILE',
     subCategory: 'Icons',
-    price: 300,
+    price: 100,
     imageUrl: '/assets/global/shop/avatars/Magic Heroes by Captainskeleto 3_2.png',
     tag: 'Profile Icon',
     description: 'A heroic warrior clad in gleaming golden armor ready for any adventure.'
@@ -495,7 +495,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: 'BORDER',
     category: 'PROFILE',
     subCategory: 'Borders',
-    price: 250,
+    price: 150,
     imageUrl: '/assets/global/shop/borders/Austere Balcony.svg',
     tag: 'Border',
     description: 'An elegant cosmic balcony overlooking the endless starry abyss.'
@@ -506,7 +506,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: 'BORDER',
     category: 'PROFILE',
     subCategory: 'Borders',
-    price: 220,
+    price: 150,
     imageUrl: '/assets/global/shop/borders/Cupcake.svg',
     tag: 'Border',
     description: 'A cheerful pastel border topped with delicious frosted cupcakes.'
@@ -517,7 +517,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: 'BORDER',
     category: 'PROFILE',
     subCategory: 'Borders',
-    price: 250,
+    price: 150,
     imageUrl: '/assets/global/shop/borders/Flame On!.svg',
     tag: 'Border',
     description: 'A blazing circular frame radiating with fiery energy.'
@@ -528,7 +528,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: 'BORDER',
     category: 'PROFILE',
     subCategory: 'Borders',
-    price: 220,
+    price: 150,
     imageUrl: '/assets/global/shop/borders/Spring Blossom.svg',
     tag: 'Border',
     description: 'A vibrant floral border blooming with cheerful botanical petals.'
@@ -539,7 +539,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: 'BORDER',
     category: 'PROFILE',
     subCategory: 'Borders',
-    price: 220,
+    price: 150,
     imageUrl: '/assets/global/shop/borders/Busy Bees.svg',
     tag: 'Border',
     description: 'A buzzing cosmic hive border surrounded by hardworking starry bees.'
@@ -550,7 +550,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: 'BORDER',
     category: 'PROFILE',
     subCategory: 'Borders',
-    price: 180,
+    price: 150,
     imageUrl: '/assets/global/shop/borders/Knitted Love.svg',
     tag: 'Border',
     description: 'A handcrafted pink yarn border stitched with sweet hearts.'
@@ -561,7 +561,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: 'BORDER',
     category: 'PROFILE',
     subCategory: 'Borders',
-    price: 250,
+    price: 150,
     imageUrl: '/assets/global/shop/borders/Mushrooms.svg',
     tag: 'Border',
     description: 'A whimsical forest border decorated with cozy red mushrooms.'
@@ -572,7 +572,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: 'BORDER',
     category: 'PROFILE',
     subCategory: 'Borders',
-    price: 260,
+    price: 150,
     imageUrl: '/assets/global/shop/borders/Paper Cuttings.svg',
     tag: 'Border',
     description: 'An intricate craft border inspired by handcrafted paper art.'
@@ -583,7 +583,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: 'BORDER',
     category: 'PROFILE',
     subCategory: 'Borders',
-    price: 200,
+    price: 150,
     imageUrl: '/assets/global/shop/borders/Ropes.svg',
     tag: 'Border',
     description: 'A sturdy twisted rope border made for rugged adventurers.'
@@ -594,7 +594,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: 'BORDER',
     category: 'PROFILE',
     subCategory: 'Borders',
-    price: 240,
+    price: 150,
     imageUrl: '/assets/global/shop/borders/Garden.svg',
     tag: 'Border',
     description: 'A lush botanical border blooming with verdant vines, blossoms, and nature’s charm.'
@@ -605,7 +605,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: 'BORDER',
     category: 'PROFILE',
     subCategory: 'Borders',
-    price: 260,
+    price: 150,
     imageUrl: '/assets/global/shop/borders/Golden Ring.svg',
     tag: 'Border',
     description: 'A polished radiant golden ring border shimmering with pure stellar brilliance.'
@@ -616,7 +616,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: 'BORDER',
     category: 'PROFILE',
     subCategory: 'Borders',
-    price: 280,
+    price: 150,
     imageUrl: '/assets/global/shop/borders/Red Ruby.svg',
     tag: 'Border',
     description: 'A majestic frame embedded with precious glowing red rubies and royal gems.'
@@ -627,7 +627,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: 'BORDER',
     category: 'PROFILE',
     subCategory: 'Borders',
-    price: 250,
+    price: 150,
     imageUrl: '/assets/global/shop/borders/Snowy Winter.svg',
     tag: 'Border',
     description: 'A frosty crystal border glistening with falling snowflakes and winter magic.'
@@ -638,7 +638,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: 'BORDER',
     category: 'PROFILE',
     subCategory: 'Borders',
-    price: 260,
+    price: 150,
     imageUrl: '/assets/global/shop/borders/Tech Girl and Boy.svg',
     tag: 'Border',
     description: 'A futuristic neon cyber border celebrating young coders and stellar tech explorers.'
@@ -649,7 +649,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: 'BORDER',
     category: 'PROFILE',
     subCategory: 'Borders',
-    price: 270,
+    price: 150,
     imageUrl: '/assets/global/shop/borders/Tech Robot.svg',
     tag: 'Border',
     description: 'An advanced robotic circuit frame equipped with high-tech gears and mechanical sensors.'
@@ -664,7 +664,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Hair",
-    price: 140,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/hair/black/Bangs.png",
     tag: "Hair",
     description: "A sleek and stylish black hairstyle featuring soft bangs."
@@ -675,7 +675,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Hair",
-    price: 120,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/hair/black/Bowl Cut.png",
     tag: "Hair",
     description: "A classic rounded bowl cut with a modern space-cadet vibe."
@@ -686,7 +686,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Hair",
-    price: 150,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/hair/black/Curly.png",
     tag: "Hair",
     description: "Bouncy and full-bodied black curls packed with stellar personality."
@@ -697,7 +697,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Hair",
-    price: 150,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/hair/black/Formal.png",
     tag: "Hair",
     description: "A refined and polished black hairstyle tailored for star fleet ceremonies."
@@ -708,7 +708,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Hair",
-    price: 160,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/hair/black/Messy.png",
     tag: "Hair",
     description: "A carefree and effortlessly cool tousled black hairstyle."
@@ -719,7 +719,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Hair",
-    price: 140,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/hair/black/Pigtails.png",
     tag: "Hair",
     description: "Playful twin black pigtails full of youthful energetic charm."
@@ -730,7 +730,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Hair",
-    price: 160,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/hair/black/Spiky.png",
     tag: "Hair",
     description: "An energetic, gravity-defying spiky black hairstyle."
@@ -741,7 +741,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Hair",
-    price: 150,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/hair/black/Wavy.png",
     tag: "Hair",
     description: "Flowing and smooth black waves that shimmer under nebula light."
@@ -752,7 +752,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Hair",
-    price: 140,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/hair/blonde/Bangs.svg",
     tag: "Hair",
     description: "A sleek and stylish blonde hairstyle featuring soft bangs."
@@ -763,7 +763,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Hair",
-    price: 120,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/hair/blonde/Bowl Cut.svg",
     tag: "Hair",
     description: "A classic rounded bowl cut with a modern space-cadet vibe."
@@ -774,7 +774,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Hair",
-    price: 150,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/hair/blonde/Curly.svg",
     tag: "Hair",
     description: "Bouncy and full-bodied blonde curls packed with stellar personality."
@@ -785,7 +785,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Hair",
-    price: 150,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/hair/blonde/Formal.svg",
     tag: "Hair",
     description: "A refined and polished blonde hairstyle tailored for star fleet ceremonies."
@@ -796,7 +796,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Hair",
-    price: 160,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/hair/blonde/Messy.svg",
     tag: "Hair",
     description: "A carefree and effortlessly cool tousled blonde hairstyle."
@@ -807,7 +807,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Hair",
-    price: 140,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/hair/blonde/Pigtails.svg",
     tag: "Hair",
     description: "Playful twin blonde pigtails full of youthful energetic charm."
@@ -818,7 +818,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Hair",
-    price: 160,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/hair/blonde/Spiky.svg",
     tag: "Hair",
     description: "An energetic, gravity-defying spiky blonde hairstyle."
@@ -829,7 +829,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Hair",
-    price: 150,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/hair/blonde/Wavy.svg",
     tag: "Hair",
     description: "Flowing and smooth blonde waves that shimmer under nebula light."
@@ -840,7 +840,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Hair",
-    price: 140,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/hair/brown/Bangs.svg",
     tag: "Hair",
     description: "A sleek and stylish brown hairstyle featuring soft bangs."
@@ -851,7 +851,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Hair",
-    price: 120,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/hair/brown/Bowl Cut.svg",
     tag: "Hair",
     description: "A classic rounded bowl cut with a modern space-cadet vibe."
@@ -862,7 +862,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Hair",
-    price: 150,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/hair/brown/Curly.svg",
     tag: "Hair",
     description: "Bouncy and full-bodied brown curls packed with stellar personality."
@@ -873,7 +873,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Hair",
-    price: 150,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/hair/brown/Formal.svg",
     tag: "Hair",
     description: "A refined and polished brown hairstyle tailored for star fleet ceremonies."
@@ -884,7 +884,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Hair",
-    price: 160,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/hair/brown/Messy.svg",
     tag: "Hair",
     description: "A carefree and effortlessly cool tousled brown hairstyle."
@@ -895,7 +895,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Hair",
-    price: 140,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/hair/brown/Pigtails.svg",
     tag: "Hair",
     description: "Playful twin brown pigtails full of youthful energetic charm."
@@ -906,7 +906,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Hair",
-    price: 160,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/hair/brown/Spiky.svg",
     tag: "Hair",
     description: "An energetic, gravity-defying spiky brown hairstyle."
@@ -917,7 +917,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Hair",
-    price: 150,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/hair/brown/Wavy.svg",
     tag: "Hair",
     description: "Flowing and smooth brown waves that shimmer under nebula light."
@@ -928,7 +928,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Hair",
-    price: 140,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/hair/ginger/Bangs.svg",
     tag: "Hair",
     description: "A sleek and stylish ginger hairstyle featuring soft bangs."
@@ -939,7 +939,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Hair",
-    price: 120,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/hair/ginger/Bowl Cut.svg",
     tag: "Hair",
     description: "A classic rounded bowl cut with a modern space-cadet vibe."
@@ -950,7 +950,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Hair",
-    price: 150,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/hair/ginger/Curly.svg",
     tag: "Hair",
     description: "Bouncy and full-bodied ginger curls packed with stellar personality."
@@ -961,7 +961,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Hair",
-    price: 150,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/hair/ginger/Formal.svg",
     tag: "Hair",
     description: "A refined and polished ginger hairstyle tailored for star fleet ceremonies."
@@ -972,7 +972,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Hair",
-    price: 160,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/hair/ginger/Messy.svg",
     tag: "Hair",
     description: "A carefree and effortlessly cool tousled ginger hairstyle."
@@ -983,7 +983,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Hair",
-    price: 140,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/hair/ginger/Pigtails.svg",
     tag: "Hair",
     description: "Playful twin ginger pigtails full of youthful energetic charm."
@@ -994,7 +994,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Hair",
-    price: 160,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/hair/ginger/Spiky.svg",
     tag: "Hair",
     description: "An energetic, gravity-defying spiky ginger hairstyle."
@@ -1005,7 +1005,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Hair",
-    price: 150,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/hair/ginger/Wavy.svg",
     tag: "Hair",
     description: "Flowing and smooth ginger waves that shimmer under nebula light."
@@ -1016,7 +1016,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Hair",
-    price: 140,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/hair/red/Bangs.svg",
     tag: "Hair",
     description: "A sleek and stylish red hairstyle featuring soft bangs."
@@ -1027,7 +1027,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Hair",
-    price: 120,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/hair/red/Bowl Cut.svg",
     tag: "Hair",
     description: "A classic rounded bowl cut with a modern space-cadet vibe."
@@ -1038,7 +1038,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Hair",
-    price: 150,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/hair/red/Curly.svg",
     tag: "Hair",
     description: "Bouncy and full-bodied red curls packed with stellar personality."
@@ -1049,7 +1049,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Hair",
-    price: 150,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/hair/red/Formal.svg",
     tag: "Hair",
     description: "A refined and polished red hairstyle tailored for star fleet ceremonies."
@@ -1060,7 +1060,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Hair",
-    price: 160,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/hair/red/Messy.svg",
     tag: "Hair",
     description: "A carefree and effortlessly cool tousled red hairstyle."
@@ -1071,7 +1071,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Hair",
-    price: 140,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/hair/red/Pigtails.svg",
     tag: "Hair",
     description: "Playful twin red pigtails full of youthful energetic charm."
@@ -1082,7 +1082,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Hair",
-    price: 160,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/hair/red/Spiky.svg",
     tag: "Hair",
     description: "An energetic, gravity-defying spiky red hairstyle."
@@ -1093,7 +1093,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Hair",
-    price: 150,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/hair/red/Wavy.svg",
     tag: "Hair",
     description: "Flowing and smooth red waves that shimmer under nebula light."
@@ -1104,7 +1104,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Hair",
-    price: 140,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/hair/white/Bangs.svg",
     tag: "Hair",
     description: "A sleek and stylish white hairstyle featuring soft bangs."
@@ -1115,7 +1115,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Hair",
-    price: 120,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/hair/white/Bowl Cut.svg",
     tag: "Hair",
     description: "A classic rounded bowl cut with a modern space-cadet vibe."
@@ -1126,7 +1126,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Hair",
-    price: 150,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/hair/white/Curly.svg",
     tag: "Hair",
     description: "Bouncy and full-bodied white curls packed with stellar personality."
@@ -1137,7 +1137,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Hair",
-    price: 150,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/hair/white/Formal.svg",
     tag: "Hair",
     description: "A refined and polished white hairstyle tailored for star fleet ceremonies."
@@ -1148,7 +1148,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Hair",
-    price: 160,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/hair/white/Messy.svg",
     tag: "Hair",
     description: "A carefree and effortlessly cool tousled white hairstyle."
@@ -1159,7 +1159,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Hair",
-    price: 140,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/hair/white/Pigtails.svg",
     tag: "Hair",
     description: "Playful twin white pigtails full of youthful energetic charm."
@@ -1170,7 +1170,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Hair",
-    price: 160,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/hair/white/Spiky.svg",
     tag: "Hair",
     description: "An energetic, gravity-defying spiky white hairstyle."
@@ -1181,7 +1181,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Hair",
-    price: 150,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/hair/white/Wavy.svg",
     tag: "Hair",
     description: "Flowing and smooth white waves that shimmer under nebula light."
@@ -1192,7 +1192,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Accessories",
-    price: 240,
+    price: 80,
     imageUrl: "/assets/global/shop/avatar/accessories/AstroHelmet.svg",
     tag: "Accessory",
     description: "A pressurized astronaut helmet with an anti-glare gold visor."
@@ -1203,7 +1203,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Accessories",
-    price: 250,
+    price: 80,
     imageUrl: "/assets/global/shop/avatar/accessories/Crown.svg",
     tag: "Accessory",
     description: "A majestic golden crown studded with shimmering cosmic gems."
@@ -1214,7 +1214,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Accessories",
-    price: 140,
+    price: 80,
     imageUrl: "/assets/global/shop/avatar/accessories/Cute Bow.svg",
     tag: "Accessory",
     description: "A charming silk ribbon bow to brighten any explorer's day."
@@ -1225,7 +1225,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Accessories",
-    price: 160,
+    price: 80,
     imageUrl: "/assets/global/shop/avatar/accessories/Field Hat.svg",
     tag: "Accessory",
     description: "A durable wide-brim hat ideal for desert moons and sunny expeditions."
@@ -1236,7 +1236,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Accessories",
-    price: 150,
+    price: 80,
     imageUrl: "/assets/global/shop/avatar/accessories/Flowers.svg",
     tag: "Accessory",
     description: "A fragrant crown of freshly harvested flowers from biodome greenhouses."
@@ -1247,7 +1247,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Accessories",
-    price: 180,
+    price: 80,
     imageUrl: "/assets/global/shop/avatar/accessories/Headset.svg",
     tag: "Accessory",
     description: "A tactical communications headset tuned into deep space frequencies."
@@ -1258,7 +1258,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Accessories",
-    price: 200,
+    price: 80,
     imageUrl: "/assets/global/shop/avatar/accessories/Horns.svg",
     tag: "Accessory",
     description: "A pair of mystical glowing horns forged in stellar plasma."
@@ -1269,7 +1269,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Accessories",
-    price: 130,
+    price: 80,
     imageUrl: "/assets/global/shop/avatar/accessories/Night Cap.svg",
     tag: "Accessory",
     description: "A cozy pointed sleeping cap designed for sweet dreams in zero gravity."
@@ -1280,7 +1280,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Accessories",
-    price: 140,
+    price: 80,
     imageUrl: "/assets/global/shop/avatar/accessories/Orange Cap.svg",
     tag: "Accessory",
     description: "A bold orange baseball cap bringing sporty street vibes to orbit."
@@ -1291,7 +1291,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Accessories",
-    price: 150,
+    price: 80,
     imageUrl: "/assets/global/shop/avatar/accessories/Straw Hat.svg",
     tag: "Accessory",
     description: "A breezy woven straw hat inspired by legendary explorers of old."
@@ -1302,7 +1302,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Accessories",
-    price: 110,
+    price: 80,
     imageUrl: "/assets/global/shop/avatar/accessories/Bandages.svg",
     tag: "Accessory",
     description: "Sturdy facial dressings proving you survived your latest daring mission."
@@ -1313,7 +1313,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Accessories",
-    price: 130,
+    price: 80,
     imageUrl: "/assets/global/shop/avatar/accessories/BurglarMask.svg",
     tag: "Accessory",
     description: "A classic domino eye mask for stealthy nighttime operations."
@@ -1324,7 +1324,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Accessories",
-    price: 100,
+    price: 80,
     imageUrl: "/assets/global/shop/avatar/accessories/ClownNose.svg",
     tag: "Accessory",
     description: "A bright red clown nose guaranteed to bring smiles across the station."
@@ -1335,7 +1335,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Accessories",
-    price: 140,
+    price: 80,
     imageUrl: "/assets/global/shop/avatar/accessories/Eyepatch.svg",
     tag: "Accessory",
     description: "A rugged leather eyepatch worn by legendary space privateers."
@@ -1346,7 +1346,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Accessories",
-    price: 120,
+    price: 80,
     imageUrl: "/assets/global/shop/avatar/accessories/Mask.svg",
     tag: "Accessory",
     description: "A breathable sterile mask filtering hazardous atmospheric particles."
@@ -1357,7 +1357,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Accessories",
-    price: 160,
+    price: 80,
     imageUrl: "/assets/global/shop/avatar/accessories/Monocle.svg",
     tag: "Accessory",
     description: "An aristocratic golden monocle adding instant intellectual flair."
@@ -1368,7 +1368,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Accessories",
-    price: 110,
+    price: 80,
     imageUrl: "/assets/global/shop/avatar/accessories/Moustache.svg",
     tag: "Accessory",
     description: "A handsomely groomed handlebar moustache worthy of an admiral."
@@ -1379,7 +1379,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Accessories",
-    price: 170,
+    price: 80,
     imageUrl: "/assets/global/shop/avatar/accessories/Shades.svg",
     tag: "Accessory",
     description: "Tinted sunglasses that block out ultraviolet radiation and solar flares."
@@ -1390,7 +1390,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Accessories",
-    price: 110,
+    price: 80,
     imageUrl: "/assets/global/shop/avatar/accessories/Whiskers.svg",
     tag: "Accessory",
     description: "Cute hand-drawn feline face whiskers for extra cosmic charm."
@@ -1402,7 +1402,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Tops",
-    price: 260,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/tops/AstroSuit.svg",
     tag: "Top",
     description: "A state-of-the-art EVA pressurized suit engineered for deep space travel."
@@ -1413,7 +1413,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Tops",
-    price: 220,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/tops/Black Jacket.svg",
     tag: "Top",
     description: "A sharp black zip-up bomber jacket lined with thermal space insulation."
@@ -1424,7 +1424,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Tops",
-    price: 210,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/tops/Sporty Jacket.svg",
     tag: "Top",
     description: "A high-performance training jacket made for low-gravity athletic drills."
@@ -1437,7 +1437,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Tops",
-    price: 180,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/tops/Hoodie.svg",
     tag: "Top",
     description: "An ultra-cozy slate pullover hoodie for relaxing after long coding sessions."
@@ -1448,7 +1448,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Tops",
-    price: 190,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/tops/Hoodie (Green).svg",
     tag: "Top",
     description: "A vibrant green hoodie bursting with natural planetary energy."
@@ -1459,7 +1459,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Tops",
-    price: 190,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/tops/Hoodie (Orange).svg",
     tag: "Top",
     description: "A high-visibility orange fleece hoodie radiating sunny warmth."
@@ -1470,7 +1470,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Tops",
-    price: 190,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/tops/Hoodie (Purple).svg",
     tag: "Top",
     description: "A rich royal purple hoodie combining comfort and stellar style."
@@ -1481,7 +1481,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Tops",
-    price: 190,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/tops/Hoodie (Red).svg",
     tag: "Top",
     description: "A bold red hoodie that stands out in any cosmic environment."
@@ -1492,7 +1492,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Tops",
-    price: 190,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/tops/Hoodie (Yellow).svg",
     tag: "Top",
     description: "A warm yellow hoodie bringing happiness wherever you explore."
@@ -1505,7 +1505,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Tops",
-    price: 190,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/tops/Sweater.svg",
     tag: "Top",
     description: "A chunky hand-knit cream sweater keeping you warm in deep space chill."
@@ -1516,7 +1516,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Tops",
-    price: 200,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/tops/Sweater (Black).svg",
     tag: "Top",
     description: "A sophisticated black knitted pullover suited for chilly evenings."
@@ -1527,7 +1527,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Tops",
-    price: 200,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/tops/Sweater (Green).svg",
     tag: "Top",
     description: "A deep pine-green knit sweater crafted with warm thermal wool."
@@ -1538,7 +1538,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Tops",
-    price: 200,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/tops/Sweater (Yellow).svg",
     tag: "Top",
     description: "A golden knit sweater glowing with rich autumn colors."
@@ -1551,7 +1551,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Tops",
-    price: 140,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/tops/Tee.svg",
     tag: "Top",
     description: "A soft and timeless cotton crewneck t-shirt perfect for daily wear."
@@ -1562,7 +1562,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Tops",
-    price: 170,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/tops/Stripey Top.svg",
     tag: "Top",
     description: "A monochrome striped crewneck offering timeless nautical flair."
@@ -1573,7 +1573,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Tops",
-    price: 180,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/tops/Stripey Top (Blue).svg",
     tag: "Top",
     description: "A navy-striped long sleeve top reminiscent of ocean-faring voyages."
@@ -1584,7 +1584,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Tops",
-    price: 180,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/tops/Stripey Top (Green).svg",
     tag: "Top",
     description: "A fresh green striped top designed for casual weekend leisure."
@@ -1595,7 +1595,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Tops",
-    price: 180,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/tops/Stripey Top (Red).svg",
     tag: "Top",
     description: "A vibrant red and white striped shirt full of festive spirit."
@@ -1608,7 +1608,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Tops",
-    price: 230,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/tops/Cloudy Dress.svg",
     tag: "Top",
     description: "A dreamy baby-blue dress patterned with fluffy white stratospheric clouds."
@@ -1619,7 +1619,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Tops",
-    price: 240,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/tops/Cloudy Dress (Black).svg",
     tag: "Top",
     description: "A chic black dress floating with mystical nocturnal clouds."
@@ -1630,7 +1630,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Tops",
-    price: 230,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/tops/Cloudy Dress (Pink).svg",
     tag: "Top",
     description: "A lovely pink sun-dress adorned with whimsical cotton clouds."
@@ -1641,7 +1641,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Tops",
-    price: 230,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/tops/Cloudy Dress (Yellow).svg",
     tag: "Top",
     description: "A cheerful sunny dress brightening up every planetary colony."
@@ -1652,7 +1652,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Tops",
-    price: 240,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/tops/Formal Dress.svg",
     tag: "Top",
     description: "An elegant dark evening gown tailored for diplomatic galas and banquets."
@@ -1663,7 +1663,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Tops",
-    price: 250,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/tops/Formal Dress (Green).svg",
     tag: "Top",
     description: "A luxurious emerald silk gown that sparkles under chandeliers."
@@ -1674,7 +1674,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Tops",
-    price: 250,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/tops/Formal Dress (Red).svg",
     tag: "Top",
     description: "A breathtaking crimson velvet gown radiating confidence and grace."
@@ -1685,7 +1685,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Tops",
-    price: 250,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/tops/Formal Dress (White).svg",
     tag: "Top",
     description: "A pristine white formal dress woven from radiant cosmic fibers."
@@ -1698,7 +1698,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Tops",
-    price: 150,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/tops/Apron.svg",
     tag: "Top",
     description: "A clean culinary apron ready for whipping up gourmet space meals."
@@ -1709,7 +1709,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Tops",
-    price: 160,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/tops/Apron (Blue).svg",
     tag: "Top",
     description: "A sturdy denim-blue utility apron with deep tool pockets."
@@ -1720,7 +1720,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Tops",
-    price: 160,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/tops/Apron (Orange).svg",
     tag: "Top",
     description: "A warm and bright orange apron favored by spaceport baristas."
@@ -1731,7 +1731,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Tops",
-    price: 160,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/tops/Apron (Pink).svg",
     tag: "Top",
     description: "A pastel pink baking apron dusted with celestial sweetness."
@@ -1744,7 +1744,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Bottoms",
-    price: 230,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/bottoms/AstroPants.svg",
     tag: "Bottom",
     description: "Reinforced pressure trousers matching the legendary AstroSuit."
@@ -1755,7 +1755,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Bottoms",
-    price: 170,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/bottoms/Black Pants.svg",
     tag: "Bottom",
     description: "Crisply pressed dark trousers perfect for any smart occasion."
@@ -1766,7 +1766,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Bottoms",
-    price: 180,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/bottoms/Jeans.svg",
     tag: "Bottom",
     description: "Rugged and dependable denim jeans that never go out of style."
@@ -1777,7 +1777,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Bottoms",
-    price: 180,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/bottoms/Sporty Pants.svg",
     tag: "Bottom",
     description: "Lightweight, breathable track pants equipped with flexible stretch panels."
@@ -1790,7 +1790,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Bottoms",
-    price: 160,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/bottoms/Cargo Shorts.svg",
     tag: "Bottom",
     description: "Roomy multi-pocket cargo shorts built for hot planetary days."
@@ -1801,7 +1801,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Bottoms",
-    price: 190,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/bottoms/Cargo Pants (Black).png",
     tag: "Bottom",
     description: "Heavy-duty tactical cargo pants engineered for covert operations."
@@ -1812,7 +1812,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Bottoms",
-    price: 190,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/bottoms/Cargo Pants (Brown).png",
     tag: "Bottom",
     description: "Sturdy earth-toned cargo trousers designed for rough wilderness trails."
@@ -1823,7 +1823,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Bottoms",
-    price: 190,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/bottoms/Cargo Pants (Red).png",
     tag: "Bottom",
     description: "Vibrant red utility trousers with reinforced knee pads."
@@ -1834,7 +1834,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Bottoms",
-    price: 190,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/bottoms/Cargo Pants (White).png",
     tag: "Bottom",
     description: "Insulated white tactical pants made for freezing polar expeditions."
@@ -1847,7 +1847,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Bottoms",
-    price: 170,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/bottoms/Pink Skirt.svg",
     tag: "Bottom",
     description: "A sweet pleated pink skirt that twirls gracefully in low gravity."
@@ -1858,7 +1858,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Bottoms",
-    price: 170,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/bottoms/Skirt (Blue).png",
     tag: "Bottom",
     description: "A classic blue A-line skirt radiating calm composure."
@@ -1869,7 +1869,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Bottoms",
-    price: 170,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/bottoms/Skirt (Red).png",
     tag: "Bottom",
     description: "A fiery red flared skirt that brightens up any setting."
@@ -1880,7 +1880,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Bottoms",
-    price: 170,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/bottoms/Skirt (White).png",
     tag: "Bottom",
     description: "An immaculate white skirt matching almost every top in your wardrobe."
@@ -1891,7 +1891,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Bottoms",
-    price: 170,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/bottoms/Skirt (Yellow).png",
     tag: "Bottom",
     description: "A cheerful yellow skirt bursting with bright positivity."
@@ -1902,7 +1902,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Bottoms",
-    price: 190,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/bottoms/Plaid Skirt.svg",
     tag: "Bottom",
     description: "A classic tartan skirt combining heritage tradition with modern school charm."
@@ -1913,7 +1913,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Bottoms",
-    price: 190,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/bottoms/Plaid Skirt (Blue).png",
     tag: "Bottom",
     description: "A smart blue plaid pleated skirt standard in naval academies."
@@ -1924,7 +1924,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Bottoms",
-    price: 190,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/bottoms/Plaid Skirt (Pink).png",
     tag: "Bottom",
     description: "A cute pink plaid skirt adding colorful charm to your outfit."
@@ -1935,7 +1935,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Bottoms",
-    price: 190,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/bottoms/Plaid Skirt (Purple).png",
     tag: "Bottom",
     description: "A mystical purple plaid skirt inspired by evening horizon skies."
@@ -1946,7 +1946,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Bottoms",
-    price: 190,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/bottoms/Plaid Skirt (White).png",
     tag: "Bottom",
     description: "A clean monochromatic plaid skirt with silver undertones."
@@ -1959,7 +1959,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Bottoms",
-    price: 200,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/bottoms/Kilt.svg",
     tag: "Bottom",
     description: "A proud tartan kilt honoring the bold heritage of ancient warrior clans."
@@ -1970,7 +1970,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Bottoms",
-    price: 200,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/bottoms/Kilt (Blue).png",
     tag: "Bottom",
     description: "A majestic blue tartan kilt tailored for royal festivities."
@@ -1981,7 +1981,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Bottoms",
-    price: 200,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/bottoms/Kilt (Brown).png",
     tag: "Bottom",
     description: "A rustic wool kilt echoing the rolling hills of the Scottish highlands."
@@ -1992,7 +1992,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Bottoms",
-    price: 200,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/bottoms/Kilt (Green).png",
     tag: "Bottom",
     description: "A deep green tartan kilt rich with forest foliage heritage."
@@ -2003,7 +2003,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Bottoms",
-    price: 200,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/bottoms/Kilt (Pink).png",
     tag: "Bottom",
     description: "A playful pastel pink kilt offering a fun twist on classic attire."
@@ -2016,7 +2016,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Bottoms",
-    price: 150,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/bottoms/Pajamas.svg",
     tag: "Bottom",
     description: "Silky soft loungewear trousers crafted for peaceful interstellar sleep."
@@ -2027,7 +2027,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Bottoms",
-    price: 150,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/bottoms/Pajamas (Black).png",
     tag: "Bottom",
     description: "Sleek black lounge pants designed for midnight stargazing."
@@ -2038,7 +2038,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Bottoms",
-    price: 150,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/bottoms/Pajamas (Blue).png",
     tag: "Bottom",
     description: "Soothing sky-blue sleepwear pants for recharging after long journeys."
@@ -2049,7 +2049,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Bottoms",
-    price: 150,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/bottoms/Pajamas (Green).png",
     tag: "Bottom",
     description: "Relaxing mint-green sleep pants soft as lunar morning mist."
@@ -2060,7 +2060,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Bottoms",
-    price: 150,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/bottoms/Pajamas (Pink).png",
     tag: "Bottom",
     description: "Candy-pink thermal sleep bottoms keeping you toasty in sleep pods."
@@ -2071,7 +2071,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Bottoms",
-    price: 150,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/bottoms/Pajamas (White).png",
     tag: "Bottom",
     description: "Pure white cotton pajama pants as gentle as a nebula cloud."
@@ -2084,7 +2084,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Bottoms",
-    price: 140,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/bottoms/Swim Trunks.svg",
     tag: "Bottom",
     description: "Quick-drying blue board shorts made for aquatic recreation."
@@ -2095,7 +2095,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Bottoms",
-    price: 140,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/bottoms/SwimTrunks (Black).png",
     tag: "Bottom",
     description: "Sleek black swim shorts resistant to chlorine and saltwater."
@@ -2106,7 +2106,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Bottoms",
-    price: 140,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/bottoms/SwimTrunks (Blue).png",
     tag: "Bottom",
     description: "Deep blue swim shorts inspired by crystal ocean tide pools."
@@ -2117,7 +2117,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Bottoms",
-    price: 140,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/bottoms/SwimTrunks (Purple).png",
     tag: "Bottom",
     description: "Eye-catching purple trunks ready for resort hydro-domes."
@@ -2128,7 +2128,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Bottoms",
-    price: 140,
+    price: 60,
     imageUrl: "/assets/global/shop/avatar/bottoms/SwimTrunks (Red).png",
     tag: "Bottom",
     description: "Bright red swim trunks crafted for sun-drenched beach worlds."
@@ -2139,7 +2139,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Shoes",
-    price: 210,
+    price: 40,
     imageUrl: "/assets/global/shop/avatar/shoes/AstroBoots.svg",
     tag: "Shoes",
     description: "Magnetic traction boots engineered for zero-G spacewalks."
@@ -2150,7 +2150,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Shoes",
-    price: 160,
+    price: 40,
     imageUrl: "/assets/global/shop/avatar/shoes/Sneakers.svg",
     tag: "Shoes",
     description: "Lightweight cushioned sneakers offering effortless all-day agility."
@@ -2161,7 +2161,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Shoes",
-    price: 180,
+    price: 40,
     imageUrl: "/assets/global/shop/avatar/shoes/Boots.svg",
     tag: "Shoes",
     description: "Durable leather combat boots built to conquer rough extraterrestrial soil."
@@ -2172,7 +2172,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Shoes",
-    price: 130,
+    price: 40,
     imageUrl: "/assets/global/shop/avatar/shoes/Sandals.svg",
     tag: "Shoes",
     description: "Casual open-toe strap sandals meant for warm planet beaches."
@@ -2183,7 +2183,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Shoes",
-    price: 170,
+    price: 40,
     imageUrl: "/assets/global/shop/avatar/shoes/Brogues.svg",
     tag: "Shoes",
     description: "Handcrafted leather dress shoes with decorative perforations."
@@ -2194,7 +2194,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Shoes",
-    price: 180,
+    price: 40,
     imageUrl: "/assets/global/shop/avatar/shoes/Brogues (Blue).svg",
     tag: "Shoes",
     description: "Striking blue leather brogues making a dapper fashion statement."
@@ -2205,7 +2205,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Shoes",
-    price: 180,
+    price: 40,
     imageUrl: "/assets/global/shop/avatar/shoes/Brogues (Green).svg",
     tag: "Shoes",
     description: "Unique moss-green dress shoes for distinguished commanders."
@@ -2216,7 +2216,7 @@ export const SHOP_CATALOG: ShopCatalogItem[] = [
     type: "AVATAR",
     category: "AVATAR",
     subCategory: "Shoes",
-    price: 180,
+    price: 40,
     imageUrl: "/assets/global/shop/avatar/shoes/Brogues (Purple).svg",
     tag: "Shoes",
     description: "Rich purple brogues tailored for the most extravagant celebrations."

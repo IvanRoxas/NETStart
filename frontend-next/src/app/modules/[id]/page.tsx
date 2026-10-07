@@ -113,13 +113,53 @@ interface Params {
 }
 
 export default async function ModuleMissionsPage({ params }: { params: Promise<Params> }) {
-  const cookieStore = await cookies();
-  const isDemoMode = cookieStore.get(DEMO_MODE_COOKIE)?.value === 'true';
-
   const session = await getServerSession(authOptions);
-  if (!session && !isDemoMode) {
+  if (!session) {
     redirect("/login");
   }
+
+  const sessionUser = session.user as any;
+  const userId = sessionUser?.id;
+  const userEmail = sessionUser?.email;
+
+  if (!userId && !userEmail) {
+    redirect("/login");
+  }
+
+  let dbUser: any = null;
+  try {
+    dbUser = await prisma.user.findUnique({
+      where: userId ? { id: userId } : { email: userEmail },
+      select: {
+        id: true,
+        canUseDemoMode: true,
+      }
+    });
+  } catch (err: any) {
+    dbUser = await prisma.user.findUnique({
+      where: userId ? { id: userId } : { email: userEmail },
+      select: {
+        id: true,
+      }
+    });
+    if (dbUser) {
+      try {
+        const raw: any = await prisma.$queryRaw`SELECT can_use_demo_mode FROM users WHERE user_id = ${dbUser.id} LIMIT 1`;
+        dbUser.canUseDemoMode = Boolean(raw?.[0]?.can_use_demo_mode);
+      } catch {
+        dbUser.canUseDemoMode = false;
+      }
+    }
+  }
+
+  if (!dbUser) {
+    redirect("/login");
+  }
+
+  const cookieStore = await cookies();
+  const canUseDemoMode = dbUser.canUseDemoMode === true;
+  const isDemoModeCookie = cookieStore.get(DEMO_MODE_COOKIE)?.value === 'true';
+  const isDemoMode = canUseDemoMode && isDemoModeCookie;
 
   const { id } = await params;
   const moduleId = id.toLowerCase();
@@ -131,21 +171,18 @@ export default async function ModuleMissionsPage({ params }: { params: Promise<P
     redirect("/modules");
   }
 
-  const userId = (session?.user as any)?.id || (isDemoMode ? "demo-cadet" : undefined);
-  if (!userId) {
-    redirect("/login");
-  }
+  const activeUserId = dbUser.id;
 
   // Retrieve user completed missions
-  const completedMissions = session ? await prisma.missionProgress.findMany({
+  const completedMissions = await prisma.missionProgress.findMany({
     where: {
-      userId,
+      userId: activeUserId,
       status: "COMPLETED",
     },
     select: {
       missionId: true,
     }
-  }) : [];
+  });
 
   const getCompletedCount = (modId: string) => {
     return completedMissions.filter(m => {
@@ -203,6 +240,7 @@ export default async function ModuleMissionsPage({ params }: { params: Promise<P
       }}
       initialDemoMode={isDemoMode}
       isLocked={isLocked}
+      canUseDemoMode={canUseDemoMode}
     />
   );
 }

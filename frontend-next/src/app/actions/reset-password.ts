@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/auth";
 import { sendPasswordResetEmail } from "@/lib/mail";
 import { logSystemAction } from "@/lib/logger";
+import { validatePassword } from "@/lib/password";
 import crypto from "crypto";
 import bcrypt from "bcryptjs";
 
@@ -80,6 +81,11 @@ export async function resetPassword(token: string, newPassword: string) {
 
     if (!user) {
       return { success: false, error: "User not found." };
+    }
+
+    const passwordError = validatePassword(newPassword);
+    if (passwordError) {
+      return { success: false, error: passwordError };
     }
 
     // Hash the new password

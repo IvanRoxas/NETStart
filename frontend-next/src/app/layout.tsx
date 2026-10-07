@@ -21,6 +21,15 @@ export const metadata: Metadata = {
     default: 'NETStart',
   },
   description: "Structural UI Foundation",
+  icons: {
+    icon: [
+      { url: '/favicon-32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon.png', sizes: '390x394', type: 'image/png' },
+      { url: '/icon.png', sizes: '390x394', type: 'image/png' },
+    ],
+    shortcut: '/favicon-32.png',
+    apple: '/icon.png',
+  },
 };
 
 export default function RootLayout({

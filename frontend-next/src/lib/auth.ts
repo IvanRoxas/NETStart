@@ -22,7 +22,9 @@ const createPrismaClient = () => {
 const cachedPrisma = globalForPrisma.prisma;
 const isOutdated = Boolean(
   cachedPrisma &&
-  !(cachedPrisma as any)?._dmmf?.modelMap?.User?.fields?.some((f: any) => f.name === 'border')
+  (!(cachedPrisma as any)?._dmmf?.modelMap?.User?.fields?.some((f: any) => f.name === 'border') ||
+   !(cachedPrisma as any)?._dmmf?.modelMap?.SystemAdmin?.fields?.some((f: any) => f.name === 'isActive') ||
+   !(cachedPrisma as any)?._dmmf?.modelMap?.User?.fields?.some((f: any) => f.name === 'canUseDemoMode'))
 );
 
 if (!globalForPrisma.prisma || isOutdated) {
@@ -86,7 +88,7 @@ export const authOptions: NextAuthOptions = {
   ],
   session: {
     strategy: "jwt",
-    maxAge: 3600, // 1 hour
+    maxAge: 30 * 24 * 60 * 60, // 30 days for persistent session
   },
   callbacks: {
     async jwt({ token, user, trigger, session }) {
@@ -97,16 +99,26 @@ export const authOptions: NextAuthOptions = {
         token.displayName = (user as any).displayName;
         token.isVerified = (user as any).isVerified || false;
         token.hasTakenAptitudeTest = (user as any).hasTakenAptitudeTest || false;
+        token.canUseDemoMode = (user as any).canUseDemoMode || false;
         token.studentId = (user as any).studentId || null;
         token.xp = (user as any).xp || 0;
         token.activeTitle = (user as any).activeTitle || null;
         token.border = (user as any).border || null;
         token.createdAt = (user as any).createdAt ? new Date((user as any).createdAt).toISOString() : null;
+        token.rememberMe = (user as any).rememberMe !== undefined ? (user as any).rememberMe : true;
         if (user.image && user.image.startsWith('data:')) {
           token.picture = `/api/profile/avatar?id=${user.id}&t=${Date.now()}`;
         }
       } else if (token.picture && typeof token.picture === 'string' && token.picture.startsWith('data:')) {
         token.picture = `/api/profile/avatar?id=${token.id}&t=${Date.now()}`;
+      }
+      
+      // If user opted out of Remember Me, enforce max 24h lifetime even if browser remains open
+      if (token.rememberMe === false && token.iat) {
+        const elapsed = Math.floor(Date.now() / 1000) - Number(token.iat);
+        if (elapsed > 24 * 60 * 60) {
+          return {} as any;
+        }
       }
       
       // Allow frontend to refresh claims via update()
@@ -150,12 +162,30 @@ export const authOptions: NextAuthOptions = {
         try {
           const dbU = await prisma.user.findUnique({
             where: { id: token.id as string },
-            select: { hasTakenAptitudeTest: true, isVerified: true, isBanned: true, xp: true, gears: true, name: true, displayName: true, activeTitle: true, border: true, createdAt: true, image: true }
+            select: { 
+              hasTakenAptitudeTest: true, 
+              isVerified: true, 
+              isBanned: true, 
+              canUseDemoMode: true,
+              xp: true, 
+              gears: true, 
+              name: true, 
+              displayName: true, 
+              activeTitle: true, 
+              border: true, 
+              createdAt: true, 
+              image: true,
+              logicScore: true,
+              patternRecognitionScore: true,
+              taskDecompositionScore: true,
+              recommendedLearningPath: true,
+            }
           });
           if (dbU) {
             token.hasTakenAptitudeTest = dbU.hasTakenAptitudeTest;
             token.isVerified = dbU.isVerified;
             token.isBanned = dbU.isBanned;
+            token.canUseDemoMode = dbU.canUseDemoMode ?? false;
             if (typeof dbU.xp === 'number') token.xp = dbU.xp;
             if (dbU.name) token.name = dbU.name;
             if (dbU.displayName) token.displayName = dbU.displayName;
@@ -163,6 +193,10 @@ export const authOptions: NextAuthOptions = {
             if (dbU.border !== undefined) token.border = dbU.border;
             if (dbU.createdAt) token.createdAt = dbU.createdAt.toISOString();
             if (dbU.image && !dbU.image.startsWith('data:')) token.picture = dbU.image;
+            token.logicScore = dbU.logicScore;
+            token.patternRecognitionScore = dbU.patternRecognitionScore;
+            token.taskDecompositionScore = dbU.taskDecompositionScore;
+            token.recommendedLearningPath = dbU.recommendedLearningPath;
           }
         } catch (e) {}
       }
@@ -176,11 +210,16 @@ export const authOptions: NextAuthOptions = {
         session.user.isBanned = token.isBanned as boolean;
         session.user.isVerified = token.isVerified as boolean;
         session.user.hasTakenAptitudeTest = token.hasTakenAptitudeTest as boolean;
+        session.user.canUseDemoMode = (token.canUseDemoMode as boolean) || false;
         session.user.studentId = token.studentId as string | null;
         session.user.xp = token.xp as number;
         session.user.activeTitle = token.activeTitle as string | null;
         session.user.border = (token.border as string) || null;
         session.user.createdAt = (token.createdAt as string) || null;
+        session.user.logicScore = (token.logicScore as number | null) ?? null;
+        session.user.patternRecognitionScore = (token.patternRecognitionScore as number | null) ?? null;
+        session.user.taskDecompositionScore = (token.taskDecompositionScore as number | null) ?? null;
+        session.user.recommendedLearningPath = (token.recommendedLearningPath as string | null) ?? null;
         if (token.name) session.user.name = token.name as string;
         if (token.displayName) session.user.displayName = token.displayName as string;
         if (token.picture) session.user.image = token.picture as string;
@@ -235,8 +274,10 @@ export const authOptions: NextAuthOptions = {
                 achievementId: createAch.id
               }
             });
-            const { addXPAndCheckLevelUp } = await import('@/lib/xp');
-            await addXPAndCheckLevelUp(user.id, createAch.xpReward);
+            if (createAch.xpReward > 0) {
+              const { addXPAndCheckLevelUp } = await import('@/lib/xp');
+              await addXPAndCheckLevelUp(user.id, createAch.xpReward);
+            }
           }
 
           // Create notification

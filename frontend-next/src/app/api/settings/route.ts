@@ -13,12 +13,40 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
-    const { username, password } = await req.json();
+    const { username, password, currentPassword } = await req.json();
+
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+    });
+
+    if (!user) {
+      return NextResponse.json({ message: 'User not found' }, { status: 404 });
+    }
 
     const updateData: any = {};
-    if (username) updateData.name = username;
+    if (username && username !== user.name) {
+      const existing = await prisma.user.findFirst({
+        where: {
+          name: { equals: username, mode: 'insensitive' },
+          id: { not: user.id },
+        },
+      });
+      if (existing) {
+        return NextResponse.json({ message: 'Username is already taken' }, { status: 409 });
+      }
+      updateData.name = username;
+    }
     
     if (password) {
+      if (user.password) {
+        if (!currentPassword) {
+          return NextResponse.json({ message: 'Current password is required to set a new password' }, { status: 400 });
+        }
+        const isValid = await bcrypt.compare(currentPassword, user.password);
+        if (!isValid) {
+          return NextResponse.json({ message: 'Incorrect current password' }, { status: 400 });
+        }
+      }
       const passwordError = validatePassword(password);
       if (passwordError) {
         return NextResponse.json({ message: passwordError }, { status: 400 });

@@ -3,22 +3,25 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
-import { 
-  X, 
-  Check, 
-  RotateCcw, 
-  ShoppingBag, 
-  Palette, 
-  Sparkles, 
-  Layers, 
-  Shirt, 
-  Footprints, 
+import { useSession } from 'next-auth/react';
+import { setUserStorageItem } from '@/lib/userStorage';
+import {
+  X,
+  Check,
+  RotateCcw,
+  ShoppingBag,
+  Palette,
+  Sparkles,
+  Layers,
+  Shirt,
+  Footprints,
   Glasses,
   CheckCircle2,
   AlertCircle
 } from 'lucide-react';
 import AvatarDisplay, { AvatarLayers, DEFAULT_AVATAR_LAYERS } from '@/components/AvatarDisplay';
 import { getAvatarItemStyle } from '@/lib/shopCatalog';
+import { triggerDailyTaskCompletion } from '@/lib/dailyTasks';
 
 export interface AvatarCustomizeModalProps {
   isOpen: boolean;
@@ -39,22 +42,37 @@ interface InventoryItem {
   };
 }
 
-// 10 Available Base Skins (Faceless 2000x2000 SVGs with Full Face on top)
-// Arranged from lightest to darkest:
-// Human tones (1 -> 9 -> 10 -> 5 -> 2) followed by Cosmic tones (6 -> 8 -> 4 -> 3 -> 7)
-export const BASE_SKINS = [
-  // Human-Skin Complexions (Lightest to Darkest)
-  { id: 'skin-1', name: 'Skin Tone 1', hex: '#ead0c3', label: 'Light Fair', category: 'human', url: '/assets/global/shop/avatar/base/Skin 1 Faceless.svg' },
-  { id: 'skin-9', name: 'Skin Tone 9', hex: '#efb9a2', label: 'Warm Peach', category: 'human', url: '/assets/global/shop/avatar/base/Skin 9 Faceless.svg' },
-  { id: 'skin-10', name: 'Skin Tone 10', hex: '#e8ae86', label: 'Golden Sand', category: 'human', url: '/assets/global/shop/avatar/base/Skin 10 Faceless.svg' },
-  { id: 'skin-5', name: 'Skin Tone 5', hex: '#8d6244', label: 'Amber Tan', category: 'human', url: '/assets/global/shop/avatar/base/Skin 5 Faceless.svg' },
-  { id: 'skin-2', name: 'Skin Tone 2', hex: '#4e3c30', label: 'Deep Espresso', category: 'human', url: '/assets/global/shop/avatar/base/Skin 2 Faceless.svg' },
-  // Cosmic & Fantasy Complexions (Lightest to Darkest)
-  { id: 'skin-6', name: 'Skin Tone 6', hex: '#bfd0e6', label: 'Cosmic Ice', category: 'cosmic', url: '/assets/global/shop/avatar/base/Skin 6 Faceless.svg' },
-  { id: 'skin-8', name: 'Skin Tone 8', hex: '#e1c5d4', label: 'Blossom Pink', category: 'cosmic', url: '/assets/global/shop/avatar/base/Skin 8 Faceless.svg' },
-  { id: 'skin-4', name: 'Skin Tone 4', hex: '#b9cc90', label: 'Alien Sage', category: 'cosmic', url: '/assets/global/shop/avatar/base/Skin 4 Faceless.svg' },
-  { id: 'skin-3', name: 'Skin Tone 3', hex: '#c1bdd3', label: 'Lavender Dusk', category: 'cosmic', url: '/assets/global/shop/avatar/base/Skin 3 Faceless.svg' },
-  { id: 'skin-7', name: 'Skin Tone 7', hex: '#c3bcd5', label: 'Deep Violet', category: 'cosmic', url: '/assets/global/shop/avatar/base/Skin 7 Faceless.svg' },
+export interface BaseSkin {
+  id: string;
+  name: string;
+  hex: string;
+  category: string;
+  url: string;
+}
+
+// 16 Available Base Skins (ordered and grouped consecutively by similar color harmony)
+export const BASE_SKINS: BaseSkin[] = [
+  // Natural & Earth Tones
+  { id: 'skin-light-fair', name: 'Light Fair', hex: '#ead0c3', category: 'human', url: '/assets/global/shop/avatar/base/Skin 1 Faceless.svg' },
+  { id: 'skin-warm-peach', name: 'Warm Peach', hex: '#efb8a1', category: 'human', url: '/assets/global/shop/avatar/base/New Skin 1 Faceless.svg' },
+  { id: 'skin-golden-sand', name: 'Golden Sand', hex: '#e7ad85', category: 'human', url: '/assets/global/shop/avatar/base/New Skin 4 Faceless.svg' },
+  { id: 'skin-amber-tan', name: 'Amber Tan', hex: '#8d6346', category: 'human', url: '/assets/global/shop/avatar/base/Skin 5 Faceless.svg' },
+  { id: 'skin-chestnut-bronze', name: 'Chestnut Bronze', hex: '#895c42', category: 'human', url: '/assets/global/shop/avatar/base/New Skin 5 Faceless.svg' },
+  { id: 'skin-deep-espresso', name: 'Deep Espresso', hex: '#4e3c2f', category: 'human', url: '/assets/global/shop/avatar/base/Skin 2 Faceless.svg' },
+  // Solar & Ember Tones
+  { id: 'skin-solar-amber', name: 'Solar Amber', hex: '#fea343', category: 'cosmic', url: '/assets/global/shop/avatar/base/New Skin 7 Faceless.svg' },
+  { id: 'skin-terracotta-coral', name: 'Terracotta Coral', hex: '#f07458', category: 'cosmic', url: '/assets/global/shop/avatar/base/New Skin 3 Faceless.svg' },
+  // Rose & Nebula Tones
+  { id: 'skin-blossom-pink', name: 'Blossom Pink', hex: '#e1c5d4', category: 'cosmic', url: '/assets/global/shop/avatar/base/Skin 8 Faceless.svg' },
+  { id: 'skin-nebula-rose', name: 'Nebula Rose', hex: '#ff90be', category: 'cosmic', url: '/assets/global/shop/avatar/base/New Skin 8 Faceless.svg' },
+  { id: 'skin-mystic-orchid', name: 'Mystic Orchid', hex: '#c15a9f', category: 'cosmic', url: '/assets/global/shop/avatar/base/New Skin 6 Faceless.svg' },
+  { id: 'skin-deep-violet', name: 'Deep Violet', hex: '#c3bcd5', category: 'cosmic', url: '/assets/global/shop/avatar/base/Skin 7 Faceless.svg' },
+  // Flora & Cyber Tones
+  { id: 'skin-alien-sage', name: 'Alien Sage', hex: '#bacc8f', category: 'cosmic', url: '/assets/global/shop/avatar/base/Skin 4 Faceless.svg' },
+  { id: 'skin-cyber-olive', name: 'Cyber Olive', hex: '#89b433', category: 'cosmic', url: '/assets/global/shop/avatar/base/New Skin 2 Faceless.svg' },
+  // Celestial & Frost Tones
+  { id: 'skin-lunar-pearl', name: 'Lunar Pearl', hex: '#ffffff', category: 'cosmic', url: '/assets/global/shop/avatar/base/New Skin 9 Faceless.svg' },
+  { id: 'skin-cosmic-ice', name: 'Cosmic Ice', hex: '#bfd0e6', category: 'cosmic', url: '/assets/global/shop/avatar/base/Skin 6 Faceless.svg' },
 ];
 
 type CustomizationTab = 'skin' | 'hair' | 'accessories' | 'tops' | 'bottoms' | 'shoes';
@@ -73,6 +91,8 @@ export default function AvatarCustomizeModal({
   onClose,
   onAvatarUpdated,
 }: AvatarCustomizeModalProps) {
+  const { data: session } = useSession();
+  const userId = session?.user?.id;
   const [activeTab, setActiveTab] = useState<CustomizationTab>('skin');
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
@@ -229,11 +249,16 @@ export default function AvatarCustomizeModal({
       });
 
       if (res.ok) {
-        // Persist to local storage for zero-latency client retrieval
+        // Persist to user-scoped local storage for zero-latency client retrieval
         if (typeof window !== 'undefined') {
-          window.localStorage.setItem('netstart_avatar_layers', JSON.stringify(currentLayers));
+          if (userId) {
+            setUserStorageItem('avatar_layers', JSON.stringify(currentLayers), userId);
+          }
           window.dispatchEvent(new CustomEvent('netstart_avatar_updated', { detail: currentLayers }));
         }
+
+        // Trigger daily task for avatar customization
+        triggerDailyTaskCompletion('task-explore-1');
 
         if (onAvatarUpdated) {
           onAvatarUpdated(currentLayers);
@@ -262,11 +287,10 @@ export default function AvatarCustomizeModal({
       <button
         key={skin.id}
         onClick={() => setSelectedSkin(skin.url)}
-        className={`relative p-2 sm:p-2.5 rounded-2xl border transition-all flex flex-col items-center gap-1.5 sm:gap-2 text-center cursor-pointer group ${
-          isSelected
-            ? 'bg-[#ff912d]/20 border-[#ff912d] shadow-[0_0_15px_rgba(255,145,45,0.3)]'
-            : 'bg-white/5 hover:bg-white/10 border-white/10 hover:border-white/20'
-        }`}
+        className={`relative p-2 sm:p-2.5 rounded-2xl border transition-all flex flex-col items-center gap-1.5 sm:gap-2 text-center cursor-pointer group ${isSelected
+          ? 'bg-[#ff912d]/20 border-[#ff912d] shadow-[0_0_15px_rgba(255,145,45,0.3)]'
+          : 'bg-white/5 hover:bg-white/10 border-white/10 hover:border-white/20'
+          }`}
       >
         {/* Check badge when selected */}
         {isSelected && (
@@ -277,7 +301,7 @@ export default function AvatarCustomizeModal({
 
         {/* Head Avatar Preview with Full Face on Top */}
         <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden border-2 border-white/20 bg-black/40 flex items-center justify-center shadow-inner">
-          <div 
+          <div
             className="relative w-full h-full"
             style={{ transform: 'scale(2.4) translateY(18%)', transformOrigin: 'center center' }}
           >
@@ -297,18 +321,13 @@ export default function AvatarCustomizeModal({
         </div>
 
         {/* Swatch & Title */}
-        <div className="flex flex-col items-center gap-0.5 sm:gap-1 w-full">
-          <div className="flex items-center gap-1.5">
-            <span 
-              className="w-3 h-3 rounded-full border border-white/40 shadow-sm shrink-0"
-              style={{ backgroundColor: skin.hex }}
-            />
-            <span className="text-[11px] sm:text-xs font-display font-black text-white truncate">
-              {skin.name}
-            </span>
-          </div>
-          <span className="text-[9px] sm:text-[10px] font-mono text-white/50 truncate">
-            {skin.label}
+        <div className="flex items-center justify-center gap-1.5 w-full px-1">
+          <span
+            className="w-3 h-3 rounded-full border border-white/40 shadow-sm shrink-0"
+            style={{ backgroundColor: skin.hex }}
+          />
+          <span className="text-[11px] sm:text-xs font-display font-black text-white truncate">
+            {skin.name}
           </span>
         </div>
       </button>
@@ -332,10 +351,10 @@ export default function AvatarCustomizeModal({
       {/* Main Customization Modal Container */}
       <div className="relative w-full max-w-5xl h-[88vh] max-h-[720px] min-h-[460px] my-auto bg-[#1a082c]/95 border-2 border-[#ff912d]/50 rounded-[24px] sm:rounded-[32px] shadow-[0_0_50px_rgba(255,145,45,0.25)] flex flex-col overflow-hidden text-white">
         {/* Subtle Ambient Cosmic Background Elements */}
-        <img 
-          src="/assets/global/ui/Landing Page BG.png" 
-          alt="Stars" 
-          className="absolute inset-0 w-full h-full object-cover opacity-20 pointer-events-none" 
+        <img
+          src="/assets/global/ui/Landing Page BG.png"
+          alt="Stars"
+          className="absolute inset-0 w-full h-full object-cover opacity-20 pointer-events-none"
         />
         <div className="absolute top-0 right-1/4 w-80 h-80 bg-[#ff912d]/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-1/4 w-80 h-80 bg-[#a855f7]/15 rounded-full blur-3xl pointer-events-none" />
@@ -347,14 +366,11 @@ export default function AvatarCustomizeModal({
               <Sparkles size={18} />
             </div>
             <div>
-              <h2 className="text-base sm:text-lg md:text-xl font-display font-black tracking-wide text-white uppercase flex items-center gap-2">
+              <h2 className="text-base sm:text-lg md:text-xl font-display font-black tracking-wide text-white uppercase">
                 Customize Avatar
-                <span className="text-[10px] font-mono font-bold text-[#ff912d] bg-[#ff912d]/15 px-2 py-0.5 rounded-full border border-[#ff912d]/30 lowercase">
-                  wardrobe
-                </span>
               </h2>
               <p className="text-[11px] sm:text-xs text-white/60 font-sans line-clamp-1">
-                Style your astronaut with unlocked gear and choose your base skin color
+                Style your astronaut with unlocked gear.
               </p>
             </div>
           </div>
@@ -370,7 +386,7 @@ export default function AvatarCustomizeModal({
 
         {/* Modal Main Body (3-Column Layout: Categories Tabs -> Showcase Center -> Options Grid) */}
         <div className="relative z-10 flex-1 min-h-0 grid grid-cols-1 md:grid-cols-[190px_1fr] lg:grid-cols-[205px_1.1fr_310px] xl:grid-cols-[215px_1.15fr_330px] overflow-hidden">
-          
+
           {/* LEFT COLUMN: Customization Category Tabs */}
           <div className="border-r border-white/10 bg-[#140523]/70 p-2.5 sm:p-3 flex md:flex-col gap-1.5 overflow-x-auto md:overflow-y-auto no-scrollbar shrink-0 min-h-0">
             <div className="hidden md:block text-[10px] font-mono uppercase tracking-wider text-white/40 font-bold px-2 py-1 mb-0.5">
@@ -380,7 +396,7 @@ export default function AvatarCustomizeModal({
             {TABS.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
-              
+
               // Count owned items for badge (skin always BASE_SKINS.length)
               const count = tab.id === 'skin' ? BASE_SKINS.length : inventory.filter((inv) => {
                 const sub = (inv.item.subCategory || '').toLowerCase();
@@ -396,19 +412,17 @@ export default function AvatarCustomizeModal({
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`w-full flex items-center justify-between px-3 py-2 sm:py-2.5 rounded-xl font-display font-black text-xs sm:text-sm tracking-wide transition-all cursor-pointer whitespace-nowrap md:whitespace-normal text-left ${
-                    isActive
-                      ? 'bg-gradient-to-r from-[#ff912d] to-amber-500 text-black shadow-lg shadow-[#ff912d]/25'
-                      : 'bg-white/5 hover:bg-white/10 text-white/80 hover:text-white border border-white/5'
-                  }`}
+                  className={`w-full flex items-center justify-between px-3 py-2 sm:py-2.5 rounded-xl font-display font-black text-xs sm:text-sm tracking-wide transition-all cursor-pointer whitespace-nowrap md:whitespace-normal text-left ${isActive
+                    ? 'bg-gradient-to-r from-[#ff912d] to-amber-500 text-black shadow-lg shadow-[#ff912d]/25'
+                    : 'bg-white/5 hover:bg-white/10 text-white/80 hover:text-white border border-white/5'
+                    }`}
                 >
                   <div className="flex items-center gap-2.5">
                     <Icon size={15} className={isActive ? 'text-black' : 'text-[#ff912d]'} />
                     <span>{tab.label}</span>
                   </div>
-                  <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full ${
-                    isActive ? 'bg-black/25 text-black' : 'bg-white/10 text-white/60'
-                  }`}>
+                  <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full ${isActive ? 'bg-black/25 text-black' : 'bg-white/10 text-white/60'
+                    }`}>
                     {count}
                   </span>
                 </button>
@@ -434,7 +448,7 @@ export default function AvatarCustomizeModal({
             <div className="w-full flex items-center justify-between z-10 shrink-0">
               <div className="flex items-center gap-2">
                 <span className="text-[10px] sm:text-[11px] font-mono uppercase tracking-wider text-white/50 font-bold">
-                  Live Showcase
+                  Preview
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -457,11 +471,12 @@ export default function AvatarCustomizeModal({
 
               {/* Character Display */}
               <div className="relative z-10 w-full h-full max-h-[290px] sm:max-h-[340px] flex items-center justify-center">
-                <AvatarDisplay 
-                  layers={currentLayers} 
-                  className="w-full h-full" 
-                  scale={1.16} 
+                <AvatarDisplay
+                  layers={currentLayers}
+                  className="w-full h-full"
+                  scale={1.16}
                   offsetYClass="translate-y-2 sm:translate-y-3"
+                  shadowBottomClass="bottom-[30px] sm:bottom-[41px]"
                 />
               </div>
             </div>
@@ -536,11 +551,10 @@ export default function AvatarCustomizeModal({
                 {/* Unequip / None Option at the top */}
                 <button
                   onClick={handleUnequipSlot}
-                  className={`p-2.5 sm:p-3 rounded-2xl border transition-all flex items-center gap-2.5 cursor-pointer shrink-0 ${
-                    !equippedItems[activeTab === 'hair' ? 'hair' : activeTab === 'accessories' ? 'accessory' : activeTab === 'tops' ? 'top' : activeTab === 'bottoms' ? 'bottom' : 'shoes']
-                      ? 'bg-purple-500/20 border-purple-400/60 shadow-md'
-                      : 'bg-white/5 hover:bg-white/10 border-white/10'
-                  }`}
+                  className={`p-2.5 sm:p-3 rounded-2xl border transition-all flex items-center gap-2.5 cursor-pointer shrink-0 ${!equippedItems[activeTab === 'hair' ? 'hair' : activeTab === 'accessories' ? 'accessory' : activeTab === 'tops' ? 'top' : activeTab === 'bottoms' ? 'bottom' : 'shoes']
+                    ? 'bg-purple-500/20 border-purple-400/60 shadow-md'
+                    : 'bg-white/5 hover:bg-white/10 border-white/10'
+                    }`}
                 >
                   <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/50 shrink-0">
                     <X size={15} />
@@ -574,18 +588,17 @@ export default function AvatarCustomizeModal({
                   /* Grid of owned items */
                   <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
                     {tabItems.map((inv) => {
-                      const isCurrentlyEquipped = 
+                      const isCurrentlyEquipped =
                         equippedItems[activeTab === 'hair' ? 'hair' : activeTab === 'accessories' ? 'accessory' : activeTab === 'tops' ? 'top' : activeTab === 'bottoms' ? 'bottom' : 'shoes']?.shopItemId === inv.shopItemId;
 
                       return (
                         <button
                           key={inv.id}
                           onClick={() => handleSelectItem(inv)}
-                          className={`relative p-2 sm:p-2.5 rounded-2xl border transition-all flex flex-col items-center gap-1.5 sm:gap-2 text-center cursor-pointer group ${
-                            isCurrentlyEquipped
-                              ? 'bg-[#ff912d]/20 border-[#ff912d] shadow-[0_0_15px_rgba(255,145,45,0.3)]'
-                              : 'bg-white/5 hover:bg-white/10 border-white/10 hover:border-white/20'
-                          }`}
+                          className={`relative p-2 sm:p-2.5 rounded-2xl border transition-all flex flex-col items-center gap-1.5 sm:gap-2 text-center cursor-pointer group ${isCurrentlyEquipped
+                            ? 'bg-[#ff912d]/20 border-[#ff912d] shadow-[0_0_15px_rgba(255,145,45,0.3)]'
+                            : 'bg-white/5 hover:bg-white/10 border-white/10 hover:border-white/20'
+                            }`}
                         >
                           {/* Equipped badge */}
                           {isCurrentlyEquipped && (
@@ -596,7 +609,7 @@ export default function AvatarCustomizeModal({
 
                           {/* Zoomed Thumbnail using getAvatarItemStyle */}
                           <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden bg-purple-950/40 border border-white/10 flex items-center justify-center shadow-inner">
-                            <div 
+                            <div
                               className="relative w-full h-full"
                               style={getAvatarItemStyle(inv.item.subCategory)}
                             >

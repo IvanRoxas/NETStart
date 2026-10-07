@@ -28,6 +28,22 @@ export async function POST(req: Request) {
       );
     }
 
+    const existingUsername = await prisma.user.findFirst({
+      where: {
+        name: {
+          equals: username,
+          mode: 'insensitive',
+        },
+      },
+    });
+
+    if (existingUsername) {
+      return NextResponse.json(
+        { message: "Username is already taken" },
+        { status: 409 }
+      );
+    }
+
     const passwordError = validatePassword(password);
     if (passwordError) {
       return NextResponse.json(
@@ -102,8 +118,15 @@ export async function POST(req: Request) {
     );
   } catch (error: any) {
     console.error("Registration Error: ", error);
+    if (error?.code === 'P2002') {
+      const target = Array.isArray(error?.meta?.target) ? error.meta.target.join(', ') : '';
+      if (target.includes('username') || target.includes('name')) {
+        return NextResponse.json({ message: "Username is already taken" }, { status: 409 });
+      }
+      return NextResponse.json({ message: "An account with these details already exists" }, { status: 409 });
+    }
     return NextResponse.json(
-      { message: "Internal server error", error: error?.message, stack: error?.stack },
+      { message: "Internal server error" },
       { status: 500 }
     );
   }

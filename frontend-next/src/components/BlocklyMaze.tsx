@@ -9,6 +9,7 @@ import '@/lib/customblocks';
 import { generatePlainEnglishPseudocode } from '@/lib/customblocks';
 import PlainEnglishCodeViewer from '@/components/PlainEnglishCodeViewer';
 import { useNavigationGuard } from '@/context/NavigationGuardContext';
+import { triggerDailyTaskCompletion } from '@/lib/dailyTasks';
 import {
   Play,
   RotateCcw,
@@ -57,6 +58,7 @@ import {
 } from 'lucide-react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import MusicToggleButton from '@/components/MusicToggleButton';
 import { useProgression } from '@/context/ProgressionContext';
 import { getUserStorageItem, setUserStorageItem, removeUserStorageItem } from '@/lib/userStorage';
 import { XP_REWARDS } from '@/lib/leveling';
@@ -225,6 +227,14 @@ import {
   getEarthLevel1DefaultWorkspaceXml,
 } from '@/lib/earth/earthLevel1Definitions';
 import EarthLevel1Lab from '@/components/earth/level1/EarthLevel1Lab';
+import {
+  EARTH_CHALLENGE_SECTIONS,
+  EARTH_CHALLENGE_SECTION_SPECS,
+  getEarthChallengeToolbox,
+  parseEarthChallengeWorkspace,
+  generateEarthChallengePythonCode,
+  registerEarthChallengeBlocks,
+} from '@/lib/earth/earthChallengeDefinitions';
 import {
   registerEarthLevel2Blocks,
   parseEarth2Tab1Workspace,
@@ -409,13 +419,13 @@ export const LEVEL_3_SECTIONS: LevelSection[] = [
     sectionIndex: 1,
     name: "Fuel Synthesis",
     subtag: "Section 2 of 3",
-    desc: "Synthesize 3 batches of fuel: Add solution, increase heat, mix 5 times, refine green fuel to orange, and fuel the spaceship.",
-    tip: "Hint: Follow the synthesis steps carefully to prepare each batch of fuel.",
+    desc: "Synthesize 3 batches of fuel: Add solution, increase heat, mix 5 times, refine blue fuel to orange (increase heat and mix solution), and fuel the spaceship.",
+    tip: "Hint: If the fuel turns blue, increase heat and mix solution to turn it orange.",
     initialState: { x: 0, y: 0, direction: 0 },
     maze: [[1]],
     objectives: [
       { id: 1, text: "Use both Start and End blocks", completed: false, isClaimed: false },
-      { id: 2, text: "Use If condition to check if color is green", completed: false, isClaimed: false },
+      { id: 2, text: "Use If condition to check if color is blue", completed: false, isClaimed: false },
       { id: 3, text: "Synthesize and fuel all 3 batches", completed: false, isClaimed: false }
     ]
   },
@@ -756,14 +766,29 @@ export const DAILY_CHALLENGE_FUEL_SYNTHESIS: LevelSection = {
   sectionIndex: 0,
   name: "Fuel Synthesis Protocol",
   subtag: "Daily Challenge Mission",
-  desc: "Synthesize 3 batches of fuel for the lunar fleet: Add solution, increase heat, mix 5 times, refine green fuel to orange, and fuel the spaceship.",
-  tip: "Hint: Follow the synthesis steps carefully to prepare each batch of fuel.",
+  desc: "Synthesize 3 batches of fuel for the lunar fleet: Add solution, increase heat, mix 5 times, refine blue fuel to orange (increase heat and mix solution), and fuel the spaceship.",
+  tip: "Hint: If the fuel turns blue, increase heat and mix solution to turn it orange.",
   initialState: { x: 0, y: 0, direction: 0 },
   maze: [[1]],
   objectives: [
     { id: 1, text: "Use both Start and End blocks", completed: false, isClaimed: false },
-    { id: 2, text: "Use If condition to check if color is green", completed: false, isClaimed: false },
+    { id: 2, text: "Use If condition to check if color is blue", completed: false, isClaimed: false },
     { id: 3, text: "Synthesize and fuel all 3 batches", completed: false, isClaimed: false }
+  ]
+};
+
+export const DAILY_CHALLENGE_LEDGER_CIPHER: LevelSection = {
+  sectionIndex: 0,
+  name: "Ledger Cipher Recovery",
+  subtag: "Daily Challenge Mission",
+  desc: "Decode corrupted satellite telemetry! Laser-slice boundary noise, swap multiple leet characters, and explode delimiters.",
+  tip: "Hint: Laser slice from 2 to 17, swap digits, and explode the delimiter.",
+  initialState: { x: 0, y: 0, direction: 0 },
+  maze: [[1]],
+  objectives: [
+    { id: 1, text: "Restore Channel 1: ORBITAL DOCKING", completed: false, isClaimed: false },
+    { id: 2, text: "Restore Channel 2: QUANTUM CREDITS", completed: false, isClaimed: false },
+    { id: 3, text: "Restore Channel 3: COSMIC VECTOR FLIGHT", completed: false, isClaimed: false }
   ]
 };
 
@@ -772,7 +797,8 @@ export const DAILY_CHALLENGE_POOL: LevelSection[] = [
   DAILY_CHALLENGE_LANE_CHANGER,
   DAILY_CHALLENGE_HAZARD_LABYRINTH,
   DAILY_CHALLENGE_CONVEYOR_GAUNTLET,
-  DAILY_CHALLENGE_FUEL_SYNTHESIS
+  DAILY_CHALLENGE_FUEL_SYNTHESIS,
+  DAILY_CHALLENGE_LEDGER_CIPHER
 ];
 
 export const getDailyChallengeSection = (missionId: string): LevelSection => {
@@ -792,6 +818,9 @@ export const getDailyChallengeSection = (missionId: string): LevelSection => {
   if (m === 'daily-5' || m === 'daily-fuel-synthesis' || m.includes('fuel-synth') || m.includes('synthesis')) {
     return DAILY_CHALLENGE_FUEL_SYNTHESIS;
   }
+  if (m === 'daily-6' || m === 'daily-ledger' || m.includes('ledger') || m.includes('cipher')) {
+    return DAILY_CHALLENGE_LEDGER_CIPHER;
+  }
 
   // Deterministic daily date hash for daily rotation
   const dateMatch = m.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
@@ -806,7 +835,7 @@ export const getDailyChallengeSection = (missionId: string): LevelSection => {
     seed = (now.getFullYear() * 372) + ((now.getMonth() + 1) * 31) + now.getDate();
   }
 
-  const idx = Math.abs(seed) % DAILY_CHALLENGE_POOL.length;
+  const idx = Math.abs(seed + 5) % DAILY_CHALLENGE_POOL.length;
   return DAILY_CHALLENGE_POOL[idx];
 };
 
@@ -1200,8 +1229,15 @@ export const getMars1ToolboxForSection = (sectionIndex: number = 0, themeId: str
 
 export const getSectionsForMission = (missionId: string): LevelSection[] => {
   const m = (missionId || '').toLowerCase();
+  if (m === 'challenge-earth-ledger' || m === 'earth-challenge' || m === 'challenge-ledger' || m === 'daily-ledger' || m === 'challenge-python-cipher') {
+    return EARTH_CHALLENGE_SECTIONS;
+  }
   if (m.startsWith('daily') || m.includes('daily')) {
-    return [getDailyChallengeSection(missionId)];
+    const dailySec = getDailyChallengeSection(missionId);
+    if (dailySec.name === 'Ledger Cipher Recovery') {
+      return EARTH_CHALLENGE_SECTIONS;
+    }
+    return [dailySec];
   }
   if (m === 'mars-1' || m === 'html-1-mars') {
     return MARS_1_SECTIONS;
@@ -1430,6 +1466,9 @@ export const getToolboxForMission = (
     if (dSec.name === 'Fuel Synthesis Protocol') {
       return getLevelThreeToolboxForSection(1);
     }
+    if (dSec.name === 'Ledger Cipher Recovery') {
+      return getEarthChallengeToolbox(sectionIndex);
+    }
     return advancedToolbox;
   }
   if (m === 'mars-1' || m === 'html-1-mars') {
@@ -1498,6 +1537,9 @@ export const getToolboxForMission = (
   }
   if (m === 'earth-1' || m === 'python-1' || m === 'earth') {
     return getEarthLevel1Toolbox(sectionIndex);
+  }
+  if (m === 'challenge-earth-ledger' || m === 'earth-challenge' || m === 'challenge-ledger' || m === 'daily-ledger' || m === 'challenge-python-cipher') {
+    return getEarthChallengeToolbox(sectionIndex);
   }
   if (m === 'earth-2' || m === 'python-2') {
     return getEarthLevel2Toolbox(earth2Tab);
@@ -1598,6 +1640,9 @@ const getMissionDescForMission = (mId: string, isDaily: boolean) => {
     'python-2': "A solar storm scrambled the Master Ledger! Sort the loose data into digital folders to reconnect the solar system.",
     'earth-3': "The Architect has one final program to bring together every repair you've made across the solar system, but he needs your help to run it. Use Python functions and modules to unify the network and bring the solar system online at once!",
     'python-3': "The Architect has one final program to bring together every repair you've made across the solar system, but he needs your help to run it. Use Python functions and modules to unify the network and bring the solar system online at once!",
+    'challenge-earth-ledger': "Deep-space telemetry is scrambled! Use Python slicing and string tools to eliminate static noise and decrypt all three navigation channels.",
+    'earth-challenge': "Deep-space telemetry is scrambled! Use Python slicing and string tools to eliminate static noise and decrypt all three navigation channels.",
+    'daily-ledger': "Deep-space telemetry is scrambled! Use Python slicing and string tools to eliminate static noise and decrypt all three navigation channels.",
   };
   return descMap[id] || (isDaily ? "Today's practice level exercise completed in the sandbox." : "Complete objectives and guide your rover or starship safely through the mission challenges.");
 };
@@ -1610,7 +1655,7 @@ const getMissionModuleForMission = (mId: string, isDaily: boolean) => {
   if (id.startsWith('mercury') || id.startsWith('javascript') || id.startsWith('js')) return 'Mercury (JavaScript)';
   if (id.startsWith('jupiter') || id.startsWith('java')) return 'Jupiter (Java)';
   if (id.startsWith('saturn') || id.startsWith('cpp')) return 'Saturn (C++)';
-  if (id.startsWith('earth') || id.startsWith('python')) return 'Earth (Python)';
+  if (id.startsWith('earth') || id.startsWith('python') || id.includes('ledger') || id.includes('cipher')) return 'Earth (Python)';
   return isDaily ? 'Daily Level' : 'The Moon';
 };
 
@@ -1622,7 +1667,7 @@ const getMissionPlanetSlug = (mId: string, isDaily: boolean) => {
   if (id.startsWith('mercury') || id.startsWith('javascript') || id.startsWith('js')) return 'mercury';
   if (id.startsWith('jupiter') || id.startsWith('java')) return 'jupiter';
   if (id.startsWith('saturn') || id.startsWith('cpp')) return 'saturn';
-  if (id.startsWith('earth') || id.startsWith('python')) return 'earth';
+  if (id.startsWith('earth') || id.startsWith('python') || id.includes('ledger') || id.includes('cipher')) return 'earth';
   return isDaily ? 'moon' : 'moon';
 };
 
@@ -1650,6 +1695,12 @@ export default function BlocklyMaze() {
   const isEarthLevel1 = (missionId || '').toLowerCase() === 'earth-1' || (missionId || '').toLowerCase() === 'python-1' || (missionId || '').toLowerCase() === 'earth';
   const isEarthLevel2 = (missionId || '').toLowerCase() === 'earth-2' || (missionId || '').toLowerCase() === 'python-2';
   const isEarthLevel3 = (missionId || '').toLowerCase() === 'earth-3' || (missionId || '').toLowerCase() === 'python-3';
+  const isEarthChallenge = (missionId || '').toLowerCase() === 'challenge-earth-ledger' ||
+    (missionId || '').toLowerCase() === 'earth-challenge' ||
+    (missionId || '').toLowerCase() === 'challenge-ledger' ||
+    (missionId || '').toLowerCase() === 'daily-ledger' ||
+    (missionId || '').toLowerCase() === 'challenge-python-cipher' ||
+    dailySection?.name === 'Ledger Cipher Recovery';
   const isLevel2 = (missionId || '').toLowerCase() === 'moon-2' || (missionId || '').toLowerCase() === 'html-2' || (dailySection?.name === 'Master Sorting Gauntlet');
   const isLevel3 = (missionId || '').toLowerCase() === 'moon-3' || (missionId || '').toLowerCase() === 'html-3' || (dailySection?.name === 'Fuel Synthesis Protocol');
   const currentMissionSections = useMemo(() => getSectionsForMission(missionId), [missionId]);
@@ -1692,6 +1743,9 @@ export default function BlocklyMaze() {
     'python-2': "Level 2: The Planetary Archive",
     'earth-3': "Level 3: The Master Reboot",
     'python-3': "Level 3: The Master Reboot",
+    'challenge-earth-ledger': "Challenge: Ledger Cipher Recovery",
+    'earth-challenge': "Challenge: Ledger Cipher Recovery",
+    'daily-ledger': "Challenge: Ledger Cipher Recovery",
   };
 
   // Venus Level 1 CSS State
@@ -1757,6 +1811,10 @@ export default function BlocklyMaze() {
   // Earth Level 1 Python Master Ledger State
   const [earthWorkspaceState, setEarthWorkspaceState] = useState<Earth1WorkspaceState>(INITIAL_EARTH_1_WORKSPACE);
   const [earth1Validation, setEarth1Validation] = useState<Earth1ValidationResult>(INITIAL_EARTH_1_VALIDATION);
+
+  // Earth Challenge Ledger Cipher State
+  const [earthChallengeWorkspaceState, setEarthChallengeWorkspaceState] = useState<Earth1WorkspaceState>(INITIAL_EARTH_1_WORKSPACE);
+  const [earthChallengeValidation, setEarthChallengeValidation] = useState<Earth1ValidationResult>(INITIAL_EARTH_1_VALIDATION);
 
   // Earth Level 3 State
   const [earth3Audit, setEarth3Audit] = useState<Earth3AuditStatus>(INITIAL_EARTH_3_AUDIT);
@@ -2677,7 +2735,7 @@ export default function BlocklyMaze() {
       (window as any).__NETSTART_DAILY_SECTION_NAME__ = dailySection?.name;
       (window as any).__NETSTART_MISSION_ID__ = missionId;
     }
-    if (isMarsLevel1 || isMarsLevel2 || isMarsLevel3 || isVenusLevel1 || isEarthLevel1 || isEarthLevel2 || isEarthLevel3 || isJupiterLevel2 || isJupiterLevel3) {
+    if (isMarsLevel1 || isMarsLevel2 || isMarsLevel3 || isVenusLevel1 || isEarthLevel1 || isEarthLevel2 || isEarthLevel3 || isJupiterLevel2 || isJupiterLevel3 || isEarthChallenge) {
       if (workspace.current) {
         (workspace.current as any).currentSectionIndex = currentSection;
         (workspace.current as any).dailySectionName = dailySection?.name;
@@ -2779,7 +2837,7 @@ export default function BlocklyMaze() {
       }
 
       return activeSection.objectives.map(obj => {
-        if (isEarthLevel1) {
+        if (isEarthLevel1 || isEarthChallenge) {
           const matchingSection = obj.id - 1;
           const unifiedKey = `${missionId}_sec${matchingSection}_goal${obj.id}`;
           const isClaimedAny = claimedList.includes(unifiedKey);
@@ -3092,6 +3150,14 @@ export default function BlocklyMaze() {
               removeNetstartItem(`netstart_saved_workspace_${id}_2`);
             });
           }
+          if (isEarthChallenge) {
+            const challengeAliases = [missionId, 'challenge-earth-ledger', 'daily-ledger'].filter(Boolean);
+            challengeAliases.forEach(id => {
+              removeNetstartItem(`netstart_saved_workspace_${id}_0`);
+              removeNetstartItem(`netstart_saved_workspace_${id}_1`);
+              removeNetstartItem(`netstart_saved_workspace_${id}_2`);
+            });
+          }
           if (isEarthLevel2) {
             const earth2Aliases = [missionId, 'earth-2', 'python-2'].filter(Boolean);
             earth2Aliases.forEach(id => {
@@ -3261,6 +3327,14 @@ export default function BlocklyMaze() {
           if (isEarthLevel1) {
             const earthAliases = [missionId, 'earth-1', 'python-1', 'earth'].filter(Boolean);
             earthAliases.forEach(id => {
+              removeNetstartItem(`netstart_saved_workspace_${id}_0`);
+              removeNetstartItem(`netstart_saved_workspace_${id}_1`);
+              removeNetstartItem(`netstart_saved_workspace_${id}_2`);
+            });
+          }
+          if (isEarthChallenge) {
+            const challengeAliases = [missionId, 'challenge-earth-ledger', 'daily-ledger'].filter(Boolean);
+            challengeAliases.forEach(id => {
               removeNetstartItem(`netstart_saved_workspace_${id}_0`);
               removeNetstartItem(`netstart_saved_workspace_${id}_1`);
               removeNetstartItem(`netstart_saved_workspace_${id}_2`);
@@ -3467,7 +3541,7 @@ export default function BlocklyMaze() {
       }
 
       const updated = activeSection.objectives.map(obj => {
-        if (isEarthLevel1) {
+        if (isEarthLevel1 || isEarthChallenge) {
           const secIdx = obj.id - 1; // goal 1 -> sec 0, goal 2 -> sec 1, goal 3 -> sec 2
           const key = `${missionId}_goal_${obj.id}`;
           const isClaimed = isReplayMode || isMissionDone || claimedList.includes(key);
@@ -3497,7 +3571,7 @@ export default function BlocklyMaze() {
     } catch (e) {
       setObjectives(activeSection.objectives.map(o => ({ ...o, completed: isReplayMode, isClaimed: isReplayMode })));
     }
-  }, [currentSection, activeSection, missionId, getNetstartItem, isReplayMode, isEarthLevel1, isJupiterLevel2]);
+  }, [currentSection, activeSection, missionId, getNetstartItem, isReplayMode, isEarthLevel1, isEarthChallenge, isJupiterLevel2]);
 
   // Save handler for NavigationGuard and level exit
   const saveLevelWorkspace = useCallback(async () => {
@@ -3730,7 +3804,7 @@ export default function BlocklyMaze() {
         } catch (e) { }
       }
 
-      if ((isVenusLevel3 || isMercuryLevel1 || isMercuryLevel2 || isMercuryLevel3 || isJupiterLevel1 || isJupiterLevel2 || isJupiterLevel3 || isSaturnLevel1 || isSaturnLevel2 || isSaturnLevel3 || isEarthLevel1 || isEarthLevel2 || isEarthLevel3) && savedXml) {
+      if ((isVenusLevel3 || isMercuryLevel1 || isMercuryLevel2 || isMercuryLevel3 || isJupiterLevel1 || isJupiterLevel2 || isJupiterLevel3 || isSaturnLevel1 || isSaturnLevel2 || isSaturnLevel3 || isEarthLevel1 || isEarthLevel2 || isEarthLevel3 || isEarthChallenge) && savedXml) {
         savedXml = savedXml
           .replace(/<block[^>]*type="event_start"[^>]*>[\s\S]*?<\/block>/gi, '')
           .replace(/<block[^>]*type="event_start"[^>]*\/>/gi, '');
@@ -3748,7 +3822,7 @@ export default function BlocklyMaze() {
         }
       }
 
-      if (isEarthLevel1 && savedXml) {
+      if ((isEarthLevel1 || isEarthChallenge) && savedXml) {
         // Discard legacy auto-generated standalone earth_data_block if no operations are attached
         if (
           savedXml.includes('id="earth_data_block"') &&
@@ -3815,7 +3889,7 @@ export default function BlocklyMaze() {
             Blockly.svgResize(ws);
             loaded = true;
           } catch (e) {}
-        } else if (isEarthLevel1 || isEarthLevel2 || isEarthLevel3 || isMarsLevel1 || isMarsLevel2 || isMarsLevel3 || isVenusLevel1 || isVenusLevel2 || isVenusLevel3 || isMercuryLevel1 || isMercuryLevel2 || isMercuryLevel3 || isJupiterLevel1 || isJupiterLevel2) {
+        } else if (isEarthLevel1 || isEarthLevel2 || isEarthLevel3 || isEarthChallenge || isMarsLevel1 || isMarsLevel2 || isMarsLevel3 || isVenusLevel1 || isVenusLevel2 || isVenusLevel3 || isMercuryLevel1 || isMercuryLevel2 || isMercuryLevel3 || isJupiterLevel1 || isJupiterLevel2) {
           Blockly.svgResize(ws);
         } else {
           const xmlText = '<xml xmlns="https://developers.google.com/blockly/xml"><block type="event_start" id="start_block" x="40" y="40" deletable="true" movable="true"></block></xml>';
@@ -3825,7 +3899,7 @@ export default function BlocklyMaze() {
         }
       }
 
-      if (isVenusLevel1 || isVenusLevel2 || isMercuryLevel1 || isMercuryLevel2 || isMercuryLevel3 || isJupiterLevel1 || isJupiterLevel2 || isJupiterLevel3 || isSaturnLevel1 || isSaturnLevel2 || isSaturnLevel3 || isEarthLevel1 || isEarthLevel2 || isEarthLevel3) {
+      if (isVenusLevel1 || isVenusLevel2 || isMercuryLevel1 || isMercuryLevel2 || isMercuryLevel3 || isJupiterLevel1 || isJupiterLevel2 || isJupiterLevel3 || isSaturnLevel1 || isSaturnLevel2 || isSaturnLevel3 || isEarthLevel1 || isEarthLevel2 || isEarthLevel3 || isEarthChallenge) {
         ws.getAllBlocks(false).forEach(b => {
           if (b.type === 'event_start') {
             b.dispose(true);
@@ -4109,6 +4183,19 @@ export default function BlocklyMaze() {
             return obj;
           }));
         }
+      } else if (isEarthChallenge) {
+        const { state: pState, validation: pVal } = parseEarthChallengeWorkspace(ws, currentSection);
+        const code = pVal.pythonCode || generateEarthChallengePythonCode(pState, currentSection);
+        setPlainEnglishCode(code);
+        setJsCode(code);
+        setEarthChallengeWorkspaceState(pState);
+        setEarthChallengeValidation(pVal);
+
+        setObjectives(prev => prev.map(obj => {
+          const secIdx = obj.id - 1;
+          const isDone = completedSections.includes(secIdx) || obj.isClaimed || isReplayMode;
+          return { ...obj, completed: isDone };
+        }));
       } else if (isEarthLevel1) {
         const { state: pState, validation: pVal } = parseEarthLevel1Workspace(ws, currentSection);
         const code = pVal.pythonCode || generateEarthPythonCode(pState, currentSection);
@@ -4163,7 +4250,7 @@ export default function BlocklyMaze() {
     } finally {
       isRestoringWorkspaceRef.current = false;
     }
-  }, [isMarsLevel1, isMarsLevel2, isMarsLevel3, isVenusLevel1, isVenusLevel2, isVenusLevel3, isMercuryLevel1, isMercuryLevel2, isJupiterLevel1, isJupiterLevel2, isJupiterLevel3, isJupiter2Wave1Complete, isJupiter2Wave2Complete, isSaturnLevel1, isSaturnLevel2, isSaturnLevel3, isEarthLevel1, isEarthLevel2, isEarthLevel3, isReplayMode, saturnWave, venus2ActivePanel, venus2SolvedPanels, venus3ActiveTab, venus3SolvedSectors, currentSection, missionId, userId, completedSections, getNetstartItem, removeNetstartItem]);
+  }, [isMarsLevel1, isMarsLevel2, isMarsLevel3, isVenusLevel1, isVenusLevel2, isVenusLevel3, isMercuryLevel1, isMercuryLevel2, isJupiterLevel1, isJupiterLevel2, isJupiterLevel3, isJupiter2Wave1Complete, isJupiter2Wave2Complete, isSaturnLevel1, isSaturnLevel2, isSaturnLevel3, isEarthLevel1, isEarthChallenge, isEarthLevel2, isEarthLevel3, isReplayMode, saturnWave, venus2ActivePanel, venus2SolvedPanels, venus3ActiveTab, venus3SolvedSectors, currentSection, missionId, userId, completedSections, getNetstartItem, removeNetstartItem]);
 
   const hasRestoredWorkspace = useRef<string | null>(null);
 
@@ -4818,7 +4905,7 @@ export default function BlocklyMaze() {
   // XP Guardrail: Only awards XP if !objective.isClaimed
   const awardDirectiveXp = useCallback((goalId: number) => {
     if (isDemoModeActive()) return false;
-    const key = isEarthLevel1
+    const key = isEarthLevel1 || isEarthChallenge
       ? `${missionId}_goal_${goalId}`
       : `${missionId}_sec${currentSection}_goal${goalId}`;
     let claimedList: string[] = [];
@@ -4836,11 +4923,11 @@ export default function BlocklyMaze() {
       setNetstartItem('netstart_claimed_directives', JSON.stringify(claimedList));
     } catch (e) { }
     return true;
-  }, [addXp, missionId, currentSection, getNetstartItem, setNetstartItem, userId, isEarthLevel1]);
+  }, [addXp, missionId, currentSection, getNetstartItem, setNetstartItem, userId, isEarthLevel1, isEarthChallenge]);
 
   const markObjectiveComplete = useCallback((id: number) => {
     let shouldAward = false;
-    const goalKey = isEarthLevel1
+    const goalKey = isEarthLevel1 || isEarthChallenge
       ? `${missionId}_goal_${id}`
       : `${missionId}_sec${currentSection}_goal${id}`;
 
@@ -4872,7 +4959,7 @@ export default function BlocklyMaze() {
     if (shouldAward) {
       awardDirectiveXp(id);
     }
-  }, [awardDirectiveXp, missionId, currentSection, getNetstartItem, setNetstartItem, userId, isEarthLevel1]);
+  }, [awardDirectiveXp, missionId, currentSection, getNetstartItem, setNetstartItem, userId, isEarthLevel1, isEarthChallenge]);
 
   const triggerMissionCompletion = async (codeSnippet: string) => {
     if (!missionId) return;
@@ -4899,7 +4986,7 @@ export default function BlocklyMaze() {
         const data = await res.json();
         setRewards({
           xpEarned: data.xpEarned ?? (isDaily ? 100 : 150),
-          gearsEarned: data.gearsEarned ?? (isDaily ? 250 : 20),
+          gearsEarned: data.gearsEarned ?? (isDaily ? 300 : 30),
         });
         if (data.completedDailyTasks && Array.isArray(data.completedDailyTasks)) {
           data.completedDailyTasks.forEach((task: any) => {
@@ -6102,6 +6189,65 @@ export default function BlocklyMaze() {
     }
   }, [earth1Validation, earthWorkspaceState, currentSection, markObjectiveComplete, handleEarth1Success]);
 
+  const handleEarthChallengeSuccess = useCallback((finalCode: string) => {
+    let codeToUse = finalCode || generateEarthChallengePythonCode(earthChallengeWorkspaceState, currentSection);
+    setPlainEnglishCode(codeToUse);
+    setJsCode(codeToUse);
+    const challengeGoalId = currentSection + 1;
+    markObjectiveComplete(challengeGoalId);
+    recordSectionCompleted(currentSection);
+    setShowPopup(true);
+
+    const bonusKey = `${missionId}_sec${currentSection}_bonus`;
+    let claimedList: string[] = [];
+    try {
+      claimedList = JSON.parse(getNetstartItem('netstart_claimed_directives') || '[]');
+    } catch (e) { }
+
+    if (!isReplayMode && !isDemoModeActive() && !claimedList.includes(bonusKey)) {
+      addXp(XP_REWARDS.SECTION_COMPLETION_BONUS, `Challenge Channel ${currentSection + 1} Decoded`);
+      claimedList.push(bonusKey);
+      try {
+        setNetstartItem('netstart_claimed_directives', JSON.stringify(claimedList));
+      } catch (e) { }
+    }
+
+    if (currentSection === 2) {
+      try {
+        removeNetstartItem('netstart_active_saved_level');
+        removeNetstartItem('netstart_active_level');
+        const challengeAliases = [missionId, 'challenge-earth-ledger', 'daily-ledger'].filter(Boolean);
+        challengeAliases.forEach(id => {
+          removeNetstartItem(`netstart_saved_workspace_${id}_0`);
+          removeNetstartItem(`netstart_saved_workspace_${id}_1`);
+          removeNetstartItem(`netstart_saved_workspace_${id}_2`);
+        });
+        if (!isDemoModeActive() && missionId) {
+          const compKey = 'netstart_completed_missions';
+          const existing: string[] = JSON.parse(getNetstartItem(compKey) || '[]');
+          if (!existing.includes(missionId)) {
+            existing.push(missionId);
+            setNetstartItem(compKey, JSON.stringify(existing));
+          }
+        }
+      } catch (e) { }
+      triggerMissionCompletion(codeToUse);
+    }
+  }, [earthChallengeWorkspaceState, markObjectiveComplete, recordSectionCompleted, setShowPopup, missionId, isReplayMode, addXp, triggerMissionCompletion, currentSection]);
+
+  const handleEarthChallengeSimulationComplete = useCallback((success: boolean, failureReason?: string) => {
+    setIsRunning(false);
+    if (success) {
+      const py = earthChallengeValidation.pythonCode || generateEarthChallengePythonCode(earthChallengeWorkspaceState, currentSection);
+      handleEarthChallengeSuccess(py);
+    } else if (failureReason) {
+      setErrorToastMessage(failureReason);
+      setShowErrorToast(true);
+      if (errorToastTimer.current) clearTimeout(errorToastTimer.current);
+      errorToastTimer.current = setTimeout(() => setShowErrorToast(false), 5000);
+    }
+  }, [earthChallengeValidation, earthChallengeWorkspaceState, currentSection, markObjectiveComplete, handleEarthChallengeSuccess]);
+
   const handleEarth2SimulationComplete = useCallback((success: boolean, message?: string) => {
     setIsRunning(false);
     if (success) {
@@ -6958,6 +7104,24 @@ export default function BlocklyMaze() {
                 return obj;
               }));
             }
+          } else if (isEarthChallenge) {
+            const activeSec = (workspace.current as any)?.currentSectionIndex ?? currentSection;
+            const { state: pState, validation: pVal } = parseEarthChallengeWorkspace(workspace.current, activeSec);
+            const code = pVal.pythonCode || generateEarthChallengePythonCode(pState, activeSec);
+            setPlainEnglishCode(code);
+            setJsCode(code);
+            setEarthChallengeWorkspaceState(pState);
+            setEarthChallengeValidation(pVal);
+
+            const isSecDone = completedSections.includes(currentSection);
+            setObjectives(prev => prev.map(obj => {
+              const secIdx = obj.id - 1;
+              const isDone = completedSections.includes(secIdx) || obj.isClaimed || isReplayMode;
+              if (secIdx === currentSection) {
+                return { ...obj, completed: isDone };
+              }
+              return { ...obj, completed: isDone };
+            }));
           } else if (isEarthLevel1) {
             const activeSec = (workspace.current as any)?.currentSectionIndex ?? currentSection;
             const { state: pState, validation: pVal } = parseEarthLevel1Workspace(workspace.current, activeSec);
@@ -7963,6 +8127,21 @@ export default function BlocklyMaze() {
       }
     }
 
+    if (isEarthChallenge) {
+      setIsRunning(false);
+      setEarthChallengeValidation(INITIAL_EARTH_1_VALIDATION);
+      setEarthChallengeWorkspaceState(INITIAL_EARTH_1_WORKSPACE);
+      const challengeAliases = [missionId, 'challenge-earth-ledger', 'daily-ledger'].filter(Boolean);
+      try {
+        challengeAliases.forEach(id => {
+          removeNetstartItem(`netstart_saved_workspace_${id}_0`);
+          removeNetstartItem(`netstart_saved_workspace_${id}_1`);
+          removeNetstartItem(`netstart_saved_workspace_${id}_2`);
+          removeNetstartItem(`netstart_completed_goals_${id}`);
+        });
+      } catch (e) { }
+    }
+
     if (isEarthLevel1) {
       setIsRunning(false);
       setEarth1Validation(INITIAL_EARTH_1_VALIDATION);
@@ -8009,7 +8188,7 @@ export default function BlocklyMaze() {
     }
 
     setIsPaused(false);
-  }, [missionId, isMarsLevel1, isVenusLevel1, isVenusLevel2, isVenusLevel3, isMercuryLevel1, isMercuryLevel2, isMercuryLevel3, isJupiterLevel1, isSaturnLevel1, isEarthLevel1, isEarthLevel2, removeXp, resetWorkspaceToDefaultStart, isLevel2, isLevel3, currentMissionSections, dailySection?.name, handleMercury3Reset]);
+  }, [missionId, isMarsLevel1, isVenusLevel1, isVenusLevel2, isVenusLevel3, isMercuryLevel1, isMercuryLevel2, isMercuryLevel3, isJupiterLevel1, isSaturnLevel1, isEarthLevel1, isEarthChallenge, isEarthLevel2, removeXp, resetWorkspaceToDefaultStart, isLevel2, isLevel3, currentMissionSections, dailySection?.name, handleMercury3Reset]);
 
   const resetGame = () => {
     executionIdRef.current++;
@@ -8060,6 +8239,12 @@ export default function BlocklyMaze() {
           if (o.id === 1) return { ...o, completed: Boolean(pVal.hasStart && pVal.hasEnd) };
           if (o.id === 2) return { ...o, completed: Boolean(pVal.hasShield || pVal.hasGreetUfo || saturn2ShieldActivated || saturn2UfoGreeted) };
           if (o.id === 3) return { ...o, completed: isSecDone };
+        }
+        if (isEarthChallenge && workspace.current) {
+          const { state: pState, validation: pVal } = parseEarthChallengeWorkspace(workspace.current, currentSection);
+          if (o.id === 1) return { ...o, completed: Boolean(pState.hasSlice) };
+          if (o.id === 2) return { ...o, completed: Boolean(pState.hasReplace || pState.hasSplit) };
+          if (o.id === 3) return { ...o, completed: Boolean(pVal.isCorrect) };
         }
         if (isEarthLevel1 && workspace.current) {
           const { state: pState, validation: pVal } = parseEarthLevel1Workspace(workspace.current, currentSection);
@@ -8150,6 +8335,13 @@ export default function BlocklyMaze() {
         const pVal = parseSaturnLevel2Workspace(workspace.current);
         setSaturn2Validation(pVal);
       }
+    } else if (isEarthChallenge) {
+      setIsRunning(false);
+      if (workspace.current) {
+        const { state, validation } = parseEarthChallengeWorkspace(workspace.current, currentSection);
+        setEarthChallengeWorkspaceState(state);
+        setEarthChallengeValidation(validation);
+      }
     } else if (isEarthLevel1) {
       setIsRunning(false);
       if (workspace.current) {
@@ -8213,6 +8405,9 @@ export default function BlocklyMaze() {
 
     executionIdRef.current++;
     const thisExecId = executionIdRef.current;
+
+    // Trigger daily task for running code in sandbox if active
+    triggerDailyTaskCompletion("task-curriculum-2");
 
     // Reset state and evaluate objectives fresh for this execution run (preserving already achieved milestones)
     try {
@@ -8279,7 +8474,7 @@ export default function BlocklyMaze() {
           if (o.id === 2) return { ...o, completed: Boolean((hasAllPointers && hasAllAllocations) || (hasAllAllocations && hasAllRuns)) };
           if (o.id === 3) return { ...o, completed: isSecDone };
         }
-        if (isEarthLevel1 && workspace.current) {
+        if ((isEarthLevel1 || isEarthChallenge) && workspace.current) {
           const secIdx = o.id - 1;
           const isDone = compSections.includes(secIdx) || completedGoals.includes(`${missionId}_goal_${o.id}`);
           if (secIdx === currentSection) {
@@ -9466,6 +9661,47 @@ export default function BlocklyMaze() {
     }
 
     // =========================================================================
+    // EARTH CHALLENGE: LEDGER CIPHER RECOVERY (ADVANCED PYTHON STRING OPERATIONS)
+    // =========================================================================
+    if (isEarthChallenge) {
+      clearAllBlockHighlights(workspace.current);
+      const allBlocks = workspace.current.getAllBlocks(false);
+      const { state: pState, validation: pVal } = parseEarthChallengeWorkspace(workspace.current, currentSection);
+      setEarthChallengeWorkspaceState(pState);
+      setEarthChallengeValidation(pVal);
+      const code = pVal.pythonCode || generateEarthChallengePythonCode(pState, currentSection);
+      setPlainEnglishCode(code);
+      setJsCode(code);
+
+      setObjectives(prev => prev.map(obj => {
+        const secIdx = obj.id - 1;
+        const isDone = completedSections.includes(secIdx) || obj.isClaimed || isReplayMode;
+        if (secIdx === currentSection) {
+          return { ...obj, completed: isDone };
+        }
+        return { ...obj, completed: isDone };
+      }));
+
+      if (allBlocks.length === 0 || pVal.errorType === 'EMPTY') {
+        setIsBumping(true);
+        setIsStartError(true);
+        setTimeout(() => {
+          setIsBumping(false);
+          setIsStartError(false);
+        }, 800);
+
+        setErrorToastMessage(pVal.errorMessage || "Workspace is empty! Drag out 'Load Data' to start.");
+        setShowErrorToast(true);
+        if (errorToastTimer.current) clearTimeout(errorToastTimer.current);
+        errorToastTimer.current = setTimeout(() => setShowErrorToast(false), 5000);
+        return;
+      }
+
+      setIsRunning(true);
+      return;
+    }
+
+    // =========================================================================
     // EARTH LEVEL 1: FIX THE MASTER LEDGER! (PYTHON STRING METHODS & SLICING)
     // =========================================================================
     if (isEarthLevel1) {
@@ -10131,7 +10367,7 @@ export default function BlocklyMaze() {
           markObjectiveComplete(1);
         }
         const xml = workspace.current ? Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(workspace.current)) : '';
-        if (xml.includes('controls_if') || xml.includes('color_green') || xml.includes('color_is') || xml.includes('action_add_solution')) {
+        if (xml.includes('controls_if') || xml.includes('color_blue') || xml.includes('color_green') || xml.includes('color_is') || xml.includes('action_increase_heat')) {
           markObjectiveComplete(2);
         }
 
@@ -11416,6 +11652,9 @@ export default function BlocklyMaze() {
       if (!raw) {
         raw = jupiter2Validation?.javaCode || '';
       }
+    } else if (isEarthChallenge) {
+      const livePython = earthChallengeValidation?.pythonCode || (workspace.current ? parseEarthChallengeWorkspace(workspace.current, currentSection).validation.pythonCode : '') || generateEarthChallengePythonCode(earthChallengeWorkspaceState, currentSection);
+      raw = livePython || '/* No code generated */';
     } else if (isEarthLevel1) {
       const livePython = earth1Validation?.pythonCode || (workspace.current ? parseEarthLevel1Workspace(workspace.current, currentSection).validation.pythonCode : '') || generateEarthPythonCode(earthWorkspaceState, currentSection);
       raw = livePython || '/* No code generated */';
@@ -11429,14 +11668,14 @@ export default function BlocklyMaze() {
       raw = earth3Code || (workspace.current ? javascriptGenerator.workspaceToCode(workspace.current) : '');
     }
     return raw || '/* No code generated */';
-  }, [plainEnglishCode, jsCode, isJupiterLevel1, isJupiterLevel2, jupiter2Validation, isSaturnLevel1, isSaturnLevel2, saturn2Validation, isEarthLevel1, isEarthLevel2, isEarthLevel3, earth3Code, currentSection, earthWorkspaceState, earth1Validation, earth2Tab1Validation, earth2Tab2Validation, saturnWave, saturnWorkspaceState, saturn1Validation, isMercuryLevel1, isMercuryLevel2, isMercuryLevel3, mercury3HtmlCode, mercury3CssCode, mercury3JsCode, isVenusLevel1, isVenusLevel2, isVenusLevel3, venus2ActivePanel, venus3ActiveTab, jupiter1Validation]);
+  }, [plainEnglishCode, jsCode, isJupiterLevel1, isJupiterLevel2, jupiter2Validation, isSaturnLevel1, isSaturnLevel2, saturn2Validation, isEarthLevel1, isEarthChallenge, earthChallengeWorkspaceState, earthChallengeValidation, isEarthLevel2, isEarthLevel3, earth3Code, currentSection, earthWorkspaceState, earth1Validation, earth2Tab1Validation, earth2Tab2Validation, saturnWave, saturnWorkspaceState, saturn1Validation, isMercuryLevel1, isMercuryLevel2, isMercuryLevel3, mercury3HtmlCode, mercury3CssCode, mercury3JsCode, isVenusLevel1, isVenusLevel2, isVenusLevel3, venus2ActivePanel, venus3ActiveTab, jupiter1Validation]);
 
   const syntaxExplanations = useMemo(() => {
     if (!completionModalCode || completionModalCode === '/* No code generated */') return [];
     const lines = completionModalCode.split('\n');
     const isHtml = isMarsLevel1 || isMarsLevel2 || isMarsLevel3 || (isVenusLevel3 && venus3ActiveTab === 'main') || (isMercuryLevel3 && mercury3ActiveTab === 'html');
     const isCss = isVenusLevel1 || isVenusLevel2 || (isVenusLevel3 && venus3ActiveTab !== 'main') || (isMercuryLevel3 && mercury3ActiveTab === 'css');
-    const langMode = isSaturnLevel1 || isSaturnLevel2 || isSaturnLevel3 ? 'cpp' : isEarthLevel1 || isEarthLevel2 || isEarthLevel3 ? 'python' : isJupiterLevel1 || isJupiterLevel2 || isJupiterLevel3 ? 'java' : isMercuryLevel1 || isMercuryLevel2 || isMercuryLevel3 ? 'javascript' : undefined;
+    const langMode = isSaturnLevel1 || isSaturnLevel2 || isSaturnLevel3 ? 'cpp' : isEarthLevel1 || isEarthLevel2 || isEarthLevel3 || isEarthChallenge ? 'python' : isJupiterLevel1 || isJupiterLevel2 || isJupiterLevel3 ? 'java' : isMercuryLevel1 || isMercuryLevel2 || isMercuryLevel3 ? 'javascript' : undefined;
 
     const seen = new Set<string>();
     const list: Array<{ line: string; exp: SyntaxExplanation }> = [];
@@ -11451,7 +11690,7 @@ export default function BlocklyMaze() {
       }
     }
     return list;
-  }, [completionModalCode, isMarsLevel1, isMarsLevel2, isMarsLevel3, isVenusLevel1, isVenusLevel2, isVenusLevel3, venus3ActiveTab, isSaturnLevel1, isSaturnLevel2, isEarthLevel1, isEarthLevel2, isEarthLevel3, isJupiterLevel1, isJupiterLevel2, isMercuryLevel1, isMercuryLevel2]);
+  }, [completionModalCode, isMarsLevel1, isMarsLevel2, isMarsLevel3, isVenusLevel1, isVenusLevel2, isVenusLevel3, venus3ActiveTab, isSaturnLevel1, isSaturnLevel2, isEarthLevel1, isEarthChallenge, isEarthLevel2, isEarthLevel3, isJupiterLevel1, isJupiterLevel2, isMercuryLevel1, isMercuryLevel2]);
 
   return (
     <div className="w-full h-full flex flex-col bg-[#0d0418] text-white overflow-hidden select-none font-sans min-h-0">
@@ -11617,7 +11856,7 @@ export default function BlocklyMaze() {
                 {/* Objectives List with 3-State System */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-xs font-mono text-gray-400 uppercase tracking-wider font-bold px-1">
-                    <span>{isEarthLevel1 ? 'Mission Objectives' : currentMissionSections.length > 1 ? `Section ${currentSection + 1} Objectives` : 'Objectives'}</span>
+                    <span>{isEarthLevel1 || isEarthChallenge ? 'Mission Objectives' : currentMissionSections.length > 1 ? `Section ${currentSection + 1} Objectives` : 'Objectives'}</span>
                     <span>{completedCount}/{totalCount} Completed</span>
                   </div>
 
@@ -11697,6 +11936,9 @@ export default function BlocklyMaze() {
               </div>
             )}
           </div>
+
+          {/* Background Music Mute / Unmute Toggle Button */}
+          <MusicToggleButton variant="rounded" size="md" />
 
           {/* AI Assist Button */}
           <button
@@ -12235,6 +12477,11 @@ export default function BlocklyMaze() {
                   }
                   mode="cpp"
                 />
+              ) : isEarthChallenge ? (
+                <SyntaxViewer
+                  code={earthChallengeValidation.pythonCode || generateEarthChallengePythonCode(earthChallengeWorkspaceState, currentSection)}
+                  mode="python"
+                />
               ) : isEarthLevel1 || isEarthLevel2 ? (
                 <SyntaxViewer
                   code={
@@ -12538,6 +12785,31 @@ export default function BlocklyMaze() {
                   }
                 }}
                 onExitToModules={() => requestNavigation('/modules/saturn')}
+              />
+            </div>
+          ) : isEarthChallenge ? (
+            <div className="flex-1 min-h-0 min-w-0 w-full h-full flex flex-col overflow-hidden relative">
+              <EarthLevel1Lab
+                sectionIndex={currentSection}
+                validation={earthChallengeValidation}
+                workspaceState={earthChallengeWorkspaceState}
+                isRunning={isRunning}
+                sectionSpecs={EARTH_CHALLENGE_SECTION_SPECS}
+                onSimulationComplete={handleEarthChallengeSimulationComplete}
+                onAdvanceSection={() => {
+                  if (currentSection < 2) {
+                    recordSectionCompleted(currentSection);
+                    const nextSec = currentSection + 1;
+                    const challengeAliases = [missionId, 'challenge-earth-ledger', 'daily-ledger'].filter(Boolean);
+                    challengeAliases.forEach(id => {
+                      removeNetstartItem(`netstart_saved_workspace_${id}_${nextSec}`);
+                    });
+                    loadSection(nextSec);
+                    showToast("Signal decrypted! Moving to next transmission channel.");
+                  } else {
+                    handleEarthChallengeSuccess(earthChallengeValidation.pythonCode);
+                  }
+                }}
               />
             </div>
           ) : isEarthLevel1 ? (
@@ -13672,7 +13944,7 @@ export default function BlocklyMaze() {
                         ? 'text-purple-300/70 line-through'
                         : 'text-purple-300 drop-shadow-[0_0_12px_rgba(192,132,252,0.6)]'
                       }`}>
-                      <span>{isDemoModeActive() ? '+0 Gears (Demo)' : isDaily ? '+250 Gears' : '+20 Gears'}</span>
+                      <span>{isDemoModeActive() ? '+0 Gears (Demo)' : isDaily ? '+300 Gears' : '+30 Gears'}</span>
                     </div>
                   </div>
                 )}
@@ -13750,7 +14022,7 @@ export default function BlocklyMaze() {
                     <span className={`px-2 py-0.5 rounded text-[11px] font-mono uppercase font-bold border ${
                       isSaturnLevel1 || isSaturnLevel2 || isSaturnLevel3
                         ? 'text-cyan-400 bg-cyan-400/10 border-cyan-400/20'
-                        : isEarthLevel1 || isEarthLevel2
+                        : isEarthLevel1 || isEarthLevel2 || isEarthChallenge
                         ? 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20'
                         : isJupiterLevel1 || isJupiterLevel2 || isJupiterLevel3
                         ? 'text-amber-400 bg-amber-400/10 border-amber-400/20'
@@ -13764,7 +14036,7 @@ export default function BlocklyMaze() {
                         ? 'text-[#38bdf8] bg-[#38bdf8]/10 border-[#38bdf8]/20'
                         : 'text-[#ff912d] bg-[#ff912d]/10 border-[#ff912d]/20'
                     }`}>
-                      {isSaturnLevel1 || isSaturnLevel2 || isSaturnLevel3 ? 'C++' : isEarthLevel1 || isEarthLevel2 ? 'Python' : isJupiterLevel1 || isJupiterLevel2 || isJupiterLevel3 ? 'Java' : isMercuryLevel3 ? 'Full-Stack' : isMercuryLevel1 || isMercuryLevel2 ? 'JavaScript' : isVenusLevel3 ? (venus3ActiveTab === 'main' ? 'HTML' : 'CSS') : isVenusLevel1 || isVenusLevel2 ? 'CSS' : isMarsLevel1 || isMarsLevel2 || isMarsLevel3 ? 'HTML' : 'Logic'}
+                      {isSaturnLevel1 || isSaturnLevel2 || isSaturnLevel3 ? 'C++' : isEarthLevel1 || isEarthLevel2 || isEarthChallenge ? 'Python' : isJupiterLevel1 || isJupiterLevel2 || isJupiterLevel3 ? 'Java' : isMercuryLevel3 ? 'Full-Stack' : isMercuryLevel1 || isMercuryLevel2 ? 'JavaScript' : isVenusLevel3 ? (venus3ActiveTab === 'main' ? 'HTML' : 'CSS') : isVenusLevel1 || isVenusLevel2 ? 'CSS' : isMarsLevel1 || isMarsLevel2 || isMarsLevel3 ? 'HTML' : 'Logic'}
                     </span>
                   </div>
 
@@ -13772,7 +14044,7 @@ export default function BlocklyMaze() {
                   {completionTab === 'code' ? (
                     <div className="flex flex-col gap-2 flex-1 min-h-0">
                       <div className={`overflow-auto max-h-[145px] font-mono text-xs leading-relaxed pr-1 rounded-lg bg-black/40 p-2.5 border border-white/5 ${
-                        isSaturnLevel1 || isSaturnLevel2 || isSaturnLevel3 ? 'text-cyan-300' : isEarthLevel1 || isEarthLevel2 ? 'text-emerald-300' : isJupiterLevel1 || isJupiterLevel2 || isJupiterLevel3 ? 'text-amber-300' : isMercuryLevel3 ? 'text-orange-300' : isMercuryLevel1 || isMercuryLevel2 ? 'text-yellow-300' : isVenusLevel1 || isVenusLevel2 || isVenusLevel3 ? 'text-cyan-300' : isMarsLevel1 || isMarsLevel2 || isMarsLevel3 ? 'text-sky-300' : 'text-[#ff912d]'
+                        isSaturnLevel1 || isSaturnLevel2 || isSaturnLevel3 ? 'text-cyan-300' : isEarthLevel1 || isEarthLevel2 || isEarthChallenge ? 'text-emerald-300' : isJupiterLevel1 || isJupiterLevel2 || isJupiterLevel3 ? 'text-amber-300' : isMercuryLevel3 ? 'text-orange-300' : isMercuryLevel1 || isMercuryLevel2 ? 'text-yellow-300' : isVenusLevel1 || isVenusLevel2 || isVenusLevel3 ? 'text-cyan-300' : isMarsLevel1 || isMarsLevel2 || isMarsLevel3 ? 'text-sky-300' : 'text-[#ff912d]'
                       }`}>
                         <div className="space-y-0.5">
                           {completionModalCode.split('\n').map((line, idx) => {

@@ -22,84 +22,91 @@ export interface DailyTaskNotificationData {
 }
 
 export const DAILY_TASKS_CONFIG: Record<string, Omit<DailyTaskDefinition, "id">> = {
+  // Slot 1: Daily Challenge Staple
   "task-daily-level": {
     title: "Complete Today's Daily Challenge",
     tag: "DAILY",
-    desc: "Finish today's quick practice coding challenge.",
+    desc: "Solve today's featured coding challenge in the sandbox.",
     xpReward: XP_REWARDS.DAILY_COMMISSIONS.MISSION_XP,
-    gearsReward: 20,
+    gearsReward: 30,
     link: "/sandbox?mode=daily",
   },
+
+  // Slot 2: Coding & Missions Rotation
   "task-curriculum-1": {
-    title: "Finish 1 Curriculum Lesson",
-    tag: "LESSON",
-    desc: "Complete any 1 lesson in your current course.",
+    title: "Finish 1 Planet Mission",
+    tag: "MISSION",
+    desc: "Solve and complete any coding level on your current planet course.",
     xpReward: XP_REWARDS.DAILY_COMMISSIONS.MISSION_XP,
-    gearsReward: 10,
+    gearsReward: 30,
     link: "/modules",
   },
   "task-curriculum-2": {
-    title: "Finish 1 Planet Level",
-    tag: "PLANET",
-    desc: "Solve any 1 coding level on the planet map.",
+    title: "Test Code in the Sandbox",
+    tag: "SANDBOX",
+    desc: "Run a script or test code blocks in the free-play Sandbox.",
     xpReward: XP_REWARDS.DAILY_COMMISSIONS.MISSION_XP,
-    gearsReward: 10,
-    link: "/modules",
+    gearsReward: 30,
+    link: "/sandbox",
   },
   "task-curriculum-3": {
-    title: "Play 1 Rover Level",
-    tag: "GAME",
-    desc: "Move your rover past blocks to reach the goal.",
+    title: "Review a Story Archive Log",
+    tag: "STORY",
+    desc: "Open the Story Archive and review a planetary mission cutscene.",
     xpReward: XP_REWARDS.DAILY_COMMISSIONS.MISSION_XP,
-    gearsReward: 10,
+    gearsReward: 30,
     link: "/modules",
   },
+
+  // Slot 3: Avatar Studio & Starport Gear Rotation
   "task-explore-1": {
-    title: "Visit the Shop",
-    tag: "EXPLORE",
-    desc: "Take a look at items and outfits in the shop.",
+    title: "Customize Your Avatar",
+    tag: "AVATAR",
+    desc: "Equip or customize an item layer in the Avatar Studio.",
     xpReward: XP_REWARDS.DAILY_COMMISSIONS.MISSION_XP,
-    gearsReward: 5,
+    gearsReward: 30,
     link: "/shop",
   },
   "task-explore-2": {
-    title: "View the Planet Map",
-    tag: "EXPLORE",
-    desc: "Look at the planets and courses on the map.",
-    xpReward: XP_REWARDS.DAILY_COMMISSIONS.MISSION_XP,
-    gearsReward: 5,
-    link: "/modules",
-  },
-  "task-explore-3": {
-    title: "Look at Space Suits",
+    title: "Inspect Starport Supplies",
     tag: "SHOP",
-    desc: "Check out astronaut suits and gear in the shop.",
+    desc: "Preview an outfit, hair, or accessory in the Starport Shop.",
     xpReward: XP_REWARDS.DAILY_COMMISSIONS.MISSION_XP,
-    gearsReward: 5,
+    gearsReward: 30,
     link: "/shop",
   },
-  "task-achieve-1": {
-    title: "Check Your Badges",
-    tag: "BADGES",
-    desc: "See the badges and trophies you have unlocked.",
+  "task-explore-3": {
+    title: "Explore Course Tracks",
+    tag: "EXPEDITION",
+    desc: "Inspect a course track on the planetary solar system map.",
     xpReward: XP_REWARDS.DAILY_COMMISSIONS.MISSION_XP,
-    gearsReward: 5,
-    link: "/achievements",
+    gearsReward: 30,
+    link: "/modules",
+  },
+
+  // Slot 4: Pilot Career, Aptitude & Badges Rotation
+  "task-achieve-1": {
+    title: "Analyze Cognitive Aptitudes",
+    tag: "APTITUDE",
+    desc: "Inspect your cognitive metrics radar on your Pilot Passport.",
+    xpReward: XP_REWARDS.DAILY_COMMISSIONS.MISSION_XP,
+    gearsReward: 30,
+    link: "/profile",
   },
   "task-achieve-2": {
-    title: "View Your Profile",
+    title: "Calibrate Pilot Profile",
     tag: "PROFILE",
-    desc: "Check your level, gears, and stats on your profile.",
+    desc: "Update your bio, title, or review your stats on your profile.",
     xpReward: XP_REWARDS.DAILY_COMMISSIONS.MISSION_XP,
-    gearsReward: 5,
+    gearsReward: 30,
     link: "/profile",
   },
   "task-achieve-3": {
-    title: "Check Achievements",
+    title: "Inspect Badge Accolades",
     tag: "BADGES",
-    desc: "See your progress toward new achievements.",
+    desc: "Review your earned badges and milestone progress in Achievements.",
     xpReward: XP_REWARDS.DAILY_COMMISSIONS.MISSION_XP,
-    gearsReward: 5,
+    gearsReward: 30,
     link: "/achievements",
   },
 };
@@ -115,7 +122,7 @@ export function getDailyTaskInfo(taskId: string): DailyTaskDefinition {
     tag: "DAILY",
     desc: "Completed a daily mission task.",
     xpReward: XP_REWARDS.DAILY_COMMISSIONS.MISSION_XP,
-    gearsReward: 5,
+    gearsReward: 30,
     link: "/dashboard",
   };
 }
@@ -148,5 +155,42 @@ export function getTodayActiveDailyTaskIds(date: Date = new Date()): string[] {
     expTaskId,
     achTaskId,
   ];
+}
+
+/**
+ * Triggers completion for an active daily task from the client side.
+ * Validates with the backend and broadcasts the notification toast if newly completed.
+ */
+export async function triggerDailyTaskCompletion(taskId: string): Promise<boolean> {
+  if (typeof window === "undefined") return false;
+  try {
+    const res = await fetch("/api/daily-tasks/complete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ taskId }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success && !data.alreadyCompleted) {
+        window.dispatchEvent(
+          new CustomEvent("daily_task_completed", {
+            detail: {
+              taskId,
+              title: data.task?.title || "Daily Task Completed",
+              tag: data.task?.tag || "DAILY",
+              desc: data.task?.desc || "Completed a daily mission task.",
+              xpEarned: data.xpEarned || 25,
+              gearsEarned: data.gearsEarned || 30,
+              notificationId: data.notificationId,
+            },
+          })
+        );
+        return true;
+      }
+    }
+  } catch (err) {
+    console.warn(`Failed to complete daily task ${taskId}:`, err);
+  }
+  return false;
 }
 

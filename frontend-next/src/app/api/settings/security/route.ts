@@ -20,11 +20,22 @@ export async function PUT(req: Request) {
     }
 
     const updates: any = {};
+    let isCurrentPasswordVerified = false;
 
     if (email && email !== user.email) {
+      if (user.password) {
+        if (!currentPassword) {
+          return NextResponse.json({ error: 'Current password is required to change email' }, { status: 400 });
+        }
+        const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+        if (!isPasswordValid) {
+          return NextResponse.json({ error: 'Incorrect current password' }, { status: 400 });
+        }
+        isCurrentPasswordVerified = true;
+      }
       const emailExists = await prisma.user.findUnique({ where: { email } });
       if (emailExists) {
-         return NextResponse.json({ error: 'Email already in use' }, { status: 400 });
+        return NextResponse.json({ error: 'Email already in use' }, { status: 400 });
       }
       updates.email = email;
     }
@@ -36,9 +47,11 @@ export async function PUT(req: Request) {
       if (!user.password) {
         return NextResponse.json({ error: 'User registered via OAuth cannot change password here' }, { status: 400 });
       }
-      const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
-      if (!isPasswordValid) {
-        return NextResponse.json({ error: 'Incorrect current password' }, { status: 400 });
+      if (!isCurrentPasswordVerified) {
+        const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+        if (!isPasswordValid) {
+          return NextResponse.json({ error: 'Incorrect current password' }, { status: 400 });
+        }
       }
 
       const passwordError = validatePassword(newPassword);

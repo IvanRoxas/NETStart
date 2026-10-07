@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Sparkles, Brain, Plus, Trash2, CheckCircle2, XCircle, RefreshCw, Layers, Edit3, ChevronDown, ChevronUp, AlertTriangle } from 'lucide-react';
+import { Sparkles, Brain, Plus, Trash2, CheckCircle2, XCircle, RefreshCw, Layers, Edit3, AlertTriangle } from 'lucide-react';
 import {
   getAdminAptitudeQuestions,
   generateAptitudeQuestionsAI,
@@ -15,50 +15,13 @@ export default function AptitudeManagement() {
   const [questions, setQuestions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
-  const [generateCount, setGenerateCount] = useState<number | string>(5);
+  const [generateCount, setGenerateCount] = useState<number>(5);
+  const [aiCategory, setAiCategory] = useState<"MIXED" | "LOGIC" | "PATTERN" | "CODING_READINESS">("MIXED");
+  const [aiDifficulty, setAiDifficulty] = useState<"STANDARD" | "STRICT_TECHNICAL" | "BEGINNER">("STANDARD");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Deletion Confirmation Modal state (No browser confirm)
   const [deletingId, setDeletingId] = useState<string | null>(null);
-
-  // Custom AI System Prompt State
-  const [showPromptEditor, setShowPromptEditor] = useState(false);
-  const [customPrompt, setCustomPrompt] = useState(`Act as an expert computer science and cognitive assessment author.
-Generate 5 distinct Aptitude Assessment diagnostic questions for software engineering candidates.
-Target category focus: "MIXED" (Allowed categories: LOGIC, PATTERN, CODING_READINESS).
-Supported question types: "MULTIPLE_CHOICE", "TRUE_FALSE", "SHORT_ANSWER".
-
-STRICT REQUIREMENT: Respond ONLY with a valid raw JSON object conforming EXACTLY to this schema:
-{
-  "questions": [
-    {
-      "question": "Clear diagnostic question text",
-      "questionType": "MULTIPLE_CHOICE",
-      "category": "LOGIC",
-      "options": ["Option A", "Option B", "Option C", "Option D"],
-      "correctAnswer": 0,
-      "shortAnswer": "",
-      "explanation": "Brief explanation"
-    },
-    {
-      "question": "An algorithm with O(1) time complexity runs in constant time.",
-      "questionType": "TRUE_FALSE",
-      "category": "LOGIC",
-      "options": ["True", "False"],
-      "correctAnswer": 0,
-      "explanation": "O(1) denotes constant time performance."
-    },
-    {
-      "question": "What keyword is used in JavaScript to declare an immutable constant variable?",
-      "questionType": "SHORT_ANSWER",
-      "category": "CODING_READINESS",
-      "options": [],
-      "correctAnswer": 0,
-      "shortAnswer": "const",
-      "explanation": "const declares block-scoped immutable references."
-    }
-  ]
-}`);
 
   // Manual Creation / Edit Modal state
   const [showModal, setShowModal] = useState(false);
@@ -93,10 +56,10 @@ STRICT REQUIREMENT: Respond ONLY with a valid raw JSON object conforming EXACTLY
   };
 
   const handleGenerateAI = async () => {
-    const count = typeof generateCount === 'number' ? generateCount : parseInt(String(generateCount), 10) || 5;
+    const count = Math.min(Math.max(1, Number(generateCount) || 5), 10);
     setGenerating(true);
     try {
-      const res = await generateAptitudeQuestionsAI(customPrompt, "MIXED", count);
+      const res = await generateAptitudeQuestionsAI(aiCategory, aiDifficulty, count);
       showNotification(`Successfully generated ${res.count} AI Aptitude questions!`);
       await loadQuestions();
     } catch (err: any) {
@@ -218,7 +181,7 @@ STRICT REQUIREMENT: Respond ONLY with a valid raw JSON object conforming EXACTLY
 
       {/* Header Banner & AI Generator Control Card */}
       <div className="bg-[#1e0a2d] border border-[#ff912d]/30 rounded-3xl p-6 sm:p-8 shadow-xl space-y-6 relative overflow-hidden">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10">
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 relative z-10">
           <div className="space-y-1 max-w-xl">
             <div className="flex items-center gap-2">
               <Brain className="text-[#ff912d]" size={24} />
@@ -226,163 +189,78 @@ STRICT REQUIREMENT: Respond ONLY with a valid raw JSON object conforming EXACTLY
                 A.I. Quiz Generation Engine
               </h2>
             </div>
+            <p className="text-xs text-gray-400">
+              Generate structured, diagnostic aptitude test items with vetted cognitive frameworks.
+            </p>
           </div>
 
-          {/* AI Generation Inputs & Trigger */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
-            <div className="flex items-center gap-2 bg-black/40 border border-white/20 px-3.5 py-2 rounded-xl">
-              <span className="text-xs font-mono text-gray-300 font-bold whitespace-nowrap">Questions:</span>
+          {/* AI Generation Parameters & Trigger */}
+          <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+            {/* Category Focus Selector */}
+            <div className="flex flex-col gap-1">
+              <span className="text-[10px] font-mono text-gray-400 uppercase font-bold">Category</span>
+              <select
+                value={aiCategory}
+                onChange={(e) => setAiCategory(e.target.value as any)}
+                className="bg-black/40 border border-white/20 px-3 py-2 rounded-xl text-xs font-bold text-white outline-none focus:border-[#ff912d] cursor-pointer"
+              >
+                <option value="MIXED">Mixed (Balanced)</option>
+                <option value="LOGIC">Logic</option>
+                <option value="PATTERN">Pattern Recognition</option>
+                <option value="CODING_READINESS">Coding Readiness</option>
+              </select>
+            </div>
+
+            {/* Difficulty Selector */}
+            <div className="flex flex-col gap-1">
+              <span className="text-[10px] font-mono text-gray-400 uppercase font-bold">Difficulty</span>
+              <select
+                value={aiDifficulty}
+                onChange={(e) => setAiDifficulty(e.target.value as any)}
+                className="bg-black/40 border border-white/20 px-3 py-2 rounded-xl text-xs font-bold text-white outline-none focus:border-[#ff912d] cursor-pointer"
+              >
+                <option value="STANDARD">Standard</option>
+                <option value="STRICT_TECHNICAL">Strict Technical</option>
+                <option value="BEGINNER">Beginner Friendly</option>
+              </select>
+            </div>
+
+            {/* Bounded Count Input */}
+            <div className="flex flex-col gap-1">
+              <span className="text-[10px] font-mono text-gray-400 uppercase font-bold">Count (1-10)</span>
               <input
                 type="number"
                 min={1}
-                max={50}
+                max={10}
                 value={generateCount}
                 onChange={(e) => {
                   const val = parseInt(e.target.value, 10);
-                  setGenerateCount(isNaN(val) ? "" : val);
+                  setGenerateCount(isNaN(val) ? 5 : Math.min(10, Math.max(1, val)));
                 }}
-                className="w-16 bg-transparent text-white text-xs font-bold font-mono outline-none text-center"
-                placeholder="5"
+                className="w-20 bg-black/40 border border-white/20 px-3 py-2 rounded-xl text-xs font-bold font-mono text-white text-center outline-none focus:border-[#ff912d]"
               />
             </div>
 
-            <button
-              onClick={handleGenerateAI}
-              disabled={generating || !generateCount || Number(generateCount) < 1}
-              className="px-6 py-2.5 bg-gradient-to-r from-[#ff912d] to-[#ff5722] hover:from-[#ff5722] hover:to-[#ff912d] text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-lg transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer"
-            >
-              {generating ? (
-                <>
-                  <RefreshCw size={16} className="animate-spin" /> Generating AI Quiz...
-                </>
-              ) : (
-                <>
-                  <Sparkles size={16} /> Generate AI Questions
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-
-        {/* Intuitive AI System Prompt Editor Section */}
-        <div className="border-t border-white/10 pt-4">
-          <div className="flex items-center justify-between">
-            <button
-              onClick={() => setShowPromptEditor(!showPromptEditor)}
-              className="flex items-center gap-2 text-xs font-mono font-bold text-[#ff912d] hover:underline cursor-pointer"
-            >
-              <Edit3 size={14} />
-              <span>{showPromptEditor ? "Hide Prompt Configuration" : "Configure AI Prompt Instructions & Rules"}</span>
-              {showPromptEditor ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-            </button>
-
-            {showPromptEditor && (
-              <span className="text-[11px] font-mono text-gray-400 hidden sm:inline">
-                {customPrompt.length} chars
-              </span>
-            )}
-          </div>
-
-          {showPromptEditor && (
-            <div className="mt-4 space-y-4 bg-black/30 border border-white/10 p-4 sm:p-5 rounded-2xl">
-              
-              {/* Presets Control Bar */}
-              <div className="space-y-2">
-                <label className="text-xs font-mono text-gray-300 font-bold uppercase tracking-wider block">
-                  Quick System Prompt Presets:
-                </label>
-                <div className="flex flex-wrap items-center gap-2">
-                  <button
-                    onClick={() => {
-                      setCustomPrompt(`Act as an expert computer science and cognitive assessment author.
-Generate 5 distinct Aptitude Assessment diagnostic questions for software engineering candidates.
-Target category focus: "MIXED".
-Supported question types: "MULTIPLE_CHOICE", "TRUE_FALSE", "SHORT_ANSWER".
-
-STRICT REQUIREMENT: Respond ONLY with a valid raw JSON object conforming EXACTLY to this schema:
-{
-  "questions": [
-    {
-      "question": "Clear diagnostic question text",
-      "questionType": "MULTIPLE_CHOICE",
-      "category": "LOGIC",
-      "options": ["Option A", "Option B", "Option C", "Option D"],
-      "correctAnswer": 0,
-      "shortAnswer": "",
-      "explanation": "Brief explanation"
-    }
-  ]
-}`);
-                      showNotification("Loaded Standard Assessment Prompt Preset!");
-                    }}
-                    className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-mono text-xs rounded-lg transition-all cursor-pointer"
-                  >
-                    Standard Assessment
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      setCustomPrompt(`Act as a Senior Systems Architect and Algorithmic Thinking Evaluator.
-Generate high-caliber technical diagnostic questions testing Big-O time complexity, data structures, recursion, and task decomposition.
-Target category focus: "MIXED".
-Supported question types: "MULTIPLE_CHOICE", "TRUE_FALSE", "SHORT_ANSWER".
-
-STRICT REQUIREMENT: Respond ONLY with a valid raw JSON object conforming EXACTLY to the standard questions schema.`);
-                      showNotification("Loaded Strict Technical Prompt Preset!");
-                    }}
-                    className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-mono text-xs rounded-lg transition-all cursor-pointer"
-                  >
-                    Strict Technical
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      setCustomPrompt(`Act as an encouraging CS educator.
-Generate beginner-friendly algorithmic thinking and logic puzzles suitable for candidates with zero prior coding experience.
-Target category focus: "MIXED".
-Supported question types: "MULTIPLE_CHOICE", "TRUE_FALSE", "SHORT_ANSWER".
-
-STRICT REQUIREMENT: Respond ONLY with a valid raw JSON object conforming EXACTLY to the standard questions schema.`);
-                      showNotification("Loaded Beginner Friendly Prompt Preset!");
-                    }}
-                    className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-mono text-xs rounded-lg transition-all cursor-pointer"
-                  >
-                    Beginner Friendly
-                  </button>
-                </div>
-              </div>
-
-              {/* Textarea Editor */}
-              <div className="space-y-1">
-                <div className="flex items-center justify-between text-[11px] font-mono text-gray-400 font-bold">
-                  <span>Custom Gemini Prompt Instructions:</span>
-                  <span className="text-[#ff912d]">Active Focus: Mixed</span>
-                </div>
-                <textarea
-                  rows={8}
-                  value={customPrompt}
-                  onChange={(e) => setCustomPrompt(e.target.value)}
-                  className="w-full bg-black/60 border border-white/20 text-emerald-400 font-mono text-xs p-4 rounded-2xl resize-y outline-none focus:border-[#ff912d] shadow-inner leading-relaxed"
-                />
-              </div>
-
-              {/* Action Bar */}
-              <div className="flex items-center justify-between pt-1">
-                <span className="text-[11px] font-mono text-gray-400">
-                  Tip: Changes are automatically included in your next AI Question Generation.
-                </span>
-                <button
-                  onClick={() => showNotification("AI System Prompt configuration saved!")}
-                  className="px-4 py-2 bg-[#ff912d] hover:bg-[#ff912d]/90 text-black font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow cursor-pointer"
-                >
-                  Save Configuration
-                </button>
-              </div>
-
+            {/* Trigger Button */}
+            <div className="flex flex-col gap-1 self-end">
+              <button
+                onClick={handleGenerateAI}
+                disabled={generating}
+                className="px-6 py-2.5 bg-gradient-to-r from-[#ff912d] to-[#ff5722] hover:from-[#ff5722] hover:to-[#ff912d] text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-lg transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer"
+              >
+                {generating ? (
+                  <>
+                    <RefreshCw size={16} className="animate-spin" /> Generating...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles size={16} /> Generate Questions
+                  </>
+                )}
+              </button>
             </div>
-          )}
+          </div>
         </div>
-
       </div>
 
       {/* Control Bar: Title & Manual Add Button */}

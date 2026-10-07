@@ -18,20 +18,20 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing missionId" }, { status: 400 });
     }
 
-    // Check if the user has already completed this mission
-    const existingProgress = await prisma.missionProgress.findUnique({
-      where: {
-        userId_missionId: {
-          userId,
-          missionId,
-        },
-      },
-    });
-
-    const wasCompleted = existingProgress?.status === "COMPLETED";
-
-    // Start transaction to secure updates
+    // Start transaction to secure updates and prevent concurrent double-rewards
     const result = await prisma.$transaction(async (tx) => {
+      // Check if the user has already completed this mission inside the transaction
+      const existingProgress = await tx.missionProgress.findUnique({
+        where: {
+          userId_missionId: {
+            userId,
+            missionId,
+          },
+        },
+      });
+
+      const wasCompleted = existingProgress?.status === "COMPLETED";
+
       // 1. Create or update the progress status to completed
       const progress = await tx.missionProgress.upsert({
         where: {
@@ -62,7 +62,7 @@ export async function POST(req: Request) {
         const isDailyLevel = missionId.toLowerCase().startsWith('daily');
         const isEarth3 = missionId.toLowerCase() === 'earth-3' || missionId.toLowerCase() === 'python-3';
         xpEarned = isEarth3 ? 500 : isDailyLevel ? 100 : XP_REWARDS.TOTAL_LEVEL_YIELD;
-        gearsEarned = isDailyLevel ? 250 : 20;
+        gearsEarned = isDailyLevel ? 300 : 30;
 
         await tx.user.update({
           where: { id: userId },
@@ -73,8 +73,10 @@ export async function POST(req: Request) {
         });
       }
 
-      return { progress, xpEarned, gearsEarned };
+      return { progress, xpEarned, gearsEarned, wasCompleted };
     });
+
+    const { progress, xpEarned, gearsEarned, wasCompleted } = result;
 
     // 3. After transaction: check if a new planet was just unlocked (first completion of this mission)
     if (!wasCompleted) {
@@ -204,6 +206,76 @@ export async function POST(req: Request) {
             }
           }
 
+          // Award the Title for completing this individual planet
+          const planetTitleInfo: Record<string, { id: string; name: string; description: string }> = {
+            moon: {
+              id: 'title-lunar-pioneer',
+              name: 'Syntax Scout',
+              description: 'Mastered coding syntax and foundations on the Moon.',
+            },
+            mars: {
+              id: 'title-planetary-pioneer',
+              name: 'Web Builder',
+              description: 'Mastered HTML structure and hyperlinks across Mars.',
+            },
+            venus: {
+              id: 'title-venusian-voyager',
+              name: 'Style Artist',
+              description: 'Mastered CSS styling, colors, and layout design on Venus.',
+            },
+            mercury: {
+              id: 'title-mercurian-scout',
+              name: 'Script Runner',
+              description: 'Mastered JavaScript events and dynamic interactivity on Mercury.',
+            },
+            jupiter: {
+              id: 'title-jovian-sovereign',
+              name: 'Java Titan',
+              description: 'Mastered Java classes, OOP, and exception handling on Jupiter.',
+            },
+            saturn: {
+              id: 'title-void-architect',
+              name: 'System Pilot',
+              description: 'Mastered C++ pointers, memory, and performance loops on Saturn.',
+            },
+            earth: {
+              id: 'title-terran-maestro',
+              name: 'Python Master',
+              description: 'Mastered Python algorithms and data structures on Earth.',
+            },
+          };
+
+          const awardedTitle = planetTitleInfo[completedPlanet.id];
+          if (awardedTitle) {
+            const existingTitleNotif = await prisma.notification.findFirst({
+              where: {
+                userId,
+                notificationType: 'title_unlocked',
+                data: {
+                  path: ['titleId'],
+                  equals: awardedTitle.id,
+                },
+              },
+            });
+
+            if (!existingTitleNotif) {
+              await prisma.notification.create({
+                data: {
+                  userId,
+                  notificationType: 'title_unlocked',
+                  data: {
+                    titleId: awardedTitle.id,
+                    titleName: awardedTitle.name,
+                    planetId: completedPlanet.id,
+                    planetName: completedPlanet.name,
+                    description: awardedTitle.description,
+                    icon: 'quill',
+                  },
+                },
+              });
+            }
+          }
+
           // Check if all 7 planets are completed
           const planetsCompleteCount = planetOrder.filter(p => {
             return allMissions.filter(m => p.prefixes.some(pre => m.missionId.toLowerCase().startsWith(pre))).length >= 3;
@@ -235,6 +307,34 @@ export async function POST(req: Request) {
                 });
               }
             }
+
+            // Award Grand Celestial Master title notification
+            const existingGrandNotif = await prisma.notification.findFirst({
+              where: {
+                userId,
+                notificationType: 'title_unlocked',
+                data: {
+                  path: ['titleId'],
+                  equals: 'title-grand-celestial-master',
+                },
+              },
+            });
+
+            if (!existingGrandNotif) {
+              await prisma.notification.create({
+                data: {
+                  userId,
+                  notificationType: 'title_unlocked',
+                  data: {
+                    titleId: 'title-grand-celestial-master',
+                    titleName: 'Full Stack Master',
+                    planetName: 'The Entire Solar Constellation',
+                    description: 'The pinnacle rank: conquered all programming languages in the constellation.',
+                    icon: 'quill',
+                  },
+                },
+              });
+            }
           }
         }
       }
@@ -254,11 +354,18 @@ export async function POST(req: Request) {
       const [pYear, pMonth, pDay] = todayStrPHT.split("-").map(Number);
       const phtDaySeed = (pYear * 372) + (pMonth * 31) + pDay;
 
+      const { getTodayActiveDailyTaskIds, getDailyTaskInfo } = await import("@/lib/dailyTasks");
+      const activeDailyTaskIds = getTodayActiveDailyTaskIds();
+
       let eligibleDailyTaskId: string | null = null;
       if (missionId.toLowerCase().startsWith("daily")) {
-        eligibleDailyTaskId = "task-daily-level";
+        if (activeDailyTaskIds.includes("task-daily-level")) {
+          eligibleDailyTaskId = "task-daily-level";
+        }
       } else {
-        eligibleDailyTaskId = `task-curriculum-${1 + (phtDaySeed % 3)}`;
+        if (activeDailyTaskIds.includes("task-curriculum-1")) {
+          eligibleDailyTaskId = "task-curriculum-1";
+        }
       }
 
       if (eligibleDailyTaskId) {
@@ -270,8 +377,8 @@ export async function POST(req: Request) {
         if (!existingDaily || existingDaily.status !== "COMPLETED") {
           const { getDailyTaskInfo } = await import("@/lib/dailyTasks");
           const taskInfo = getDailyTaskInfo(eligibleDailyTaskId);
-          const xpEarned = taskInfo.xpReward || 5;
-          const gearsEarned = taskInfo.gearsReward || 10;
+          const xpEarned = taskInfo.xpReward || 25;
+          const gearsEarned = taskInfo.gearsReward || 30;
 
           await prisma.$transaction(async (tx) => {
             await tx.missionProgress.upsert({

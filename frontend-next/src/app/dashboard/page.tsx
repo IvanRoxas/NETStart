@@ -237,7 +237,7 @@ export default async function DashboardPage() {
     };
   });
 
-  // Daily Rotating Challenge Pool (5 Playable Challenges with Custom Vector Icons)
+  // Daily Rotating Challenge Pool (6 Playable Challenges with Custom Vector Icons)
   const DAILY_LEVEL_POOL = [
     {
       title: "Weave Trap",
@@ -245,7 +245,7 @@ export default async function DashboardPage() {
       desc: "Watch out for red bomb traps! Steer your space rover around the danger and take the safe road to reach the finish line.",
       customIcon: "/assets/global/daily/weave-trap.svg",
       xpReward: 100,
-      gearsReward: 250,
+      gearsReward: 300,
     },
     {
       title: "Lane Changer",
@@ -253,7 +253,7 @@ export default async function DashboardPage() {
       desc: "Switch lanes to avoid road blocks! Pick the best turns and drive your rover safely all the way to the goal.",
       customIcon: "/assets/global/daily/lane-changer.svg",
       xpReward: 100,
-      gearsReward: 250,
+      gearsReward: 300,
     },
     {
       title: "Hazard Labyrinth",
@@ -261,7 +261,7 @@ export default async function DashboardPage() {
       desc: "Find your way out of the space maze! Use repeat loops and look out for walls to reach the golden star.",
       customIcon: "/assets/global/daily/hazard-labyrinth.svg",
       xpReward: 100,
-      gearsReward: 250,
+      gearsReward: 300,
     },
     {
       title: "Master Sorting Gauntlet",
@@ -269,7 +269,7 @@ export default async function DashboardPage() {
       desc: "The robot belt is rolling fast! Sort 25 space items into Food, Fuel, Cargo, and Trash boxes without any mistakes.",
       customIcon: "/assets/global/daily/sorting-gauntlet.svg",
       xpReward: 100,
-      gearsReward: 250,
+      gearsReward: 300,
     },
     {
       title: "Fuel Synthesis Protocol",
@@ -277,11 +277,21 @@ export default async function DashboardPage() {
       desc: "Make fuel for the rocket ship! Add drops, turn up the heat, and mix it well until the fuel turns orange.",
       customIcon: "/assets/global/daily/fuel-synthesis.svg",
       xpReward: 100,
-      gearsReward: 250,
+      gearsReward: 300,
+    },
+    {
+      title: "Ledger Cipher Recovery",
+      tag: "Python",
+      desc: "Decode corrupted satellite telemetry! Laser-slice boundary noise, swap multiple leet characters, and explode delimiters.",
+      customIcon: "/assets/global/daily/ledger-cipher.svg",
+      xpReward: 100,
+      gearsReward: 300,
     },
   ];
 
-  const dailyLevelTemplate = DAILY_LEVEL_POOL[phtDaySeed % DAILY_LEVEL_POOL.length];
+  // Offset seed (+5) preserves today as Fuel Synthesis Protocol without disruption,
+  // allowing Ledger Cipher Recovery (index 5) to rotate in seamlessly tomorrow.
+  const dailyLevelTemplate = DAILY_LEVEL_POOL[(phtDaySeed + 5) % DAILY_LEVEL_POOL.length];
   const dailyGeneratedLevel = {
     ...dailyLevelTemplate,
     link: `/sandbox?mode=daily&missionId=${dailyMissionId}&tier=${level}`,
@@ -293,99 +303,99 @@ export default async function DashboardPage() {
       id: "task-daily-level",
       title: "Complete Today's Daily Challenge",
       tag: "DAILY",
-      desc: "Finish today's quick practice coding challenge.",
+      desc: "Solve today's featured coding challenge in the sandbox.",
       xpReward: XP_REWARDS.DAILY_COMMISSIONS.MISSION_XP,
-      gearsReward: 20,
+      gearsReward: 30,
       completed: isDailyLevelCompleted || completedTaskIdsToday.has("task-daily-level"),
       link: `/sandbox?mode=daily&missionId=${dailyMissionId}&tier=${level}`,
     },
     {
       id: "task-curriculum-1",
-      title: isHtmlExpert ? "Finish 1 HTML Lesson" : isCssExpert ? "Finish 1 CSS Lesson" : "Finish 1 JavaScript Lesson",
-      tag: "LESSON",
-      desc: "Complete any 1 lesson in your current course.",
+      title: "Finish 1 Planet Mission",
+      tag: "MISSION",
+      desc: "Solve and complete any coding level on your current planet course.",
       xpReward: XP_REWARDS.DAILY_COMMISSIONS.MISSION_XP,
-      gearsReward: 10,
+      gearsReward: 30,
       completed: hasCampaignCompletedToday || completedTaskIdsToday.has("task-curriculum-1"),
-      link: isHtmlExpert ? "/modules/html" : isCssExpert ? "/modules/css" : "/modules/javascript",
-    },
-    {
-      id: "task-curriculum-2",
-      title: "Finish 1 Planet Level",
-      tag: "PLANET",
-      desc: "Solve any 1 coding level on the planet map.",
-      xpReward: XP_REWARDS.DAILY_COMMISSIONS.MISSION_XP,
-      gearsReward: 10,
-      completed: hasCampaignCompletedToday || completedTaskIdsToday.has("task-curriculum-2"),
       link: "/modules",
     },
     {
-      id: "task-curriculum-3",
-      title: "Play 1 Rover Level",
-      tag: "GAME",
-      desc: "Move your rover past blocks to reach the goal.",
+      id: "task-curriculum-2",
+      title: "Test Code in the Sandbox",
+      tag: "SANDBOX",
+      desc: "Run a script or test code blocks in the free-play Sandbox.",
       xpReward: XP_REWARDS.DAILY_COMMISSIONS.MISSION_XP,
-      gearsReward: 10,
-      completed: hasCampaignCompletedToday || completedTaskIdsToday.has("task-curriculum-3"),
+      gearsReward: 30,
+      completed: completedTaskIdsToday.has("task-curriculum-2"),
+      link: "/sandbox",
+    },
+    {
+      id: "task-curriculum-3",
+      title: "Review a Story Archive Log",
+      tag: "STORY",
+      desc: "Open the Story Archive and review a planetary mission cutscene.",
+      xpReward: XP_REWARDS.DAILY_COMMISSIONS.MISSION_XP,
+      gearsReward: 30,
+      completed: completedTaskIdsToday.has("task-curriculum-3"),
       link: "/modules",
     },
     {
       id: "task-explore-1",
-      title: "Visit the Shop",
-      tag: "EXPLORE",
-      desc: "Take a look at items and outfits in the shop.",
+      title: "Customize Your Avatar",
+      tag: "AVATAR",
+      desc: "Equip or customize an item layer in the Avatar Studio.",
       xpReward: XP_REWARDS.DAILY_COMMISSIONS.MISSION_XP,
-      gearsReward: 5,
+      gearsReward: 30,
       completed: completedTaskIdsToday.has("task-explore-1"),
       link: "/shop",
     },
     {
       id: "task-explore-2",
-      title: "View the Planet Map",
-      tag: "EXPLORE",
-      desc: "Look at the planets and courses on the map.",
-      xpReward: XP_REWARDS.DAILY_COMMISSIONS.MISSION_XP,
-      gearsReward: 5,
-      completed: completedTaskIdsToday.has("task-explore-2"),
-      link: "/modules",
-    },
-    {
-      id: "task-explore-3",
-      title: "Look at Space Suits",
+      title: "Inspect Starport Supplies",
       tag: "SHOP",
-      desc: "Check out astronaut suits and gear in the shop.",
+      desc: "Preview an outfit, hair, or accessory in the Starport Shop.",
       xpReward: XP_REWARDS.DAILY_COMMISSIONS.MISSION_XP,
-      gearsReward: 5,
-      completed: completedTaskIdsToday.has("task-explore-3"),
+      gearsReward: 30,
+      completed: completedTaskIdsToday.has("task-explore-2"),
       link: "/shop",
     },
     {
-      id: "task-achieve-1",
-      title: "Check Your Badges",
-      tag: "BADGES",
-      desc: "See the badges and trophies you have unlocked.",
+      id: "task-explore-3",
+      title: "Explore Course Tracks",
+      tag: "EXPEDITION",
+      desc: "Inspect a course track on the planetary solar system map.",
       xpReward: XP_REWARDS.DAILY_COMMISSIONS.MISSION_XP,
-      gearsReward: 5,
+      gearsReward: 30,
+      completed: completedTaskIdsToday.has("task-explore-3"),
+      link: "/modules",
+    },
+    {
+      id: "task-achieve-1",
+      title: "Analyze Cognitive Aptitudes",
+      tag: "APTITUDE",
+      desc: "Inspect your cognitive metrics radar on your Pilot Passport.",
+      xpReward: XP_REWARDS.DAILY_COMMISSIONS.MISSION_XP,
+      gearsReward: 30,
       completed: completedTaskIdsToday.has("task-achieve-1"),
-      link: "/achievements",
+      link: "/profile",
     },
     {
       id: "task-achieve-2",
-      title: "View Your Profile",
+      title: "Calibrate Pilot Profile",
       tag: "PROFILE",
-      desc: "Check your level, gears, and stats on your profile.",
+      desc: "Update your bio, title, or review your stats on your profile.",
       xpReward: XP_REWARDS.DAILY_COMMISSIONS.MISSION_XP,
-      gearsReward: 5,
+      gearsReward: 30,
       completed: completedTaskIdsToday.has("task-achieve-2"),
       link: "/profile",
     },
     {
       id: "task-achieve-3",
-      title: "Check Achievements",
+      title: "Inspect Badge Accolades",
       tag: "BADGES",
-      desc: "See your progress toward new achievements.",
+      desc: "Review your earned badges and milestone progress in Achievements.",
       xpReward: XP_REWARDS.DAILY_COMMISSIONS.MISSION_XP,
-      gearsReward: 5,
+      gearsReward: 30,
       completed: completedTaskIdsToday.has("task-achieve-3"),
       link: "/achievements",
     },
@@ -870,7 +880,7 @@ export default async function DashboardPage() {
                     <DailyCommissionClaimButton 
                       completedTasksCount={completedTasksCount}
                       totalTasksCount={dailyTasks.length}
-                      bonusGears={50}
+                      bonusGears={100}
                       bonusXP={XP_REWARDS.DAILY_COMMISSIONS.COMPLETION_BONUS}
                       initialIsClaimed={isDailyBonusClaimed}
                     />
@@ -925,7 +935,7 @@ export default async function DashboardPage() {
                             <span className="text-xs font-mono font-black bg-[#ff912d]/20 text-[#ff912d] px-2.5 py-1 rounded-lg border border-[#ff912d]/35">
                               +{task.xpReward} XP
                             </span>
-                            <span className="text-xs font-mono font-black bg-[#ff912d]/20 text-[#ff912d] px-2.5 py-1 rounded-lg border border-[#ff912d]/35">
+                            <span className="text-xs font-mono font-black bg-purple-500/20 text-[#c084fc] px-2.5 py-1 rounded-lg border border-purple-500/35">
                               +{task.gearsReward} Gears
                             </span>
                           </div>

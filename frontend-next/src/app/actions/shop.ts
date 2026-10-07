@@ -16,7 +16,7 @@ export async function getShopItems() {
     const hasMissing = SHOP_CATALOG.some(c => !existingIds.has(c.id));
     const hasOutOfDate = items.some(i => {
       const cat = getCatalogItemById(i.id);
-      return cat && cat.title !== i.title;
+      return cat && (cat.title !== i.title || cat.price !== i.price);
     });
 
     // Auto-seed or upsert items from SHOP_CATALOG if missing or updated
@@ -131,8 +131,9 @@ export async function purchaseItem(itemId: string) {
         where: { id: itemId },
       });
 
+      const catItem = getCatalogItemById(itemId);
+
       if (!item) {
-        const catItem = getCatalogItemById(itemId);
         if (catItem) {
           item = await tx.shopItem.create({
             data: {
@@ -146,6 +147,18 @@ export async function purchaseItem(itemId: string) {
             },
           });
         }
+      } else if (catItem && item.price !== catItem.price) {
+        item = await tx.shopItem.update({
+          where: { id: itemId },
+          data: {
+            price: catItem.price,
+            title: catItem.title,
+            type: catItem.type,
+            category: catItem.category,
+            subCategory: catItem.subCategory,
+            imageUrl: catItem.imageUrl,
+          },
+        });
       }
 
       const user = await tx.user.findUnique({
@@ -171,16 +184,20 @@ export async function purchaseItem(itemId: string) {
         throw new Error("You already own this item");
       }
 
-      // 3. Check if user has enough gears
-      if (user.gears < item.price) {
+      // 3. Atomically check and deduct gears to prevent concurrent double-spend
+      const updatedUser = await tx.user.updateMany({
+        where: {
+          id: userId,
+          gears: { gte: item.price },
+        },
+        data: {
+          gears: { decrement: item.price },
+        },
+      });
+
+      if (updatedUser.count === 0) {
         throw new Error("Not enough gears");
       }
-
-      // 4. Deduct gears and add to inventory
-      await tx.user.update({
-        where: { id: userId },
-        data: { gears: { decrement: item.price } },
-      });
 
       await tx.userInventory.create({
         data: {
@@ -213,48 +230,55 @@ export async function claimVerificationReward() {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user || !(session.user as any).id) {
-      return { success: false, error: "Unauthorized" };
+      return { success: false, claimed: false, amount: 0, error: "Unauthorized" };
     }
     const userId = (session.user as any).id;
 
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user || !user.isVerified) {
-      return { success: false, error: "User not verified" };
+      return { success: false, claimed: false, amount: 0, error: "User not verified" };
     }
 
-    const existing = await prisma.notification.findFirst({
-      where: { userId, notificationType: 'system_verify_reward' }
-    });
+    const result = await prisma.$transaction(async (tx) => {
+      const existing = await tx.notification.findFirst({
+        where: { userId, notificationType: 'system_verify_reward' }
+      });
 
-    if (existing) {
-      return { success: true, claimed: false };
-    }
+      if (existing) {
+        return { success: true, claimed: false, amount: 0 };
+      }
 
-    await prisma.$transaction([
-      prisma.user.update({
+      await tx.user.update({
         where: { id: userId },
-        data: { gears: { increment: 150 } }
-      }),
-      prisma.notification.create({
+        data: { gears: { increment: 225 } }
+      });
+
+      await tx.notification.create({
         data: {
           userId,
           notificationType: 'system_verify_reward',
-          data: { amount: 150, title: 'Verification Reward' }
+          data: { amount: 225, title: 'Verification Reward' }
         }
-      })
-    ]);
+      });
+
+      return { success: true, claimed: true, amount: 225 };
+    });
+
+    if (!result.claimed) {
+      return result;
+    }
 
     await logSystemAction({
       actorId: userId,
       actorRole: "STUDENT",
       action: "GRANTED_CURRENCY",
       targetUserId: userId,
-      details: { amount: 150, type: 'GEARS', reason: 'Email Verification' }
+      details: { amount: 225, type: 'GEARS', reason: 'Email Verification' }
     });
 
-    return { success: true, claimed: true, amount: 150 };
+    return { success: true, claimed: true, amount: 225 };
   } catch (error) {
     console.error("Claim reward error:", error);
-    return { success: false, error: "An error occurred claiming the reward" };
+    return { success: false, claimed: false, amount: 0, error: "An error occurred claiming the reward" };
   }
 }

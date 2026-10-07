@@ -270,6 +270,14 @@ export const FuelSynthesis = forwardRef<FuelSynthesisRef, FuelSynthesisProps>(({
       return;
     }
 
+    if (col === 'Blue') {
+      setIsBlueHeated(true);
+      stateRef.current.blueHeated = true;
+      addLog('Heated Blue fuel! Now Mix Solution to turn it Orange.', 'info');
+      await delay(400);
+      return;
+    }
+
     if (col === 'Green') {
       triggerExplosion('Oops! Heating Green fuel caused it to explode. Green fuel needs Add Solution to turn Orange!');
       throw new Error("SIMULATION_FAILED");
@@ -314,6 +322,11 @@ export const FuelSynthesis = forwardRef<FuelSynthesisRef, FuelSynthesisProps>(({
       return;
     }
 
+    if (col === 'Blue') {
+      triggerExplosion('Oops! Blue fuel does not need more solution. Increase Heat and Mix Solution to turn it Orange!');
+      throw new Error("SIMULATION_FAILED");
+    }
+
     // 2. 50/50 Green Fuel -> Add Solution turns it to Perfect Orange!
     if (col === 'Green') {
       setCurrentColor('Orange');
@@ -354,12 +367,12 @@ export const FuelSynthesis = forwardRef<FuelSynthesisRef, FuelSynthesisProps>(({
       if (nextCount < 5) {
         addLog(`Mixing fuel mixture (${nextCount}/5)...`, 'info');
       } else if (nextCount === 5) {
-        // Deterministic 50/50 distribution across 3 batches: Batch 0 = Green, Batch 1 = Orange, Batch 2 = Green
-        const resultColor: FuelColor = (stateRef.current.currentBatch % 2 === 0) ? 'Green' : 'Orange';
+        // Deterministic distribution across 3 batches: Batch 0 = Blue, Batch 1 = Orange, Batch 2 = Blue
+        const resultColor: FuelColor = (stateRef.current.currentBatch % 2 === 0) ? 'Blue' : 'Orange';
         setCurrentColor(resultColor);
         stateRef.current.currentColor = resultColor;
-        if (resultColor === 'Green') {
-          addLog('Mix 5/5 complete! Fuel turned Green. Add Solution to turn it Orange!', 'warn');
+        if (resultColor === 'Blue') {
+          addLog('Mix 5/5 complete! Fuel turned Blue. Increase Heat and Mix Solution to turn it Orange!', 'warn');
         } else {
           addLog('Mix 5/5 complete! Fuel turned Perfect Orange! Ready for spaceship.', 'success');
         }
@@ -369,6 +382,21 @@ export const FuelSynthesis = forwardRef<FuelSynthesisRef, FuelSynthesisProps>(({
       }
       await delay(400);
       return;
+    }
+
+    if (col === 'Blue') {
+      if (stateRef.current.blueHeated) {
+        setCurrentColor('Orange');
+        stateRef.current.currentColor = 'Orange';
+        setIsBlueHeated(false);
+        stateRef.current.blueHeated = false;
+        addLog('Mixed heated Blue fuel -> Successfully refined to Perfect Orange!', 'success');
+        await delay(400);
+        return;
+      } else {
+        triggerExplosion('Oops! Blue fuel must be heated first. Increase Heat, then Mix Solution to turn it Orange!');
+        throw new Error("SIMULATION_FAILED");
+      }
     }
 
     if (col === 'Green') {
@@ -393,13 +421,18 @@ export const FuelSynthesis = forwardRef<FuelSynthesisRef, FuelSynthesisProps>(({
 
     const col = stateRef.current.currentColor;
 
+    if (col === 'Blue') {
+      triggerExplosion('Oops! Blue fuel is not finished yet. Increase Heat and Mix Solution to turn it Orange before fueling!');
+      throw new Error("SIMULATION_FAILED");
+    }
+
     if (col === 'Green') {
       triggerExplosion('Oops! Green fuel is not finished yet. Add Solution to turn it Orange before fueling!');
       throw new Error("SIMULATION_FAILED");
     }
 
     if (col !== 'Orange') {
-      triggerExplosion('Oops! Fuel is not finished synthesizing. Follow all 5 steps: Add Solution, Heat, Mix 5x, check Green -> Add Solution, then Fuel!');
+      triggerExplosion('Oops! Fuel is not finished synthesizing. Follow all 5 steps: Add Solution, Heat, Mix 5x, check Blue -> Increase Heat & Mix, then Fuel!');
       throw new Error("SIMULATION_FAILED");
     }
 
@@ -675,7 +708,7 @@ export const FuelSynthesis = forwardRef<FuelSynthesisRef, FuelSynthesisProps>(({
                   </li>
                   <li className="flex items-start gap-1.5">
                     <span className="text-amber-400 font-bold">4.</span>
-                    <span>If the fuel turns <strong className="text-emerald-400">Green</strong>, use <strong className="text-cyan-300">Add Solution</strong> to refine it into <strong className="text-orange-400">Orange</strong>.</span>
+                    <span>If the fuel turns <strong className="text-cyan-400">Blue</strong>, use <strong className="text-orange-300">Increase Heat</strong> and <strong className="text-purple-300">Mix Solution</strong> to refine it into <strong className="text-orange-400">Orange</strong>.</span>
                   </li>
                   <li className="flex items-start gap-1.5">
                     <span className="text-amber-400 font-bold">5.</span>
@@ -822,7 +855,7 @@ export const FuelSynthesis = forwardRef<FuelSynthesisRef, FuelSynthesisProps>(({
                   }`}
                 >
                   {/* Rising Bubbles Effect when Heat is Triggered */}
-                  {(isHeatedOnce || activeStationGlow === 'HEAT') && (
+                  {(isHeatedOnce || isBlueHeated || activeStationGlow === 'HEAT') && (
                     <div className="absolute inset-0 pointer-events-none overflow-hidden z-10">
                       <div className="bubble-anim" style={{ left: '12%', width: '8px', height: '8px', animationDuration: '1.2s', animationDelay: '0s' }} />
                       <div className="bubble-anim" style={{ left: '30%', width: '11px', height: '11px', animationDuration: '1.5s', animationDelay: '0.3s' }} />
@@ -840,27 +873,27 @@ export const FuelSynthesis = forwardRef<FuelSynthesisRef, FuelSynthesisProps>(({
 
                 {/* Bottom Heating Element Coils (Grow larger and glow brightly when Heat is Triggered) */}
                 <div className={`w-full transition-all duration-500 bg-slate-900 border-t flex items-center justify-around px-2 shrink-0 z-20 ${
-                  isHeatedOnce 
+                  (isHeatedOnce || isBlueHeated) 
                     ? 'h-3.5 sm:h-4 border-orange-500/60 shadow-[0_0_12px_rgba(249,115,22,0.6)]' 
                     : 'h-2.5 border-white/20'
                 }`}>
                   <div className={`transition-all duration-500 rounded-full ${
-                    isHeatedOnce 
+                    (isHeatedOnce || isBlueHeated) 
                       ? 'w-4 sm:w-5 h-2 sm:h-2.5 bg-gradient-to-r from-amber-400 via-orange-500 to-amber-300 shadow-[0_0_12px_#f97316] animate-pulse' 
                       : 'w-2.5 h-1 bg-slate-700'
                   }`} />
                   <div className={`transition-all duration-500 rounded-full ${
-                    isHeatedOnce 
+                    (isHeatedOnce || isBlueHeated) 
                       ? 'w-4 sm:w-5 h-2 sm:h-2.5 bg-gradient-to-r from-amber-400 via-orange-500 to-amber-300 shadow-[0_0_12px_#f97316] animate-pulse' 
                       : 'w-2.5 h-1 bg-slate-700'
                   }`} />
                   <div className={`transition-all duration-500 rounded-full ${
-                    isHeatedOnce 
+                    (isHeatedOnce || isBlueHeated) 
                       ? 'w-4 sm:w-5 h-2 sm:h-2.5 bg-gradient-to-r from-amber-400 via-orange-500 to-amber-300 shadow-[0_0_12px_#f97316] animate-pulse' 
                       : 'w-2.5 h-1 bg-slate-700'
                   }`} />
                   <div className={`transition-all duration-500 rounded-full ${
-                    isHeatedOnce 
+                    (isHeatedOnce || isBlueHeated) 
                       ? 'w-4 sm:w-5 h-2 sm:h-2.5 bg-gradient-to-r from-amber-400 via-orange-500 to-amber-300 shadow-[0_0_12px_#f97316] animate-pulse' 
                       : 'w-2.5 h-1 bg-slate-700'
                   }`} />

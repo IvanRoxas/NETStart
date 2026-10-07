@@ -12,7 +12,7 @@ const vt323 = VT323({ weight: '400', subsets: ['latin'] });
 import { specialBadges, planetaryBadges, Badge } from '@/lib/badgesData';
 import { getXPDetails } from '@/lib/leveling';
 import { getUnlockedAchievements } from '@/app/actions/achievements';
-import DailyTaskTracker from '@/components/DailyTaskTracker';
+import { triggerDailyTaskCompletion } from '@/lib/dailyTasks';
 
 export default function AchievementsPage() {
   const [showcasedBadges, setShowcasedBadges] = useState<string[]>([]);
@@ -71,6 +71,7 @@ export default function AchievementsPage() {
 
   const handleToggleBadge = async (badgeId: string) => {
     if (loading) return;
+    triggerDailyTaskCompletion("task-achieve-3");
 
     const isAdding = !showcasedBadges.includes(badgeId);
     if (isAdding && showcasedBadges.length >= 6) {
@@ -109,7 +110,7 @@ export default function AchievementsPage() {
       ...baseBadge,
       name: dbData?.name || baseBadge.name,
       description: dbData?.description || baseBadge.description,
-      xpReward: dbData?.xpReward || baseBadge.xpReward || 100,
+      xpReward: dbData?.xpReward ?? baseBadge.xpReward ?? 0,
       gearsReward: dbData?.gearsReward || 0,
       icon: dbData?.iconUrl || baseBadge.icon,
       image: dbData?.iconUrl || baseBadge.image,
@@ -133,7 +134,8 @@ export default function AchievementsPage() {
     return (
       <div
         key={badge.id}
-        className={`relative rounded-2xl p-5 sm:p-6 flex flex-col justify-between transition-all duration-300 shadow-xl overflow-hidden group/badge-card border-2
+        onClick={() => triggerDailyTaskCompletion("task-achieve-3")}
+        className={`relative rounded-2xl p-5 sm:p-6 flex flex-col justify-between transition-all duration-300 shadow-xl overflow-visible group/badge-card border-2
           ${isUnlocked 
             ? 'bg-[#1b092c] border-[#ff912d]/50 hover:border-[#ff912d] hover:-translate-y-1 hover:shadow-[0_0_25px_rgba(255,145,45,0.25)]' 
             : 'bg-[#140622] border-white/10 hover:border-white/20'
@@ -141,7 +143,7 @@ export default function AchievementsPage() {
           ${isShowcased ? 'ring-2 ring-[#ff912d] shadow-[0_0_15px_rgba(255,145,45,0.35)]' : ''}
         `}
       >
-        {/* Top Status & Rewards Row */}
+        {/* Top Status & Showcase Action Row */}
         <div className="flex items-center justify-between gap-1.5 mb-2 w-full">
           {isUnlocked ? (
             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 shadow-sm">
@@ -153,14 +155,45 @@ export default function AchievementsPage() {
             </span>
           )}
 
+          {/* Moved Showcase Toggle Button to where EXP used to be */}
           <div className="flex items-center gap-1.5">
-            <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#ff912d]/20 text-[#ff912d] border border-[#ff912d]/40 shadow-sm">
-              +{badge.xpReward || 100} EXP
-            </span>
             {badge.gearsReward > 0 && (
               <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-purple-900/60 text-purple-300 border border-purple-600 shadow-sm">
                 +{badge.gearsReward} ⚙
               </span>
+            )}
+
+            {isUnlocked && (
+              <div className="relative group/tooltip flex items-center justify-center">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleToggleBadge(badge.id);
+                  }}
+                  aria-label={isShowcased ? "Remove from Showcase" : "Add to Showcase"}
+                  className={`p-1.5 rounded-xl transition-all duration-200 border cursor-pointer active:scale-90 flex items-center justify-center ${
+                    isShowcased
+                      ? 'bg-[#ff912d] border-[#ff912d] text-black shadow-[0_0_12px_rgba(255,145,45,0.4)] hover:bg-red-500 hover:border-red-500 hover:text-white hover:shadow-[0_0_12px_rgba(239,68,68,0.4)]'
+                      : 'bg-white/5 border-white/10 text-white/50 hover:text-[#ff912d] hover:border-[#ff912d]/50 hover:bg-[#ff912d]/10 hover:shadow-[0_0_10px_rgba(255,145,45,0.2)]'
+                  }`}
+                >
+                  <Star
+                    size={15}
+                    className={`transition-transform duration-200 ${
+                      isShowcased ? 'fill-current scale-105' : 'hover:scale-110'
+                    }`}
+                  />
+                </button>
+
+                {/* Hover Tooltip */}
+                <div className="pointer-events-none absolute right-0 top-full mt-2 z-30 opacity-0 group-hover/tooltip:opacity-100 transition-opacity duration-150 whitespace-nowrap">
+                  <div className="bg-[#0e0419] border border-[#ff912d]/40 text-white text-[11px] font-sans font-semibold px-2.5 py-1 rounded-lg shadow-xl flex items-center gap-1.5 backdrop-blur-md">
+                    <span className={`w-1.5 h-1.5 rounded-full ${isShowcased ? 'bg-red-400' : 'bg-[#ff912d]'}`} />
+                    {isShowcased ? 'Remove from Showcase' : 'Add to Showcase'}
+                  </div>
+                </div>
+              </div>
             )}
           </div>
         </div>
@@ -173,13 +206,6 @@ export default function AchievementsPage() {
               : 'bg-[#0e0419] border-white/10'
             }`}
           >
-            {/* Showcased star icon indicator */}
-            {isShowcased && (
-              <div className="absolute -top-2 -right-2 bg-[#ff912d] text-black rounded-full p-1.5 shadow-md z-20" title="Active on Profile Showcase">
-                <Star size={14} className="fill-black" />
-              </div>
-            )}
-
             {!isUnlocked ? (
               <Lock className="text-white/40 w-12 h-12" />
             ) : badge.image ? (
@@ -205,35 +231,15 @@ export default function AchievementsPage() {
           </p>
 
           {/* Unlocked Date Note */}
-          {isUnlocked && badge.unlockedAt && (
-            <span className="text-white/40 text-[10px] font-mono mt-0.5">
+          {isUnlocked && badge.unlockedAt ? (
+            <span className="text-white/40 text-[10px] font-mono mt-1">
               Unlocked on {new Date(badge.unlockedAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
             </span>
-          )}
-
-          {/* Action Row */}
-          <div className="mt-3 pt-3 border-t border-white/10 w-full flex items-center justify-between gap-2">
-            {isUnlocked ? (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleToggleBadge(badge.id);
-                }}
-                className={`w-full py-2 sm:py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider transition-all active:scale-95 border cursor-pointer ${
-                  isShowcased
-                    ? 'bg-red-500/20 hover:bg-red-500/30 text-red-300 border-red-500/40'
-                    : 'bg-[#ff912d] hover:bg-[#ff912d]/80 text-black border-[#ff912d] shadow-md'
-                }`}
-              >
-                {isShowcased ? 'Remove from Showcase' : 'Add to Showcase'}
-              </button>
-            ) : (
-              <div className="w-full py-2 sm:py-2.5 text-center text-xs font-bold text-white/40 uppercase tracking-widest bg-white/5 rounded-xl border border-white/5">
-                Locked
-              </div>
-            )}
-          </div>
+          ) : !isUnlocked ? (
+            <span className="text-white/30 text-[10px] font-mono mt-1 uppercase tracking-wider">
+              Not Yet Earned
+            </span>
+          ) : null}
         </div>
       </div>
     );
@@ -251,7 +257,6 @@ export default function AchievementsPage() {
         </div>
       )}
 
-      <DailyTaskTracker taskIds={["task-achieve-1", "task-achieve-3"]} />
       <TopHeader title="Badges" />
 
       {/* Toast Notification */}

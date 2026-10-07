@@ -35,26 +35,25 @@ export async function POST(req: Request) {
 
     const missionId = `daily-task-${taskId}-${todayStrPHT}`;
 
-    // Check if this task was already recorded today
-    const existing = await prisma.missionProgress.findUnique({
-      where: {
-        userId_missionId: {
-          userId,
-          missionId,
-        },
-      },
-    });
-
-    if (existing && existing.status === "COMPLETED") {
-      return NextResponse.json({ success: true, alreadyCompleted: true });
-    }
-
-
     const taskInfo = getDailyTaskInfo(taskId);
     const xpEarned = taskInfo.xpReward || XP_REWARDS.DAILY_COMMISSIONS.MISSION_XP;
-    const gearsEarned = taskInfo.gearsReward || 5;
+    const gearsEarned = taskInfo.gearsReward || 30;
 
     await prisma.$transaction(async (tx) => {
+      // Check if this task was already recorded today inside the transaction lock
+      const existing = await tx.missionProgress.findUnique({
+        where: {
+          userId_missionId: {
+            userId,
+            missionId,
+          },
+        },
+      });
+
+      if (existing && existing.status === "COMPLETED") {
+        throw new Error("ALREADY_COMPLETED");
+      }
+
       await tx.missionProgress.upsert({
         where: {
           userId_missionId: {
@@ -91,6 +90,9 @@ export async function POST(req: Request) {
       task: taskInfo,
     });
   } catch (error: any) {
+    if (error?.message === "ALREADY_COMPLETED") {
+      return NextResponse.json({ success: true, alreadyCompleted: true });
+    }
     console.error("Error completing daily task:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }

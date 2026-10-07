@@ -19,15 +19,30 @@ export async function GET(req: Request) {
       return NextResponse.redirect(new URL('/assets/global/badges/Profile.svg', req.url));
     }
 
+    const ALLOWED_IMAGE_TYPES = new Set([
+      'image/png',
+      'image/jpeg',
+      'image/jpg',
+      'image/webp',
+      'image/gif',
+      'image/svg+xml',
+    ]);
+
     // if image is a base64 string, return it directly as binary
     const matches = user.image.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
     if (matches && matches.length === 3) {
-      const type = matches[1];
+      const type = matches[1].toLowerCase();
+      if (!ALLOWED_IMAGE_TYPES.has(type)) {
+        return NextResponse.redirect(new URL('/assets/global/badges/Profile.svg', req.url));
+      }
+
       const buffer = Buffer.from(matches[2], 'base64');
       return new NextResponse(buffer, {
         headers: {
           'Content-Type': type,
           'Cache-Control': 'public, max-age=31536000, immutable',
+          'X-Content-Type-Options': 'nosniff',
+          'Content-Security-Policy': "default-src 'none'",
         },
       });
     }
@@ -38,7 +53,17 @@ export async function GET(req: Request) {
       const encodedPath = encodeURI(user.image);
       return NextResponse.redirect(new URL(encodedPath, req.url));
     }
-    return NextResponse.redirect(user.image);
+
+    try {
+      const parsedExternalUrl = new URL(user.image);
+      if (parsedExternalUrl.protocol === 'http:' || parsedExternalUrl.protocol === 'https:') {
+        return NextResponse.redirect(parsedExternalUrl.toString());
+      }
+    } catch {
+      // Invalid URL format
+    }
+
+    return NextResponse.redirect(new URL('/assets/global/badges/Profile.svg', req.url));
     
   } catch (error) {
     console.error('Error serving avatar:', error);

@@ -35,6 +35,11 @@ export const adminAuthOptions: NextAuthOptions = {
           throw new Error("Invalid admin credentials");
         }
 
+        // Deactivated check
+        if (admin.isActive === false) {
+          throw new Error("This account has been deactivated. Please contact the administrator.");
+        }
+
         // Lockout Check
         if (admin.lockedUntil && new Date(admin.lockedUntil) > new Date()) {
           const remainingMinutes = Math.ceil((new Date(admin.lockedUntil).getTime() - Date.now()) / (60 * 1000));
@@ -110,6 +115,9 @@ export const adminAuthOptions: NextAuthOptions = {
         return {
           id: admin.id,
           name: admin.username,
+          displayName: admin.displayName || admin.username,
+          role: (admin.role as "SUPER_ADMIN" | "TEACHER") || "SUPER_ADMIN",
+          isActive: true,
           type: "admin"
         } as any;
       }
@@ -124,6 +132,21 @@ export const adminAuthOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id;
         token.type = "admin";
+        token.role = (user as any).role || "SUPER_ADMIN";
+        token.displayName = (user as any).displayName || user.name;
+        token.isActive = (user as any).isActive !== false;
+      } else if (token.id && token.type === "admin") {
+        try {
+          const dbAdmin = await prisma.systemAdmin.findUnique({
+            where: { id: token.id as string },
+            select: { isActive: true, role: true, displayName: true }
+          });
+          if (dbAdmin) {
+            token.isActive = dbAdmin.isActive !== false;
+            token.role = (dbAdmin.role as "SUPER_ADMIN" | "TEACHER") || "SUPER_ADMIN";
+            if (dbAdmin.displayName) token.displayName = dbAdmin.displayName;
+          }
+        } catch {}
       }
       return token;
     },
@@ -131,6 +154,9 @@ export const adminAuthOptions: NextAuthOptions = {
       if (token && session.user) {
         session.user.id = token.id as string;
         session.user.type = token.type as "student" | "admin";
+        session.user.role = (token.role as "SUPER_ADMIN" | "TEACHER") || "SUPER_ADMIN";
+        session.user.displayName = (token.displayName as string) || session.user.name || undefined;
+        session.user.isActive = token.isActive !== false;
       }
       return session;
     }
@@ -157,7 +183,7 @@ export const adminAuthOptions: NextAuthOptions = {
   },
   cookies: {
     sessionToken: {
-      name: `admin-next-auth.session-token`,
+      name: process.env.NODE_ENV === "production" ? "__Secure-admin-next-auth.session-token" : "admin-next-auth.session-token",
       options: {
         httpOnly: true,
         sameSite: 'lax',

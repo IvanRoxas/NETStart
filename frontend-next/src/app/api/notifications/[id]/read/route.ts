@@ -21,6 +21,15 @@ export async function POST(
 
     if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
+    const notification = await prisma.notification.findUnique({
+      where: { id: id },
+      select: { userId: true }
+    });
+
+    if (!notification || notification.userId !== user.id) {
+      return NextResponse.json({ error: 'Notification not found or unauthorized' }, { status: 404 });
+    }
+
     await prisma.notification.update({
       where: { id: id },
       data: { readAt: new Date() }

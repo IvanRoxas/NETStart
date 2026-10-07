@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { Lock, Check, Rocket } from 'lucide-react';
+import { triggerDailyTaskCompletion } from '@/lib/dailyTasks';
 
 interface LanguageBadge {
   iconUrl?: string; // CDN URL for the language SVG icon (optional — omit to use Rocket fallback)
@@ -318,6 +319,7 @@ export default function PlanetNode({
             ) : (
               <Link
                 href={`/modules/${id}`}
+                onClick={() => triggerDailyTaskCompletion('task-explore-3')}
                 className={`px-5 py-2.5 rounded-xl text-xs font-black tracking-wider uppercase flex items-center gap-1.5 transition-all duration-150 hover:scale-105 active:scale-95 cursor-pointer ${isCompleted
                     ? 'bg-emerald-600 hover:bg-emerald-500 text-white border-2 border-emerald-300/80 shadow-[0_4px_14px_rgba(0,0,0,0.3),0_0_12px_rgba(16,185,129,0.35)]'
                     : 'bg-[#ff912d] hover:bg-orange-400 text-black shadow-[0_0_15px_rgba(255,145,45,0.4)]'

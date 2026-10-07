@@ -38,7 +38,7 @@ export default function SaturnLevel3Simulation({
   const [debrisAllocated, setDebrisAllocated] = useState<number>(0);
   const [shieldAllocated, setShieldAllocated] = useState<number>(0);
   const [activeArm, setActiveArm] = useState<PointerId | null>(null);
-  const [armAction, setArmAction] = useState<'idle' | 'allocating' | 'running' | 'deallocating'>('idle');
+  const [armAction, setArmAction] = useState<'idle' | 'allocating' | 'running' | 'deallocating' | 'crashed'>('idle');
   const [activeTask, setActiveTask] = useState<'RUN_SENSORS' | 'RUN_DEBRIS' | 'RUN_SHIELDS' | null>(null);
   const [scenario, setScenario] = useState<Saturn3Scenario>('IDLE');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -720,7 +720,7 @@ export default function SaturnLevel3Simulation({
             setActiveArm(ptr || null);
             setScenario(audit.scenario);
             setToastMessage(audit.message);
-            setArmAction('idle');
+            setArmAction('crashed');
             playShortCircuitSound();
             onStopRunning?.();
             isExecutingRef.current = false;
@@ -795,22 +795,15 @@ export default function SaturnLevel3Simulation({
           activeTimersRef.current.push(t4);
         }
 
-        // Reset tripInfo when all trips complete
+        // Reset tripInfo when all trips complete: cores are docked in mainframe, arm goes idle
         const tDone = setTimeout(() => {
           setTripInfo(null);
-          setArmAction('running');
+          setArmAction('idle');
         }, delayAccumulator + amount * TRIP_DURATION);
         activeTimersRef.current.push(tDone);
 
-        // If the very next step is deallocation (e.g. no RUN_TASK between them), allow the pressure to climb
-        // to the core's level and let the machine run stably before extraction begins.
-        const nextStep = steps[idx + 1];
-        const nextIsDeallocate = nextStep && nextStep.type === 'DEALLOCATE';
-        const dwellTime = nextIsDeallocate
-          ? Math.round(((amount * 25) / 100) * 8500) + 500
-          : 150;
-
-        delayAccumulator += amount * TRIP_DURATION + dwellTime;
+        // Natural short pause before the next command
+        delayAccumulator += amount * TRIP_DURATION + 250;
       }
 
       // 2. RUN TASK (runSensors / runDebris / runShields)
@@ -825,16 +818,11 @@ export default function SaturnLevel3Simulation({
 
         const tRun = setTimeout(() => {
           setActiveTask(task || null);
-          setArmAction('running');
           setLiveThreshold(taskThreshold);
           liveThresholdRef.current = taskThreshold;
-          if (task === 'RUN_SHIELDS') {
-            playShieldHumSound();
-          } else {
-            playEngineRevSound();
-          }
 
           if (isFailedStep) {
+            setArmAction('crashed');
             setScenario(audit.scenario);
             setToastMessage(audit.message);
             playShortCircuitSound();
@@ -842,8 +830,22 @@ export default function SaturnLevel3Simulation({
             isExecutingRef.current = false;
             return;
           }
+
+          setArmAction('running');
+          if (task === 'RUN_SHIELDS') {
+            playShieldHumSound();
+          } else {
+            playEngineRevSound();
+          }
         }, delayAccumulator);
         activeTimersRef.current.push(tRun);
+
+        const tFinishTask = setTimeout(() => {
+          setActiveTask(null);
+          setArmAction('idle');
+        }, delayAccumulator + taskDuration);
+        activeTimersRef.current.push(tFinishTask);
+
         delayAccumulator += taskDuration;
       }
 

@@ -2,8 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { ArrowRight, Sparkles } from 'lucide-react';
+import { useSession } from 'next-auth/react';
 import AvatarDisplay, { AvatarLayers, DEFAULT_AVATAR_LAYERS } from '@/components/AvatarDisplay';
 import AvatarCustomizeModal from '@/components/AvatarCustomizeModal';
+import { getUserStorageItem, setUserStorageItem } from '@/lib/userStorage';
 
 interface DashboardAvatarCardProps {
   userDisplayName: string;
@@ -14,15 +16,17 @@ export default function DashboardAvatarCard({
   userDisplayName,
   initialLayers,
 }: DashboardAvatarCardProps) {
+  const { data: session } = useSession();
+  const userId = session?.user?.id;
   const [layers, setLayers] = useState<AvatarLayers>(initialLayers || DEFAULT_AVATAR_LAYERS);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
   // Sync avatar layers on mount and listen to real-time update events
   useEffect(() => {
-    // 1. Check local storage for quick cached response
-    if (typeof window !== 'undefined') {
+    // 1. Check user-scoped local storage for quick cached response
+    if (typeof window !== 'undefined' && userId) {
       try {
-        const cached = window.localStorage.getItem('netstart_avatar_layers');
+        const cached = getUserStorageItem('avatar_layers', userId);
         if (cached) {
           setLayers(JSON.parse(cached));
         }
@@ -38,8 +42,8 @@ export default function DashboardAvatarCard({
           const data = await res.json();
           if (isMounted && data.layers) {
             setLayers(data.layers);
-            if (typeof window !== 'undefined') {
-              window.localStorage.setItem('netstart_avatar_layers', JSON.stringify(data.layers));
+            if (typeof window !== 'undefined' && userId) {
+              setUserStorageItem('avatar_layers', JSON.stringify(data.layers), userId);
             }
           }
         }
@@ -100,7 +104,12 @@ export default function DashboardAvatarCard({
 
           {/* Middle Stage: Floor Stage with Character Standing & Shadow Below */}
           <div className="relative z-10 w-full flex-1 flex flex-col items-center justify-end my-1 min-h-[260px] pb-1">
-            <AvatarDisplay layers={layers} className="w-full h-64 sm:h-72" scale={1.20} />
+            <AvatarDisplay 
+              layers={layers} 
+              className="w-full h-64 sm:h-72" 
+              scale={1.20} 
+              shadowBottomClass="bottom-[7px] sm:bottom-[10px]"
+            />
           </div>
 
           {/* Trigger Button: Opens Customize Avatar Menu Modal */}

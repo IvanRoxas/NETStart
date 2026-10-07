@@ -106,26 +106,26 @@ export const modulesData: ModuleData[] = [
 ];
 
 export const specialBadges: Badge[] = [
-  { id: 'b_create_account', name: 'Ready for Blast Off!', image: '/assets/global/badges/milestones/CreateAccount.svg', description: 'Create your NETStart account to begin your journey.', xpReward: 100 },
-  { id: 'b_verify_account', name: 'Verified Explorer', image: '/assets/global/badges/milestones/AccountVerified.svg', description: 'Verify your email address to confirm your account.', xpReward: 100 },
-  { id: 'b_change_pfp', name: 'A New Look', image: '/assets/global/badges/milestones/ChangeProfileIcon.svg', description: 'Change your profile picture to customize your astronaut.', xpReward: 100 },
-  { id: 'b_aptitude_test', name: 'Aptitude Tested', image: '/assets/global/badges/milestones/Aptitude Test.svg', description: 'Complete the aptitude test to discover your skills.', xpReward: 100 },
-  { id: 'b_first_mission', name: 'First Mission', image: '/assets/global/badges/milestones/FirstMission.svg', description: 'Complete your very first coding mission.', xpReward: 100 },
-  { id: 'b_buy_reward', name: 'First Purchase', image: '/assets/global/badges/milestones/FirstPurchase.svg', description: 'Buy your first item from the rewards shop.', xpReward: 100 },
-  { id: 'b_change_bg', name: 'Interior Designer', image: '/assets/global/badges/milestones/ChangeBackground.svg', description: 'Customize your profile with a new background.', xpReward: 100 },
-  { id: 'b_reach_lvl5', name: 'Level 5 Reached', image: '/assets/global/badges/milestones/Level 5.svg', description: 'Earn enough experience to reach Level 5.', xpReward: 100 },
-  { id: 'b_reach_lvl10', name: 'Level 10 Reached', image: '/assets/global/badges/milestones/Level 10.svg', description: 'Earn enough experience to reach Level 10.', xpReward: 100 }
+  { id: 'b_create_account', name: 'Ready for Blast Off!', image: '/assets/global/badges/milestones/CreateAccount.svg', description: 'Create your NETStart account to begin your journey.', xpReward: 0 },
+  { id: 'b_verify_account', name: 'Verified Explorer', image: '/assets/global/badges/milestones/AccountVerified.svg', description: 'Verify your email address to confirm your account.', xpReward: 0 },
+  { id: 'b_change_pfp', name: 'A New Look', image: '/assets/global/badges/milestones/ChangeProfileIcon.svg', description: 'Change your profile picture to customize your astronaut.', xpReward: 0 },
+  { id: 'b_aptitude_test', name: 'Aptitude Tested', image: '/assets/global/badges/milestones/Aptitude Test.svg', description: 'Complete the aptitude test to discover your skills.', xpReward: 0 },
+  { id: 'b_first_mission', name: 'First Mission', image: '/assets/global/badges/milestones/FirstMission.svg', description: 'Complete your very first coding mission.', xpReward: 0 },
+  { id: 'b_buy_reward', name: 'First Purchase', image: '/assets/global/badges/milestones/FirstPurchase.svg', description: 'Buy your first item from the rewards shop.', xpReward: 0 },
+  { id: 'b_change_bg', name: 'Interior Designer', image: '/assets/global/badges/milestones/ChangeBackground.svg', description: 'Customize your profile with a new background.', xpReward: 0 },
+  { id: 'b_reach_lvl5', name: 'Level 5 Reached', image: '/assets/global/badges/milestones/Level 5.svg', description: 'Earn enough experience to reach Level 5.', xpReward: 0 },
+  { id: 'b_reach_lvl10', name: 'Level 10 Reached', image: '/assets/global/badges/milestones/Level 10.svg', description: 'Earn enough experience to reach Level 10.', xpReward: 0 }
 ];
 
 export const planetaryBadges: Badge[] = [
-  { id: 'b_complete_moon', name: 'Moon Pioneer', image: '/assets/global/badges/planets/CompleteMoon.svg', description: 'Complete all missions on The Moon.', xpReward: 150 },
-  { id: 'b_complete_mercury', name: 'Mercury Logician', image: '/assets/global/badges/planets/CompleteMercury.svg', description: 'Complete all missions on Mercury.', xpReward: 150 },
-  { id: 'b_complete_venus', name: 'Venus Navigator', image: '/assets/global/badges/planets/CompleteVenus.svg', description: 'Complete all missions on Venus.', xpReward: 150 },
-  { id: 'b_complete_mars', name: 'Mars Conqueror', image: '/assets/global/badges/planets/CompleteMars.svg', description: 'Complete all missions on Mars.', xpReward: 150 },
-  { id: 'b_complete_jupiter', name: 'Jupiter Architect', image: '/assets/global/badges/planets/CompleteJupiter.svg', description: 'Complete all missions on Jupiter.', xpReward: 150 },
-  { id: 'b_complete_saturn', name: 'Saturn Engineer', image: '/assets/global/badges/planets/CompleteSaturn.svg', description: 'Complete all missions on Saturn.', xpReward: 150 },
-  { id: 'b_complete_earth', name: 'Earth Master', image: '/assets/global/badges/planets/CompleteEarth.svg', description: 'Complete all missions on Earth.', xpReward: 150 },
-  { id: 'b_complete_all_planets', name: 'Grand Celestial Master', image: '/assets/global/badges/planets/CompleteAllPlanets.svg', description: 'Complete all planets in the solar system constellation.', xpReward: 500 }
+  { id: 'b_complete_moon', name: 'Moon Pioneer', image: '/assets/global/badges/planets/CompleteMoon.svg', description: 'Complete all missions on The Moon.', xpReward: 0 },
+  { id: 'b_complete_mercury', name: 'Mercury Logician', image: '/assets/global/badges/planets/CompleteMercury.svg', description: 'Complete all missions on Mercury.', xpReward: 0 },
+  { id: 'b_complete_venus', name: 'Venus Navigator', image: '/assets/global/badges/planets/CompleteVenus.svg', description: 'Complete all missions on Venus.', xpReward: 0 },
+  { id: 'b_complete_mars', name: 'Mars Conqueror', image: '/assets/global/badges/planets/CompleteMars.svg', description: 'Complete all missions on Mars.', xpReward: 0 },
+  { id: 'b_complete_jupiter', name: 'Jupiter Architect', image: '/assets/global/badges/planets/CompleteJupiter.svg', description: 'Complete all missions on Jupiter.', xpReward: 0 },
+  { id: 'b_complete_saturn', name: 'Saturn Engineer', image: '/assets/global/badges/planets/CompleteSaturn.svg', description: 'Complete all missions on Saturn.', xpReward: 0 },
+  { id: 'b_complete_earth', name: 'Earth Master', image: '/assets/global/badges/planets/CompleteEarth.svg', description: 'Complete all missions on Earth.', xpReward: 0 },
+  { id: 'b_complete_all_planets', name: 'Grand Celestial Master', image: '/assets/global/badges/planets/CompleteAllPlanets.svg', description: 'Complete all planets in the solar system constellation.', xpReward: 0 }
 ];
 
 export const allBadges: Badge[] = [...modulesData.flatMap(module => module.badges), ...specialBadges, ...planetaryBadges];

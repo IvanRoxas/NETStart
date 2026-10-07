@@ -1,18 +1,33 @@
 import React from 'react';
 import { getUserDetails } from '@/app/admin/actions/users';
+import { getSections } from '@/app/admin/actions/sections';
+import { requireAdmin } from '@/app/admin/actions';
 import UserDetailsClientWrapper from './UserDetailsClientWrapper';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 
 export default async function AdminUserDetailPage({ params }: { params: Promise<{ id: string }> | { id: string } }) {
   try {
+    const session = await requireAdmin();
+    const role = (session.user as any).role || "SUPER_ADMIN";
+
     const resolvedParams = await Promise.resolve(params);
     const userId = resolvedParams?.id;
     if (!userId) {
       throw new Error("Missing or invalid User ID");
     }
-    const user = await getUserDetails(userId);
-    return <UserDetailsClientWrapper user={user} />;
+    const [user, sections] = await Promise.all([
+      getUserDetails(userId),
+      getSections()
+    ]);
+
+    return (
+      <UserDetailsClientWrapper 
+        user={user} 
+        sections={sections}
+        currentUserRole={role}
+      />
+    );
   } catch (error: any) {
     console.error("Error in AdminUserDetailPage:", error);
     return (

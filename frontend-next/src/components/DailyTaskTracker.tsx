@@ -39,8 +39,8 @@ export default function DailyTaskTracker({ taskIds }: DailyTaskTrackerProps) {
                       title: data.task?.title || "Daily Task Completed",
                       tag: data.task?.tag || "DAILY",
                       desc: data.task?.desc || "Completed a daily mission task.",
-                      xpEarned: data.xpEarned || 5,
-                      gearsEarned: data.gearsEarned || 5,
+                      xpEarned: data.xpEarned || 25,
+                      gearsEarned: data.gearsEarned || 30,
                       notificationId: data.notificationId,
                     },
                   })

@@ -44,6 +44,8 @@ export function clearLegacyUnscopedData(): void {
       'netstart_last_animated_planet_idx',
       'netstart_planet_unlock_pending',
       'netstart_sound_enabled',
+      'netstart_avatar_layers',
+      'netstart_remember_password',
     ];
     keysToRemove.forEach(k => localStorage.removeItem(k));
 

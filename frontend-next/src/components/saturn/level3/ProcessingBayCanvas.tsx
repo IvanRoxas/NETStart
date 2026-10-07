@@ -7,7 +7,7 @@ import {
   PointerId,
   Saturn3Scenario,
 } from '@/lib/saturn/saturnLevel3Definitions';
-import { Zap, Shield } from 'lucide-react';
+import { Zap, Shield, AlertTriangle } from 'lucide-react';
 
 interface ProcessingBayCanvasProps {
   currentHeap: number; // 0 to 4
@@ -68,10 +68,11 @@ export default function ProcessingBayCanvas({
     scenario === 'MISSING_END';
 
   const hasCoresInMainframe = sensorAllocated > 0 || debrisAllocated > 0 || shieldAllocated > 0;
+  // Machine only runs (turbines spin, RAM pressure builds) when a subsystem task is actively executing
   const isMachineRunning =
     !isBreakerTrip &&
     !isOverloadCrash &&
-    (hasCoresInMainframe || activeTask !== null || armAction === 'running') &&
+    activeTask !== null &&
     isSimulating;
 
   const isMemoryLeak = scenario === 'MEMORY_LEAK';
@@ -108,8 +109,8 @@ export default function ProcessingBayCanvas({
           return 100;
         }
 
-        // If machine has cores in mainframe: gradual pressure increase (8.5 seconds to 100%)
-        if (hasCoresInMainframe) {
+        // If machine is actively running a task: gradual pressure increase (8.5 seconds to 100%)
+        if (isMachineRunning) {
           const targetCap = threshold >= 100 || isCrashed ? 100 : threshold;
           if (prev < targetCap) {
             const next = prev + (dt / 8500) * 100;
@@ -121,8 +122,8 @@ export default function ProcessingBayCanvas({
           return prev;
         }
 
-        // If cores were deallocated back to rack, pressure drains smoothly down to 0% over ~1.8s
-        if (!hasCoresInMainframe) {
+        // If task finished or no task running: drain pressure down smoothly
+        if (!isMachineRunning) {
           if (prev <= 0) return 0;
           return Math.max(0, prev - (dt / 1800) * 100);
         }
@@ -138,7 +139,7 @@ export default function ProcessingBayCanvas({
       cancelAnimationFrame(animId);
       lastTimeRef.current = null;
     };
-  }, [hasCoresInMainframe, isSimulating, isBreakerTrip, isOverloadCrash, isCrashed, threshold]);
+  }, [isMachineRunning, isBreakerTrip, isOverloadCrash, isCrashed, threshold]);
 
   // DOM Refs for dynamic, screen-accurate crane positioning without changing machine layout
   const stageRef = useRef<HTMLDivElement>(null);
@@ -638,18 +639,34 @@ export default function ProcessingBayCanvas({
                     ? 'text-rose-300 tracking-wider'
                     : displayPressure >= threshold * 0.7
                     ? 'text-amber-300 tracking-wider'
+                    : isMachineRunning
+                    ? 'text-cyan-300 tracking-wider'
+                    : hasCoresInMainframe
+                    ? 'text-amber-300 tracking-wider'
                     : 'text-emerald-300 tracking-wider'
                 }`}
               >
                 {isBreakerTrip
                   ? 'OFFLINE'
-                  : isCrashed
+                  : isOverloadCrash
                   ? 'OVERLOAD'
+                  : scenario === 'UNDECLARED_POINTER'
+                  ? 'ARM ERROR'
+                  : scenario === 'NULL_POINTER_DEREFERENCE'
+                  ? 'NO CORES'
+                  : scenario === 'INCOMPLETE_TASKS'
+                  ? 'UNEXECUTED'
+                  : scenario === 'MEMORY_LEAK'
+                  ? 'LEAK DETECTED'
                   : displayPressure >= threshold
                   ? 'ALARM'
                   : displayPressure >= threshold * 0.7
                   ? 'CAUTION'
-                  : 'STANDBY'}
+                  : isMachineRunning
+                  ? 'ACTIVE'
+                  : hasCoresInMainframe
+                  ? 'STANDBY'
+                  : 'READY'}
               </span>
             </div>
           </div>
@@ -1131,6 +1148,26 @@ export default function ProcessingBayCanvas({
                     );
                   })}
                 </div>
+
+                {/* Visual Scenario Status Indicators for Docking Bay */}
+                {hasCoresInMainframe && activeTask === null && !isCrashed && !isSuccess && (
+                  <div className="mt-1.5 px-2 py-0.5 rounded-full bg-amber-950/70 border border-amber-500/50 text-amber-300 text-[8px] font-mono font-bold tracking-wider uppercase flex items-center gap-1 shadow-sm">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                    STANDBY: RUN SUBSYSTEM REQUIRED
+                  </div>
+                )}
+                {scenario === 'NULL_POINTER_DEREFERENCE' && !hasCoresInMainframe && (
+                  <div className="mt-1.5 px-2 py-0.5 rounded-full bg-rose-950/90 border border-rose-500 text-rose-300 text-[8px] font-mono font-bold tracking-wider uppercase flex items-center gap-1 animate-pulse shadow-[0_0_8px_rgba(244,63,94,0.6)]">
+                    <AlertTriangle size={10} className="text-rose-400" />
+                    FAULT: NO CORES LOADED
+                  </div>
+                )}
+                {scenario === 'INCOMPLETE_TASKS' && hasCoresInMainframe && (
+                  <div className="mt-1.5 px-2 py-0.5 rounded-full bg-amber-950/90 border border-amber-500 text-amber-300 text-[8px] font-mono font-bold tracking-wider uppercase flex items-center gap-1 animate-pulse shadow-[0_0_8px_rgba(245,158,11,0.6)]">
+                    <AlertTriangle size={10} className="text-amber-400" />
+                    ORDER ERROR: RUN SUBSYSTEM FIRST
+                  </div>
+                )}
               </div>
 
               {/* Right Nacelle Turbine (Debris) */}
@@ -1275,9 +1312,18 @@ export default function ProcessingBayCanvas({
           className="flex flex-col items-center pointer-events-none"
         >
           {/* Overhead Trolley Carriage */}
-          <div className="w-10 h-3 bg-[#162234] border border-cyan-400 flex items-center justify-between px-1 shadow">
-            <div className="w-1.5 h-1.5 rounded-full bg-cyan-300 animate-pulse shadow-[0_0_3px_#22d3ee]" />
-            <div className="w-1.5 h-1.5 rounded-full bg-cyan-300 animate-pulse shadow-[0_0_3px_#22d3ee]" />
+          <div className={`w-10 h-3 border flex items-center justify-between px-1 shadow relative ${
+            scenario === 'UNDECLARED_POINTER' && activeArm === 'sensorPtr'
+              ? 'bg-rose-950 border-rose-500 shadow-[0_0_8px_#f43f5e]'
+              : 'bg-[#162234] border-cyan-400'
+          }`}>
+            {scenario === 'UNDECLARED_POINTER' && activeArm === 'sensorPtr' && (
+              <div className="absolute -top-5 left-1/2 -translate-x-1/2 px-1 py-0.5 rounded bg-rose-950 border border-rose-500 text-rose-300 text-[7px] font-mono font-bold tracking-tight whitespace-nowrap shadow animate-bounce">
+                ARM LOCKED
+              </div>
+            )}
+            <div className={`w-1.5 h-1.5 rounded-full ${scenario === 'UNDECLARED_POINTER' && activeArm === 'sensorPtr' ? 'bg-rose-500 animate-ping' : 'bg-cyan-300 animate-pulse shadow-[0_0_3px_#22d3ee]'}`} />
+            <div className={`w-1.5 h-1.5 rounded-full ${scenario === 'UNDECLARED_POINTER' && activeArm === 'sensorPtr' ? 'bg-rose-500 animate-ping' : 'bg-cyan-300 animate-pulse shadow-[0_0_3px_#22d3ee]'}`} />
           </div>
 
           {/* Telescopic Piston Rod */}
@@ -1349,9 +1395,18 @@ export default function ProcessingBayCanvas({
           className="flex flex-col items-center pointer-events-none"
         >
           {/* Overhead Trolley Carriage */}
-          <div className="w-10 h-3 bg-[#142820] border border-emerald-400 flex items-center justify-between px-1 shadow">
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse shadow-[0_0_3px_#34d399]" />
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse shadow-[0_0_3px_#34d399]" />
+          <div className={`w-10 h-3 border flex items-center justify-between px-1 shadow relative ${
+            scenario === 'UNDECLARED_POINTER' && activeArm === 'shieldPtr'
+              ? 'bg-rose-950 border-rose-500 shadow-[0_0_8px_#f43f5e]'
+              : 'bg-[#142820] border-emerald-400'
+          }`}>
+            {scenario === 'UNDECLARED_POINTER' && activeArm === 'shieldPtr' && (
+              <div className="absolute -top-5 left-1/2 -translate-x-1/2 px-1 py-0.5 rounded bg-rose-950 border border-rose-500 text-rose-300 text-[7px] font-mono font-bold tracking-tight whitespace-nowrap shadow animate-bounce">
+                ARM LOCKED
+              </div>
+            )}
+            <div className={`w-1.5 h-1.5 rounded-full ${scenario === 'UNDECLARED_POINTER' && activeArm === 'shieldPtr' ? 'bg-rose-500 animate-ping' : 'bg-emerald-300 animate-pulse shadow-[0_0_3px_#34d399]'}`} />
+            <div className={`w-1.5 h-1.5 rounded-full ${scenario === 'UNDECLARED_POINTER' && activeArm === 'shieldPtr' ? 'bg-rose-500 animate-ping' : 'bg-emerald-300 animate-pulse shadow-[0_0_3px_#34d399]'}`} />
           </div>
 
           {/* Telescopic Piston Rod */}
@@ -1423,9 +1478,18 @@ export default function ProcessingBayCanvas({
           className="flex flex-col items-center pointer-events-none"
         >
           {/* Overhead Trolley Carriage */}
-          <div className="w-10 h-3 bg-[#221634] border border-purple-400 flex items-center justify-between px-1 shadow">
-            <div className="w-1.5 h-1.5 rounded-full bg-purple-300 animate-pulse shadow-[0_0_3px_#c084fc]" />
-            <div className="w-1.5 h-1.5 rounded-full bg-purple-300 animate-pulse shadow-[0_0_3px_#c084fc]" />
+          <div className={`w-10 h-3 border flex items-center justify-between px-1 shadow relative ${
+            scenario === 'UNDECLARED_POINTER' && activeArm === 'debrisPtr'
+              ? 'bg-rose-950 border-rose-500 shadow-[0_0_8px_#f43f5e]'
+              : 'bg-[#221634] border-purple-400'
+          }`}>
+            {scenario === 'UNDECLARED_POINTER' && activeArm === 'debrisPtr' && (
+              <div className="absolute -top-5 left-1/2 -translate-x-1/2 px-1 py-0.5 rounded bg-rose-950 border border-rose-500 text-rose-300 text-[7px] font-mono font-bold tracking-tight whitespace-nowrap shadow animate-bounce">
+                ARM LOCKED
+              </div>
+            )}
+            <div className={`w-1.5 h-1.5 rounded-full ${scenario === 'UNDECLARED_POINTER' && activeArm === 'debrisPtr' ? 'bg-rose-500 animate-ping' : 'bg-purple-300 animate-pulse shadow-[0_0_3px_#c084fc]'}`} />
+            <div className={`w-1.5 h-1.5 rounded-full ${scenario === 'UNDECLARED_POINTER' && activeArm === 'debrisPtr' ? 'bg-rose-500 animate-ping' : 'bg-purple-300 animate-pulse shadow-[0_0_3px_#c084fc]'}`} />
           </div>
 
           {/* Telescopic Piston Rod */}

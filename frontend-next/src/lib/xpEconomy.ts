@@ -32,11 +32,11 @@ export const XP_REWARDS = {
     ACCOUNT_VERIFIED: 100, // "Account Verified" (100 XP)
   },
 
-  // Daily Commissions (Repeatable): 4 missions at 5 XP each, plus a 10 XP completion bonus (30 XP total per day)
+  // Daily Commissions (Repeatable): 4 missions at 25 XP each, plus a 100 XP completion bonus (200 XP total per day)
   DAILY_COMMISSIONS: {
-    MISSION_XP: 5,
+    MISSION_XP: 25,
     MISSION_COUNT: 4,
-    COMPLETION_BONUS: 10,
-    TOTAL_DAILY_XP: 30,
+    COMPLETION_BONUS: 100,
+    TOTAL_DAILY_XP: 200,
   },
 } as const;

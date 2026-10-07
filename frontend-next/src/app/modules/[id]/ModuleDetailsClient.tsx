@@ -3,11 +3,15 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Check, Lock, Rocket, Zap, HelpCircle, AlertTriangle, X, Play, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Check, Lock, Rocket, Zap, HelpCircle, AlertTriangle, X, Play, RotateCcw, Film } from 'lucide-react';
 
 import { getUserStorageItem, setUserStorageItem, removeUserStorageItem } from '@/lib/userStorage';
 import DemoToggle from '@/components/DemoToggle';
 import { useDemoMode } from '@/lib/demoMode';
+import StoryArchiveModal from '@/components/StoryArchiveModal';
+import MusicToggleButton from '@/components/MusicToggleButton';
+import { normalizeModuleToCategory } from '@/lib/storyArchive';
+import { getMissionPreviewImage, matchMissionAliases } from '@/lib/missionPreviewImages';
 
 interface Mission {
   id: string;
@@ -39,6 +43,7 @@ interface ModuleDetailsClientProps {
   };
   initialDemoMode?: boolean;
   isLocked?: boolean;
+  canUseDemoMode?: boolean;
 }
 
 const getMissionHint = (missionId: string) => {
@@ -114,37 +119,18 @@ export default function ModuleDetailsClient({
   sessionUser,
   initialDemoMode = false,
   isLocked = false,
+  canUseDemoMode = false,
 }: ModuleDetailsClientProps) {
   const router = useRouter();
   const userId = sessionUser?.id;
   const { isDemoMode: hookDemoMode } = useDemoMode();
-  const isDemoMode = hookDemoMode || initialDemoMode;
+  const isDemoMode = canUseDemoMode && (hookDemoMode || initialDemoMode);
   const [pendingMission, setPendingMission] = useState<Mission | null>(null);
   const [existingSaveInfo, setExistingSaveInfo] = useState<{ title: string; sectionIndex: number; missionId: string } | null>(null);
   const [showOverrideModal, setShowOverrideModal] = useState(false);
   const [hoveredCardId, setHoveredCardId] = useState<string | null>(null);
   const [savedMissionId, setSavedMissionId] = useState<string | null>(null);
-
-  const matchMissionAliases = (a?: string, b?: string): boolean => {
-    if (!a || !b) return false;
-    const aL = a.toLowerCase();
-    const bL = b.toLowerCase();
-    if (aL === bL) return true;
-    if ((aL === 'saturn-3' || aL === 'cpp-3') && (bL === 'saturn-3' || bL === 'cpp-3')) return true;
-    if ((aL === 'saturn-2' || aL === 'cpp-2') && (bL === 'saturn-2' || bL === 'cpp-2')) return true;
-    if ((aL === 'saturn-1' || aL === 'cpp-1') && (bL === 'saturn-1' || bL === 'cpp-1')) return true;
-    if ((aL === 'jupiter-3' || aL === 'java-3') && (bL === 'jupiter-3' || bL === 'java-3')) return true;
-    if ((aL === 'jupiter-2' || aL === 'java-2') && (bL === 'jupiter-2' || bL === 'java-2')) return true;
-    if ((aL === 'jupiter-1' || aL === 'java-1') && (bL === 'jupiter-1' || bL === 'java-1')) return true;
-    if ((aL === 'mercury-1' || aL === 'js-1-mercury') && (bL === 'mercury-1' || bL === 'js-1-mercury')) return true;
-    if ((aL === 'mercury-2' || aL === 'js-2-mercury') && (bL === 'mercury-2' || bL === 'js-2-mercury')) return true;
-    if ((aL === 'mercury-3' || aL === 'js-3-mercury' || aL === 'javascript-3' || aL === 'js-3') && (bL === 'mercury-3' || bL === 'js-3-mercury' || bL === 'javascript-3' || bL === 'js-3')) return true;
-    if ((aL === 'earth-1' || aL === 'python-1' || aL === 'earth') && (bL === 'earth-1' || bL === 'python-1' || bL === 'earth')) return true;
-    if ((aL === 'earth-2' || aL === 'python-2') && (bL === 'earth-2' || bL === 'python-2')) return true;
-    if ((aL === 'earth-3' || aL === 'python-3') && (bL === 'earth-3' || bL === 'python-3')) return true;
-    return false;
-  };
-
+  const [showStoryArchive, setShowStoryArchive] = useState(false);
   // Server completion set is authoritative
   const serverCompletedSet = useMemo(() => new Set(completedMissions.map(m => m.missionId.toLowerCase())), [completedMissions]);
 
@@ -420,7 +406,8 @@ export default function ModuleDetailsClient({
       console.warn("Could not save active level metadata:", e);
     }
 
-    router.push(`/sandbox?missionId=${mission.id}${isReplay ? '&mode=replay' : ''}`);
+    const skipCutscene = !isCompleted && hasActiveProgress;
+    router.push(`/sandbox?missionId=${mission.id}${isReplay ? '&mode=replay' : ''}&skipCutscene=${skipCutscene}`);
   };
 
   const handleConfirmOverride = () => {
@@ -600,6 +587,7 @@ export default function ModuleDetailsClient({
     }
     setShowOverrideModal(false);
     launchLevel(pendingMission);
+    setPendingMission(null);
   };
 
   const isCompactRow = missions.length <= 3;
@@ -633,9 +621,11 @@ export default function ModuleDetailsClient({
         </div>
 
         {/* Floating Demo Mode Toggle Button (bottom-left corner) */}
-        <div className="fixed bottom-6 left-24 z-50">
-          <DemoToggle />
-        </div>
+        {canUseDemoMode && (
+          <div className="fixed bottom-6 left-24 z-50">
+            <DemoToggle canUseDemoMode={canUseDemoMode} />
+          </div>
+        )}
       </div>
     );
   }
@@ -658,19 +648,37 @@ export default function ModuleDetailsClient({
       <div className="relative z-10 max-w-7xl w-full mx-auto px-6 py-12 flex-grow flex flex-col gap-10">
         
         {/* Navigation / Header Area */}
-        <div className="relative flex items-center justify-center mt-2 w-full">
+        <div className="relative flex items-center justify-between mt-2 w-full">
           {/* Back Button (Yellow Circle on Left) */}
           <Link 
             href="/modules"
-            className="absolute left-0 w-12 h-12 rounded-full bg-yellow-400 text-black hover:bg-yellow-500 transition-all flex items-center justify-center shadow-lg hover:scale-105 shrink-0 group z-10"
+            className="w-12 h-12 rounded-full bg-yellow-400 text-black hover:bg-yellow-500 transition-all flex items-center justify-center shadow-lg hover:scale-105 shrink-0 group z-10"
           >
             <ArrowLeft size={22} className="stroke-[2.5]" />
           </Link>
           
           {/* Welcome Title Centered */}
-          <h1 className="text-2xl md:text-4xl lg:text-5xl font-display font-black text-white uppercase tracking-wider text-center px-14">
+          <h1 className="text-2xl md:text-4xl lg:text-5xl font-display font-black text-white uppercase tracking-wider text-center px-4 flex-1">
             Welcome to {meta.title}
           </h1>
+
+          {/* Right Header Actions: Music Toggle & Story Archive */}
+          <div className="flex items-center gap-3 shrink-0 z-10">
+            <MusicToggleButton 
+              variant="circle" 
+              size="md" 
+              className="!w-12 !h-12 !p-0 bg-white/5 border-white/10 hover:bg-white/10" 
+            />
+            <button
+              type="button"
+              onClick={() => setShowStoryArchive(true)}
+              className="w-12 h-12 rounded-full bg-[#ff912d]/15 hover:bg-[#ff912d] text-[#ff912d] hover:text-[#110524] border border-[#ff912d]/40 hover:border-[#ff912d] shadow-lg transition-all flex items-center justify-center cursor-pointer active:scale-95 shrink-0"
+              title={`${meta?.title || "Story"} Archives`}
+              aria-label={`${meta?.title || "Story"} Archives`}
+            >
+              <Film size={20} />
+            </button>
+          </div>
         </div>
 
         {/* Dynamic Expanding Level Cards Container */}
@@ -692,7 +700,7 @@ export default function ModuleDetailsClient({
               ? hasActiveProgress 
               : (!isCompleted && index === firstUncompletedIndex);
 
-            const imageUrl = "/assets/global/ui/login-bg.jpg";
+            const imageUrl = getMissionPreviewImage(mission.id, moduleId, index, isCompleted);
             const isHovered = hoveredCardId === mission.id;
 
             return (
@@ -723,14 +731,19 @@ export default function ModuleDetailsClient({
                   } ${isHovered ? 'shadow-[#ff912d]/15 shadow-xl -translate-x-0.5 -translate-y-0.5 ring-1 ring-[#ff912d]/30' : ''}`}
                 >
                   {/* Visual progression details / Image Header */}
-                  <div className="relative aspect-[2.6/1] sm:aspect-[2.8/1] w-full overflow-hidden bg-black/20 shrink-0">
+                  <div className="relative aspect-[2.6/1] sm:aspect-[2.8/1] w-full overflow-hidden bg-black/40 shrink-0">
                     <img 
                       src={imageUrl} 
                       alt={mission.title} 
                       className={`w-full h-full object-cover transition-transform duration-500 ${
-                        isHovered ? 'scale-102' : ''
+                        isHovered ? 'scale-105' : ''
                       } ${isUnlocked ? '' : 'grayscale opacity-40'}`}
                     />
+                    
+                    {/* Active mission subtle ambient gradient overlay */}
+                    {hasActiveProgress && (
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-amber-500/20 pointer-events-none ring-1 ring-inset ring-amber-400/50" />
+                    )}
                     
                     {/* Status Overlay Badges */}
                     {hasActiveProgress ? (
@@ -904,9 +917,24 @@ export default function ModuleDetailsClient({
       )}
 
       {/* Floating Demo Mode Toggle Button (bottom-left corner) */}
-      <div className="fixed bottom-6 left-24 z-50">
-        <DemoToggle />
-      </div>
+      {canUseDemoMode && (
+        <div className="fixed bottom-6 left-24 z-50">
+          <DemoToggle canUseDemoMode={canUseDemoMode} />
+        </div>
+      )}
+
+      {/* Story Archives Modal (Scoped to this planet) */}
+      <StoryArchiveModal
+        isOpen={showStoryArchive}
+        onClose={() => setShowStoryArchive(false)}
+        userId={sessionUser?.id || undefined}
+        hasTakenAptitudeTest={true}
+        completedMissions={completedMissions}
+        isDemoMode={isDemoMode}
+        username={sessionUser?.name || "Operator"}
+        scopedCategory={normalizeModuleToCategory(moduleId)}
+        sectorTitle={meta?.title}
+      />
 
     </div>
   );

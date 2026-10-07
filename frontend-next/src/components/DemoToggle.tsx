@@ -1,19 +1,36 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { Sparkles, Lock, Unlock, Bug, Check, Info } from 'lucide-react';
-import { useDemoMode } from '@/lib/demoMode';
+import { useDemoMode, isDemoModeActive, setDemoModeActive } from '@/lib/demoMode';
 
 interface DemoToggleProps {
   className?: string;
   compact?: boolean;
+  canUseDemoMode?: boolean;
 }
 
-export default function DemoToggle({ className = "", compact = false }: DemoToggleProps) {
+export default function DemoToggle({ className = "", compact = false, canUseDemoMode: canUseDemoModeProp }: DemoToggleProps) {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const { isDemoMode, toggleDemoMode } = useDemoMode();
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const effectivePermission = typeof canUseDemoModeProp === 'boolean'
+    ? canUseDemoModeProp
+    : Boolean((session?.user as any)?.canUseDemoMode);
+
+  useEffect(() => {
+    if (status !== 'loading' && !effectivePermission && isDemoModeActive()) {
+      setDemoModeActive(false);
+    }
+  }, [effectivePermission, status]);
+
+  if (!effectivePermission) {
+    return null;
+  }
 
   const handleToggle = () => {
     const newState = toggleDemoMode();

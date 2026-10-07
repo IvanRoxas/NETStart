@@ -2,7 +2,7 @@ import { prisma } from "@/lib/auth";
 
 export async function logSystemAction(data: {
   actorId: string;
-  actorRole: "STUDENT" | "ADMIN";
+  actorRole: "STUDENT" | "ADMIN" | "SUPER_ADMIN" | "TEACHER" | string;
   action: string;
   targetUserId?: string;
   details?: any;

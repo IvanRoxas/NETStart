@@ -258,31 +258,31 @@ export default function MercuryLevel2Conveyor({
                       setActiveItemIndex(prev => prev + 1);
                       setCurrentItem(null);
                       processItemStep(itemIndex + 1);
-                    }, 500);
+                    }, 220);
                     timersRef.current.push(tSuccessChute);
 
-                  }, 850);
+                  }, 420);
                   timersRef.current.push(tArrivalAtChute);
 
-                }, 400);
+                }, 180);
                 timersRef.current.push(tRelease);
 
-              }, 500);
+              }, 220);
               timersRef.current.push(tClawDrop);
 
-            }, 500);
+            }, 260);
             timersRef.current.push(tClawTransport);
 
-          }, 450);
+          }, 220);
           timersRef.current.push(tClawLift);
 
-        }, 500);
+        }, 240);
         timersRef.current.push(tClawGrab);
 
-      }, 550);
+      }, 260);
       timersRef.current.push(tScanEnd);
 
-    }, 800);
+    }, 380);
     timersRef.current.push(tArrival);
 
   }, [cargoList]);
@@ -556,7 +556,7 @@ export default function MercuryLevel2Conveyor({
           <div className="absolute bottom-[3%] left-0 right-0 h-14 bg-slate-900 border-y-4 border-slate-700 shadow-2xl flex items-center overflow-hidden">
             {/* Animated Tiling Tread Texture */}
             <div className={`w-[200%] h-full flex bg-[repeating-linear-gradient(90deg,#0f172a,#0f172a_14px,#1e293b_14px,#1e293b_28px)] ${
-              isFeederBeltRolling ? 'animate-[marquee_0.8s_linear_infinite]' : ''
+              isFeederBeltRolling ? 'animate-[marquee_0.38s_linear_infinite]' : ''
             }`} />
             {/* Safety Rollers */}
             <div className="absolute inset-x-0 bottom-0 h-1 bg-amber-500/70" />
@@ -584,7 +584,7 @@ export default function MercuryLevel2Conveyor({
                   left: `${xPos}%`,
                   transform: 'translateX(-50%)',
                   bottom: '4.2%',
-                  transition: isRunning ? 'left 0.8s cubic-bezier(0.25, 1, 0.5, 1)' : 'none',
+                  transition: isRunning ? 'left 0.38s cubic-bezier(0.25, 1, 0.5, 1)' : 'none',
                 }}
                 className={`absolute flex flex-col items-center justify-end transition-opacity duration-300 ${
                   xPos > 105 ? 'opacity-0 pointer-events-none' : 'opacity-100'
@@ -632,7 +632,7 @@ export default function MercuryLevel2Conveyor({
                 top: travelingItem.progress === 1 ? '16%' : '58%',
                 transform: travelingItem.progress === 1 ? 'translate(-50%, -50%) scale(0.35)' : 'translate(-50%, -50%) scale(1)',
                 opacity: travelingItem.progress === 1 ? 0 : 1,
-                transition: 'top 0.85s cubic-bezier(0.25, 1, 0.5, 1), transform 0.85s ease, opacity 0.85s ease',
+                transition: 'top 0.42s cubic-bezier(0.25, 1, 0.5, 1), transform 0.42s ease, opacity 0.42s ease',
               }}
               className="absolute flex flex-col items-center justify-center pointer-events-none z-[3]"
             >
@@ -661,7 +661,7 @@ export default function MercuryLevel2Conveyor({
             style={{
               left: `${clawPos.x}%`,
               transform: 'translateX(-50%)',
-              transition: 'left 0.5s ease-in-out',
+              transition: 'left 0.26s ease-in-out',
             }}
             className="absolute top-2 w-20 h-7 bg-slate-700 border-2 border-slate-500 rounded-lg shadow-lg flex items-center justify-center gap-1.5"
           >
@@ -677,7 +677,7 @@ export default function MercuryLevel2Conveyor({
               top: '2.25rem',
               height: `${clawPos.y}%`,
               transform: 'translateX(-50%)',
-              transition: 'left 0.5s ease-in-out, height 0.4s ease-in-out',
+              transition: 'left 0.26s ease-in-out, height 0.22s ease-in-out',
             }}
             className="absolute w-4 bg-gradient-to-r from-slate-400 via-slate-200 to-slate-400 border-x border-slate-500 shadow-md"
           />
@@ -688,7 +688,7 @@ export default function MercuryLevel2Conveyor({
               left: `${clawPos.x}%`,
               top: `calc(${clawPos.y}% + 2.25rem)`,
               transform: 'translate(-50%, -100%)',
-              transition: 'left 0.5s ease-in-out, top 0.4s ease-in-out',
+              transition: 'left 0.26s ease-in-out, top 0.22s ease-in-out',
             }}
             className="absolute flex flex-col items-center"
           >
@@ -701,10 +701,10 @@ export default function MercuryLevel2Conveyor({
 
             {/* Left & Right Robotic Pincer Fingers */}
             <div className="w-22 flex items-center justify-between px-1">
-              <div className={`w-5 h-11 bg-gradient-to-b from-slate-600 to-slate-700 border border-slate-500 rounded-bl-xl shadow-md transition-transform duration-300 ${
+              <div className={`w-5 h-11 bg-gradient-to-b from-slate-600 to-slate-700 border border-slate-500 rounded-bl-xl shadow-md transition-transform duration-150 ${
                 clawState === 'grabbing' ? 'rotate-15 translate-x-2' : '-rotate-15'
               }`} />
-              <div className={`w-5 h-11 bg-gradient-to-b from-slate-600 to-slate-700 border border-slate-500 rounded-br-xl shadow-md transition-transform duration-300 ${
+              <div className={`w-5 h-11 bg-gradient-to-b from-slate-600 to-slate-700 border border-slate-500 rounded-br-xl shadow-md transition-transform duration-150 ${
                 clawState === 'grabbing' ? '-rotate-15 -translate-x-2' : 'rotate-15'
               }`} />
             </div>

@@ -423,6 +423,50 @@ export function auditMemorySequence(payload: Saturn3WorkspacePayload): Saturn3Au
         };
       }
 
+      // Order Verification: Subsystem must run before cores can be returned with delete
+      if (ptr === 'sensorPtr' && !sensorsExecuted) {
+        return {
+          success: false,
+          scenario: 'INCOMPLETE_TASKS',
+          message: "Sensors was never run! Execute 'runSensors()' while cores are loaded before returning them.",
+          failedStepIndex: stepIdxInExecuted,
+          steps: executedSteps,
+          finalHeap: currentHeap,
+          sensorsExecuted,
+          debrisExecuted,
+          shieldsExecuted,
+          threshold,
+        };
+      }
+      if (ptr === 'debrisPtr' && !debrisExecuted) {
+        return {
+          success: false,
+          scenario: 'INCOMPLETE_TASKS',
+          message: "Debris was never run! Execute 'runDebris()' while cores are loaded before returning them.",
+          failedStepIndex: stepIdxInExecuted,
+          steps: executedSteps,
+          finalHeap: currentHeap,
+          sensorsExecuted,
+          debrisExecuted,
+          shieldsExecuted,
+          threshold,
+        };
+      }
+      if (ptr === 'shieldPtr' && !shieldsExecuted) {
+        return {
+          success: false,
+          scenario: 'INCOMPLETE_TASKS',
+          message: "Shields was never run! Execute 'runShields()' while cores are loaded before returning them.",
+          failedStepIndex: stepIdxInExecuted,
+          steps: executedSteps,
+          finalHeap: currentHeap,
+          sensorsExecuted,
+          debrisExecuted,
+          shieldsExecuted,
+          threshold,
+        };
+      }
+
       if (ptr === 'sensorPtr') {
         currentHeap += sensorAllocated;
         sensorAllocated = 0;
@@ -441,11 +485,50 @@ export function auditMemorySequence(payload: Saturn3WorkspacePayload): Saturn3Au
 
   // Check 4: Incomplete Tasks (All 3 Tasks Required)
   if (!sensorsExecuted || !debrisExecuted || !shieldsExecuted) {
-    let progressMsg = 'Run Sensors, Debris, and Shields in sequence.';
+    if (sensorAllocated > 0 && !sensorsExecuted) {
+      return {
+        success: false,
+        scenario: 'INCOMPLETE_TASKS',
+        message: "Sensors cores are loaded, but the subsystem was never run! The correct order is: Ready Arm -> Grab Core -> Run Subsystem.",
+        steps: executedSteps,
+        finalHeap: currentHeap,
+        sensorsExecuted,
+        debrisExecuted,
+        shieldsExecuted,
+        threshold,
+      };
+    }
+    if (debrisAllocated > 0 && !debrisExecuted) {
+      return {
+        success: false,
+        scenario: 'INCOMPLETE_TASKS',
+        message: "Debris cores are loaded, but the subsystem was never run! The correct order is: Ready Arm -> Grab Core -> Run Subsystem.",
+        steps: executedSteps,
+        finalHeap: currentHeap,
+        sensorsExecuted,
+        debrisExecuted,
+        shieldsExecuted,
+        threshold,
+      };
+    }
+    if (shieldAllocated > 0 && !shieldsExecuted) {
+      return {
+        success: false,
+        scenario: 'INCOMPLETE_TASKS',
+        message: "Shields cores are loaded, but the subsystem was never run! The correct order is: Ready Arm -> Grab Core -> Run Subsystem.",
+        steps: executedSteps,
+        finalHeap: currentHeap,
+        sensorsExecuted,
+        debrisExecuted,
+        shieldsExecuted,
+        threshold,
+      };
+    }
+    let progressMsg = 'Run Sensors, Debris, and Shields in sequence: Ready Arm -> Grab Core -> Run Subsystem.';
     if (sensorsExecuted && debrisExecuted && !shieldsExecuted) {
-      progressMsg = 'Sensors & Debris complete! Power and run Shields with 2 cores.';
+      progressMsg = 'Sensors & Debris complete! Ready Arm, Grab 2 cores, and Run Shields.';
     } else if (sensorsExecuted && !debrisExecuted && !shieldsExecuted) {
-      progressMsg = 'Sensors complete! Power and run Debris and Shields.';
+      progressMsg = 'Sensors complete! Ready Arm, Grab 3 cores, and Run Debris.';
     }
     return {
       success: false,

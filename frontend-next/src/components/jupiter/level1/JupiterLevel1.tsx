@@ -598,16 +598,13 @@ export default function JupiterLevel1() {
             }),
           }).catch(e => console.warn('Telemetry error:', e));
 
-          if (typeof window !== 'undefined') {
-            const completed: string[] = JSON.parse(localStorage.getItem('netstart_completed_missions') || '[]');
+          if (typeof window !== 'undefined' && userId) {
+            const completed: string[] = JSON.parse(getUserStorageItem('completed_missions', userId) || '[]');
             if (!completed.includes('jupiter-1')) {
               completed.push('jupiter-1');
-              localStorage.setItem('netstart_completed_missions', JSON.stringify(completed));
             }
-            localStorage.setItem('netstart_planet_unlock_pending', 'true');
-            if (userId) {
-              setUserStorageItem('completed_missions', JSON.stringify(completed), userId);
-            }
+            setUserStorageItem('completed_missions', JSON.stringify(completed), userId);
+            setUserStorageItem('planet_unlock_pending', 'true', userId);
           }
         } catch (e) {
           console.warn('Persist error:', e);

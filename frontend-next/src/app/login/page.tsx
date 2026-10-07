@@ -42,11 +42,11 @@ export default function LoginPage() {
       }
     }
 
+    // Purge any legacy saved password from localStorage for security
+    localStorage.removeItem('netstart_remember_password');
     const savedEmail = localStorage.getItem('netstart_remember_email');
-    const savedPassword = localStorage.getItem('netstart_remember_password');
-    if (savedEmail && savedPassword) {
+    if (savedEmail) {
       setEmail(savedEmail);
-      setPassword(savedPassword);
       setRememberMe(true);
     }
   }, []);
@@ -56,13 +56,13 @@ export default function LoginPage() {
     setLoading(true);
     setToastMessage(null);
 
+    // Save only the email identifier; never persist plaintext passwords in client storage
     if (rememberMe) {
       localStorage.setItem('netstart_remember_email', email);
-      localStorage.setItem('netstart_remember_password', password);
     } else {
       localStorage.removeItem('netstart_remember_email');
-      localStorage.removeItem('netstart_remember_password');
     }
+    localStorage.removeItem('netstart_remember_password');
 
     const res = await signIn('credentials', {
       redirect: false,
@@ -74,10 +74,12 @@ export default function LoginPage() {
     if (res?.error) {
       showToast("Invalid email or password");
       setLoading(false);
-      // Clear stale saved credentials if login fails
-      localStorage.removeItem('netstart_remember_email');
+      // Ensure plaintext passwords are never left in client storage
       localStorage.removeItem('netstart_remember_password');
-      setRememberMe(false);
+      // If the user intentionally unchecked Remember Me, respect their choice
+      if (!rememberMe) {
+        localStorage.removeItem('netstart_remember_email');
+      }
     } else {
       showToast("Login successful! Redirecting...", 'success');
       setTimeout(() => window.location.href = '/dashboard', 1000);
@@ -167,17 +169,27 @@ export default function LoginPage() {
             </div>
           ) : session?.user ? (
             <div className="w-full flex flex-col gap-4 bg-white/5 p-6 rounded-2xl border border-white/10 text-center">
-              <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-tr from-[#361d57] to-[#ff912d] p-[2px] shadow-lg mb-2">
+              <div className="w-24 h-24 mx-auto rounded-full bg-gradient-to-tr from-[#361d57] to-[#ff912d] p-[2.5px] shadow-[0_0_20px_rgba(255,145,45,0.25)] mb-1">
                 <div className="w-full h-full bg-[#1e0a2d] rounded-full overflow-hidden flex items-center justify-center">
                   {session.user.image ? (
-                    <Image src={session.user.image === '/assets/planets/celestial/Planet 1.svg' ? '/assets/global/badges/Profile.svg' : session.user.image} alt="User Avatar" width={64} height={64} className="object-cover" />
+                    <Image 
+                      src={session.user.image === '/assets/planets/celestial/Planet 1.svg' ? '/assets/global/badges/Profile.svg' : session.user.image} 
+                      alt="User Avatar" 
+                      width={96} 
+                      height={96} 
+                      className="w-full h-full object-cover" 
+                    />
                   ) : (
-                    <span className="font-bold text-[#ff912d] text-xl uppercase">{session.user.name?.charAt(0) || 'U'}</span>
+                    <span className="font-bold text-[#ff912d] text-3xl uppercase">{session.user.name?.charAt(0) || 'U'}</span>
                   )}
                 </div>
               </div>
-              <h3 className="text-white font-bold text-lg">{session.user.name}</h3>
-              <p className="text-white/60 text-sm mb-4">{session.user.email}</p>
+              <div className="flex flex-col gap-1 mb-2">
+                <h3 className="text-white font-sans font-extrabold text-2xl tracking-tight">
+                  @{((session.user as any)?.displayName || session.user.name || 'Explorer').replace(/^@/, '')}
+                </h3>
+                <p className="text-white/60 text-sm">{session.user.email}</p>
+              </div>
               
               <Link 
                 href="/dashboard"
@@ -197,9 +209,12 @@ export default function LoginPage() {
             <>
               <form onSubmit={handleSubmit} className="w-full flex flex-col gap-4">
                 <div className="flex flex-col gap-1.5">
-                  <label className="font-sans text-white/80 text-sm font-semibold">Email</label>
+                  <label htmlFor="login-email" className="font-sans text-white/80 text-sm font-semibold">Email</label>
                   <input 
+                    id="login-email"
+                    name="email"
                     type="email" 
+                    autoComplete="username email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full bg-[#361d57]/50 text-white font-sans text-sm px-3 py-2 rounded-xl border border-white/10 outline-none focus:ring-2 focus:ring-[#ff912d] transition-all"
@@ -210,7 +225,7 @@ export default function LoginPage() {
 
                 <div className="flex flex-col gap-1.5">
                   <div className="flex justify-between items-center">
-                    <label className="font-sans text-white/80 text-sm font-semibold">Password</label>
+                    <label htmlFor="login-password" className="font-sans text-white/80 text-sm font-semibold">Password</label>
                     <button 
                       type="button" 
                       onClick={() => setForgotPasswordModalOpen(true)} 
@@ -221,7 +236,10 @@ export default function LoginPage() {
                   </div>
                   <div className="relative">
                     <input 
+                      id="login-password"
+                      name="password"
                       type={showPassword ? "text" : "password"}
+                      autoComplete="current-password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       className="w-full bg-[#361d57]/50 text-white font-sans text-sm px-3 py-2 pr-10 rounded-xl border border-white/10 outline-none focus:ring-2 focus:ring-[#ff912d] transition-all"
@@ -232,6 +250,7 @@ export default function LoginPage() {
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white transition-colors"
+                      aria-label={showPassword ? "Hide password" : "Show password"}
                     >
                       {showPassword ? (
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -248,11 +267,12 @@ export default function LoginPage() {
                 </div>
 
                 <div className="flex items-center gap-3 mt-1">
-                  <label className="relative flex cursor-pointer items-center rounded-full p-1" htmlFor="checkbox">
+                  <label className="relative flex cursor-pointer items-center rounded-full p-1" htmlFor="remember-me">
                     <input
                       type="checkbox"
+                      id="remember-me"
+                      name="rememberMe"
                       className="before:content[''] peer relative h-5 w-5 cursor-pointer appearance-none rounded-md border border-white/20 bg-white/5 transition-all before:absolute before:top-2/4 before:left-2/4 before:block before:h-12 before:w-12 before:-translate-y-2/4 before:-translate-x-2/4 before:rounded-full before:bg-blue-gray-500 before:opacity-0 before:transition-opacity checked:border-[#ff912d] checked:bg-[#ff912d] checked:before:bg-[#ff912d] hover:before:opacity-10"
-                      id="checkbox"
                       checked={rememberMe}
                       onChange={(e) => setRememberMe(e.target.checked)}
                     />
@@ -273,7 +293,7 @@ export default function LoginPage() {
                       </svg>
                     </div>
                   </label>
-                  <label className="mt-px cursor-pointer select-none font-sans text-sm font-semibold text-white/70 hover:text-white transition-colors" htmlFor="checkbox">
+                  <label className="mt-px cursor-pointer select-none font-sans text-sm font-semibold text-white/70 hover:text-white transition-colors" htmlFor="remember-me">
                     Remember Me
                   </label>
                 </div>

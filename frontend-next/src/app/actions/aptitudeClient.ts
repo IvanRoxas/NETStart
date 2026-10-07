@@ -84,31 +84,15 @@ export async function seedDefaultAptitudeQuestions() {
   }
 }
 
-export async function getAptitudeQuestions(): Promise<AptitudeQuestionData[]> {
-  await seedDefaultAptitudeQuestions();
+import questionsData from "@/server/data/aptitude_questions.server.json";
 
-  const questions = await prisma.aptitudeQuestion.findMany({
-    where: { isActive: true },
-    select: {
-      id: true,
-      question: true,
-      questionType: true,
-      category: true,
-      options: true,
-      shortAnswer: true,
-      explanation: true,
-    },
-    orderBy: { createdAt: "asc" },
-  });
-
-  return questions.map(q => ({
+export async function getAptitudeQuestions() {
+  return questionsData.questions.map((q) => ({
     id: q.id,
     question: q.question,
-    questionType: q.questionType || "MULTIPLE_CHOICE",
+    questionType: "MULTIPLE_CHOICE",
     category: q.category,
-    options: Array.isArray(q.options) ? (q.options as string[]) : JSON.parse(q.options as string),
-    shortAnswer: q.shortAnswer || undefined,
-    explanation: q.explanation || undefined,
+    options: Object.values(q.options),
   }));
 }
 
@@ -198,7 +182,7 @@ export async function submitAptitudeTest(userAnswers: Record<string, number | st
     });
   });
 
-  await addXPAndCheckLevelUp(userId, 150);
+  await addXPAndCheckLevelUp(userId, 200);
 
   await logSystemAction({
     actorId: userId,
@@ -209,7 +193,7 @@ export async function submitAptitudeTest(userAnswers: Record<string, number | st
       logicScore,
       patternRecognitionScore,
       recommendedLearningPath,
-      xpAwarded: 150,
+      xpAwarded: 200,
       gearsAwarded: 50,
     }
   });
@@ -219,7 +203,7 @@ export async function submitAptitudeTest(userAnswers: Record<string, number | st
     logicScore,
     patternRecognitionScore,
     recommendedLearningPath,
-    xpAwarded: 150,
+    xpAwarded: 200,
     gearsAwarded: 50,
   };
 }

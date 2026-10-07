@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="100%" height="100%">
+  <defs>
+    <radialGradient id="bgGlowCipher" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#10b981" stop-opacity="0.45"/>
+      <stop offset="60%" stop-color="#064e3b" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#0f172a" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="cyberPlateGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#090d16"/>
+    </linearGradient>
+    <linearGradient id="neonEmeraldGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#34d399"/>
+    </linearGradient>
+    <linearGradient id="neonLaserGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ef4444"/>
+      <stop offset="50%" stop-color="#f87171"/>
+      <stop offset="100%" stop-color="#dc2626"/>
+    </linearGradient>
+    <filter id="cipherGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="3.5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Ambient Glow & Protective Tech Ring -->
+  <circle cx="100" cy="100" r="92" fill="url(#bgGlowCipher)"/>
+  <circle cx="100" cy="100" r="86" fill="#0b1120" stroke="#10b981" stroke-width="2.5" stroke-dasharray="8 4" opacity="0.9"/>
+  <circle cx="100" cy="100" r="76" fill="#0f172a" stroke="#ffffff" stroke-width="1" stroke-opacity="0.15"/>
+
+  <!-- Orbital Data Satellite Frame -->
+  <rect x="42" y="55" width="116" height="84" rx="10" fill="url(#cyberPlateGrad)" stroke="#10b981" stroke-width="2" filter="url(#cipherGlow)"/>
+
+  <!-- Screen Grid Lines -->
+  <line x1="42" y1="78" x2="158" y2="78" stroke="#334155" stroke-width="1" stroke-dasharray="3 3"/>
+  <line x1="42" y1="102" x2="158" y2="102" stroke="#334155" stroke-width="1" stroke-dasharray="3 3"/>
+  <line x1="42" y1="124" x2="158" y2="124" stroke="#334155" stroke-width="1" stroke-dasharray="3 3"/>
+  <line x1="82" y1="55" x2="82" y2="139" stroke="#334155" stroke-width="1" stroke-dasharray="3 3"/>
+  <line x1="120" y1="55" x2="120" y2="139" stroke="#334155" stroke-width="1" stroke-dasharray="3 3"/>
+
+  <!-- Top Status LEDs -->
+  <circle cx="56" cy="67" r="3.5" fill="#ef4444"/>
+  <circle cx="68" cy="67" r="3.5" fill="#f59e0b"/>
+  <circle cx="80" cy="67" r="3.5" fill="#10b981"/>
+
+  <!-- Laser Emitter Head at top rail -->
+  <path d="M 92 40 L 108 40 L 105 52 L 95 52 Z" fill="#ef4444" stroke="#ffffff" stroke-width="1.2" filter="url(#cipherGlow)"/>
+  <line x1="100" y1="52" x2="100" y2="110" stroke="url(#neonLaserGrad)" stroke-width="2.5" stroke-dasharray="4 2" filter="url(#cipherGlow)"/>
+
+  <!-- Central Corrupted & Replaced Cipher Tiles -->
+  <g transform="translate(54, 86)">
+    <!-- Tile 1: Decoded 'O' -->
+    <rect x="0" y="0" width="20" height="24" rx="4" fill="#064e3b" stroke="#10b981" stroke-width="1.5"/>
+    <text x="10" y="17" fill="#34d399" font-family="monospace" font-size="14" font-weight="900" text-anchor="middle">O</text>
+
+    <!-- Tile 2: Decoded 'R' -->
+    <rect x="23" y="0" width="20" height="24" rx="4" fill="#064e3b" stroke="#10b981" stroke-width="1.5"/>
+    <text x="33" y="17" fill="#34d399" font-family="monospace" font-size="14" font-weight="900" text-anchor="middle">R</text>
+
+    <!-- Tile 3: Delimiter Slash Exploding -->
+    <rect x="46" y="0" width="20" height="24" rx="4" fill="#7f1d1d" stroke="#ef4444" stroke-width="1.5"/>
+    <text x="56" y="17" fill="#fca5a5" font-family="monospace" font-size="14" font-weight="900" text-anchor="middle">/</text>
+
+    <!-- Tile 4: Decoded 'D' -->
+    <rect x="69" y="0" width="20" height="24" rx="4" fill="#064e3b" stroke="#10b981" stroke-width="1.5"/>
+    <text x="79" y="17" fill="#34d399" font-family="monospace" font-size="14" font-weight="900" text-anchor="middle">D</text>
+  </g>
+
+  <!-- Spark Blast Particle Ring -->
+  <circle cx="110" cy="98" r="14" fill="none" stroke="#f59e0b" stroke-width="1" stroke-dasharray="3 3" opacity="0.8"/>
+  <path d="M 100 84 L 102 88 L 106 90 L 102 92 L 100 96 L 98 92 L 94 90 L 98 88 Z" fill="#fbbf24"/>
+  <path d="M 120 106 L 121 109 L 124 110 L 121 111 L 120 114 L 119 111 L 116 110 L 119 109 Z" fill="#34d399"/>
+
+  <!-- Python Track Terminal Prompt Tag -->
+  <g transform="translate(68, 148)" filter="url(#cipherGlow)">
+    <rect x="-14" y="0" width="92" height="18" rx="9" fill="#022c22" stroke="#10b981" stroke-width="1.5"/>
+    <text x="32" y="13" fill="#6ee7b7" font-family="monospace" font-size="9" font-weight="800" text-anchor="middle">PYTHON CIPHER</text>
+  </g>
+</svg>

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Lock, Zap, Settings, X, AlertTriangle } from 'lucide-react';
 import { isDemoModeActive } from '@/lib/demoMode';
+import { getMissionPreviewImage, matchMissionAliases } from '@/lib/missionPreviewImages';
 
 const PLANET_IMAGES: Record<string, string> = {
   moon: "/assets/planets/00_moon/environment/MainMoon.svg",
@@ -102,27 +103,6 @@ export default function ModuleMissionsClient({
   const [pendingMission, setPendingMission] = React.useState<Mission | null>(null);
   const [showOverrideModal, setShowOverrideModal] = React.useState(false);
   const displayLangName = MODULE_DISPLAY_NAMES[moduleId] || moduleId.toUpperCase();
-
-  const matchMissionAliases = (a?: string, b?: string): boolean => {
-    if (!a || !b) return false;
-    const aL = a.toLowerCase();
-    const bL = b.toLowerCase();
-    if (aL === bL) return true;
-    if ((aL === 'saturn-3' || aL === 'cpp-3') && (bL === 'saturn-3' || bL === 'cpp-3')) return true;
-    if ((aL === 'saturn-2' || aL === 'cpp-2') && (bL === 'saturn-2' || bL === 'cpp-2')) return true;
-    if ((aL === 'saturn-1' || aL === 'cpp-1') && (bL === 'saturn-1' || bL === 'cpp-1')) return true;
-    if ((aL === 'jupiter-3' || aL === 'java-3') && (bL === 'jupiter-3' || bL === 'java-3')) return true;
-    if ((aL === 'jupiter-2' || aL === 'java-2') && (bL === 'jupiter-2' || bL === 'java-2')) return true;
-    if ((aL === 'jupiter-1' || aL === 'java-1') && (bL === 'jupiter-1' || bL === 'java-1')) return true;
-    if ((aL === 'mercury-1' || aL === 'js-1-mercury') && (bL === 'mercury-1' || bL === 'js-1-mercury')) return true;
-    if ((aL === 'mercury-2' || aL === 'js-2-mercury') && (bL === 'mercury-2' || bL === 'js-2-mercury')) return true;
-    if ((aL === 'mercury-3' || aL === 'js-3-mercury' || aL === 'javascript-3' || aL === 'js-3') && (bL === 'mercury-3' || bL === 'js-3-mercury' || bL === 'javascript-3' || bL === 'js-3')) return true;
-    if ((aL === 'earth-1' || aL === 'python-1' || aL === 'earth') && (bL === 'earth-1' || bL === 'python-1' || bL === 'earth')) return true;
-    if ((aL === 'earth-2' || aL === 'python-2') && (bL === 'earth-2' || bL === 'python-2')) return true;
-    if ((aL === 'earth-3' || aL === 'python-3') && (bL === 'earth-3' || bL === 'python-3')) return true;
-    return false;
-  };
-
   React.useEffect(() => {
     if (!userId) return;
     try {
@@ -321,7 +301,8 @@ export default function ModuleMissionsClient({
       }
     } catch (e) { }
 
-    router.push(`/sandbox?missionId=${mission.id}${isReplay ? '&mode=replay' : ''}`);
+    const skipCutscene = !isCompleted && hasActiveProgress;
+    router.push(`/sandbox?missionId=${mission.id}${isReplay ? '&mode=replay' : ''}&skipCutscene=${skipCutscene}`);
   };
 
   const handleStartMission = (mission: Mission) => {
@@ -563,17 +544,26 @@ export default function ModuleMissionsClient({
                     setActiveMissionModal(mission);
                   }
                 }}
-                className={`bg-[#1a082c] border border-white/10 rounded-xl overflow-hidden hover:border-[#ff912d]/50 transition-all duration-300 group flex flex-col shadow-xl ${!isUnlocked ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:-translate-y-1'
+                className={`bg-[#1a082c] border rounded-xl overflow-hidden transition-all duration-300 group flex flex-col shadow-xl ${
+                  hasActiveProgress 
+                    ? 'border-[#ff912d]/80 ring-2 ring-[#ff912d]/40 shadow-[0_0_20px_rgba(255,145,45,0.35)]'
+                    : 'border-white/10 hover:border-[#ff912d]/50'
+                } ${!isUnlocked ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:-translate-y-1'
                   }`}
               >
-                {/* Top Visual Area (Starry backdrop with themed space illustrations) */}
+                {/* Top Visual Area (Themed cutscene background illustration) */}
                 <div className="relative w-full h-36 bg-gradient-to-b from-[#1a082c]/80 to-[#130927]/90 overflow-hidden flex items-center justify-center border-b border-white/5 flex-shrink-0">
-                  {/* Stars overlay */}
+                  {/* Distinct Cutscene Background Preview */}
                   <img
-                    src="/assets/global/ui/Landing Page BG.png"
-                    alt="Stars"
-                    className="absolute inset-0 w-full h-full object-cover opacity-45 group-hover:scale-110 transition-transform duration-500"
+                    src={getMissionPreviewImage(mission.id, moduleId, index, isCompleted)}
+                    alt={mission.title}
+                    className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-110 transition-transform duration-500"
                   />
+
+                  {/* Active mission ambient gradient */}
+                  {hasActiveProgress && (
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-amber-500/20 pointer-events-none ring-1 ring-inset ring-amber-400/50" />
+                  )}
 
                   {/* Space Illustration Graphic */}
                   <img
@@ -588,9 +578,15 @@ export default function ModuleMissionsClient({
                     <span className="bg-[#ff912d]/20 text-[#ff912d] border border-[#ff912d]/30 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider">
                       {displayLangName}
                     </span>
-                    <span className="bg-purple-900/40 text-purple-300 border border-purple-500/30 px-2 py-1 rounded text-[10px] font-bold uppercase ml-2 tracking-wider">
-                      Medium
-                    </span>
+                    {hasActiveProgress ? (
+                      <span className="bg-amber-500/30 text-amber-300 border border-amber-500/50 px-2 py-1 rounded text-[10px] font-bold uppercase ml-2 tracking-wider animate-pulse">
+                        Active
+                      </span>
+                    ) : (
+                      <span className="bg-purple-900/40 text-purple-300 border border-purple-500/30 px-2 py-1 rounded text-[10px] font-bold uppercase ml-2 tracking-wider">
+                        Medium
+                      </span>
+                    )}
                   </div>
 
                   {/* Grayscale/Locked overlays with center lock icon */}
@@ -691,9 +687,9 @@ export default function ModuleMissionsClient({
             {/* Mission Illustration & Description */}
             <div className="bg-[#130927] border border-white/10 rounded-2xl p-5 flex flex-col items-center gap-3 relative overflow-hidden">
               <img 
-                src="/assets/global/ui/Landing Page BG.png" 
+                src={getMissionPreviewImage(activeMissionModal.id, moduleId)} 
                 alt="Space" 
-                className="absolute inset-0 w-full h-full object-cover opacity-30 pointer-events-none" 
+                className="absolute inset-0 w-full h-full object-cover opacity-35 pointer-events-none" 
               />
               <img 
                 src={PLANET_IMAGES[moduleId] || "/assets/planets/celestial/Planet 1.svg"} 
@@ -713,7 +709,7 @@ export default function ModuleMissionsClient({
                 <Zap size={14} className="fill-amber-400" /> +100 XP
               </span>
               <span className="bg-purple-500/15 text-purple-300 border border-purple-500/30 px-4 py-1.5 rounded-xl font-mono text-xs font-black flex items-center gap-1.5">
-                <Settings size={14} className="text-purple-400" /> +20 GEARS
+                <Settings size={14} className="text-purple-400" /> +30 GEARS
               </span>
             </div>
 

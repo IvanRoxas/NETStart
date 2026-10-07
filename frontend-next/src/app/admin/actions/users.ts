@@ -1,18 +1,29 @@
 "use server";
 
 import { prisma } from "@/lib/auth";
-import { requireAdmin } from "@/app/admin/actions";
+import { requireAdmin, assertCanAccessStudent } from "@/app/admin/actions";
 
 export async function getUserDetails(id: string) {
-  await requireAdmin();
+  const session = await requireAdmin();
 
   if (!id || typeof id !== 'string') {
     return null;
   }
 
+  await assertCanAccessStudent(session, id);
+
   const user = await prisma.user.findUnique({
     where: { id },
     include: {
+      section: {
+        select: {
+          id: true,
+          name: true,
+          gradeLevel: true,
+          strand: true,
+          schoolYear: true,
+        }
+      },
       userAchievements: {
         include: { achievement: true }
       },

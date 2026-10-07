@@ -1,17 +1,19 @@
 import React from 'react';
 import { prisma } from '@/lib/auth';
-import { requireAdmin } from '@/app/admin/actions';
+import { requireAdmin, assertCanAccessStudent } from '@/app/admin/actions';
 import { History, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
 export default async function UserLogsPage({ params }: { params: Promise<{ id: string }> | { id: string } }) {
-  await requireAdmin();
+  const session = await requireAdmin();
   const resolvedParams = await Promise.resolve(params);
   const id = resolvedParams?.id;
 
   if (!id) {
     return <div className="text-white p-8">Invalid or missing User ID.</div>;
   }
+
+  await assertCanAccessStudent(session, id);
 
   const user = await prisma.user.findUnique({
     where: { id },
@@ -29,6 +31,7 @@ export default async function UserLogsPage({ params }: { params: Promise<{ id: s
         { actorId: id }
       ]
     },
+    take: 100,
     orderBy: { createdAt: 'desc' }
   });
 

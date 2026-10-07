@@ -59,11 +59,14 @@ model User {
   hasTakenAptitudeTest Boolean @default(false) @map("has_taken_aptitude_test")
   logicScore    Int?      @map("logic_score")
   patternRecognitionScore Int? @map("pattern_recognition_score")
+  taskDecompositionScore  Int? @map("task_decomposition_score")
+  aptitudeResult          Json? @map("aptitude_result")
   recommendedLearningPath String? @map("recommended_learning_path")
   xp            Int       @default(0)
   gears         Int       @default(0)
   verifiedRewardClaimed Boolean @default(false) @map("verified_reward_claimed")
   activeTitle   String?   @default("Novice Explorer") @map("active_title")
+  canUseDemoMode Boolean  @default(false) @map("can_use_demo_mode")
   
   accounts      Account[]
   sessions      Session[]
@@ -77,10 +80,16 @@ model User {
   // Gamification Relations
   userAchievements    UserAchievement[]
   missionProgresses   MissionProgress[]
+  interventionLogs    InterventionLog[]
 
   // Shop Relations
   inventory           UserInventory[]
 
+  // Section (assigned by a teacher from the admin side)
+  sectionId           String?   @map("section_id")
+  section             Section?  @relation(fields: [sectionId], references: [id], onDelete: SetNull)
+
+  @@index([sectionId])
   @@map("users")
 }
 
@@ -115,6 +124,7 @@ model MissionProgress {
   userId        String    @map("user_id")
   missionId     String    @map("mission_id")
   status        String    @default("IN_PROGRESS")
+  failureCount  Int       @default(0) @map("failure_count")
   submittedCode String?   @db.Text @map("submitted_code")
   completedAt   DateTime? @map("completed_at")
   startedAt     DateTime  @default(now()) @map("started_at")
@@ -208,9 +218,31 @@ model SystemAdmin {
   id                  String    @id @default(cuid())
   username            String    @unique
   password            String
+  displayName         String?   @map("display_name")
+  role                String    @default("SUPER_ADMIN") // SUPER_ADMIN | TEACHER
+  isActive            Boolean   @default(true) @map("is_active")
   createdAt           DateTime  @default(now()) @map("created_at")
   failedLoginAttempts Int       @default(0)
   lockedUntil         DateTime?
+
+  sections            Section[]
+}
+
+model Section {
+  id         String      @id @default(cuid())
+  name       String
+  gradeLevel Int         @map("grade_level")
+  strand     String
+  schoolYear String      @map("school_year")
+  isArchived Boolean     @default(false) @map("is_archived")
+  createdAt  DateTime    @default(now()) @map("created_at")
+  teacherId  String      @map("teacher_id")
+
+  teacher    SystemAdmin @relation(fields: [teacherId], references: [id])
+  students   User[]
+
+  @@index([teacherId])
+  @@map("sections")
 }
 
 model SystemLog {
@@ -223,18 +255,6 @@ model SystemLog {
   createdAt    DateTime @default(now()) @map("created_at")
 
   @@map("system_logs")
-}
-
-model AuditLog {
-  id           String   @id @default(cuid())
-  actorId      String   @map("actor_id")
-  actorRole    String   @map("actor_role")
-  action       String
-  targetUserId String?  @map("target_user_id")
-  details      String   @db.Text
-  createdAt    DateTime @default(now()) @map("created_at")
-
-  @@map("audit_logs")
 }
 
 model AptitudeQuestion {
@@ -264,5 +284,22 @@ model Report {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("reports")
+}
+
+model InterventionLog {
+  id            String   @id @default(cuid())
+  userId        String   @map("user_id")
+  missionId     String   @map("mission_id")
+  errorType     String   @map("error_type")
+  hintId        String   @map("hint_id")
+  promptVersion String   @map("prompt_version")
+  confidence    String?
+  fallbackUsed  Boolean  @default(false) @map("fallback_used")
+  timestamp     DateTime @default(now())
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, missionId])
+  @@map("Intervention_Logs")
 }
 

@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { SessionContext } from 'next-auth/react';
 import Image from 'next/image';
+import QuillIcon from '@/components/icons/QuillIcon';
 
 export default function AchievementPopupProvider({ children }: { children: React.ReactNode }) {
   const sessionContext = React.useContext(SessionContext);
@@ -29,7 +30,7 @@ export default function AchievementPopupProvider({ children }: { children: React
         const data = await res.json();
         if (data.notifications) {
           const unreadPopups = data.notifications.filter(
-            (n: any) => (n.type === 'achievement_unlocked' || n.type === 'level_up') && !n.read_at
+            (n: any) => (n.type === 'achievement_unlocked' || n.type === 'level_up' || n.type === 'title_unlocked') && !n.read_at
           );
           if (unreadPopups.length > 0) {
             if (localStorage.getItem('setting_sounds') !== 'false' && audioRef.current) {
@@ -117,7 +118,11 @@ export default function AchievementPopupProvider({ children }: { children: React
               <div className="absolute -top-1 -right-1 bg-[#ffb703] text-black w-5 h-5 rounded-full flex items-center justify-center shadow-lg z-20">
                 <span className="font-bold text-[10px]">★</span>
               </div>
-              {currentBadge.data?.badgeImage || (currentBadge.data?.badgeIcon && (currentBadge.data.badgeIcon.startsWith('/') || currentBadge.data.badgeIcon.startsWith('data:') || currentBadge.data.badgeIcon.startsWith('http'))) ? (
+              {(currentBadge.type === 'title_unlocked' || currentBadge.notification_type === 'title_unlocked') ? (
+                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-amber-500/30 to-purple-600/30 rounded-lg shadow-inner">
+                  <QuillIcon className="w-8 h-8 text-[#ffb703] drop-shadow-[0_0_10px_rgba(255,183,3,0.9)]" />
+                </div>
+              ) : currentBadge.data?.badgeImage || (currentBadge.data?.badgeIcon && (currentBadge.data.badgeIcon.startsWith('/') || currentBadge.data.badgeIcon.startsWith('data:') || currentBadge.data.badgeIcon.startsWith('http'))) ? (
                 <img src={currentBadge.data?.badgeImage || currentBadge.data?.badgeIcon} alt="Achievement" className="w-12 h-12 object-contain drop-shadow-[0_0_10px_rgba(255,183,3,0.5)]" />
               ) : currentBadge.type === 'level_up' || currentBadge.notification_type === 'level_up' ? (
                 <div className="w-full h-full flex items-center justify-center bg-[#ffb703] rounded-full shadow-inner">
@@ -129,14 +134,27 @@ export default function AchievementPopupProvider({ children }: { children: React
             </div>
 
             <div className="flex-1 flex flex-col z-10 pr-4">
-              <span className="text-[#ffb703] font-sans font-bold text-[10px] uppercase tracking-widest mb-1">
-                {currentBadge.type === 'level_up' ? 'Level Up!' : 'Achievement Unlocked!'}
+              <span className="text-[#ffb703] font-sans font-bold text-[10px] uppercase tracking-widest mb-1 flex items-center gap-1.5">
+                {(currentBadge.type === 'title_unlocked' || currentBadge.notification_type === 'title_unlocked') ? (
+                  <>
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#ffb703] animate-pulse" />
+                    Title Unlocked!
+                  </>
+                ) : currentBadge.type === 'level_up' ? (
+                  'Level Up!'
+                ) : (
+                  'Achievement Unlocked!'
+                )}
               </span>
               <h4 className="text-white font-bold text-sm leading-tight mb-1 drop-shadow-md">
-                "{currentBadge.data?.badgeName || "Secret Achievement"}"
+                "{currentBadge.data?.titleName || currentBadge.data?.badgeName || "Secret Achievement"}"
               </h4>
               <p className="text-white/60 text-xs leading-tight line-clamp-2">
-                {currentBadge.type === 'level_up' 
+                {(currentBadge.type === 'title_unlocked' || currentBadge.notification_type === 'title_unlocked')
+                  ? (currentBadge.data?.planetName 
+                      ? `Awarded for conquering ${currentBadge.data.planetName}! Equip it in your Profile.`
+                      : currentBadge.data?.description || `Congratulations! You unlocked the title "${currentBadge.data?.titleName || ''}".`)
+                  : currentBadge.type === 'level_up' 
                   ? `Congratulations! You have reached Level ${currentBadge.data?.badgeName?.replace(/\D/g, '') || ''}.` 
                   : `Congratulations! You have achieved "${currentBadge.data?.badgeName}".`}
               </p>

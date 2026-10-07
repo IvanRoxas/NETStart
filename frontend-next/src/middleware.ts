@@ -17,8 +17,17 @@ export async function middleware(req: NextRequest) {
       cookieName: cookieName
     });
 
-    if (!adminToken || adminToken.type !== 'admin') {
+    if (!adminToken || adminToken.type !== 'admin' || adminToken.isActive === false) {
       return NextResponse.redirect(new URL('/admin-login', req.url));
+    }
+
+    // Role-based access control for Teachers
+    if (adminToken.role === 'TEACHER') {
+      const superAdminOnlyPaths = ['/admin/teachers', '/admin/shop', '/admin/achievements', '/admin/aptitude', '/admin/logs'];
+      const isSuperAdminPath = superAdminOnlyPaths.some(path => req.nextUrl.pathname.startsWith(path));
+      if (isSuperAdminPath) {
+        return NextResponse.redirect(new URL('/admin', req.url));
+      }
     }
     
     return NextResponse.next();
@@ -32,8 +41,12 @@ export async function middleware(req: NextRequest) {
   if (isProtectedRoute) {
     const studentToken = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
     
-    if (!studentToken) {
+    if (!studentToken || !studentToken.id) {
       return NextResponse.redirect(new URL('/login', req.url));
+    }
+
+    if (studentToken.isBanned) {
+      return NextResponse.redirect(new URL('/login?error=suspended', req.url));
     }
 
     // Unverified protection

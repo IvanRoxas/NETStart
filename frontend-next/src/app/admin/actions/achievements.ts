@@ -1,13 +1,13 @@
 "use server";
 
 import { prisma } from "@/lib/auth";
-import { requireAdmin } from "@/app/admin/actions";
+import { requireSuperAdmin } from "@/app/admin/actions";
 import { revalidatePath } from "next/cache";
 import { logSystemAction } from "@/lib/logger";
 import { ensureDefaultAchievements } from "@/app/actions/achievements";
 
 export async function getAchievements(searchQuery?: string) {
-  await requireAdmin();
+  await requireSuperAdmin();
   await ensureDefaultAchievements();
 
   let whereClause: any = {};
@@ -36,7 +36,7 @@ export async function createAchievement(data: {
   gearsReward?: number;
   triggerCode?: string;
 }) {
-  const session = await requireAdmin();
+  const session = await requireSuperAdmin();
   const adminId = (session.user as any).id;
 
   // Auto-generate a unique trigger code if none is provided
@@ -55,7 +55,7 @@ export async function createAchievement(data: {
 
   await logSystemAction({
     actorId: adminId,
-    actorRole: "ADMIN",
+    actorRole: "SUPER_ADMIN",
     action: "CREATED_ACHIEVEMENT",
     details: { id: achievement.id, name: achievement.name }
   });
@@ -76,11 +76,16 @@ export async function updateAchievement(id: string, data: {
   gearsReward?: number;
   triggerCode?: string;
 }) {
-  const session = await requireAdmin();
+  const session = await requireSuperAdmin();
   const adminId = (session.user as any).id;
 
   const existing = await prisma.achievement.findUnique({ where: { id } });
   if (!existing) return { success: false };
+
+  // Protect system-critical trigger codes from renaming
+  if (data.triggerCode && data.triggerCode !== existing.triggerCode && existing.triggerCode.startsWith('B_')) {
+    throw new Error("Cannot modify trigger code of system-critical achievement.");
+  }
 
   const updatedFields = [];
   if (data.name !== existing.name) updatedFields.push('name');
@@ -107,7 +112,7 @@ export async function updateAchievement(id: string, data: {
 
   await logSystemAction({
     actorId: adminId,
-    actorRole: "ADMIN",
+    actorRole: "SUPER_ADMIN",
     action: "UPDATED_ACHIEVEMENT",
     details: { id: achievement.id, name: achievement.name, updatedFields }
   });
@@ -121,8 +126,16 @@ export async function updateAchievement(id: string, data: {
 }
 
 export async function deleteAchievement(id: string) {
-  const session = await requireAdmin();
+  const session = await requireSuperAdmin();
   const adminId = (session.user as any).id;
+
+  const existing = await prisma.achievement.findUnique({ where: { id } });
+  if (!existing) return { success: false };
+
+  // Prevent deletion of system achievements
+  if (existing.triggerCode.startsWith('B_')) {
+    throw new Error("Cannot delete system-critical achievement.");
+  }
 
   const achievement = await prisma.achievement.delete({
     where: { id }
@@ -130,7 +143,7 @@ export async function deleteAchievement(id: string) {
 
   await logSystemAction({
     actorId: adminId,
-    actorRole: "ADMIN",
+    actorRole: "SUPER_ADMIN",
     action: "DELETED_ACHIEVEMENT",
     details: { id, name: achievement.name }
   });

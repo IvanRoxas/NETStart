@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions, prisma } from '@/lib/auth';
 import { logSystemAction } from '@/lib/logger';
 import { addXPAndCheckLevelUp } from '@/lib/xp';
+import { getTitleDefinition, evaluateTitleUnlocks } from '@/lib/titlesData';
 
 export async function GET(req: Request) {
   try {
@@ -32,37 +33,49 @@ export async function GET(req: Request) {
           showcasedBadges: true,
           activeTitle: true,
           xp: true,
+          hasTakenAptitudeTest: true,
+          logicScore: true,
+          patternRecognitionScore: true,
+          taskDecompositionScore: true,
+          recommendedLearningPath: true,
+          canUseDemoMode: true,
         }
       });
     } catch (err: any) {
-      if (err?.message?.includes('border')) {
-        user = await prisma.user.findFirst({
-          where: sessionUserId ? { id: sessionUserId } : { email: sessionEmail! },
-          select: {
-            id: true,
-            name: true,
-            displayName: true,
-            email: true,
-            image: true,
-            banner: true,
-            status: true,
-            bio: true,
-            createdAt: true,
-            showcasedBadges: true,
-            activeTitle: true,
-            xp: true,
-          }
-        });
-        if (user) {
-          try {
-            const rawRes: any = await prisma.$queryRaw`SELECT border FROM users WHERE user_id = ${user.id} LIMIT 1`;
-            if (rawRes && rawRes[0]) user.border = rawRes[0].border;
-          } catch (_) {
-            user.border = null;
-          }
+      console.warn("Extended user fields select failed, falling back to base fields:", err?.message);
+      user = await prisma.user.findFirst({
+        where: sessionUserId ? { id: sessionUserId } : { email: sessionEmail! },
+        select: {
+          id: true,
+          name: true,
+          displayName: true,
+          email: true,
+          image: true,
+          banner: true,
+          status: true,
+          bio: true,
+          createdAt: true,
+          showcasedBadges: true,
+          activeTitle: true,
+          xp: true,
+          hasTakenAptitudeTest: true,
+          logicScore: true,
+          patternRecognitionScore: true,
+          taskDecompositionScore: true,
+          recommendedLearningPath: true,
         }
-      } else {
-        throw err;
+      });
+      if (user) {
+        try {
+          const rawRes: any = await prisma.$queryRaw`SELECT border, can_use_demo_mode FROM users WHERE user_id = ${user.id} LIMIT 1`;
+          if (rawRes && rawRes[0]) {
+            if (rawRes[0].border !== undefined) user.border = rawRes[0].border;
+            (user as any).canUseDemoMode = Boolean(rawRes[0].can_use_demo_mode);
+          }
+        } catch (_) {
+          user.border = null;
+          (user as any).canUseDemoMode = false;
+        }
       }
     }
 
@@ -206,7 +219,12 @@ export async function GET(req: Request) {
       backendTrackPercent: backendPct,
     };
 
-    return NextResponse.json({ user, missionProgress, stats });
+    return NextResponse.json({ 
+      user, 
+      missionProgress, 
+      stats, 
+      completedMissionIds: completedMissions.map(m => m.missionId) 
+    });
   } catch (error) {
     console.error('Error fetching profile:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
@@ -259,6 +277,58 @@ export async function PUT(req: Request) {
       }
     }
 
+    // Validate title eligibility
+    let cleanActiveTitle = activeTitle !== undefined ? (typeof activeTitle === 'string' ? activeTitle.trim() : null) : undefined;
+    if (cleanActiveTitle && cleanActiveTitle !== 'Novice Explorer') {
+      const titleDef = getTitleDefinition(cleanActiveTitle);
+      if (titleDef.id !== 'title-novice-explorer') {
+        const u = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { xp: true, hasTakenAptitudeTest: true, isVerified: true }
+        });
+        const userAchs = await prisma.userAchievement.findMany({
+          where: { userId },
+          include: { achievement: true }
+        });
+        const triggerCodes = new Set(userAchs.map(a => a.achievement?.triggerCode?.toUpperCase()).filter(Boolean) as string[]);
+        const { getXPDetails } = await import('@/lib/leveling');
+        const userLvl = getXPDetails(u?.xp || 0).level;
+        const unlocks = evaluateTitleUnlocks({
+          level: userLvl,
+          xp: u?.xp || 0,
+          isVerified: !!u?.isVerified,
+          hasTakenAptitudeTest: !!u?.hasTakenAptitudeTest,
+          unlockedTriggerCodes: triggerCodes,
+        });
+
+        if (!unlocks[titleDef.id]) {
+          return NextResponse.json(
+            { error: 'You have not unlocked this title yet.' },
+            { status: 403 }
+          );
+        }
+      }
+    }
+
+    // Validate showcased badges
+    let cleanShowcasedBadges: string[] | undefined = undefined;
+    if (showcasedBadges !== undefined) {
+      if (Array.isArray(showcasedBadges)) {
+        const userAchs = await prisma.userAchievement.findMany({
+          where: { userId },
+          include: { achievement: true }
+        });
+        const validCodes = new Set(userAchs.map(a => a.achievement?.triggerCode?.toLowerCase()).filter(Boolean) as string[]);
+        const validIds = new Set(userAchs.map(a => a.achievement?.id?.toLowerCase()).filter(Boolean) as string[]);
+        
+        cleanShowcasedBadges = showcasedBadges
+          .slice(0, 6)
+          .filter(b => typeof b === 'string')
+          .map(b => b.trim())
+          .filter(b => validCodes.has(b.toLowerCase()) || validIds.has(b.toLowerCase()));
+      }
+    }
+
     try {
       await prisma.user.update({
         where: { id: userId },
@@ -270,8 +340,8 @@ export async function PUT(req: Request) {
           ...(image !== undefined && { image }),
           ...(banner !== undefined && { banner }),
           ...(cleanBorder !== undefined && { border: cleanBorder }),
-          ...(showcasedBadges !== undefined && { showcasedBadges }),
-          ...(activeTitle !== undefined && { activeTitle }),
+          ...(cleanShowcasedBadges !== undefined && { showcasedBadges: cleanShowcasedBadges }),
+          ...(cleanActiveTitle !== undefined && { activeTitle: cleanActiveTitle }),
         }
       });
     } catch (updateErr: any) {
@@ -285,8 +355,8 @@ export async function PUT(req: Request) {
             ...(cleanBio !== undefined && { bio: cleanBio }),
             ...(image !== undefined && { image }),
             ...(banner !== undefined && { banner }),
-            ...(showcasedBadges !== undefined && { showcasedBadges }),
-            ...(activeTitle !== undefined && { activeTitle }),
+            ...(cleanShowcasedBadges !== undefined && { showcasedBadges: cleanShowcasedBadges }),
+            ...(cleanActiveTitle !== undefined && { activeTitle: cleanActiveTitle }),
           }
         });
         if (cleanBorder !== undefined) {

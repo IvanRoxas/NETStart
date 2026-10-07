@@ -1,12 +1,12 @@
 "use server";
 
 import { prisma } from "@/lib/auth";
-import { requireAdmin } from "@/app/admin/actions";
+import { requireSuperAdmin } from "@/app/admin/actions";
 import { revalidatePath } from "next/cache";
 import { logSystemAction } from "@/lib/logger";
 
 export async function getShopItems(searchQuery?: string) {
-  await requireAdmin();
+  await requireSuperAdmin();
 
   let whereClause: any = {};
   if (searchQuery) {
@@ -34,23 +34,32 @@ export async function createShopItem(data: {
   price: number;
   imageUrl: string;
 }) {
-  const session = await requireAdmin();
+  const session = await requireSuperAdmin();
   const adminId = (session.user as any).id;
+
+  if (!data.title?.trim()) {
+    throw new Error("Item title is required.");
+  }
+  const safePrice = Math.max(0, Math.floor(Number(data.price) || 0));
+  const safeImage = (data.imageUrl || "").trim();
+  if (!safeImage) {
+    throw new Error("Item image URL is required.");
+  }
 
   const item = await prisma.shopItem.create({
     data: {
-      title: data.title,
+      title: data.title.trim(),
       type: data.type,
       category: data.category,
       subCategory: data.subCategory,
-      price: data.price,
-      imageUrl: data.imageUrl
+      price: safePrice,
+      imageUrl: safeImage
     }
   });
 
   await logSystemAction({
     actorId: adminId,
-    actorRole: "ADMIN",
+    actorRole: "SUPER_ADMIN",
     action: "CREATED_SHOP_ITEM",
     details: { id: item.id, title: item.title, price: item.price }
   });
@@ -68,35 +77,44 @@ export async function updateShopItem(id: string, data: {
   price: number;
   imageUrl: string;
 }) {
-  const session = await requireAdmin();
+  const session = await requireSuperAdmin();
   const adminId = (session.user as any).id;
 
   const existing = await prisma.shopItem.findUnique({ where: { id } });
   if (!existing) return { success: false };
+
+  if (!data.title?.trim()) {
+    throw new Error("Item title is required.");
+  }
+  const safePrice = Math.max(0, Math.floor(Number(data.price) || 0));
+  const safeImage = (data.imageUrl || "").trim();
+  if (!safeImage) {
+    throw new Error("Item image URL is required.");
+  }
 
   const updatedFields = [];
   if (data.title !== existing.title) updatedFields.push('title');
   if (data.type !== existing.type) updatedFields.push('type');
   if (data.category !== existing.category) updatedFields.push('category');
   if (data.subCategory !== existing.subCategory) updatedFields.push('subCategory');
-  if (data.price !== existing.price) updatedFields.push('price');
-  if (data.imageUrl !== existing.imageUrl) updatedFields.push('imageUrl');
+  if (safePrice !== existing.price) updatedFields.push('price');
+  if (safeImage !== existing.imageUrl) updatedFields.push('imageUrl');
 
   const item = await prisma.shopItem.update({
     where: { id },
     data: {
-      title: data.title,
+      title: data.title.trim(),
       type: data.type,
       category: data.category,
       subCategory: data.subCategory,
-      price: data.price,
-      imageUrl: data.imageUrl
+      price: safePrice,
+      imageUrl: safeImage
     }
   });
 
   await logSystemAction({
     actorId: adminId,
-    actorRole: "ADMIN",
+    actorRole: "SUPER_ADMIN",
     action: "UPDATED_SHOP_ITEM",
     details: { id: item.id, title: item.title, updatedFields }
   });
@@ -107,7 +125,7 @@ export async function updateShopItem(id: string, data: {
 }
 
 export async function deleteShopItem(id: string) {
-  const session = await requireAdmin();
+  const session = await requireSuperAdmin();
   const adminId = (session.user as any).id;
 
   const item = await prisma.shopItem.delete({
@@ -116,7 +134,7 @@ export async function deleteShopItem(id: string) {
 
   await logSystemAction({
     actorId: adminId,
-    actorRole: "ADMIN",
+    actorRole: "SUPER_ADMIN",
     action: "DELETED_SHOP_ITEM",
     details: { id, title: item.title }
   });

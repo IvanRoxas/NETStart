@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions, prisma } from "@/lib/auth";
 import { XP_REWARDS } from "@/lib/xpEconomy";
+import { getTodayActiveDailyTaskIds } from "@/lib/dailyTasks";
 
 export async function POST(req: Request) {
   try {
@@ -24,24 +25,40 @@ export async function POST(req: Request) {
 
     const bonusMissionId = `daily-commission-bonus-${todayStrPHT}`;
 
-    // Check if already claimed today
-    const existingClaim = await prisma.missionProgress.findUnique({
-      where: {
-        userId_missionId: {
-          userId,
-          missionId: bonusMissionId,
-        },
-      },
-    });
-
-    if (existingClaim && existingClaim.status === "COMPLETED") {
-      return NextResponse.json({ error: "Daily bonus already claimed for today" }, { status: 400 });
-    }
-
-    const bonusXP = XP_REWARDS.DAILY_COMMISSIONS.COMPLETION_BONUS; // 10 XP
-    const bonusGears = 50;
+    const bonusXP = XP_REWARDS.DAILY_COMMISSIONS.COMPLETION_BONUS; // 100 XP
+    const bonusGears = 100;
 
     await prisma.$transaction(async (tx) => {
+      // Check if already claimed today inside the transaction lock
+      const existingClaim = await tx.missionProgress.findUnique({
+        where: {
+          userId_missionId: {
+            userId,
+            missionId: bonusMissionId,
+          },
+        },
+      });
+
+      if (existingClaim && existingClaim.status === "COMPLETED") {
+        throw new Error("ALREADY_CLAIMED");
+      }
+
+      // Enforce that all active daily tasks for today are completed
+      const activeDailyTaskIds = getTodayActiveDailyTaskIds(nowUtc);
+      const requiredMissionIds = activeDailyTaskIds.map(tId => `daily-task-${tId}-${todayStrPHT}`);
+
+      const completedCount = await tx.missionProgress.count({
+        where: {
+          userId,
+          missionId: { in: requiredMissionIds },
+          status: "COMPLETED",
+        },
+      });
+
+      if (completedCount < activeDailyTaskIds.length) {
+        throw new Error("TASKS_NOT_COMPLETED");
+      }
+
       await tx.missionProgress.upsert({
         where: {
           userId_missionId: {
@@ -76,6 +93,12 @@ export async function POST(req: Request) {
       bonusGears,
     });
   } catch (error: any) {
+    if (error?.message === "ALREADY_CLAIMED") {
+      return NextResponse.json({ error: "Daily bonus already claimed for today" }, { status: 400 });
+    }
+    if (error?.message === "TASKS_NOT_COMPLETED") {
+      return NextResponse.json({ error: "All daily tasks must be completed before claiming the bonus" }, { status: 400 });
+    }
     console.error("Error claiming daily commission bonus:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }

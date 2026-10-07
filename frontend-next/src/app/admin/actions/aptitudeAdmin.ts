@@ -1,7 +1,6 @@
 "use server";
 
-import { getServerSession } from "next-auth/next";
-import { adminAuthOptions } from "@/lib/adminAuth";
+import { requireSuperAdmin } from "@/app/admin/actions";
 import { prisma } from "@/lib/auth";
 import { logSystemAction } from "@/lib/logger";
 
@@ -16,10 +15,7 @@ export interface CreateQuestionInput {
 }
 
 export async function getAdminAptitudeQuestions() {
-  const session = await getServerSession(adminAuthOptions);
-  if (!session?.user || (session.user as any).type !== "admin") {
-    throw new Error("Unauthorized: Admin access required");
-  }
+  await requireSuperAdmin();
 
   const questions = await prisma.aptitudeQuestion.findMany({
     orderBy: { createdAt: "desc" }
@@ -40,10 +36,7 @@ export async function getAdminAptitudeQuestions() {
 }
 
 export async function toggleAptitudeQuestionStatus(id: string, isActive: boolean) {
-  const session = await getServerSession(adminAuthOptions);
-  if (!session?.user || (session.user as any).type !== "admin") {
-    throw new Error("Unauthorized: Admin access required");
-  }
+  const session = await requireSuperAdmin();
 
   await prisma.aptitudeQuestion.update({
     where: { id },
@@ -51,8 +44,8 @@ export async function toggleAptitudeQuestionStatus(id: string, isActive: boolean
   });
 
   await logSystemAction({
-    actorId: session.user.id,
-    actorRole: "ADMIN",
+    actorId: (session.user as any).id,
+    actorRole: "SUPER_ADMIN",
     action: "APTITUDE_QUESTION_TOGGLED",
     details: { questionId: id, isActive }
   });
@@ -61,18 +54,15 @@ export async function toggleAptitudeQuestionStatus(id: string, isActive: boolean
 }
 
 export async function deleteAptitudeQuestion(id: string) {
-  const session = await getServerSession(adminAuthOptions);
-  if (!session?.user || (session.user as any).type !== "admin") {
-    throw new Error("Unauthorized: Admin access required");
-  }
+  const session = await requireSuperAdmin();
 
   await prisma.aptitudeQuestion.delete({
     where: { id }
   });
 
   await logSystemAction({
-    actorId: session.user.id,
-    actorRole: "ADMIN",
+    actorId: (session.user as any).id,
+    actorRole: "SUPER_ADMIN",
     action: "APTITUDE_QUESTION_DELETED",
     details: { questionId: id }
   });
@@ -85,10 +75,7 @@ export interface UpdateQuestionInput extends CreateQuestionInput {
 }
 
 export async function updateAptitudeQuestion(input: UpdateQuestionInput) {
-  const session = await getServerSession(adminAuthOptions);
-  if (!session?.user || (session.user as any).type !== "admin") {
-    throw new Error("Unauthorized: Admin access required");
-  }
+  const session = await requireSuperAdmin();
 
   const qType = input.questionType || "MULTIPLE_CHOICE";
   let finalOpts = input.options || [];
@@ -113,8 +100,8 @@ export async function updateAptitudeQuestion(input: UpdateQuestionInput) {
   });
 
   await logSystemAction({
-    actorId: session.user.id,
-    actorRole: "ADMIN",
+    actorId: (session.user as any).id,
+    actorRole: "SUPER_ADMIN",
     action: "APTITUDE_QUESTION_UPDATED",
     details: { questionId: input.id, category: input.category }
   });
@@ -123,10 +110,7 @@ export async function updateAptitudeQuestion(input: UpdateQuestionInput) {
 }
 
 export async function createManualAptitudeQuestion(input: CreateQuestionInput) {
-  const session = await getServerSession(adminAuthOptions);
-  if (!session?.user || (session.user as any).type !== "admin") {
-    throw new Error("Unauthorized: Admin access required");
-  }
+  const session = await requireSuperAdmin();
 
   const qType = input.questionType || "MULTIPLE_CHOICE";
   let finalOpts = input.options || [];
@@ -151,8 +135,8 @@ export async function createManualAptitudeQuestion(input: CreateQuestionInput) {
   });
 
   await logSystemAction({
-    actorId: session.user.id,
-    actorRole: "ADMIN",
+    actorId: (session.user as any).id,
+    actorRole: "SUPER_ADMIN",
     action: "APTITUDE_QUESTION_CREATED",
     details: { questionId: newQuestion.id, category: input.category }
   });
@@ -161,21 +145,27 @@ export async function createManualAptitudeQuestion(input: CreateQuestionInput) {
 }
 
 export async function generateAptitudeQuestionsAI(
-  customPrompt?: string,
-  categoryFocus: string = "MIXED",
+  categoryFocus: "MIXED" | "LOGIC" | "PATTERN" | "CODING_READINESS" = "MIXED",
+  difficulty: "STANDARD" | "STRICT_TECHNICAL" | "BEGINNER" = "STANDARD",
   count: number = 5
 ) {
-  const session = await getServerSession(adminAuthOptions);
-  if (!session?.user || (session.user as any).type !== "admin") {
-    throw new Error("Unauthorized: Admin access required");
+  const session = await requireSuperAdmin();
+
+  const safeCount = Math.min(Math.max(1, Math.floor(count) || 5), 10);
+  const apiKey = process.env.GEMINI_API_KEY;
+
+  let difficultyDirective = "Target standard computer science undergraduate level diagnostic questions.";
+  if (difficulty === "STRICT_TECHNICAL") {
+    difficultyDirective = "Target rigorous, advanced technical questions testing Big-O analysis, algorithmic recursion, and system architecture.";
+  } else if (difficulty === "BEGINNER") {
+    difficultyDirective = "Target beginner-friendly algorithmic thinking and logic puzzles suitable for candidates with minimal programming experience.";
   }
 
-  const apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
-  
-  const defaultPrompt = `
+  const promptText = `
 Act as an expert computer science and cognitive assessment author.
-Generate ${count} distinct Aptitude Assessment diagnostic questions for software engineering candidates.
+Generate ${safeCount} distinct Aptitude Assessment diagnostic questions for software engineering candidates.
 Target category focus: "${categoryFocus}" (Allowed categories: LOGIC, PATTERN, CODING_READINESS).
+${difficultyDirective}
 Supported question types: "MULTIPLE_CHOICE", "TRUE_FALSE", "SHORT_ANSWER".
 
 STRICT REQUIREMENT: Respond ONLY with a valid raw JSON object conforming EXACTLY to this schema with NO markdown wrapping, codeblocks, or extra text:
@@ -212,13 +202,12 @@ STRICT REQUIREMENT: Respond ONLY with a valid raw JSON object conforming EXACTLY
 }
 `;
 
-  const promptText = customPrompt && customPrompt.trim().length > 10 ? customPrompt : defaultPrompt;
-
   let generatedItems: CreateQuestionInput[] = [];
 
   if (apiKey) {
     try {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+      const model = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -252,7 +241,7 @@ STRICT REQUIREMENT: Respond ONLY with a valid raw JSON object conforming EXACTLY
       {
         question: `AI Diagnostic (${categoryFocus}): Evaluate variable scope in loop execution when index = ${Math.floor(Math.random() * 10)}. What is the output?`,
         questionType: "MULTIPLE_CHOICE",
-        category: "CODING_READINESS",
+        category: categoryFocus === "MIXED" ? "CODING_READINESS" : categoryFocus,
         options: ["Index bound overflow", "Deterministic constant value", "Undefined scope reference", "Sequential iteration result"],
         correctAnswer: 1,
         explanation: "Deterministic constant value represents bounded closure execution."
@@ -260,7 +249,7 @@ STRICT REQUIREMENT: Respond ONLY with a valid raw JSON object conforming EXACTLY
       {
         question: "In binary search trees, the left child node key is always less than its parent node key.",
         questionType: "TRUE_FALSE",
-        category: "LOGIC",
+        category: categoryFocus === "MIXED" ? "LOGIC" : categoryFocus,
         options: ["True", "False"],
         correctAnswer: 0,
         explanation: "By BST invariant definition, left subtree keys are smaller than root."
@@ -268,7 +257,7 @@ STRICT REQUIREMENT: Respond ONLY with a valid raw JSON object conforming EXACTLY
       {
         question: "What keyword declares a block-scoped mutable variable in modern JavaScript?",
         questionType: "SHORT_ANSWER",
-        category: "CODING_READINESS",
+        category: categoryFocus === "MIXED" ? "CODING_READINESS" : categoryFocus,
         options: [],
         correctAnswer: 0,
         shortAnswer: "let",
@@ -278,7 +267,7 @@ STRICT REQUIREMENT: Respond ONLY with a valid raw JSON object conforming EXACTLY
   }
 
   const createdQuestions = [];
-  for (const item of generatedItems) {
+  for (const item of generatedItems.slice(0, safeCount)) {
     const qType = item.questionType || "MULTIPLE_CHOICE";
     let opts = item.options || [];
     if (qType === "TRUE_FALSE") opts = ["True", "False"];
@@ -288,7 +277,7 @@ STRICT REQUIREMENT: Respond ONLY with a valid raw JSON object conforming EXACTLY
       data: {
         question: item.question,
         questionType: qType,
-        category: item.category || "LOGIC",
+        category: item.category || (categoryFocus === "MIXED" ? "LOGIC" : categoryFocus),
         options: opts,
         correctAnswer: typeof item.correctAnswer === "number" ? item.correctAnswer : 0,
         shortAnswer: item.shortAnswer || null,
@@ -299,21 +288,11 @@ STRICT REQUIREMENT: Respond ONLY with a valid raw JSON object conforming EXACTLY
     createdQuestions.push(q);
   }
 
-  // Audit log entry
-  await prisma.auditLog.create({
-    data: {
-      actorId: session.user.id,
-      actorRole: "ADMIN",
-      action: "ADMIN_GENERATE_APTITUDE_QUESTIONS",
-      details: `Generated ${createdQuestions.length} AI Aptitude Diagnostic questions in category: ${categoryFocus}`
-    }
-  });
-
   await logSystemAction({
-    actorId: session.user.id,
-    actorRole: "ADMIN",
+    actorId: (session.user as any).id,
+    actorRole: "SUPER_ADMIN",
     action: "APTITUDE_QUESTIONS_AI_GENERATED",
-    details: { count: createdQuestions.length, categoryFocus }
+    details: { count: createdQuestions.length, categoryFocus, difficulty }
   });
 
   return {

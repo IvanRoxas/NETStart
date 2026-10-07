@@ -17,6 +17,8 @@ interface AvatarDisplayProps {
   showShadow?: boolean;
   scale?: number;
   offsetYClass?: string;
+  shadowBottomClass?: string;
+  imgClassName?: string;
 }
 
 export const DEFAULT_AVATAR_LAYERS: AvatarLayers = {
@@ -31,6 +33,8 @@ export default function AvatarDisplay({
   showShadow = true,
   scale = 1.20,
   offsetYClass = "translate-y-4 sm:translate-y-5",
+  shadowBottomClass = "bottom-[7px] sm:bottom-[10px]",
+  imgClassName = "",
 }: AvatarDisplayProps) {
   const activeSkin = layers.skin ?? DEFAULT_AVATAR_LAYERS.skin;
   const activeFace = layers.face ?? DEFAULT_AVATAR_LAYERS.face;
@@ -43,10 +47,10 @@ export default function AvatarDisplay({
     <div className={`relative flex items-center justify-center overflow-visible ${className}`}>
       {/* Avatar + Ground Shadow Unit (positioned down to allocate headspace for accessories, hair, hats) */}
       <div className={`relative w-full h-full flex items-center justify-center ${offsetYClass}`}>
-        {/* Floor Standing Contact Shadow (positioned directly under feet at bottom 5%) */}
+        {/* Floor Standing Contact Shadow (positioned directly in the center of the platform under feet) */}
         {showShadow && (
           <div 
-            className="absolute bottom-[5%] left-1/2 -translate-x-1/2 h-4 sm:h-5 bg-black/75 rounded-[100%] blur-[3px] z-0 pointer-events-none transition-all duration-300" 
+            className={`absolute ${shadowBottomClass} left-1/2 -translate-x-1/2 h-4 sm:h-5 bg-black/80 rounded-[100%] blur-[2.5px] z-0 pointer-events-none transition-all duration-300`}
             style={{ width: `${shadowWidthPx}px` }}
           />
         )}
@@ -61,7 +65,7 @@ export default function AvatarDisplay({
           <img
             src={activeSkin}
             alt="Base Skin"
-            className="absolute inset-0 w-full h-full object-contain pointer-events-none select-none"
+            className={`absolute inset-0 w-full h-full object-contain pointer-events-none select-none ${imgClassName}`}
             style={{ zIndex: 1 }}
           />
         )}
@@ -71,7 +75,7 @@ export default function AvatarDisplay({
           <img
             src={activeFace}
             alt="Full Face"
-            className="absolute inset-0 w-full h-full object-contain pointer-events-none select-none"
+            className={`absolute inset-0 w-full h-full object-contain pointer-events-none select-none ${imgClassName}`}
             style={{ zIndex: 2 }}
           />
         )}
@@ -81,7 +85,7 @@ export default function AvatarDisplay({
           <img
             src={activeUnderwear}
             alt="Underwear"
-            className="absolute inset-0 w-full h-full object-contain pointer-events-none select-none"
+            className={`absolute inset-0 w-full h-full object-contain pointer-events-none select-none ${imgClassName}`}
             style={{ zIndex: 3 }}
           />
         )}
@@ -91,7 +95,7 @@ export default function AvatarDisplay({
           <img
             src={layers.bottom}
             alt="Bottom"
-            className="absolute inset-0 w-full h-full object-contain pointer-events-none select-none"
+            className={`absolute inset-0 w-full h-full object-contain pointer-events-none select-none ${imgClassName}`}
             style={{ zIndex: 4 }}
           />
         )}
@@ -101,7 +105,7 @@ export default function AvatarDisplay({
           <img
             src={layers.top}
             alt="Top"
-            className="absolute inset-0 w-full h-full object-contain pointer-events-none select-none"
+            className={`absolute inset-0 w-full h-full object-contain pointer-events-none select-none ${imgClassName}`}
             style={{ zIndex: 5 }}
           />
         )}
@@ -111,7 +115,7 @@ export default function AvatarDisplay({
           <img
             src={layers.shoes}
             alt="Shoes"
-            className="absolute inset-0 w-full h-full object-contain pointer-events-none select-none"
+            className={`absolute inset-0 w-full h-full object-contain pointer-events-none select-none ${imgClassName}`}
             style={{ zIndex: 6 }}
           />
         )}
@@ -121,7 +125,7 @@ export default function AvatarDisplay({
           <img
             src={layers.hair}
             alt="Hair"
-            className="absolute inset-0 w-full h-full object-contain pointer-events-none select-none"
+            className={`absolute inset-0 w-full h-full object-contain pointer-events-none select-none ${imgClassName}`}
             style={{ zIndex: 7 }}
           />
         )}
@@ -131,7 +135,7 @@ export default function AvatarDisplay({
           <img
             src={layers.accessory}
             alt="Accessory"
-            className="absolute inset-0 w-full h-full object-contain pointer-events-none select-none"
+            className={`absolute inset-0 w-full h-full object-contain pointer-events-none select-none ${imgClassName}`}
             style={{ zIndex: 8 }}
           />
         )}

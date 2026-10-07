@@ -7,15 +7,18 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { VT323 } from 'next/font/google';
 import TopHeader from '@/components/TopHeader';
-import { Check, X, ChevronDown } from 'lucide-react';
+import { Check, X, ChevronDown, Lock, Eye } from 'lucide-react';
+import { TITLES_LIST, getTitleDefinition, evaluateTitleUnlocks, TitleDefinition } from '@/lib/titlesData';
+import TitleBadge from '@/components/TitleBadge';
 import { allBadges } from '@/lib/badgesData';
 import { getXPDetails } from '@/lib/leveling';
 import { getUnlockedAchievements } from '@/app/actions/achievements';
 import SpaceLoader from '@/components/SpaceLoader';
-import DailyTaskTracker from '@/components/DailyTaskTracker';
+import { triggerDailyTaskCompletion } from '@/lib/dailyTasks';
 import { getUserStorageItem } from '@/lib/userStorage';
 import { getUserInventory } from '@/app/actions/shop';
 import { getBorderScale } from '@/lib/shopCatalog';
+import PassportStatsCard from '@/components/PassportStatsCard';
 
 const vt323 = VT323({ weight: '400', subsets: ['latin'] });
 
@@ -255,6 +258,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [dbAchievements, setDbAchievements] = useState<any[]>([]);
   const [ongoingMissions, setOngoingMissions] = useState<any[]>([]);
+  const [completedMissionIds, setCompletedMissionIds] = useState<string[]>([]);
   const [expandedMissionId, setExpandedMissionId] = useState<string | null>(null);
 
   // Profile Customization & Edit State
@@ -268,7 +272,7 @@ export default function ProfilePage() {
   const [previewBorder, setPreviewBorder] = useState<string | null>(null);
   const [editDisplayName, setEditDisplayName] = useState('');
   const [editBio, setEditBio] = useState('');
-  const [activeCategory, setActiveCategory] = useState<'background' | 'icons' | 'borders'>('background');
+  const [activeCategory, setActiveCategory] = useState<'titles' | 'background' | 'icons' | 'borders'>('titles');
   const [userInventory, setUserInventory] = useState<any[]>([]);
   const [showUnsavedModal, setShowUnsavedModal] = useState(false);
   const [stats, setStats] = useState<any>(null);
@@ -284,44 +288,22 @@ export default function ProfilePage() {
   const [statsTab, setStatsTab] = useState<'overview' | 'progress'>('overview');
   const [xp, setXp] = useState(0);
 
-  // Compute earned & unlocked titles based on progression, achievements, and level
-  const availableTitles = useMemo(() => {
+  // Evaluate unlock status for the 8 curated titles based on progression and achievements
+  const titleUnlocks = useMemo(() => {
     const userLvl = getXPDetails(xp).level;
     const unlockedBadges = dbAchievements.filter(a => unlockedDates[a.triggerCode?.toUpperCase()] || unlockedDates[a.id]);
     const triggerCodes = new Set(unlockedBadges.map(a => a.triggerCode?.toUpperCase()));
 
-    const titles = new Set<string>();
-
-    // Starter titles
-    titles.add("Novice Explorer");
-    titles.add("Space Cadet");
-
-    // Level Progression Titles (Unlocked as player levels up)
-    if (userLvl >= 2) titles.add("Astro Trainee");
-    if (userLvl >= 3) titles.add("Cosmic Navigator");
-    if (userLvl >= 4) titles.add("Orbital Specialist");
-    if (userLvl >= 5 || triggerCodes.has("B_REACH_LVL5")) titles.add("Solar Pioneer");
-    if (userLvl >= 6) titles.add("Quantum Coder");
-    if (userLvl >= 7) titles.add("Galactic Engineer");
-    if (userLvl >= 8) titles.add("Starship Commander");
-    if (userLvl >= 9) titles.add("Deep Space Voyager");
-    if (userLvl >= 10 || triggerCodes.has("B_REACH_LVL10")) titles.add("Grand Celestial Architect");
-
-    // Achievement & Milestone Titles
-    if (profile?.isVerified || triggerCodes.has("B_VERIFY_ACCOUNT")) titles.add("Certified Astronaut");
-    if (profile?.hasTakenAptitudeTest || triggerCodes.has("B_APTITUDE_TEST")) titles.add("Logic Prodigy");
-    if (triggerCodes.has("B_FIRST_MISSION")) titles.add("Mission Specialist");
-    if (triggerCodes.has("B_FIRST_PLANET")) titles.add("Planetary Pioneer");
-    if (triggerCodes.has("B_BUY_REWARD")) titles.add("Cosmic Collector");
-    if (triggerCodes.has("B_CHANGE_PFP") || triggerCodes.has("B_CHANGE_BG")) titles.add("Starship Decorator");
-
-    // Always preserve currently assigned title
-    if (profile?.activeTitle) titles.add(profile.activeTitle);
-    if (profile?.title) titles.add(profile.title);
-    if (selectedTitle) titles.add(selectedTitle);
-
-    return Array.from(titles);
-  }, [xp, dbAchievements, unlockedDates, profile, selectedTitle]);
+    return evaluateTitleUnlocks({
+      level: userLvl,
+      xp: xp,
+      isVerified: !!profile?.isVerified,
+      hasTakenAptitudeTest: !!profile?.hasTakenAptitudeTest,
+      unlockedTriggerCodes: triggerCodes,
+      dailyCompletedDatesCount: stats?.dailyCompletedDatesCount ?? (unlockedDates['B_FIRST_MISSION'] ? 1 : 0),
+      inventoryCount: userInventory?.length ?? 0,
+    });
+  }, [xp, dbAchievements, unlockedDates, profile, stats, userInventory]);
 
   // Memoize valid showcased badges without phantom holes or missing badges
   const validShowcasedBadges = useMemo(() => {
@@ -353,7 +335,7 @@ export default function ProfilePage() {
           id: badgeId,
           name: dbData?.name || baseBadge?.name || 'Achievement',
           description: dbData?.description || baseBadge?.description || '',
-          xpReward: dbData?.xpReward || baseBadge?.xpReward || 100,
+          xpReward: dbData?.xpReward ?? baseBadge?.xpReward ?? 0,
           gearsReward: dbData?.gearsReward || 0,
           icon: dbData?.iconUrl || baseBadge?.icon || '🏆',
           image: dbData?.iconUrl || baseBadge?.image,
@@ -369,7 +351,7 @@ export default function ProfilePage() {
     const list: { id: string; title: string; imageUrl: string; description?: string }[] = [
       {
         id: 'default-cosmic',
-        title: 'Default Cosmic',
+        title: 'Default',
         imageUrl: '',
         description: 'Default deep purple space theme',
       }
@@ -589,6 +571,9 @@ export default function ProfilePage() {
             console.warn("Could not parse active level from user storage:", e);
           }
         }
+        if (data.completedMissionIds) {
+          setCompletedMissionIds(data.completedMissionIds);
+        }
         setOngoingMissions(ongoing);
         setSelectedTitle(data.user.activeTitle || data.user.title || (session?.user as any)?.activeTitle || 'Novice Explorer');
         setSelectedIcon(
@@ -685,6 +670,7 @@ export default function ProfilePage() {
     setEditDisplayName(profile?.displayName || profile?.name || session?.user?.displayName || session?.user?.name || '');
     setEditBio(profile?.bio || '');
     setIsEditing(true);
+    triggerDailyTaskCompletion("task-achieve-2");
   };
 
   const handleCloseSidebar = () => {
@@ -743,6 +729,7 @@ export default function ProfilePage() {
         setIsEditing(false);
         setShowUnsavedModal(false);
         showToast('Profile updated successfully!');
+        triggerDailyTaskCompletion("task-achieve-2");
         await update({
           displayName: data.user?.displayName,
           image: data.user?.image,
@@ -807,17 +794,13 @@ export default function ProfilePage() {
         />
       )}
 
-      <DailyTaskTracker taskIds={["task-achieve-2"]} />
       <TopHeader title="Profile" />
       <div className={`flex-1 overflow-y-auto overflow-x-hidden p-6 lg:p-10 pr-10 lg:pr-16 no-scrollbar @container relative z-10 ${isEditing ? 'pointer-events-none select-none' : ''}`}>
 
-        <div className="max-w-7xl mx-auto w-full flex flex-col gap-10">
+        <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-[1.75fr_1fr] gap-10 items-stretch">
 
-          {/* TOP ROW: Identification Card (Left) & Level + Achievements (Right) */}
-          <div className="grid grid-cols-1 lg:grid-cols-[1.75fr_1fr] gap-10 items-stretch">
-
-            {/* IDENTIFICATION CARD */}
-            <div className="relative group/id-card flex flex-col h-full">
+          {/* ROW 1 - LEFT: IDENTIFICATION CARD */}
+          <div className="relative group/id-card flex flex-col h-full min-w-0 lg:col-start-1 lg:row-start-1">
               {/* Shaded background depth layer */}
               <div className="absolute inset-0 bg-[#090311]/75 rounded-3xl translate-x-2 translate-y-2 z-0 transition-all duration-300 group-hover/id-card:translate-x-3 group-hover/id-card:translate-y-3" />
 
@@ -899,14 +882,12 @@ export default function ProfilePage() {
                               {`"${((isEditing && editDisplayName) ? editDisplayName : (profile?.displayName || profile?.name || session?.user?.displayName || session?.user?.name || 'Explorer')).replace(/^["“”']+|["“”']+$/g, '')}"`}
                             </h3>
 
-                            {/* Earned Rank / Title Badge */}
-                            <div className="mt-2.5 inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#ff912d]/15 border border-[#ff912d]/50 text-[#ff912d] shadow-[0_0_12px_rgba(255,145,45,0.25)]">
-                              <svg className="w-3.5 h-3.5 text-[#ff912d] shrink-0" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
-                              </svg>
-                              <span className="font-bold text-xs uppercase tracking-widest truncate">
-                                {(isEditing && selectedTitle) ? selectedTitle : (profile?.activeTitle || profile?.title || (session?.user as any)?.activeTitle || 'Novice Explorer')}
-                              </span>
+                            {/* Earned Rank / Title Badge with Bespoke Stylized Effect */}
+                            <div className="mt-2.5 flex items-center justify-center max-w-full">
+                              <TitleBadge 
+                                title={(isEditing && selectedTitle) ? selectedTitle : (profile?.activeTitle || profile?.title || (session?.user as any)?.activeTitle || 'Novice Explorer')} 
+                                size="lg"
+                              />
                             </div>
                           </>
                         );
@@ -970,8 +951,13 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* RIGHT TOP GROUP: Level & XP Bar + Achievements */}
-            <div className="flex flex-col gap-6 h-full justify-between min-w-0">
+          {/* ROW 2 - LEFT: PASSPORT STATISTICS CARD */}
+          <div className="w-full min-w-0 h-full lg:col-start-1 lg:row-start-2">
+            <PassportStatsCard profile={profile} completedMissionIds={completedMissionIds} />
+          </div>
+
+          {/* ROW 1 - RIGHT: LEVEL & XP BAR + ACHIEVEMENTS */}
+          <div className="flex flex-col gap-6 w-full justify-between min-w-0 h-full lg:col-start-2 lg:row-start-1">
               {/* Level Text & XP Bar */}
               <div className="flex items-center gap-4 shrink-0">
                 {/* Dynamic SVG Level Badge */}
@@ -1068,83 +1054,9 @@ export default function ProfilePage() {
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* BOTTOM ROW: Profile Statistics (Left) & Ongoing Missions (Right) */}
-          <div className="grid grid-cols-1 lg:grid-cols-[1.75fr_1fr] gap-10 items-stretch">
-            {/* PROFILE STATISTICS */}
-            <div className="relative group/stats-card flex flex-col h-full">
-              {/* Shaded background depth layer */}
-              <div className="absolute inset-0 bg-[#090311]/75 rounded-3xl translate-x-2 translate-y-2 z-0 transition-all duration-300 group-hover/stats-card:translate-x-3 group-hover/stats-card:translate-y-3" />
-
-              <div className="relative z-10 flex flex-col flex-1 gap-4 bg-[#361d57] border-2 border-[#ff912d]/50 p-6 rounded-3xl hover:-translate-x-1 hover:-translate-y-1 transition-all duration-300 shadow-xl justify-between h-full">
-                {/* Title Box */}
-                <div className="border border-[#ff912d]/50 p-3 bg-[#361d57]/60 text-center rounded-xl shrink-0">
-                  <h2 className={`${vt323.className} font-bold text-[#ff912d] text-2xl tracking-[0.2em] uppercase`}>Profile Statistics</h2>
-                </div>
-
-                {/* Tabs and Content */}
-                <div className="flex flex-col flex-1 justify-between gap-4">
-                  <div className="flex border border-[#ff912d]/50 border-b-0 bg-[#361d57]/60 rounded-t-xl px-2 pt-2 gap-2 shrink-0">
-                    <button
-                      onClick={() => setStatsTab('overview')}
-                      className={`flex-1 py-2 text-xs font-bold uppercase tracking-widest rounded-t-lg transition-colors ${statsTab === 'overview' ? 'bg-black/30 text-[#ff912d] border-t border-x border-[#ff912d]/50' : 'text-white/50 hover:bg-black/10 hover:text-white/80'}`}
-                    >
-                      Overview
-                    </button>
-                    <button
-                      onClick={() => setStatsTab('progress')}
-                      className={`flex-1 py-2 text-xs font-bold uppercase tracking-widest rounded-t-lg transition-colors ${statsTab === 'progress' ? 'bg-black/30 text-[#ff912d] border-t border-x border-[#ff912d]/50' : 'text-white/50 hover:bg-black/10 hover:text-white/80'}`}
-                    >
-                      Progress
-                    </button>
-                  </div>
-                  <div className="border-x border-b border-[#ff912d]/50 bg-black/30 rounded-b-xl p-6 flex flex-col gap-6 justify-center shadow-inner min-h-[160px] flex-1">
-                    {statsTab === 'overview' ? (
-                      <div className="grid grid-cols-2 gap-6">
-                        <div className="bg-[#361d57]/40 border border-[#ff912d]/30 rounded-xl p-6 text-center shadow-inner flex flex-col items-center justify-center">
-                          <span className={`${vt323.className} text-[#ff912d] text-5xl mb-2 drop-shadow-md`}>
-                            {stats?.perfectModulesCount ?? 0}
-                          </span>
-                          <span className="text-white/60 text-xs font-bold uppercase tracking-widest text-center">Modules Completed</span>
-                        </div>
-                        <div className="bg-[#361d57]/40 border border-[#ff912d]/30 rounded-xl p-6 text-center shadow-inner flex flex-col items-center justify-center">
-                          <span className={`${vt323.className} text-[#ffb703] text-5xl mb-2 drop-shadow-md`}>
-                            {stats?.planetsExploredCount ?? 0}
-                          </span>
-                          <span className="text-white/60 text-xs font-bold uppercase tracking-widest text-center">Planets Explored</span>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="flex flex-col gap-4">
-                        <div className="bg-[#361d57]/30 border border-white/5 rounded-lg p-4 flex flex-col gap-2">
-                          <div className="flex justify-between items-end">
-                            <span className="text-white/80 text-xs font-bold uppercase tracking-wider">Frontend Track</span>
-                            <span className="text-[#ff912d] text-xs font-bold">{stats?.frontendTrackPercent ?? 0}%</span>
-                          </div>
-                          <div className="w-full h-1.5 bg-black/60 rounded-full overflow-hidden">
-                            <div className="h-full bg-[#ff912d] rounded-full transition-all duration-700" style={{ width: `${stats?.frontendTrackPercent ?? 0}%` }}></div>
-                          </div>
-                        </div>
-
-                        <div className="bg-[#361d57]/30 border border-white/5 rounded-lg p-4 flex flex-col gap-2">
-                          <div className="flex justify-between items-end">
-                            <span className="text-white/80 text-xs font-bold uppercase tracking-wider">Backend Track</span>
-                            <span className="text-[#9b4dff] text-xs font-bold">{stats?.backendTrackPercent ?? 0}%</span>
-                          </div>
-                          <div className="w-full h-1.5 bg-black/60 rounded-full overflow-hidden">
-                            <div className="h-full bg-[#9b4dff] rounded-full transition-all duration-700" style={{ width: `${stats?.backendTrackPercent ?? 0}%` }}></div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* ONGOING MISSIONS */}
-            <div className="relative group/ongoing-card flex flex-col h-full min-w-0">
+          {/* ROW 2 - RIGHT: ONGOING MISSIONS */}
+          <div className="relative group/ongoing-card flex flex-col h-full min-w-0 lg:col-start-2 lg:row-start-2">
               {/* Shaded background depth layer */}
               <div className="absolute inset-0 bg-[#090311]/75 rounded-3xl translate-x-2 translate-y-2 z-0 transition-all duration-300 group-hover/ongoing-card:translate-x-3 group-hover/ongoing-card:translate-y-3" />
 
@@ -1234,7 +1146,7 @@ export default function ProfilePage() {
                 </div>
               </div>
             </div>
-          </div>
+
         </div>
       </div>
 
@@ -1267,9 +1179,15 @@ export default function ProfilePage() {
               <h3 className={`${vt323.className} text-[#ff912d] text-4xl mb-2 tracking-wider`}>"{selectedBadge.name}"</h3>
 
               <div className="flex items-center gap-3 mb-3 flex-wrap justify-center md:justify-start">
-                <div className="bg-[#270d3c] border border-[#ff912d]/50 text-[#ff912d] text-xs font-bold px-3 py-1 rounded-full shadow-sm">
-                  +{selectedBadge.xpReward || 100} EXP
-                </div>
+                {(selectedBadge.xpReward || 0) > 0 ? (
+                  <div className="bg-[#270d3c] border border-[#ff912d]/50 text-[#ff912d] text-xs font-bold px-3 py-1 rounded-full shadow-sm">
+                    +{selectedBadge.xpReward} EXP
+                  </div>
+                ) : (
+                  <div className="bg-[#270d3c] border border-[#ff912d]/50 text-[#ff912d] text-xs font-bold px-3 py-1 rounded-full shadow-sm">
+                    Showcase Trophy
+                  </div>
+                )}
                 {selectedBadge.gearsReward > 0 && (
                   <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-purple-900 text-purple-200 text-xs font-bold border border-purple-700">
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
@@ -1383,35 +1301,19 @@ export default function ProfilePage() {
               />
             </div>
 
-            {/* 3. Title Dropdown */}
-            <div className="flex flex-col gap-2">
-              <label className="text-xs sm:text-sm font-bold uppercase tracking-wider text-[#ff912d] flex items-center gap-1.5">
-                <svg className="w-4 h-4 text-[#ff912d]" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
-                </svg>
-                Title
-              </label>
-              <div className="relative">
-                <select
-                  value={selectedTitle}
-                  onChange={(e) => setSelectedTitle(e.target.value)}
-                  className="w-full bg-[#270d3c] border border-[#ff912d]/50 text-white rounded-xl py-3 pl-3.5 pr-10 text-sm sm:text-base font-semibold uppercase tracking-wider focus:border-[#ff912d] outline-none appearance-none cursor-pointer"
-                >
-                  {availableTitles.map(t => (
-                    <option key={t} value={t} className="bg-[#1e0a2d] text-white py-2 text-sm sm:text-base">
-                      {t}
-                    </option>
-                  ))}
-                </select>
-                <svg className="w-4 h-4 text-[#ff912d] pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
-            </div>
-
             {/* 3. Category Tabs */}
             <div className="flex flex-col gap-3">
               <div className="flex border border-[#ff912d]/40 rounded-xl overflow-hidden bg-[#270d3c]/80 p-1">
+                <button
+                  type="button"
+                  onClick={() => setActiveCategory('titles')}
+                  className={`flex-1 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all cursor-pointer ${activeCategory === 'titles'
+                      ? 'bg-[#ff912d] text-black shadow-md'
+                      : 'text-white/70 hover:text-white'
+                    }`}
+                >
+                  Titles
+                </button>
                 <button
                   type="button"
                   onClick={() => setActiveCategory('background')}
@@ -1430,7 +1332,7 @@ export default function ProfilePage() {
                       : 'text-white/70 hover:text-white'
                     }`}
                 >
-                  Profile Icons
+                  Icons
                 </button>
                 <button
                   type="button"
@@ -1444,8 +1346,73 @@ export default function ProfilePage() {
                 </button>
               </div>
 
-              {/* Items Grid: 2 items per row */}
-              {activeCategory === 'background' ? (
+              {/* Items Grid */}
+              {activeCategory === 'titles' ? (
+                <div className="flex flex-col gap-3 pt-1">
+                  <div className="flex items-center justify-between px-1">
+                    <span className="text-[11px] font-mono text-white/50 uppercase tracking-wider font-bold">
+                      Unlocked: {TITLES_LIST.filter(t => titleUnlocks[t.id]).length} / {TITLES_LIST.length}
+                    </span>
+                    <span className="text-[10px] text-white/40">
+                      Click to equip
+                    </span>
+                  </div>
+
+                  {TITLES_LIST.map((item) => {
+                    const isUnlocked = !!titleUnlocks[item.id] || selectedTitle === item.name;
+                    const isSelected = selectedTitle === item.name;
+
+                    return (
+                      <div
+                        key={item.id}
+                        onClick={() => {
+                          if (isUnlocked) {
+                            setSelectedTitle(item.name);
+                            showToast(`Equipped: "${item.name}"`);
+                          } else {
+                            showToast(`Locked: ${item.unlockRequirement}`);
+                          }
+                        }}
+                        className={`relative group flex flex-col p-3.5 rounded-2xl border-2 transition-all cursor-pointer ${
+                          isSelected
+                            ? 'bg-[#361d57] border-[#ff912d] shadow-[0_0_20px_rgba(255,145,45,0.35)]'
+                            : isUnlocked
+                            ? 'bg-[#1e0a2d] border-white/15 hover:border-white/40 hover:bg-[#270d3c]'
+                            : 'bg-black/40 border-white/5 opacity-60 hover:opacity-85'
+                        }`}
+                      >
+                        {/* Header: Title Badge & Status Badge */}
+                        <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
+                          <div className={!isUnlocked ? 'filter grayscale contrast-75' : ''}>
+                            <TitleBadge title={item.name} size="sm" showGlyph={true} />
+                          </div>
+
+                          {isSelected ? (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider bg-[#ff912d] text-black px-2 py-0.5 rounded-full shadow-sm">
+                              <Check size={10} className="stroke-[3]" /> Equipped
+                            </span>
+                          ) : isUnlocked ? (
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded-full">
+                              Unlocked
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-wider text-white/40 bg-white/5 border border-white/10 px-2 py-0.5 rounded-full">
+                              <Lock size={10} /> Locked
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Unlock Requirement / Info */}
+                        <div className="pt-2 border-t border-white/5 text-[10px] font-mono">
+                          <span className={`${isUnlocked ? 'text-white/40' : 'text-amber-400 font-semibold'}`}>
+                            {item.unlockRequirement}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : activeCategory === 'background' ? (
                 <div className="grid grid-cols-2 gap-3 pt-1">
                   {ownedBackgrounds.map((item) => {
                     const isSelected = selectedBanner === item.imageUrl;
@@ -1479,10 +1446,10 @@ export default function ProfilePage() {
                             e.stopPropagation();
                             setFullPreviewBg(item);
                           }}
-                          className="absolute top-2 right-2 z-20 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-black/80 hover:bg-[#ff912d] text-white hover:text-black border border-white/20 transition-all shadow cursor-pointer active:scale-95"
+                          className="absolute top-2 right-2 z-20 p-1.5 rounded-lg bg-black/80 hover:bg-[#ff912d] text-white hover:text-black border border-white/20 transition-all shadow cursor-pointer active:scale-95 flex items-center justify-center"
                           title="Open full background preview"
                         >
-                          Preview
+                          <Eye size={13} className="stroke-[2.5]" />
                         </button>
 
                         {/* Thumbnail */}
@@ -1496,7 +1463,7 @@ export default function ProfilePage() {
                             />
                           ) : (
                             <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-[#180728] via-[#270d3c] to-[#361d57] text-white/70 p-2 text-center">
-                              <span className="text-[11px] font-bold tracking-wider uppercase text-[#ff912d]">Default Purple</span>
+                              <span className="text-[11px] font-bold tracking-wider uppercase text-white drop-shadow-sm">Default</span>
                             </div>
                           )}
                         </div>
@@ -1589,10 +1556,10 @@ export default function ProfilePage() {
                             e.stopPropagation();
                             setFullPreviewBorder(item);
                           }}
-                          className="absolute top-2 right-2 z-20 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-black/80 hover:bg-[#ff912d] text-white hover:text-black border border-white/20 transition-all shadow cursor-pointer active:scale-95"
+                          className="absolute top-2 right-2 z-20 p-1.5 rounded-lg bg-black/80 hover:bg-[#ff912d] text-white hover:text-black border border-white/20 transition-all shadow cursor-pointer active:scale-95 flex items-center justify-center"
                           title="Open full border preview"
                         >
-                          Preview
+                          <Eye size={13} className="stroke-[2.5]" />
                         </button>
 
                         {/* Thumbnail showcasing border framing avatar */}
@@ -1697,7 +1664,7 @@ export default function ProfilePage() {
                 />
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-[#180728] via-[#270d3c] to-[#361d57] text-white p-6 text-center">
-                  <h4 className="text-xl font-bold text-[#ff912d] uppercase tracking-widest mb-2">Default Cosmic Theme</h4>
+                  <h4 className="text-xl font-bold text-white uppercase tracking-widest mb-2">Default</h4>
                   <p className="text-sm text-white/70 max-w-md">The signature deep purple nebula background of the NETStart star system.</p>
                 </div>
               )}

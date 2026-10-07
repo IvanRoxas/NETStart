@@ -1,12 +1,12 @@
 import React from 'react';
 import { prisma } from '@/lib/auth';
-import { requireAdmin } from '@/app/admin/actions';
+import { requireSuperAdmin } from '@/app/admin/actions';
 import { Activity } from 'lucide-react';
 import { formatActionName, formatLogDetails } from '@/lib/formatters/logs';
 import LogsFilter from './LogsFilter';
 
 export default async function GlobalLogsPage({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
-  await requireAdmin();
+  await requireSuperAdmin();
   const params = await searchParams;
 
   const actionFilter = typeof params.action === 'string' ? params.action : undefined;

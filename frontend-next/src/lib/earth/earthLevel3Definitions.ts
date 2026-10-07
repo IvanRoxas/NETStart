@@ -313,36 +313,36 @@ export function auditEarth3Workspace(
         defFuncCount++;
       } else if (b.type === 'py_system_synchronize') {
         syncBlockCount++;
-        // Check if ancestor is py_def_func (Recursion vulnerability)
-        let ancestor = b.getParent();
-        while (ancestor) {
-          if (ancestor.type === 'py_def_func') {
+        // Check if ancestor is py_def_func (Recursion vulnerability - only if placed INSIDE the body)
+        let surround = typeof b.getSurroundParent === 'function' ? b.getSurroundParent() : null;
+        while (surround) {
+          if (surround.type === 'py_def_func') {
             syncInsideFunction = true;
             break;
           }
-          ancestor = ancestor.getParent();
+          surround = typeof surround.getSurroundParent === 'function' ? surround.getSurroundParent() : null;
         }
       } else if (b.type === 'py_import_module') {
-        // Check if ancestor is py_def_func (Imports must be top-level)
-        let ancestor = b.getParent();
-        while (ancestor) {
-          if (ancestor.type === 'py_def_func') {
+        // Check if ancestor is py_def_func (Imports must be top-level, not inside def body)
+        let surround = typeof b.getSurroundParent === 'function' ? b.getSurroundParent() : null;
+        while (surround) {
+          if (surround.type === 'py_def_func') {
             importsInsideFunction = true;
             break;
           }
-          ancestor = ancestor.getParent();
+          surround = typeof surround.getSurroundParent === 'function' ? surround.getSurroundParent() : null;
         }
       } else if (b.type === 'py_module_execute') {
         const method = b.getFieldValue('METHOD') || '';
-        // Check if ancestor is py_def_func
-        let ancestor = b.getParent();
+        // Check if ancestor is py_def_func (truly nested inside def body)
+        let surround = typeof b.getSurroundParent === 'function' ? b.getSurroundParent() : null;
         let isInside = false;
-        while (ancestor) {
-          if (ancestor.type === 'py_def_func') {
+        while (surround) {
+          if (surround.type === 'py_def_func') {
             isInside = true;
             break;
           }
-          ancestor = ancestor.getParent();
+          surround = typeof surround.getSurroundParent === 'function' ? surround.getSurroundParent() : null;
         }
 
         if (isInside) {

@@ -13,6 +13,40 @@ export async function unlockAchievement(triggerCode: string) {
 
     const userId = (session.user as any).id;
 
+    // Validate eligibility to prevent arbitrary achievement and currency forging
+    const dbUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { isVerified: true, hasTakenAptitudeTest: true }
+    });
+
+    if (!dbUser) {
+      return { success: false, error: "User not found" };
+    }
+
+    if (triggerCode === 'B_VERIFY_ACCOUNT' && !dbUser.isVerified) {
+      return { success: false, error: "Requirement not met: User is not verified" };
+    }
+
+    if (triggerCode === 'B_APTITUDE_TEST' && !dbUser.hasTakenAptitudeTest) {
+      return { success: false, error: "Requirement not met: Aptitude test not completed" };
+    }
+
+    const RESTRICTED_TRIGGERS = new Set([
+      'B_COMPLETE_MOON',
+      'B_COMPLETE_MARS',
+      'B_COMPLETE_VENUS',
+      'B_COMPLETE_MERCURY',
+      'B_COMPLETE_JUPITER',
+      'B_COMPLETE_SATURN',
+      'B_COMPLETE_EARTH',
+      'B_COMPLETE_ALL_PLANETS',
+      'B_FIRST_MISSION',
+    ]);
+
+    if (RESTRICTED_TRIGGERS.has(triggerCode)) {
+      return { success: false, error: "This achievement can only be unlocked through curriculum progression" };
+    }
+
     const achievement = await prisma.achievement.findUnique({
       where: { triggerCode }
     });
@@ -63,8 +97,10 @@ export async function unlockAchievement(triggerCode: string) {
       })
     ]);
 
-    const { addXPAndCheckLevelUp } = await import('@/lib/xp');
-    await addXPAndCheckLevelUp(userId, achievement.xpReward);
+    if (achievement.xpReward > 0) {
+      const { addXPAndCheckLevelUp } = await import('@/lib/xp');
+      await addXPAndCheckLevelUp(userId, achievement.xpReward);
+    }
 
     if (achievement.gearsReward > 0) {
       await prisma.user.update({
@@ -103,24 +139,24 @@ export async function unlockAchievement(triggerCode: string) {
 export async function ensureDefaultAchievements() {
   try {
     const defaultBadges = [
-      { triggerCode: 'B_CREATE_ACCOUNT', name: 'Ready for Blast Off!', iconUrl: '/assets/global/badges/milestones/CreateAccount.svg', description: 'Create your NETStart account to begin your journey.', xpReward: 100 },
-      { triggerCode: 'B_VERIFY_ACCOUNT', name: 'Verified Explorer', iconUrl: '/assets/global/badges/milestones/AccountVerified.svg', description: 'Verify your email address to confirm your account.', xpReward: 100 },
-      { triggerCode: 'B_CHANGE_PFP', name: 'A New Look', iconUrl: '/assets/global/badges/milestones/ChangeProfileIcon.svg', description: 'Change your profile picture to customize your astronaut.', xpReward: 100 },
-      { triggerCode: 'B_APTITUDE_TEST', name: 'Aptitude Tested', iconUrl: '/assets/global/badges/milestones/Aptitude Test.svg', description: 'Complete the aptitude test to discover your skills.', xpReward: 100 },
-      { triggerCode: 'B_FIRST_MISSION', name: 'First Mission', iconUrl: '/assets/global/badges/milestones/FirstMission.svg', description: 'Complete your very first coding mission.', xpReward: 100 },
-      { triggerCode: 'B_BUY_REWARD', name: 'First Purchase', iconUrl: '/assets/global/badges/milestones/FirstPurchase.svg', description: 'Buy your first item from the rewards shop.', xpReward: 100 },
-      { triggerCode: 'B_CHANGE_BG', name: 'Interior Designer', iconUrl: '/assets/global/badges/milestones/ChangeBackground.svg', description: 'Customize your profile with a new background.', xpReward: 100 },
-      { triggerCode: 'B_REACH_LVL5', name: 'Level 5 Reached', iconUrl: '/assets/global/badges/milestones/Level 5.svg', description: 'Earn enough experience to reach Level 5.', xpReward: 100 },
-      { triggerCode: 'B_REACH_LVL10', name: 'Level 10 Reached', iconUrl: '/assets/global/badges/milestones/Level 10.svg', description: 'Earn enough experience to reach Level 10.', xpReward: 100 },
+      { triggerCode: 'B_CREATE_ACCOUNT', name: 'Ready for Blast Off!', iconUrl: '/assets/global/badges/milestones/CreateAccount.svg', description: 'Create your NETStart account to begin your journey.', xpReward: 0 },
+      { triggerCode: 'B_VERIFY_ACCOUNT', name: 'Verified Explorer', iconUrl: '/assets/global/badges/milestones/AccountVerified.svg', description: 'Verify your email address to confirm your account.', xpReward: 0 },
+      { triggerCode: 'B_CHANGE_PFP', name: 'A New Look', iconUrl: '/assets/global/badges/milestones/ChangeProfileIcon.svg', description: 'Change your profile picture to customize your astronaut.', xpReward: 0 },
+      { triggerCode: 'B_APTITUDE_TEST', name: 'Aptitude Tested', iconUrl: '/assets/global/badges/milestones/Aptitude Test.svg', description: 'Complete the aptitude test to discover your skills.', xpReward: 0 },
+      { triggerCode: 'B_FIRST_MISSION', name: 'First Mission', iconUrl: '/assets/global/badges/milestones/FirstMission.svg', description: 'Complete your very first coding mission.', xpReward: 0 },
+      { triggerCode: 'B_BUY_REWARD', name: 'First Purchase', iconUrl: '/assets/global/badges/milestones/FirstPurchase.svg', description: 'Buy your first item from the rewards shop.', xpReward: 0 },
+      { triggerCode: 'B_CHANGE_BG', name: 'Interior Designer', iconUrl: '/assets/global/badges/milestones/ChangeBackground.svg', description: 'Customize your profile with a new background.', xpReward: 0 },
+      { triggerCode: 'B_REACH_LVL5', name: 'Level 5 Reached', iconUrl: '/assets/global/badges/milestones/Level 5.svg', description: 'Earn enough experience to reach Level 5.', xpReward: 0 },
+      { triggerCode: 'B_REACH_LVL10', name: 'Level 10 Reached', iconUrl: '/assets/global/badges/milestones/Level 10.svg', description: 'Earn enough experience to reach Level 10.', xpReward: 0 },
       // Planetary Expeditions
-      { triggerCode: 'B_COMPLETE_MOON', name: 'Moon Pioneer', iconUrl: '/assets/global/badges/planets/CompleteMoon.svg', description: 'Complete all missions on The Moon.', xpReward: 150 },
-      { triggerCode: 'B_COMPLETE_MERCURY', name: 'Mercury Logician', iconUrl: '/assets/global/badges/planets/CompleteMercury.svg', description: 'Complete all missions on Mercury.', xpReward: 150 },
-      { triggerCode: 'B_COMPLETE_VENUS', name: 'Venus Navigator', iconUrl: '/assets/global/badges/planets/CompleteVenus.svg', description: 'Complete all missions on Venus.', xpReward: 150 },
-      { triggerCode: 'B_COMPLETE_MARS', name: 'Mars Conqueror', iconUrl: '/assets/global/badges/planets/CompleteMars.svg', description: 'Complete all missions on Mars.', xpReward: 150 },
-      { triggerCode: 'B_COMPLETE_JUPITER', name: 'Jupiter Architect', iconUrl: '/assets/global/badges/planets/CompleteJupiter.svg', description: 'Complete all missions on Jupiter.', xpReward: 150 },
-      { triggerCode: 'B_COMPLETE_SATURN', name: 'Saturn Engineer', iconUrl: '/assets/global/badges/planets/CompleteSaturn.svg', description: 'Complete all missions on Saturn.', xpReward: 150 },
-      { triggerCode: 'B_COMPLETE_EARTH', name: 'Earth Master', iconUrl: '/assets/global/badges/planets/CompleteEarth.svg', description: 'Complete all missions on Earth.', xpReward: 150 },
-      { triggerCode: 'B_COMPLETE_ALL_PLANETS', name: 'Grand Celestial Master', iconUrl: '/assets/global/badges/planets/CompleteAllPlanets.svg', description: 'Complete all planets in the solar system constellation.', xpReward: 500 }
+      { triggerCode: 'B_COMPLETE_MOON', name: 'Moon Pioneer', iconUrl: '/assets/global/badges/planets/CompleteMoon.svg', description: 'Complete all missions on The Moon.', xpReward: 0 },
+      { triggerCode: 'B_COMPLETE_MERCURY', name: 'Mercury Logician', iconUrl: '/assets/global/badges/planets/CompleteMercury.svg', description: 'Complete all missions on Mercury.', xpReward: 0 },
+      { triggerCode: 'B_COMPLETE_VENUS', name: 'Venus Navigator', iconUrl: '/assets/global/badges/planets/CompleteVenus.svg', description: 'Complete all missions on Venus.', xpReward: 0 },
+      { triggerCode: 'B_COMPLETE_MARS', name: 'Mars Conqueror', iconUrl: '/assets/global/badges/planets/CompleteMars.svg', description: 'Complete all missions on Mars.', xpReward: 0 },
+      { triggerCode: 'B_COMPLETE_JUPITER', name: 'Jupiter Architect', iconUrl: '/assets/global/badges/planets/CompleteJupiter.svg', description: 'Complete all missions on Jupiter.', xpReward: 0 },
+      { triggerCode: 'B_COMPLETE_SATURN', name: 'Saturn Engineer', iconUrl: '/assets/global/badges/planets/CompleteSaturn.svg', description: 'Complete all missions on Saturn.', xpReward: 0 },
+      { triggerCode: 'B_COMPLETE_EARTH', name: 'Earth Master', iconUrl: '/assets/global/badges/planets/CompleteEarth.svg', description: 'Complete all missions on Earth.', xpReward: 0 },
+      { triggerCode: 'B_COMPLETE_ALL_PLANETS', name: 'Grand Celestial Master', iconUrl: '/assets/global/badges/planets/CompleteAllPlanets.svg', description: 'Complete all planets in the solar system constellation.', xpReward: 0 }
     ];
 
     // Clean up B_FIRST_PLANET if previously seeded
@@ -149,7 +185,8 @@ export async function ensureDefaultAchievements() {
           data: {
             name: badge.name,
             description: badge.description,
-            iconUrl: badge.iconUrl
+            iconUrl: badge.iconUrl,
+            xpReward: 0
           }
         });
       }
@@ -183,8 +220,10 @@ export async function getUnlockedAchievements() {
           data: { userId: userId, achievementId: createAch.id }
         });
 
-        const { addXPAndCheckLevelUp } = await import('@/lib/xp');
-        await addXPAndCheckLevelUp(userId, createAch.xpReward);
+        if (createAch.xpReward > 0) {
+          const { addXPAndCheckLevelUp } = await import('@/lib/xp');
+          await addXPAndCheckLevelUp(userId, createAch.xpReward);
+        }
 
         // Also create a notification so the popup shows
         await prisma.notification.create({

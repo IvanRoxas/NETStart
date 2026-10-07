@@ -2,12 +2,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { Settings, Image as ImageIcon, Smile, Shirt, Zap, Brush, Footprints, CheckCircle, X, Sparkles, Tag, ShieldCheck, Search, CircleDot, Scissors, ChevronDown } from 'lucide-react';
+import { Settings, Image as ImageIcon, Smile, Shirt, Glasses, Brush, Footprints, CheckCircle, X, Sparkles, Tag, ShieldCheck, Search, CircleDot, Scissors, ChevronDown } from 'lucide-react';
 import PantsIcon from '@/components/PantsIcon';
 import TopHeader from '@/components/TopHeader';
 import { getShopItems, getUserInventory, purchaseItem, claimVerificationReward } from '@/app/actions/shop';
 import VerifyModal from '@/components/VerifyModal';
-import DailyTaskTracker from '@/components/DailyTaskTracker';
+import { triggerDailyTaskCompletion } from '@/lib/dailyTasks';
 import { getBorderScale, getAvatarItemStyle, getItemSubGroup, getHairColor } from '@/lib/shopCatalog';
 
 const TOP_SUB_FILTERS = [
@@ -120,7 +120,7 @@ export default function ShopPage() {
       title: 'AVATAR',
       items: [
         { name: 'Hair', label: 'Hairstyles', icon: <Scissors size={18} /> },
-        { name: 'Accessories', label: 'Accessories', icon: <Zap size={18} /> },
+        { name: 'Accessories', label: 'Accessories', icon: <Glasses size={18} /> },
         { name: 'Tops', label: 'Tops', icon: <Shirt size={18} /> },
         { name: 'Bottoms', label: 'Bottoms', icon: <PantsIcon size={18} /> },
         { name: 'Shoes', label: 'Shoes', icon: <Footprints size={18} /> }
@@ -168,6 +168,7 @@ export default function ShopPage() {
 
   const handleOpenBuyModal = (item: ShopItem) => {
     setModalItem(item);
+    triggerDailyTaskCompletion("task-explore-2");
   };
 
   const handleConfirmPurchase = async (item: ShopItem) => {
@@ -261,7 +262,6 @@ export default function ShopPage() {
 
   return (
     <div className="flex h-full text-white overflow-hidden font-sans bg-transparent">
-      <DailyTaskTracker taskIds={["task-explore-1", "task-explore-3"]} />
       <div className="flex-1 flex flex-col h-full overflow-hidden">
         <TopHeader title="Rewards Shop" />
 
@@ -307,8 +307,8 @@ export default function ShopPage() {
                               setHairColorFilter('All Colors');
                             }}
                             className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all font-semibold text-sm ${isActive
-                                ? 'bg-gradient-to-r from-[#ff912d]/20 to-[#ff912d]/5 border border-[#ff912d]/50 text-white shadow-lg'
-                                : 'text-gray-400 hover:bg-white/5 hover:text-white border border-transparent'
+                              ? 'bg-gradient-to-r from-[#ff912d]/20 to-[#ff912d]/5 border border-[#ff912d]/50 text-white shadow-lg'
+                              : 'text-gray-400 hover:bg-white/5 hover:text-white border border-transparent'
                               }`}
                           >
                             <span className={isActive ? 'text-[#ff912d]' : 'text-gray-400'}>
@@ -339,13 +339,13 @@ export default function ShopPage() {
                 <div>
                   <h1 className="text-3xl md:text-4xl font-display font-extrabold text-white tracking-tight flex items-center gap-3">
                     {activeCategory === 'Background' ? 'Backgrounds' :
-                     activeCategory === 'Icons' ? 'Profile Icons' :
-                     activeCategory === 'Borders' ? 'Profile Borders' :
-                     activeCategory === 'Hair' ? 'Avatar Hairstyles' :
-                     activeCategory === 'Accessories' ? 'Avatar Accessories' :
-                     activeCategory === 'Tops' ? 'Avatar Tops' :
-                     activeCategory === 'Bottoms' ? 'Avatar Bottoms' :
-                     activeCategory === 'Shoes' ? 'Avatar Shoes' : activeCategory}
+                      activeCategory === 'Icons' ? 'Profile Icons' :
+                        activeCategory === 'Borders' ? 'Profile Borders' :
+                          activeCategory === 'Hair' ? 'Avatar Hairstyles' :
+                            activeCategory === 'Accessories' ? 'Avatar Accessories' :
+                              activeCategory === 'Tops' ? 'Avatar Tops' :
+                                activeCategory === 'Bottoms' ? 'Avatar Bottoms' :
+                                  activeCategory === 'Shoes' ? 'Avatar Shoes' : activeCategory}
                     <span className="text-xs px-3 py-1 rounded-full bg-white/10 text-gray-300 font-semibold border border-white/10">
                       {filteredCategoryItems.length} items
                     </span>
@@ -391,8 +391,8 @@ export default function ShopPage() {
                   <button
                     onClick={() => setStatusFilter('all')}
                     className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all ${statusFilter === 'all'
-                        ? 'bg-[#ff912d] text-[#140624] shadow-md'
-                        : 'text-gray-400 hover:text-white hover:bg-white/5'
+                      ? 'bg-[#ff912d] text-[#140624] shadow-md'
+                      : 'text-gray-400 hover:text-white hover:bg-white/5'
                       }`}
                   >
                     All ({filteredCategoryItems.length})
@@ -400,8 +400,8 @@ export default function ShopPage() {
                   <button
                     onClick={() => setStatusFilter('available')}
                     className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all ${statusFilter === 'available'
-                        ? 'bg-[#ff912d] text-[#140624] shadow-md'
-                        : 'text-gray-400 hover:text-white hover:bg-white/5'
+                      ? 'bg-[#ff912d] text-[#140624] shadow-md'
+                      : 'text-gray-400 hover:text-white hover:bg-white/5'
                       }`}
                   >
                     Available for Purchase ({availableItems.length})
@@ -409,8 +409,8 @@ export default function ShopPage() {
                   <button
                     onClick={() => setStatusFilter('owned')}
                     className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all ${statusFilter === 'owned'
-                        ? 'bg-[#ff912d] text-[#140624] shadow-md'
-                        : 'text-gray-400 hover:text-white hover:bg-white/5'
+                      ? 'bg-[#ff912d] text-[#140624] shadow-md'
+                      : 'text-gray-400 hover:text-white hover:bg-white/5'
                       }`}
                   >
                     Owned ({ownedItems.length})
@@ -429,11 +429,10 @@ export default function ShopPage() {
                         key={sub}
                         type="button"
                         onClick={() => setTopSubFilter(sub)}
-                        className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all shrink-0 cursor-pointer ${
-                          isActive
+                        className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all shrink-0 cursor-pointer ${isActive
                             ? 'bg-gradient-to-r from-[#ff912d] to-amber-500 text-[#140624] shadow-md shadow-[#ff912d]/20 scale-105'
                             : 'bg-[#18072c]/90 text-gray-300 hover:text-white hover:bg-white/10 border border-white/10'
-                        }`}
+                          }`}
                       >
                         {sub}
                       </button>
@@ -452,11 +451,10 @@ export default function ShopPage() {
                         key={sub}
                         type="button"
                         onClick={() => setBottomSubFilter(sub)}
-                        className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all shrink-0 cursor-pointer ${
-                          isActive
+                        className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all shrink-0 cursor-pointer ${isActive
                             ? 'bg-gradient-to-r from-[#ff912d] to-amber-500 text-[#140624] shadow-md shadow-[#ff912d]/20 scale-105'
                             : 'bg-[#18072c]/90 text-gray-300 hover:text-white hover:bg-white/10 border border-white/10'
-                        }`}
+                          }`}
                       >
                         {sub}
                       </button>
@@ -477,11 +475,10 @@ export default function ShopPage() {
                           key={style}
                           type="button"
                           onClick={() => setHairStyleFilter(style)}
-                          className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all shrink-0 cursor-pointer ${
-                            isActive
+                          className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all shrink-0 cursor-pointer ${isActive
                               ? 'bg-gradient-to-r from-[#ff912d] to-amber-500 text-[#140624] shadow-md shadow-[#ff912d]/20 scale-105'
                               : 'bg-[#18072c]/90 text-gray-300 hover:text-white hover:bg-white/10 border border-white/10'
-                          }`}
+                            }`}
                         >
                           {style}
                         </button>
@@ -499,11 +496,10 @@ export default function ShopPage() {
                           key={c.name}
                           type="button"
                           onClick={() => setHairColorFilter(c.name)}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all shrink-0 cursor-pointer ${
-                            isActive
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all shrink-0 cursor-pointer ${isActive
                               ? 'bg-amber-400/20 text-amber-300 border border-amber-400/60 shadow-md shadow-amber-400/10'
                               : 'bg-[#18072c]/90 text-gray-400 hover:text-white hover:bg-white/10 border border-white/10'
-                          }`}
+                            }`}
                         >
                           {c.color && (
                             <span
@@ -572,132 +568,132 @@ export default function ShopPage() {
 
                       {isAvailableExpanded && (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        {availableItems.map(item => {
-                          const isProcessing = loadingItems.has(item.id);
-                          const isAvatar = item.subCategory === 'Icons';
-                          const isBorder = item.subCategory === 'Borders';
-                          const isCustomization = ['Hair', 'Hairstyles', 'Accessories', 'Tops', 'Bottoms', 'Shoes'].includes(item.subCategory);
-                          const isSquareBox = isAvatar || isBorder || isCustomization;
-                          const categoryTag = getItemCategoryTag(item);
+                          {availableItems.map(item => {
+                            const isProcessing = loadingItems.has(item.id);
+                            const isAvatar = item.subCategory === 'Icons';
+                            const isBorder = item.subCategory === 'Borders';
+                            const isCustomization = ['Hair', 'Hairstyles', 'Accessories', 'Tops', 'Bottoms', 'Shoes'].includes(item.subCategory);
+                            const isSquareBox = isAvatar || isBorder || isCustomization;
+                            const categoryTag = getItemCategoryTag(item);
 
-                          return (
-                            <div
-                              key={item.id}
-                              onClick={() => handleOpenBuyModal(item)}
-                              className="group relative rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-[#160728]/80 backdrop-blur-sm flex flex-col transition-all duration-300 hover:scale-[1.02] hover:border-[#ff912d]/60 hover:shadow-[0_10px_30px_rgba(255,145,45,0.15)] cursor-pointer"
-                            >
-                              {/* Tag Badge (Category Name) */}
-                              <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/70 backdrop-blur-md border border-white/20 text-[11px] font-bold text-amber-300 shadow-md">
-                                <Tag size={11} className="text-[#ff912d]" />
-                                <span>{categoryTag}</span>
-                              </div>
+                            return (
+                              <div
+                                key={item.id}
+                                onClick={() => handleOpenBuyModal(item)}
+                                className="group relative rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-[#160728]/80 backdrop-blur-sm flex flex-col transition-all duration-300 hover:scale-[1.02] hover:border-[#ff912d]/60 hover:shadow-[0_10px_30px_rgba(255,145,45,0.15)] cursor-pointer"
+                              >
+                                {/* Tag Badge (Category Name) */}
+                                <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/70 backdrop-blur-md border border-white/20 text-[11px] font-bold text-amber-300 shadow-md">
+                                  <Tag size={11} className="text-[#ff912d]" />
+                                  <span>{categoryTag}</span>
+                                </div>
 
-                              {/* Item Image Container */}
-                              <div className={`relative bg-gradient-to-b from-[#1c0a34] to-[#120521] overflow-hidden flex items-center justify-center p-3 sm:p-4 ${isSquareBox ? 'h-56 sm:h-60' : 'h-48'
-                                }`}>
-                                {isAvatar ? (
-                                  <div className="w-36 h-36 sm:w-40 sm:h-40 rounded-2xl bg-black/40 border-2 border-white/20 p-2.5 flex items-center justify-center shadow-inner group-hover:scale-105 group-hover:border-[#ff912d] transition-all duration-300">
-                                    <img
-                                      src={item.imageUrl}
-                                      alt={item.title}
-                                      className="w-full h-full object-contain rounded-xl"
-                                    />
-                                  </div>
-                                ) : isBorder ? (
-                                  <div className="relative w-36 h-36 sm:w-40 sm:h-40 flex items-center justify-center group-hover:scale-105 transition-all duration-300">
-                                    <div className="w-full h-full rounded-full bg-black/40 border border-white/10 overflow-hidden flex items-center justify-center">
-                                      <img
-                                        src="/assets/global/badges/Profile.svg"
-                                        alt="Avatar Preview"
-                                        className="w-full h-full object-cover rounded-full"
-                                      />
-                                    </div>
-                                    <img
-                                      src={item.imageUrl}
-                                      alt={item.title}
-                                      className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 object-contain pointer-events-none drop-shadow-[0_0_12px_rgba(0,0,0,0.8)]"
-                                      style={{ width: getBorderScale(item.imageUrl || item.title), height: getBorderScale(item.imageUrl || item.title) }}
-                                    />
-                                  </div>
-                                ) : isCustomization ? (
-                                  <div className="w-36 h-36 sm:w-40 sm:h-40 rounded-2xl bg-black/40 border-2 border-white/20 p-2.5 overflow-hidden flex items-center justify-center shadow-inner group-hover:scale-105 group-hover:border-[#ff912d] transition-all duration-300 relative">
-                                    {['Hair', 'Hairstyles', 'Accessories'].includes(item.subCategory) ? (
-                                      <div className="relative w-full h-full flex items-center justify-center">
-                                        <div className="relative w-full h-full" style={getAvatarItemStyle(item.subCategory)}>
-                                          <img
-                                            src="/assets/global/shop/avatar/base/Skin%201%20Faceless.svg"
-                                            alt="Base Skin"
-                                            className="absolute inset-0 w-full h-full object-contain pointer-events-none"
-                                            style={{ zIndex: 1 }}
-                                          />
-                                          <img
-                                            src="/assets/global/shop/avatar/base/Full%20Face.svg"
-                                            alt="Face"
-                                            className="absolute inset-0 w-full h-full object-contain pointer-events-none"
-                                            style={{ zIndex: 2 }}
-                                          />
-                                          <img
-                                            src={item.imageUrl}
-                                            alt={item.title}
-                                            className="absolute inset-0 w-full h-full object-contain pointer-events-none"
-                                            style={{ zIndex: 3 }}
-                                          />
-                                        </div>
-                                      </div>
-                                    ) : (
+                                {/* Item Image Container */}
+                                <div className={`relative bg-gradient-to-b from-[#1c0a34] to-[#120521] overflow-hidden flex items-center justify-center p-3 sm:p-4 ${isSquareBox ? 'h-56 sm:h-60' : 'h-48'
+                                  }`}>
+                                  {isAvatar ? (
+                                    <div className="w-36 h-36 sm:w-40 sm:h-40 rounded-2xl bg-black/40 border-2 border-white/20 p-2.5 flex items-center justify-center shadow-inner group-hover:scale-105 group-hover:border-[#ff912d] transition-all duration-300">
                                       <img
                                         src={item.imageUrl}
                                         alt={item.title}
-                                        style={getAvatarItemStyle(item.subCategory)}
-                                        className="w-full h-full object-contain pointer-events-none transition-transform duration-300"
+                                        className="w-full h-full object-contain rounded-xl"
                                       />
-                                    )}
+                                    </div>
+                                  ) : isBorder ? (
+                                    <div className="relative w-36 h-36 sm:w-40 sm:h-40 flex items-center justify-center group-hover:scale-105 transition-all duration-300">
+                                      <div className="w-full h-full rounded-full bg-black/40 border border-white/10 overflow-hidden flex items-center justify-center">
+                                        <img
+                                          src="/assets/global/badges/Profile.svg"
+                                          alt="Avatar Preview"
+                                          className="w-full h-full object-cover rounded-full"
+                                        />
+                                      </div>
+                                      <img
+                                        src={item.imageUrl}
+                                        alt={item.title}
+                                        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 object-contain pointer-events-none drop-shadow-[0_0_12px_rgba(0,0,0,0.8)]"
+                                        style={{ width: getBorderScale(item.imageUrl || item.title), height: getBorderScale(item.imageUrl || item.title) }}
+                                      />
+                                    </div>
+                                  ) : isCustomization ? (
+                                    <div className="w-36 h-36 sm:w-40 sm:h-40 rounded-2xl bg-black/40 border-2 border-white/20 p-2.5 overflow-hidden flex items-center justify-center shadow-inner group-hover:scale-105 group-hover:border-[#ff912d] transition-all duration-300 relative">
+                                      {['Hair', 'Hairstyles', 'Accessories'].includes(item.subCategory) ? (
+                                        <div className="relative w-full h-full flex items-center justify-center">
+                                          <div className="relative w-full h-full" style={getAvatarItemStyle(item.subCategory)}>
+                                            <img
+                                              src="/assets/global/shop/avatar/base/Skin%201%20Faceless.svg"
+                                              alt="Base Skin"
+                                              className="absolute inset-0 w-full h-full object-contain pointer-events-none"
+                                              style={{ zIndex: 1 }}
+                                            />
+                                            <img
+                                              src="/assets/global/shop/avatar/base/Full%20Face.svg"
+                                              alt="Face"
+                                              className="absolute inset-0 w-full h-full object-contain pointer-events-none"
+                                              style={{ zIndex: 2 }}
+                                            />
+                                            <img
+                                              src={item.imageUrl}
+                                              alt={item.title}
+                                              className="absolute inset-0 w-full h-full object-contain pointer-events-none"
+                                              style={{ zIndex: 3 }}
+                                            />
+                                          </div>
+                                        </div>
+                                      ) : (
+                                        <img
+                                          src={item.imageUrl}
+                                          alt={item.title}
+                                          style={getAvatarItemStyle(item.subCategory)}
+                                          className="w-full h-full object-contain pointer-events-none transition-transform duration-300"
+                                        />
+                                      )}
+                                    </div>
+                                  ) : (
+                                    <img
+                                      src={item.imageUrl}
+                                      alt={item.title}
+                                      className="w-full h-full object-cover rounded-xl shadow-inner group-hover:scale-105 transition-transform duration-500"
+                                    />
+                                  )}
+                                  <div className="absolute inset-0 bg-gradient-to-t from-[#160728] via-transparent to-transparent opacity-60"></div>
+                                </div>
+
+                                {/* Item Info Card Body */}
+                                <div className="p-4 flex flex-col flex-1 bg-gradient-to-b from-[#18082c] to-[#110420] border-t border-white/5">
+                                  <h3 className="font-display font-bold text-white text-base leading-snug group-hover:text-amber-300 transition-colors line-clamp-1">
+                                    {item.title}
+                                  </h3>
+                                  <p className="text-gray-300 text-sm mt-1.5 line-clamp-2 leading-relaxed flex-1">
+                                    {item.description || "A special space item for your journey!"}
+                                  </p>
+
+                                  {/* Price & Buy Action */}
+                                  <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between gap-2">
+                                    <div className="flex items-center gap-1.5 bg-black/40 px-3 py-1.5 rounded-xl border border-white/10">
+                                      <Settings size={15} className="text-[#ff912d]" />
+                                      <span className="font-black text-sm text-amber-300 font-display">{item.price.toLocaleString()}</span>
+                                    </div>
+
+                                    <button
+                                      disabled={isProcessing}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleOpenBuyModal(item);
+                                      }}
+                                      className="flex items-center gap-1.5 py-1.5 px-4 rounded-xl font-bold text-xs transition-all shadow-md active:scale-95 bg-[#ff912d] hover:bg-[#ffa34d] text-[#1a082c] font-black shadow-[0_0_12px_rgba(255,145,45,0.3)]"
+                                    >
+                                      {isProcessing ? (
+                                        <div className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-[#1a082c]/40 border-t-[#1a082c]"></div>
+                                      ) : (
+                                        <span>Buy Item</span>
+                                      )}
+                                    </button>
                                   </div>
-                                ) : (
-                                  <img
-                                    src={item.imageUrl}
-                                    alt={item.title}
-                                    className="w-full h-full object-cover rounded-xl shadow-inner group-hover:scale-105 transition-transform duration-500"
-                                  />
-                                )}
-                                <div className="absolute inset-0 bg-gradient-to-t from-[#160728] via-transparent to-transparent opacity-60"></div>
-                              </div>
-
-                              {/* Item Info Card Body */}
-                              <div className="p-4 flex flex-col flex-1 bg-gradient-to-b from-[#18082c] to-[#110420] border-t border-white/5">
-                                <h3 className="font-display font-bold text-white text-base leading-snug group-hover:text-amber-300 transition-colors line-clamp-1">
-                                  {item.title}
-                                </h3>
-                                <p className="text-gray-300 text-sm mt-1.5 line-clamp-2 leading-relaxed flex-1">
-                                  {item.description || "A special space item for your journey!"}
-                                </p>
-
-                                {/* Price & Buy Action */}
-                                <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between gap-2">
-                                  <div className="flex items-center gap-1.5 bg-black/40 px-3 py-1.5 rounded-xl border border-white/10">
-                                    <Settings size={15} className="text-[#ff912d]" />
-                                    <span className="font-black text-sm text-amber-300 font-display">{item.price.toLocaleString()}</span>
-                                  </div>
-
-                                  <button
-                                    disabled={isProcessing}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleOpenBuyModal(item);
-                                    }}
-                                    className="flex items-center gap-1.5 py-1.5 px-4 rounded-xl font-bold text-xs transition-all shadow-md active:scale-95 bg-[#ff912d] hover:bg-[#ffa34d] text-[#1a082c] font-black shadow-[0_0_12px_rgba(255,145,45,0.3)]"
-                                  >
-                                    {isProcessing ? (
-                                      <div className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-[#1a082c]/40 border-t-[#1a082c]"></div>
-                                    ) : (
-                                      <span>Buy Item</span>
-                                    )}
-                                  </button>
                                 </div>
                               </div>
-                            </div>
-                          );
-                        })}
+                            );
+                          })}
                         </div>
                       )}
                     </div>
@@ -728,114 +724,114 @@ export default function ShopPage() {
 
                       {isOwnedExpanded && (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        {ownedItems.map(item => {
-                          const isAvatar = item.subCategory === 'Icons';
-                          const isBorder = item.subCategory === 'Borders';
-                          const isCustomization = ['Hair', 'Hairstyles', 'Accessories', 'Tops', 'Bottoms', 'Shoes'].includes(item.subCategory);
-                          const isSquareBox = isAvatar || isBorder || isCustomization;
-                          const categoryTag = getItemCategoryTag(item);
+                          {ownedItems.map(item => {
+                            const isAvatar = item.subCategory === 'Icons';
+                            const isBorder = item.subCategory === 'Borders';
+                            const isCustomization = ['Hair', 'Hairstyles', 'Accessories', 'Tops', 'Bottoms', 'Shoes'].includes(item.subCategory);
+                            const isSquareBox = isAvatar || isBorder || isCustomization;
+                            const categoryTag = getItemCategoryTag(item);
 
-                          return (
-                            <div
-                              key={item.id}
-                              onClick={() => handleOpenBuyModal(item)}
-                              className="group relative rounded-2xl overflow-hidden shadow-xl border border-emerald-500/30 bg-[#120a22]/90 backdrop-blur-sm flex flex-col transition-all duration-300 hover:scale-[1.02] hover:border-emerald-500/60 hover:shadow-[0_10px_30px_rgba(16,185,129,0.15)] cursor-pointer"
-                            >
-                              {/* Tag Badge (Category Name) */}
-                              <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/70 backdrop-blur-md border border-white/20 text-[11px] font-bold text-amber-300 shadow-md">
-                                <Tag size={11} className="text-[#ff912d]" />
-                                <span>{categoryTag}</span>
-                              </div>
+                            return (
+                              <div
+                                key={item.id}
+                                onClick={() => handleOpenBuyModal(item)}
+                                className="group relative rounded-2xl overflow-hidden shadow-xl border border-emerald-500/30 bg-[#120a22]/90 backdrop-blur-sm flex flex-col transition-all duration-300 hover:scale-[1.02] hover:border-emerald-500/60 hover:shadow-[0_10px_30px_rgba(16,185,129,0.15)] cursor-pointer"
+                              >
+                                {/* Tag Badge (Category Name) */}
+                                <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/70 backdrop-blur-md border border-white/20 text-[11px] font-bold text-amber-300 shadow-md">
+                                  <Tag size={11} className="text-[#ff912d]" />
+                                  <span>{categoryTag}</span>
+                                </div>
 
-                              {/* Owned Status Pill */}
-                              <div className="absolute top-3 right-3 z-20 flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-950/90 backdrop-blur-md border border-emerald-500/60 text-[11px] font-bold text-emerald-400 shadow-md">
-                                <CheckCircle size={12} />
-                                <span>Owned</span>
-                              </div>
+                                {/* Owned Status Pill */}
+                                <div className="absolute top-3 right-3 z-20 flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-950/90 backdrop-blur-md border border-emerald-500/60 text-[11px] font-bold text-emerald-400 shadow-md">
+                                  <CheckCircle size={12} />
+                                  <span>Owned</span>
+                                </div>
 
-                              {/* Item Image Container */}
-                              <div className={`relative bg-gradient-to-b from-[#180b2a] to-[#0f041c] overflow-hidden flex items-center justify-center p-3 sm:p-4 ${isSquareBox ? 'h-56 sm:h-60' : 'h-48'
-                                }`}>
-                                {isAvatar ? (
-                                  <div className="w-36 h-36 sm:w-40 sm:h-40 rounded-2xl bg-black/40 border-2 border-emerald-500/30 p-2.5 flex items-center justify-center shadow-inner group-hover:scale-105 group-hover:border-emerald-400 transition-all duration-300">
-                                    <img
-                                      src={item.imageUrl}
-                                      alt={item.title}
-                                      className="w-full h-full object-contain rounded-xl"
-                                    />
-                                  </div>
-                                ) : isBorder ? (
-                                  <div className="relative w-36 h-36 sm:w-40 sm:h-40 flex items-center justify-center group-hover:scale-105 transition-all duration-300">
-                                    <div className="w-full h-full rounded-full bg-black/40 border border-white/10 overflow-hidden flex items-center justify-center">
-                                      <img
-                                        src="/assets/global/badges/Profile.svg"
-                                        alt="Avatar Preview"
-                                        className="w-full h-full object-cover rounded-full"
-                                      />
-                                    </div>
-                                    <img
-                                      src={item.imageUrl}
-                                      alt={item.title}
-                                      className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 object-contain pointer-events-none drop-shadow-[0_0_12px_rgba(0,0,0,0.8)]"
-                                      style={{ width: getBorderScale(item.imageUrl || item.title), height: getBorderScale(item.imageUrl || item.title) }}
-                                    />
-                                  </div>
-                                ) : isCustomization ? (
-                                  <div className="w-36 h-36 sm:w-40 sm:h-40 rounded-2xl bg-black/40 border-2 border-emerald-500/30 p-2.5 overflow-hidden flex items-center justify-center shadow-inner group-hover:scale-105 group-hover:border-emerald-400 transition-all duration-300 relative">
-                                    {['Hair', 'Hairstyles', 'Accessories'].includes(item.subCategory) ? (
-                                      <div className="relative w-full h-full flex items-center justify-center">
-                                        <div className="relative w-full h-full" style={getAvatarItemStyle(item.subCategory)}>
-                                          <img
-                                            src="/assets/global/shop/avatar/base/Skin%201%20Faceless.svg"
-                                            alt="Base Skin"
-                                            className="absolute inset-0 w-full h-full object-contain pointer-events-none"
-                                            style={{ zIndex: 1 }}
-                                          />
-                                          <img
-                                            src="/assets/global/shop/avatar/base/Full%20Face.svg"
-                                            alt="Face"
-                                            className="absolute inset-0 w-full h-full object-contain pointer-events-none"
-                                            style={{ zIndex: 2 }}
-                                          />
-                                          <img
-                                            src={item.imageUrl}
-                                            alt={item.title}
-                                            className="absolute inset-0 w-full h-full object-contain pointer-events-none"
-                                            style={{ zIndex: 3 }}
-                                          />
-                                        </div>
-                                      </div>
-                                    ) : (
+                                {/* Item Image Container */}
+                                <div className={`relative bg-gradient-to-b from-[#180b2a] to-[#0f041c] overflow-hidden flex items-center justify-center p-3 sm:p-4 ${isSquareBox ? 'h-56 sm:h-60' : 'h-48'
+                                  }`}>
+                                  {isAvatar ? (
+                                    <div className="w-36 h-36 sm:w-40 sm:h-40 rounded-2xl bg-black/40 border-2 border-emerald-500/30 p-2.5 flex items-center justify-center shadow-inner group-hover:scale-105 group-hover:border-emerald-400 transition-all duration-300">
                                       <img
                                         src={item.imageUrl}
                                         alt={item.title}
-                                        style={getAvatarItemStyle(item.subCategory)}
-                                        className="w-full h-full object-contain pointer-events-none transition-transform duration-300"
+                                        className="w-full h-full object-contain rounded-xl"
                                       />
-                                    )}
-                                  </div>
-                                ) : (
-                                  <img
-                                    src={item.imageUrl}
-                                    alt={item.title}
-                                    className="w-full h-full object-cover rounded-xl shadow-inner group-hover:scale-105 transition-transform duration-500"
-                                  />
-                                )}
-                                <div className="absolute inset-0 bg-gradient-to-t from-[#120a22] via-transparent to-transparent opacity-60"></div>
-                              </div>
+                                    </div>
+                                  ) : isBorder ? (
+                                    <div className="relative w-36 h-36 sm:w-40 sm:h-40 flex items-center justify-center group-hover:scale-105 transition-all duration-300">
+                                      <div className="w-full h-full rounded-full bg-black/40 border border-white/10 overflow-hidden flex items-center justify-center">
+                                        <img
+                                          src="/assets/global/badges/Profile.svg"
+                                          alt="Avatar Preview"
+                                          className="w-full h-full object-cover rounded-full"
+                                        />
+                                      </div>
+                                      <img
+                                        src={item.imageUrl}
+                                        alt={item.title}
+                                        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 object-contain pointer-events-none drop-shadow-[0_0_12px_rgba(0,0,0,0.8)]"
+                                        style={{ width: getBorderScale(item.imageUrl || item.title), height: getBorderScale(item.imageUrl || item.title) }}
+                                      />
+                                    </div>
+                                  ) : isCustomization ? (
+                                    <div className="w-36 h-36 sm:w-40 sm:h-40 rounded-2xl bg-black/40 border-2 border-emerald-500/30 p-2.5 overflow-hidden flex items-center justify-center shadow-inner group-hover:scale-105 group-hover:border-emerald-400 transition-all duration-300 relative">
+                                      {['Hair', 'Hairstyles', 'Accessories'].includes(item.subCategory) ? (
+                                        <div className="relative w-full h-full flex items-center justify-center">
+                                          <div className="relative w-full h-full" style={getAvatarItemStyle(item.subCategory)}>
+                                            <img
+                                              src="/assets/global/shop/avatar/base/Skin%201%20Faceless.svg"
+                                              alt="Base Skin"
+                                              className="absolute inset-0 w-full h-full object-contain pointer-events-none"
+                                              style={{ zIndex: 1 }}
+                                            />
+                                            <img
+                                              src="/assets/global/shop/avatar/base/Full%20Face.svg"
+                                              alt="Face"
+                                              className="absolute inset-0 w-full h-full object-contain pointer-events-none"
+                                              style={{ zIndex: 2 }}
+                                            />
+                                            <img
+                                              src={item.imageUrl}
+                                              alt={item.title}
+                                              className="absolute inset-0 w-full h-full object-contain pointer-events-none"
+                                              style={{ zIndex: 3 }}
+                                            />
+                                          </div>
+                                        </div>
+                                      ) : (
+                                        <img
+                                          src={item.imageUrl}
+                                          alt={item.title}
+                                          style={getAvatarItemStyle(item.subCategory)}
+                                          className="w-full h-full object-contain pointer-events-none transition-transform duration-300"
+                                        />
+                                      )}
+                                    </div>
+                                  ) : (
+                                    <img
+                                      src={item.imageUrl}
+                                      alt={item.title}
+                                      className="w-full h-full object-cover rounded-xl shadow-inner group-hover:scale-105 transition-transform duration-500"
+                                    />
+                                  )}
+                                  <div className="absolute inset-0 bg-gradient-to-t from-[#120a22] via-transparent to-transparent opacity-60"></div>
+                                </div>
 
-                              {/* Item Info Card Body (NO BUTTONS OMITTED AS REQUESTED) */}
-                              <div className="p-4 flex flex-col flex-1 bg-gradient-to-b from-[#140826] to-[#0d0318] border-t border-emerald-500/10">
-                                <h3 className="font-display font-bold text-white text-base leading-snug group-hover:text-emerald-300 transition-colors line-clamp-1">
-                                  {item.title}
-                                </h3>
-                                <p className="text-gray-300 text-sm mt-1.5 line-clamp-2 leading-relaxed flex-1">
-                                  {item.description || "A special space item in your collection!"}
-                                </p>
+                                {/* Item Info Card Body (NO BUTTONS OMITTED AS REQUESTED) */}
+                                <div className="p-4 flex flex-col flex-1 bg-gradient-to-b from-[#140826] to-[#0d0318] border-t border-emerald-500/10">
+                                  <h3 className="font-display font-bold text-white text-base leading-snug group-hover:text-emerald-300 transition-colors line-clamp-1">
+                                    {item.title}
+                                  </h3>
+                                  <p className="text-gray-300 text-sm mt-1.5 line-clamp-2 leading-relaxed flex-1">
+                                    {item.description || "A special space item in your collection!"}
+                                  </p>
+                                </div>
                               </div>
-                            </div>
-                          );
-                        })}
+                            );
+                          })}
                         </div>
                       )}
                     </div>
@@ -864,8 +860,8 @@ export default function ShopPage() {
             <div className="flex justify-between items-center relative z-10 border-b border-white/10 pb-3">
               <div className="flex items-center gap-2.5">
                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${inventoryIds.has(modalItem.id)
-                    ? 'bg-purple-900/30 border border-purple-500/40 text-purple-300'
-                    : 'bg-[#ff912d]/20 border border-[#ff912d]/40 text-[#ff912d]'
+                  ? 'bg-purple-900/30 border border-purple-500/40 text-purple-300'
+                  : 'bg-[#ff912d]/20 border border-[#ff912d]/40 text-[#ff912d]'
                   }`}>
                   <Sparkles size={16} />
                 </div>
@@ -1071,8 +1067,8 @@ export default function ShopPage() {
                     disabled={loadingItems.has(modalItem.id) || gears < modalItem.price}
                     onClick={() => handleConfirmPurchase(modalItem)}
                     className={`w-full py-2.5 rounded-xl font-extrabold text-sm transition-all flex items-center justify-center gap-2 shadow-lg active:scale-95 ${gears < modalItem.price
-                        ? 'bg-gray-700/40 text-gray-400 border border-gray-600/30 cursor-not-allowed opacity-80'
-                        : 'bg-gradient-to-r from-[#ff912d] to-[#ffaa40] hover:from-[#ffa34d] hover:to-[#ffb75e] text-[#140624] shadow-[0_0_20px_rgba(255,145,45,0.4)] cursor-pointer'
+                      ? 'bg-gray-700/40 text-gray-400 border border-gray-600/30 cursor-not-allowed opacity-80'
+                      : 'bg-gradient-to-r from-[#ff912d] to-[#ffaa40] hover:from-[#ffa34d] hover:to-[#ffb75e] text-[#140624] shadow-[0_0_20px_rgba(255,145,45,0.4)] cursor-pointer'
                       }`}
                   >
                     {loadingItems.has(modalItem.id) ? (

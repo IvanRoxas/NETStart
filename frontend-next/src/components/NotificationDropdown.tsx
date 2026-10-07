@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Settings, Rocket } from 'lucide-react';
+import QuillIcon from '@/components/icons/QuillIcon';
 
 interface NotificationDropdownProps {
   notifications: any[];
@@ -143,6 +144,10 @@ export default function NotificationDropdown({
                       <div className="w-full h-full flex items-center justify-center bg-[#ff912d]/20 rounded-full shadow-inner text-[#ff912d]">
                         <Settings size={18} />
                       </div>
+                    ) : (notif.type === 'title_unlocked' || notif.notification_type === 'title_unlocked') ? (
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-amber-500/20 via-purple-600/30 to-amber-500/10 rounded-full shadow-inner border border-[#ff912d]/40 text-[#ffb703]">
+                        <QuillIcon className="w-5 h-5 text-[#ffb703] drop-shadow-[0_0_6px_rgba(255,183,3,0.7)]" />
+                      </div>
                     ) : (notif.type === 'achievement_unlocked' || notif.notification_type === 'achievement_unlocked' || notif.type === 'level_up' || notif.notification_type === 'level_up') ? (
                       isBadgeImage ? (
                         <img src={badgeImg} alt={notifData?.badgeName || "Badge"} className="w-full h-full object-contain drop-shadow" />
@@ -176,7 +181,13 @@ export default function NotificationDropdown({
                       ) : (notif.type === 'system_verify_reward' || notif.notification_type === 'system_verify_reward') ? (
                         <>
                           <strong className="text-[#ff912d] font-bold block mb-0.5">Verification Reward!</strong>
-                          You received {notifData?.amount || 50} Gears for verifying your account.
+                          You received {notifData?.amount || 225} Gears for verifying your account.
+                        </>
+                      ) : (notif.type === 'title_unlocked' || notif.notification_type === 'title_unlocked') ? (
+                        <>
+                          <strong className="text-[#ff912d] font-bold block mb-0.5">Title Unlocked!</strong>
+                          You unlocked the title <span className="text-[#ffb703] font-semibold">"{notifData?.titleName || notifData?.badgeName || 'New Title'}"</span>
+                          {notifData?.planetName ? ` for completing ${notifData.planetName}` : ''}.
                         </>
                       ) : (notif.type === 'achievement_unlocked' || notif.notification_type === 'achievement_unlocked') ? (
                         <>
@@ -191,7 +202,7 @@ export default function NotificationDropdown({
                       ) : (notif.type === 'daily_task_completed' || notif.notification_type === 'daily_task_completed') ? (
                         <>
                           <strong className="text-amber-400 font-bold block mb-0.5">Daily Task Completed!</strong>
-                          <span>{notifData?.title || 'Daily Task'} (+{notifData?.xpEarned || 5} XP)</span>
+                          <span>{notifData?.title || 'Daily Task'} (+{notifData?.xpEarned || 25} XP)</span>
                         </>
                       ) : (
                         <>
