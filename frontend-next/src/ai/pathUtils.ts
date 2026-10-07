@@ -33,9 +33,9 @@ export function processAIPathResponse(
   }
 
   // 2. Compute Track from Scores
-  const pattern = aiContext.categories.patternRecognition;
-  const logic = aiContext.categories.logicalReasoning;
-  const decomp = aiContext.categories.taskDecomposition;
+  const pattern = Number(aiContext.categories.patternRecognition) || 0;
+  const logic = Number(aiContext.categories.logicalReasoning) || 0;
+  const decomp = Number(aiContext.categories.taskDecomposition) || 0;
 
   let computedTrack: "WEB" | "LOGIC" | "BALANCED" = "BALANCED";
   

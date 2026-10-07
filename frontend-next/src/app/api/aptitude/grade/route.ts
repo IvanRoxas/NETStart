@@ -250,7 +250,7 @@ export async function POST(req: Request) {
       };
     } else {
       // Regenerating context from stored dbUser
-      const apt = dbUser.aptitudeResult as any;
+      const apt = dbUser!.aptitudeResult as any;
       aiContext = {
         totalCorrect: apt.totalCorrect,
         totalPercent: apt.totalPercent,

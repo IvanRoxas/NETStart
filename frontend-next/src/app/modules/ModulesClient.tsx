@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { Lock, Rocket, Award, Settings, Zap, Brain, X, Sparkles, Film } from 'lucide-react';
 import PlanetNode from '@/components/PlanetNode';
 import { getUserStorageItem, setUserStorageItem, removeUserStorageItem } from '@/lib/userStorage';
@@ -286,8 +287,10 @@ export default function ModulesClient({
   }, [pathOrderArray, computedUserMissions]);
 
   const realUnlockedIndex = unlockInfo.sequentialUnlockedIndex;
-  const venusCompleted = unlockInfo.planetStatuses['venus'] === 'COMPLETED';
-  const earthCompleted = unlockInfo.planetStatuses['earth'] === 'COMPLETED';
+  const venusIndex = pathNodes.findIndex(n => n.id === 'venus');
+  const venusCompleted = venusIndex !== -1 && unlockInfo.statuses[venusIndex] === 'COMPLETED';
+  const earthIndex = pathNodes.findIndex(n => n.id === 'earth');
+  const earthCompleted = earthIndex !== -1 && unlockInfo.statuses[earthIndex] === 'COMPLETED';
 
   // Travel animation state
   const [animState, setAnimState] = useState<{
