@@ -3,6 +3,9 @@ import { getUsers, requireAdmin } from './actions';
 import { getSections } from './actions/sections';
 import AdminClientWrapper from './AdminClientWrapper';
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function AdminPage() {
   const session = await requireAdmin();
   const role = (session.user as any).role || "SUPER_ADMIN";

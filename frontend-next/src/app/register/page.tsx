@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { signIn } from 'next-auth/react';
+import { signIn, getProviders } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -65,9 +65,19 @@ export default function RegisterPage() {
     }
   };
 
-  const handleGoogleSignIn = () => {
-    setLoading(true);
-    signIn('google', { callbackUrl: '/dashboard' });
+  const handleGoogleSignIn = async () => {
+    try {
+      const providers = await getProviders();
+      if (!providers?.google) {
+        showToast("Google Sign-In is not configured. Please add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to .env.", "error");
+        return;
+      }
+      setLoading(true);
+      signIn('google', { callbackUrl: '/dashboard' });
+    } catch {
+      setLoading(true);
+      signIn('google', { callbackUrl: '/dashboard' });
+    }
   };
 
   return (

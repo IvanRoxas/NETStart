@@ -1,0 +1,12 @@
+# Staging directory
+staging/
+
+# IDE
+.vscode/
+
+# Environment files
+.env*
+**/.env*
+
+# Documentation / Updates (local only)
+explainer and update docs/

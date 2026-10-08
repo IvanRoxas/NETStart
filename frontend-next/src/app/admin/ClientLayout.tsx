@@ -18,12 +18,27 @@ import {
 import TopHeader from '@/components/TopHeader';
 import { signOut, useSession } from 'next-auth/react';
 
-export default function ClientLayout({ children }: { children: React.ReactNode }) {
+interface ClientLayoutProps {
+  children: React.ReactNode;
+  initialRole?: "SUPER_ADMIN" | "TEACHER";
+  initialDisplayName?: string;
+}
+
+export default function ClientLayout({ children, initialRole, initialDisplayName }: ClientLayoutProps) {
   const pathname = usePathname();
   const { data: session } = useSession();
-  const role = session?.user?.role || "SUPER_ADMIN";
+  const role = (session?.user?.role as "SUPER_ADMIN" | "TEACHER" | undefined) || initialRole || "TEACHER";
   const isTeacher = role === "TEACHER";
-  const displayName = session?.user?.displayName || session?.user?.name || "Admin";
+  const displayName = session?.user?.displayName || session?.user?.name || initialDisplayName || (isTeacher ? "Teacher" : "Admin");
+
+  const handleSignOut = async () => {
+    try {
+      await signOut({ redirect: false, callbackUrl: '/admin-login' });
+    } catch (e) {
+      console.error("Sign out error:", e);
+    }
+    window.location.href = '/admin-login';
+  };
 
   // Dynamic Browser Tab Logo (Favicon) & Title Synchronization
   useEffect(() => {
@@ -134,7 +149,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
             <p className="text-xs text-gray-400">Signed in as</p>
             <p className="text-sm font-semibold text-white truncate">{displayName}</p>
           </div>
-          <button onClick={() => signOut({ callbackUrl: '/admin-login' })} className="flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl bg-white/5 hover:bg-red-500/10 text-white hover:text-red-400 font-semibold transition-colors border border-white/10 hover:border-red-500/20 cursor-pointer">
+          <button onClick={handleSignOut} className="flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl bg-white/5 hover:bg-red-500/10 text-white hover:text-red-400 font-semibold transition-colors border border-white/10 hover:border-red-500/20 cursor-pointer">
             <LogOut size={18} />
             Sign Out
           </button>

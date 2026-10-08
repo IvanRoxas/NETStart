@@ -28,9 +28,16 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  const session = await getServerSession(adminAuthOptions);
+  const role = (session?.user as any)?.role as ("SUPER_ADMIN" | "TEACHER" | undefined);
+  const displayName = ((session?.user as any)?.displayName || session?.user?.name) as (string | undefined);
+
   return (
-    <ClientLayout>
+    <ClientLayout initialRole={role} initialDisplayName={displayName}>
       {children}
     </ClientLayout>
   );

@@ -29,10 +29,19 @@ export default function AdminLogin() {
       });
 
       if (res?.error) {
-        setError(res.error);
+        let displayError = res.error;
+        if (
+          displayError.includes('TURBOPACK') ||
+          displayError.includes('invocation in') ||
+          displayError.includes('Prisma') ||
+          displayError.includes('ECONNREFUSED')
+        ) {
+          displayError = "Unable to connect to the database. Please ensure the database server is running.";
+        }
+        setError(displayError);
         setLoading(false);
       } else {
-        router.push('/admin');
+        window.location.href = '/admin';
       }
     } catch (err) {
       setError("An unexpected error occurred.");

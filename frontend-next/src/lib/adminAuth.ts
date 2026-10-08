@@ -16,9 +16,15 @@ export const adminAuthOptions: NextAuthOptions = {
           throw new Error("Missing username or password");
         }
         
-        const admin = await prisma.systemAdmin.findUnique({ 
-          where: { username: credentials.username } 
-        });
+        let admin;
+        try {
+          admin = await prisma.systemAdmin.findUnique({ 
+            where: { username: credentials.username } 
+          });
+        } catch (dbErr: any) {
+          console.error("Database connection error in admin auth:", dbErr?.message || dbErr);
+          throw new Error("Unable to connect to the database. Please ensure database server is running.");
+        }
         
         if (!admin) {
           try {
@@ -184,6 +190,24 @@ export const adminAuthOptions: NextAuthOptions = {
   cookies: {
     sessionToken: {
       name: process.env.NODE_ENV === "production" ? "__Secure-admin-next-auth.session-token" : "admin-next-auth.session-token",
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production'
+      }
+    },
+    callbackUrl: {
+      name: process.env.NODE_ENV === "production" ? "__Secure-admin-next-auth.callback-url" : "admin-next-auth.callback-url",
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production'
+      }
+    },
+    csrfToken: {
+      name: process.env.NODE_ENV === "production" ? "__Host-admin-next-auth.csrf-token" : "admin-next-auth.csrf-token",
       options: {
         httpOnly: true,
         sameSite: 'lax',

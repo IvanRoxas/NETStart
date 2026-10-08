@@ -3,6 +3,9 @@ import { getSections, getAvailableTeachers } from '@/app/admin/actions/sections'
 import { requireAdmin } from '@/app/admin/actions';
 import SectionsClient from './SectionsClient';
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function SectionsPage() {
   const session = await requireAdmin();
   const role = (session.user as any).role || "SUPER_ADMIN";

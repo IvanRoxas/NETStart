@@ -152,24 +152,43 @@ export async function toggleUserBan(userId: string, currentStatus: boolean) {
 }
 
 export async function forceVerifyUser(userId: string) {
+  return toggleUserVerification(userId, true);
+}
+
+export async function toggleUserVerification(userId: string, targetStatus?: boolean) {
   const session = await requireAdmin();
   await assertCanAccessStudent(session, userId);
   const adminId = (session.user as any).id;
-  
+  const role = (session.user as any).role || "SUPER_ADMIN";
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { isVerified: true, email: true, displayName: true }
+  });
+
+  if (!user) {
+    throw new Error("Student not found.");
+  }
+
+  const newStatus = typeof targetStatus === "boolean" ? targetStatus : !user.isVerified;
+
   await prisma.user.update({
     where: { id: userId },
-    data: { isVerified: true }
+    data: { isVerified: newStatus }
   });
-  
+
   await logSystemAction({
     actorId: adminId,
-    actorRole: (session.user as any).role || "ADMIN",
-    action: "VERIFIED_USER",
+    actorRole: role,
+    action: newStatus ? "VERIFIED_USER" : "UNVERIFIED_USER",
     targetUserId: userId,
+    details: { isVerified: newStatus, email: user.email }
   });
-  
+
   revalidatePath('/admin');
-  return { success: true };
+  revalidatePath('/admin/sections');
+  revalidatePath(`/admin/users/${userId}`);
+  return { success: true, isVerified: newStatus };
 }
 
 export async function editGamificationStats(userId: string, actionType: 'ADD' | 'REMOVE' | 'SET', target: 'XP' | 'GEARS' | 'LEVEL', value: number) {

@@ -5,7 +5,7 @@ import { MusicProvider } from "@/context/MusicContext";
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <SessionProvider refetchOnWindowFocus={true}>
+    <SessionProvider basePath="/api/auth" refetchOnWindowFocus={true}>
       <MusicProvider>
         {children}
       </MusicProvider>

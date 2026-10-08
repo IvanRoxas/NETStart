@@ -12,10 +12,12 @@ import {
   CheckCircle, 
   AlertTriangle,
   UserX,
-  BookOpen
+  BookOpen,
+  Pencil,
+  Brain
 } from 'lucide-react';
-import { createSection, archiveSection, getSectionRoster } from '@/app/admin/actions/sections';
-import { removeStudentFromSection } from '@/app/admin/actions';
+import { createSection, updateSection, archiveSection, getSectionRoster } from '@/app/admin/actions/sections';
+import { removeStudentFromSection, toggleUserVerification, adminSetAptitudeStatus } from '@/app/admin/actions';
 import AdminToast from '@/components/AdminToast';
 import ConfirmModal from '@/components/ConfirmModal';
 
@@ -78,6 +80,15 @@ export default function SectionsClient({
   const [createSchoolYear, setCreateSchoolYear] = useState('2026-2027');
   const [createTeacherId, setCreateTeacherId] = useState<string>(currentUserId);
   const [isCreating, setIsCreating] = useState(false);
+
+  // Edit Section Modal
+  const [editTargetSection, setEditTargetSection] = useState<SectionItem | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editGrade, setEditGrade] = useState<number>(11);
+  const [editStrand, setEditStrand] = useState('STEM');
+  const [editSchoolYear, setEditSchoolYear] = useState('2026-2027');
+  const [editTeacherId, setEditTeacherId] = useState<string>('');
+  const [isEditing, setIsEditing] = useState(false);
 
   // Roster Modal
   const [rosterSection, setRosterSection] = useState<SectionItem | null>(null);
@@ -161,6 +172,62 @@ export default function SectionsClient({
       setToast({ message: err.message || "Failed to create section.", type: 'error' });
     } finally {
       setIsCreating(false);
+    }
+  };
+
+  const handleOpenEdit = (sec: SectionItem) => {
+    setEditTargetSection(sec);
+    setEditName(sec.name);
+    setEditGrade(sec.gradeLevel);
+    setEditStrand(sec.strand);
+    setEditSchoolYear(sec.schoolYear);
+    setEditTeacherId(sec.teacherId || currentUserId);
+  };
+
+  const handleSaveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editTargetSection) return;
+    try {
+      setIsEditing(true);
+      const res = await updateSection(editTargetSection.id, {
+        name: editName,
+        gradeLevel: editGrade,
+        strand: editStrand,
+        schoolYear: editSchoolYear,
+        ...(isSuperAdmin ? { teacherId: editTeacherId } : {})
+      });
+
+      setSections(prev => prev.map(s => s.id === editTargetSection.id ? { ...s, ...res.section } : s));
+      if (rosterSection && rosterSection.id === editTargetSection.id) {
+        setRosterSection(prev => prev ? { ...prev, ...res.section } : null);
+      }
+      setToast({ message: `Section "${editName}" updated successfully.`, type: 'success' });
+      setEditTargetSection(null);
+    } catch (err: any) {
+      setToast({ message: err.message || "Failed to update section.", type: 'error' });
+    } finally {
+      setIsEditing(false);
+    }
+  };
+
+  const handleToggleVerificationInRoster = async (student: StudentRosterItem) => {
+    try {
+      const res = await toggleUserVerification(student.id, !student.isVerified);
+      setRosterStudents(prev => prev.map(s => s.id === student.id ? { ...s, isVerified: res.isVerified } : s));
+      setToast({ message: `Student ${res.isVerified ? 'verified' : 'unverified'} successfully.`, type: 'success' });
+    } catch (err: any) {
+      setToast({ message: err.message || "Failed to update verification status.", type: 'error' });
+    }
+  };
+
+  const handleToggleAptitudeInRoster = async (student: StudentRosterItem) => {
+    try {
+      const target = !student.hasTakenAptitudeTest;
+      await adminSetAptitudeStatus(student.id, target);
+      setRosterStudents(prev => prev.map(s => s.id === student.id ? { ...s, hasTakenAptitudeTest: target } : s));
+      setToast({ message: `Aptitude requirement ${target ? 'waived / marked completed' : 'reset / marked required'}.`, type: 'success' });
+    } catch (err: any) {
+      setToast({ message: err.message || "Failed to update aptitude status.", type: 'error' });
     }
   };
 
@@ -356,6 +423,13 @@ export default function SectionsClient({
                   View Roster
                 </button>
                 <button
+                  onClick={() => handleOpenEdit(sec)}
+                  title="Edit Section Name & Details"
+                  className="p-2 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white rounded-xl transition-colors cursor-pointer"
+                >
+                  <Pencil size={14} />
+                </button>
+                <button
                   onClick={() => setArchiveTarget(sec)}
                   title={sec.isArchived ? "Restore Section" : "Archive Section"}
                   className="p-2 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white rounded-xl transition-colors cursor-pointer"
@@ -494,17 +568,26 @@ export default function SectionsClient({
           <div className="bg-[#1e0a2d] border border-white/10 rounded-2xl w-full max-w-2xl p-6 shadow-2xl relative max-h-[85vh] flex flex-col">
             <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-4">
               <div>
-                <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                  <Users className="text-[#ff912d]" size={20} />
-                  Section Roster: {rosterSection.name}
-                </h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                    <Users className="text-[#ff912d]" size={20} />
+                    Section Roster: {rosterSection.name}
+                  </h3>
+                  <button
+                    onClick={() => handleOpenEdit(rosterSection)}
+                    title="Rename Section / Edit Roster Name"
+                    className="p-1 bg-white/5 hover:bg-white/15 text-gray-300 hover:text-white rounded-lg transition-colors cursor-pointer"
+                  >
+                    <Pencil size={14} />
+                  </button>
+                </div>
                 <p className="text-xs text-gray-400 mt-0.5">
                   Grade {rosterSection.gradeLevel} • {rosterSection.strand} • {rosterStudents.length} Students
                 </p>
               </div>
               <button
                 onClick={() => setRosterSection(null)}
-                className="text-gray-400 hover:text-white p-1 rounded-lg"
+                className="text-gray-400 hover:text-white p-1 rounded-lg cursor-pointer"
               >
                 <X size={18} />
               </button>
@@ -527,8 +610,9 @@ export default function SectionsClient({
                       <th className="py-2.5 px-3">Student</th>
                       <th className="py-2.5 px-3">XP</th>
                       <th className="py-2.5 px-3">Gears</th>
-                      <th className="py-2.5 px-3">Status</th>
-                      <th className="py-2.5 px-3 text-right">Action</th>
+                      <th className="py-2.5 px-3">Verification</th>
+                      <th className="py-2.5 px-3">Aptitude Test</th>
+                      <th className="py-2.5 px-3 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5 text-sm">
@@ -545,24 +629,65 @@ export default function SectionsClient({
                         <td className="py-3 px-3 text-gray-300 font-mono text-xs">{student.xp}</td>
                         <td className="py-3 px-3 text-[#ff912d] font-mono text-xs">{student.gears}</td>
                         <td className="py-3 px-3">
-                          <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-bold ${
-                            student.isBanned 
-                              ? 'bg-red-500/20 text-red-400' 
-                              : student.isVerified 
-                              ? 'bg-green-500/20 text-green-400' 
-                              : 'bg-yellow-500/20 text-yellow-400'
-                          }`}>
-                            {student.isBanned ? 'Banned' : student.isVerified ? 'Verified' : 'Pending'}
-                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleToggleVerificationInRoster(student)}
+                            title={student.isVerified ? "Click to revoke verification" : "Click to verify student"}
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold cursor-pointer transition-colors ${
+                              student.isVerified 
+                                ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30' 
+                                : 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
+                            }`}
+                          >
+                            {student.isVerified ? <CheckCircle size={10} /> : <AlertTriangle size={10} />}
+                            {student.isVerified ? 'Verified' : 'Unverified'}
+                          </button>
+                        </td>
+                        <td className="py-3 px-3">
+                          <button
+                            type="button"
+                            onClick={() => handleToggleAptitudeInRoster(student)}
+                            title={student.hasTakenAptitudeTest ? "Click to require aptitude test" : "Click to waive aptitude test"}
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold cursor-pointer transition-colors ${
+                              student.hasTakenAptitudeTest 
+                                ? 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30' 
+                                : 'bg-amber-500/20 text-amber-400 hover:bg-amber-500/30'
+                            }`}
+                          >
+                            <Brain size={10} />
+                            {student.hasTakenAptitudeTest ? 'Completed' : 'Pending'}
+                          </button>
                         </td>
                         <td className="py-3 px-3 text-right">
-                          <button
-                            onClick={() => setRemoveStudentTarget(student)}
-                            title="Remove from Section"
-                            className="p-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg transition-colors cursor-pointer"
-                          >
-                            <UserX size={15} />
-                          </button>
+                          <div className="flex items-center justify-end gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => handleToggleVerificationInRoster(student)}
+                              title={student.isVerified ? "Revoke Verification" : "Verify Student"}
+                              className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                                student.isVerified ? 'bg-green-500/10 text-green-400 hover:bg-red-500/20 hover:text-red-400' : 'bg-red-500/10 text-red-400 hover:bg-green-500/20 hover:text-green-400'
+                              }`}
+                            >
+                              <CheckCircle size={14} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleToggleAptitudeInRoster(student)}
+                              title={student.hasTakenAptitudeTest ? "Require Aptitude Test" : "Waive Aptitude Test"}
+                              className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                                student.hasTakenAptitudeTest ? 'bg-emerald-500/10 text-emerald-400 hover:bg-amber-500/20 hover:text-amber-400' : 'bg-amber-500/10 text-amber-400 hover:bg-emerald-500/20 hover:text-emerald-400'
+                              }`}
+                            >
+                              <Brain size={14} />
+                            </button>
+                            <button
+                              onClick={() => setRemoveStudentTarget(student)}
+                              title="Remove from Section"
+                              className="p-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg transition-colors cursor-pointer"
+                            >
+                              <UserX size={14} />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -594,6 +719,122 @@ export default function SectionsClient({
         onConfirm={handleConfirmRemoveStudent}
         onCancel={() => setRemoveStudentTarget(null)}
       />
+
+      {/* Edit Section Modal */}
+      {editTargetSection && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+          <div className="bg-[#1e0a2d] border border-white/10 rounded-2xl w-full max-w-md p-6 shadow-2xl relative">
+            <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-5">
+              <div className="flex items-center gap-2">
+                <Pencil className="text-[#ff912d]" size={20} />
+                <h3 className="text-lg font-bold text-white">Edit Section / Roster</h3>
+              </div>
+              <button 
+                onClick={() => setEditTargetSection(null)} 
+                className="text-gray-400 hover:text-white transition-colors cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEdit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-1.5">
+                  Section / Roster Name
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Section Andromeda"
+                  value={editName}
+                  onChange={e => setEditName(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-black/40 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-[#ff912d]/50 transition-colors"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-1.5">
+                    Grade Level
+                  </label>
+                  <select
+                    value={editGrade}
+                    onChange={e => setEditGrade(Number(e.target.value))}
+                    className="w-full px-3.5 py-2.5 bg-[#140620] border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-[#ff912d]/50 cursor-pointer"
+                  >
+                    <option value={11}>Grade 11</option>
+                    <option value={12}>Grade 12</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-1.5">
+                    Strand
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. STEM"
+                    value={editStrand}
+                    onChange={e => setEditStrand(e.target.value)}
+                    className="w-full px-3.5 py-2.5 bg-black/40 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-[#ff912d]/50 uppercase transition-colors"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-1.5">
+                  School Year
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. 2026-2027"
+                  value={editSchoolYear}
+                  onChange={e => setEditSchoolYear(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-black/40 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-[#ff912d]/50 transition-colors"
+                />
+              </div>
+
+              {isSuperAdmin && (
+                <div>
+                  <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-1.5">
+                    Assigned Teacher
+                  </label>
+                  <select
+                    value={editTeacherId}
+                    onChange={e => setEditTeacherId(e.target.value)}
+                    className="w-full px-3.5 py-2.5 bg-[#140620] border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-[#ff912d]/50 cursor-pointer"
+                  >
+                    {availableTeachers.map(t => (
+                      <option key={t.id} value={t.id}>
+                        {t.displayName || t.username} ({t.username})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-white/10">
+                <button
+                  type="button"
+                  onClick={() => setEditTargetSection(null)}
+                  className="px-4 py-2 text-sm font-semibold text-gray-400 hover:text-white transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isEditing}
+                  className="flex items-center gap-2 px-5 py-2.5 bg-[#ff912d] hover:bg-[#ff912d]/90 text-white font-semibold text-sm rounded-xl transition-all cursor-pointer disabled:opacity-50"
+                >
+                  {isEditing ? <RefreshCw className="animate-spin" size={16} /> : null}
+                  {isEditing ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Archive Section Confirm */}
       <ConfirmModal

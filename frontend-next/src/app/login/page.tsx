@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { signIn, useSession, signOut } from 'next-auth/react';
+import { signIn, useSession, signOut, getProviders } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -26,18 +26,25 @@ export default function LoginPage() {
 
   const showToast = (text: string, type: 'success' | 'error' | 'deleted' = 'error') => {
     setToastMessage({ text, type });
-    setTimeout(() => setToastMessage(null), 3000);
+    setTimeout(() => setToastMessage(null), 4000);
   };
 
   useEffect(() => {
     clearLegacyUnscopedData();
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
+      const errorParam = params.get('error');
       if (params.get('deleted') === 'true') {
         showToast("Account deleted successfully.", "deleted");
         window.history.replaceState({}, '', '/login');
       } else if (params.get('registered') === 'true') {
         showToast("Account created successfully! Please log in.", "success");
+        window.history.replaceState({}, '', '/login');
+      } else if (errorParam === 'OAuthSignin' || errorParam === 'Configuration') {
+        showToast("Google Sign-In failed: OAuth credentials (GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET) are missing or invalid in .env.", "error");
+        window.history.replaceState({}, '', '/login');
+      } else if (errorParam === 'suspended') {
+        showToast("Account suspended by administrator.", "error");
         window.history.replaceState({}, '', '/login');
       }
     }
@@ -104,6 +111,19 @@ export default function LoginPage() {
     } finally {
       setForgotLoading(false);
       setShowSendConfirm(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      const providers = await getProviders();
+      if (!providers?.google) {
+        showToast("Google Sign-In is not configured. Please add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to .env.", "error");
+        return;
+      }
+      signIn('google', { callbackUrl: '/dashboard' });
+    } catch {
+      signIn('google', { callbackUrl: '/dashboard' });
     }
   };
 
@@ -315,7 +335,8 @@ export default function LoginPage() {
               </div>
 
               <button 
-                onClick={() => signIn('google', { callbackUrl: '/dashboard' })}
+                type="button"
+                onClick={handleGoogleSignIn}
                 className="flex items-center justify-center gap-4 w-full bg-transparent border-2 border-white/20 text-white hover:bg-white hover:text-[#150524] font-sans font-bold text-sm py-2 px-6 rounded-full transition-all active:scale-95 cursor-pointer"
               >
                 <svg className="w-5 h-5 bg-white rounded-full p-0.5" viewBox="0 0 24 24" fill="currentColor">

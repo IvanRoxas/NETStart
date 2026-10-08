@@ -19,7 +19,8 @@ import {
 import Link from 'next/link';
 import { 
   toggleUserBan, 
-  forceVerifyUser, 
+  toggleUserVerification,
+  adminSetAptitudeStatus,
   assignStudentToSection, 
   removeStudentFromSection,
   toggleUserDemoModePrivilege
@@ -103,15 +104,30 @@ export default function AdminClientWrapper({
     }
   };
 
-  const handleForceVerify = async (userId: string) => {
+  const handleToggleVerification = async (userId: string, currentStatus: boolean) => {
     try {
       setLoadingAction(`verify-${userId}`);
-      await forceVerifyUser(userId);
-      setUsers(users.map(u => u.id === userId ? { ...u, isVerified: true } : u));
-      setToast({ message: "User successfully verified.", type: 'success' });
+      const res = await toggleUserVerification(userId, !currentStatus);
+      setUsers(users.map(u => u.id === userId ? { ...u, isVerified: res.isVerified } : u));
+      setToast({ message: `Student successfully ${res.isVerified ? 'verified' : 'unverified'}.`, type: 'success' });
     } catch (err: any) {
       console.error(err);
-      setToast({ message: err.message || "Failed to verify user.", type: 'error' });
+      setToast({ message: err.message || "Failed to update verification status.", type: 'error' });
+    } finally {
+      setLoadingAction(null);
+    }
+  };
+
+  const handleToggleAptitude = async (userId: string, currentStatus: boolean) => {
+    try {
+      setLoadingAction(`aptitude-${userId}`);
+      const target = !currentStatus;
+      await adminSetAptitudeStatus(userId, target);
+      setUsers(users.map(u => u.id === userId ? { ...u, hasTakenAptitudeTest: target } : u));
+      setToast({ message: `Aptitude requirement ${target ? 'waived / marked completed' : 'reset / marked required'}.`, type: 'success' });
+    } catch (err: any) {
+      console.error(err);
+      setToast({ message: err.message || "Failed to update aptitude status.", type: 'error' });
     } finally {
       setLoadingAction(null);
     }
@@ -296,20 +312,42 @@ export default function AdminClientWrapper({
                     )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
-                      user.isVerified ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'
-                    }`}>
-                      {user.isVerified ? <CheckCircle size={14} /> : <ShieldAlert size={14} />}
+                    <button
+                      type="button"
+                      onClick={() => handleToggleVerification(user.id, user.isVerified)}
+                      disabled={loadingAction === `verify-${user.id}`}
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium cursor-pointer transition-all ${
+                        user.isVerified ? 'bg-green-500/10 text-green-400 border border-green-500/20 hover:bg-green-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20'
+                      }`}
+                      title={user.isVerified ? "Click to revoke verification" : "Click to verify student"}
+                    >
+                      {loadingAction === `verify-${user.id}` ? (
+                        <RefreshCcw className="animate-spin" size={13} />
+                      ) : user.isVerified ? (
+                        <CheckCircle size={14} />
+                      ) : (
+                        <ShieldAlert size={14} />
+                      )}
                       {user.isVerified ? 'Verified' : 'Unverified'}
-                    </span>
+                    </button>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
-                      user.hasTakenAptitudeTest ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
-                    }`}>
-                      <Brain size={14} />
+                    <button
+                      type="button"
+                      onClick={() => handleToggleAptitude(user.id, user.hasTakenAptitudeTest)}
+                      disabled={loadingAction === `aptitude-${user.id}`}
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium cursor-pointer transition-all ${
+                        user.hasTakenAptitudeTest ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/25' : 'bg-amber-500/15 text-amber-400 border border-amber-500/30 hover:bg-amber-500/25'
+                      }`}
+                      title={user.hasTakenAptitudeTest ? "Click to require aptitude test (mark pending)" : "Click to waive aptitude test (mark completed)"}
+                    >
+                      {loadingAction === `aptitude-${user.id}` ? (
+                        <RefreshCcw className="animate-spin" size={13} />
+                      ) : (
+                        <Brain size={14} />
+                      )}
                       {user.hasTakenAptitudeTest ? 'Completed' : 'Pending'}
-                    </span>
+                    </button>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
@@ -363,16 +401,31 @@ export default function AdminClientWrapper({
                         {loadingAction === `ban-${user.id}` ? <RefreshCcw className="animate-spin" size={16} /> : <Ban size={16} />}
                       </button>
                       
-                      {!user.isVerified && (
-                        <button
-                          onClick={() => handleForceVerify(user.id)}
-                          disabled={loadingAction === `verify-${user.id}`}
-                          className="p-2 rounded-lg bg-green-500/10 text-green-400 hover:bg-green-500/20 transition-colors disabled:opacity-50 cursor-pointer"
-                          title="Force Verify"
-                        >
-                          {loadingAction === `verify-${user.id}` ? <RefreshCcw className="animate-spin" size={16} /> : <CheckCircle size={16} />}
-                        </button>
-                      )}
+                      <button
+                        onClick={() => handleToggleVerification(user.id, user.isVerified)}
+                        disabled={loadingAction === `verify-${user.id}`}
+                        className={`p-2 rounded-lg transition-colors cursor-pointer disabled:opacity-50 ${
+                          user.isVerified 
+                            ? 'bg-green-500/10 text-green-400 hover:bg-red-500/20 hover:text-red-400' 
+                            : 'bg-red-500/10 text-red-400 hover:bg-green-500/20 hover:text-green-400'
+                        }`}
+                        title={user.isVerified ? "Revoke Verification" : "Verify Student"}
+                      >
+                        {loadingAction === `verify-${user.id}` ? <RefreshCcw className="animate-spin" size={16} /> : <CheckCircle size={16} />}
+                      </button>
+
+                      <button
+                        onClick={() => handleToggleAptitude(user.id, user.hasTakenAptitudeTest)}
+                        disabled={loadingAction === `aptitude-${user.id}`}
+                        className={`p-2 rounded-lg transition-colors cursor-pointer disabled:opacity-50 ${
+                          user.hasTakenAptitudeTest 
+                            ? 'bg-emerald-500/10 text-emerald-400 hover:bg-amber-500/20 hover:text-amber-400' 
+                            : 'bg-amber-500/10 text-amber-400 hover:bg-emerald-500/20 hover:text-emerald-400'
+                        }`}
+                        title={user.hasTakenAptitudeTest ? "Require Aptitude Test (Mark Pending)" : "Waive Aptitude Test (Mark Completed)"}
+                      >
+                        {loadingAction === `aptitude-${user.id}` ? <RefreshCcw className="animate-spin" size={16} /> : <Brain size={16} />}
+                      </button>
                     </div>
                   </td>
                 </tr>

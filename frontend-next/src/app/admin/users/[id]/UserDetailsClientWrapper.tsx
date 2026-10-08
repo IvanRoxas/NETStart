@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, ShieldAlert, CheckCircle, Ban, Zap, Star, Trophy, Package, Target, Users as UsersIcon, X, Check, RefreshCcw, History, Trash2, Brain, GraduationCap, Unlock, Lock, Sparkles } from 'lucide-react';
 import Image from 'next/image';
-import { editGamificationStats, deleteUser, adminResetAptitudeTest, adminSetAptitudeStatus, assignStudentToSection, removeStudentFromSection, toggleUserDemoModePrivilege } from '@/app/admin/actions';
+import { editGamificationStats, deleteUser, adminResetAptitudeTest, adminSetAptitudeStatus, assignStudentToSection, removeStudentFromSection, toggleUserDemoModePrivilege, toggleUserVerification } from '@/app/admin/actions';
 import AdminToast from '@/components/AdminToast';
 import ConfirmModal from '@/components/ConfirmModal';
 import { getXPDetails, LEVEL_THRESHOLDS } from '@/lib/leveling';
@@ -61,6 +61,26 @@ export default function UserDetailsClientWrapper({
       setToast({ message: err.message || "Failed to update demo mode privilege.", type: 'error' });
     } finally {
       setIsUpdatingDemoPrivilege(false);
+    }
+  };
+
+  const handleToggleVerification = async () => {
+    try {
+      setLoading(true);
+      const res = await toggleUserVerification(user.id, !user.isVerified);
+      setUser((prev: any) => ({
+        ...prev,
+        isVerified: res.isVerified
+      }));
+      setToast({
+        message: `Student verification ${res.isVerified ? 'granted' : 'revoked'} successfully.`,
+        type: 'success'
+      });
+    } catch (err: any) {
+      console.error(err);
+      setToast({ message: err.message || "Failed to update verification.", type: 'error' });
+    } finally {
+      setLoading(false);
     }
   };
   
@@ -254,12 +274,18 @@ export default function UserDetailsClientWrapper({
               <p className="text-gray-400 font-medium">{user.email}</p>
               
               <div className="flex flex-wrap items-center gap-3 mt-3">
-                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
-                  user.isVerified ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'
-                }`}>
+                <button
+                  type="button"
+                  onClick={handleToggleVerification}
+                  disabled={loading}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider cursor-pointer transition-all ${
+                    user.isVerified ? 'bg-green-500/10 text-green-400 border border-green-500/20 hover:bg-green-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20'
+                  }`}
+                  title={user.isVerified ? "Click to revoke verification" : "Click to verify student"}
+                >
                   {user.isVerified ? <CheckCircle size={14} /> : <ShieldAlert size={14} />}
                   {user.isVerified ? 'Verified' : 'Unverified'}
-                </span>
+                </button>
                 
                 <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
                   user.isBanned ? 'bg-gray-500/20 text-gray-400 border border-gray-500/30' : 'bg-[#ff912d]/10 text-[#ff912d] border border-[#ff912d]/20'
