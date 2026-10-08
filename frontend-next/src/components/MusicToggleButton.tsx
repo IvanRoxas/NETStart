@@ -140,7 +140,9 @@ export default function MusicToggleButton({
 
   return (
     <div
-      className="relative inline-flex items-center justify-center"
+      className={`relative inline-flex items-center justify-center ${
+        isHovered || isDragging ? 'z-[9999]' : 'z-20'
+      }`}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >

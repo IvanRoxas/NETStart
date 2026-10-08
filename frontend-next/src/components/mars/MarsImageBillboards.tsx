@@ -261,7 +261,10 @@ export default function MarsImageBillboards({
           });
         }
         if (onSimulationComplete) {
-          onSimulationComplete(isSuccess);
+          const failureReason = validation.errorMessages && validation.errorMessages.length > 0
+            ? validation.errorMessages[0]
+            : "Some billboards failed verification. Match each image and hint correctly!";
+          onSimulationComplete(isSuccess, isSuccess ? undefined : failureReason);
         }
       }, totalBillboards * stepDuration + 800);
 

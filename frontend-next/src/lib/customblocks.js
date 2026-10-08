@@ -80,7 +80,9 @@ Blockly.Blocks['action_move'] = {
           ["Up", "UP"],
           ["Down", "DOWN"],
           ["Left", "LEFT"],
-          ["Right", "RIGHT"]
+          ["Right", "RIGHT"],
+          ["Forward", "FORWARD"],
+          ["Backward", "BACKWARD"]
         ]), "DIR");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
@@ -95,12 +97,16 @@ Blockly.Blocks['action_move_forward'] = {
         .appendField("Move")
         .appendField(new Blockly.FieldDropdown([
           ["Forward", "FORWARD"],
-          ["Backward", "BACKWARD"]
+          ["Backward", "BACKWARD"],
+          ["Up", "UP"],
+          ["Down", "DOWN"],
+          ["Left", "LEFT"],
+          ["Right", "RIGHT"]
         ]), "DIR");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#EAB308');
-    this.setTooltip("Move 1 step forward or backward.");
+    this.setTooltip("Move 1 step in the chosen direction.");
   }
 };
 
@@ -1534,6 +1540,10 @@ javascriptGenerator.forBlock['action_move'] = function(block) {
 javascriptGenerator.forBlock['action_move_forward'] = function(block) {
   const dir = block.getFieldValue('DIR') || 'FORWARD';
   if (dir === 'BACKWARD') return 'await moveBackward();\n';
+  if (dir === 'UP') return 'await moveUp();\n';
+  if (dir === 'DOWN') return 'await moveDown();\n';
+  if (dir === 'LEFT') return 'await moveLeft();\n';
+  if (dir === 'RIGHT') return 'await moveRight();\n';
   return 'await moveForward();\n';
 };
 

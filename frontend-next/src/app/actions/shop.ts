@@ -5,6 +5,8 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { logSystemAction } from "@/lib/logger";
+import { cookies } from "next/headers";
+import { DEMO_MODE_COOKIE } from "@/lib/demoMode";
 
 import { SHOP_CATALOG, getCatalogItemById } from "@/lib/shopCatalog";
 
@@ -126,6 +128,10 @@ export async function purchaseItem(itemId: string) {
 
     const userId = (session.user as any).id;
 
+    // Check Demo Mode cookie
+    const cookieStore = await cookies();
+    const isDemoModeCookie = cookieStore.get(DEMO_MODE_COOKIE)?.value === 'true';
+
     const catItem = getCatalogItemById(itemId);
     if (catItem?.isDefaultOutfit || itemId === "top-astro-suit" || itemId === "bot-astro-pants" || itemId === "shoe-astro-boots") {
       return { success: false, error: "This item is part of the default astronaut gear and is already unlocked for everyone." };
@@ -168,7 +174,7 @@ export async function purchaseItem(itemId: string) {
 
       const user = await tx.user.findUnique({
         where: { id: userId },
-        select: { gears: true },
+        select: { gears: true, canUseDemoMode: true },
       });
 
       if (!user || !item) {
@@ -189,19 +195,25 @@ export async function purchaseItem(itemId: string) {
         throw new Error("You already own this item");
       }
 
-      // 3. Atomically check and deduct gears to prevent concurrent double-spend
-      const updatedUser = await tx.user.updateMany({
-        where: {
-          id: userId,
-          gears: { gte: item.price },
-        },
-        data: {
-          gears: { decrement: item.price },
-        },
-      });
+      // Check Demo Mode: cost is 0 ONLY during Demo Mode
+      const isDemoMode = Boolean(isDemoModeCookie && (user.canUseDemoMode || process.env.NODE_ENV !== 'production'));
+      const effectivePrice = isDemoMode ? 0 : item.price;
 
-      if (updatedUser.count === 0) {
-        throw new Error("Not enough gears");
+      // 3. Atomically check and deduct gears if price > 0
+      if (effectivePrice > 0) {
+        const updatedUser = await tx.user.updateMany({
+          where: {
+            id: userId,
+            gears: { gte: effectivePrice },
+          },
+          data: {
+            gears: { decrement: effectivePrice },
+          },
+        });
+
+        if (updatedUser.count === 0) {
+          throw new Error("Not enough gears");
+        }
       }
 
       await tx.userInventory.create({
@@ -211,7 +223,7 @@ export async function purchaseItem(itemId: string) {
         },
       });
 
-      return { success: true, item };
+      return { success: true, item, effectivePrice, isDemoMode };
     });
 
     await logSystemAction({
@@ -219,7 +231,7 @@ export async function purchaseItem(itemId: string) {
       actorRole: "STUDENT",
       action: "PURCHASED_ITEM",
       targetUserId: userId,
-      details: { itemId, title: result.item.title, price: result.item.price }
+      details: { itemId, title: result.item.title, price: result.effectivePrice, demoMode: result.isDemoMode }
     });
 
     revalidatePath("/shop");

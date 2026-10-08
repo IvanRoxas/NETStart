@@ -9,6 +9,8 @@ import { getShopItems, getUserInventory, purchaseItem, claimVerificationReward }
 import VerifyModal from '@/components/VerifyModal';
 import { triggerDailyTaskCompletion } from '@/lib/dailyTasks';
 import { getBorderScale, getAvatarItemStyle, getItemSubGroup, getHairColor } from '@/lib/shopCatalog';
+import { useDemoMode } from '@/lib/demoMode';
+import DemoToggle from '@/components/DemoToggle';
 
 const TOP_SUB_FILTERS = [
   'All',
@@ -66,6 +68,7 @@ type ShopItem = {
 
 export default function ShopPage() {
   const { data: session } = useSession();
+  const { isDemoMode } = useDemoMode();
   const [activeCategory, setActiveCategory] = useState('Background');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'available' | 'owned'>('all');
@@ -177,8 +180,10 @@ export default function ShopPage() {
       return;
     }
 
-    if (gears < item.price) {
-      showToast(`Not enough gears! You need ${(item.price - gears).toLocaleString()} more gears.`, "error");
+    const effectivePrice = isDemoMode ? 0 : item.price;
+
+    if (!isDemoMode && gears < effectivePrice) {
+      showToast(`Not enough gears! You need ${(effectivePrice - gears).toLocaleString()} more gears.`, "error");
       return;
     }
 
@@ -186,7 +191,9 @@ export default function ShopPage() {
     const res = await purchaseItem(item.id);
 
     if (res.success) {
-      setGears(prev => prev - item.price);
+      if (!isDemoMode && effectivePrice > 0) {
+        setGears(prev => prev - effectivePrice);
+      }
       setInventoryIds(prev => new Set(prev).add(item.id));
       setModalItem(null); // close the buy modal
       setCelebrationItem(item); // trigger the celebration vignette & cartoony rays popup!
@@ -271,9 +278,12 @@ export default function ShopPage() {
           <div className="w-64 bg-[#140624]/90 backdrop-blur-md border-r border-white/10 flex flex-col z-10 hidden md:flex">
             {/* Gears Balance */}
             <div className="p-6 border-b border-white/10 bg-gradient-to-b from-[#200938] to-transparent">
-              <p className="text-amber-400/80 text-[11px] font-bold mb-2 tracking-widest uppercase">
-                Your Balance
-              </p>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-amber-400/80 text-[11px] font-bold tracking-widest uppercase">
+                  Your Balance
+                </p>
+                <DemoToggle compact />
+              </div>
 
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-2xl bg-[#ff912d]/20 flex items-center justify-center border border-[#ff912d]/60 shadow-[0_0_15px_rgba(255,145,45,0.25)]">
@@ -358,9 +368,12 @@ export default function ShopPage() {
                 </div>
 
                 {/* Mobile Balance Chip */}
-                <div className="md:hidden flex items-center gap-2 bg-[#1a082c] border border-[#ff912d]/40 px-4 py-2 rounded-xl self-start">
-                  <Settings size={16} className="text-[#ff912d]" />
-                  <span className="font-bold text-amber-300">{gears.toLocaleString()} Gears</span>
+                <div className="md:hidden flex items-center gap-2.5 self-start">
+                  <div className="flex items-center gap-2 bg-[#1a082c] border border-[#ff912d]/40 px-4 py-2 rounded-xl">
+                    <Settings size={16} className="text-[#ff912d]" />
+                    <span className="font-bold text-amber-300">{gears.toLocaleString()} Gears</span>
+                  </div>
+                  <DemoToggle compact />
                 </div>
               </div>
 
@@ -672,7 +685,14 @@ export default function ShopPage() {
                                   <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between gap-2">
                                     <div className="flex items-center gap-1.5 bg-black/40 px-3 py-1.5 rounded-xl border border-white/10">
                                       <Settings size={15} className="text-[#ff912d]" />
-                                      <span className="font-black text-sm text-amber-300 font-display">{item.price.toLocaleString()}</span>
+                                      <span className="font-black text-sm text-amber-300 font-display">
+                                        {(isDemoMode ? 0 : item.price).toLocaleString()}
+                                      </span>
+                                      {isDemoMode && (
+                                        <span className="text-[10px] font-black text-amber-400 bg-amber-500/20 px-1.5 py-0.5 rounded border border-amber-500/40">
+                                          FREE
+                                        </span>
+                                      )}
                                     </div>
 
                                     <button

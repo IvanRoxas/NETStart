@@ -217,7 +217,7 @@ export const LEVEL_SOLUTION_GUIDES: Record<string, LevelSolutionGuide> = {
         title: "Section 1: Air Vent Cross",
         requiredBlocks: [
           { name: "Start", category: "event", summary: "Begins program." },
-          { name: "Move Forward", category: "movement", summary: "Directs airflow along open vents." },
+          { name: "Move (Up/Down/Left/Right/Forward)", category: "movement", summary: "Directs airflow along open vents using direction or forward movement." },
           { name: "Turn Left / Right", category: "movement", summary: "Navigates around broken fans at (3,3) & (4,5)." },
           { name: "End", category: "event", summary: "Reaches Cabin Goal at (6,3)." }
         ],

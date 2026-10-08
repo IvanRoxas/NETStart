@@ -644,6 +644,38 @@ export default function MercuryLevel1Biodome({
           }
         }, currentTime + 1400);
         animTimersRef.current.push(tWin);
+      } else {
+        let failureReason = "Biodome stabilization incomplete. Check your DOM selectors and sequence.";
+        if (validation.hasMisplacedBlockError && validation.misplacedBlockErrorMessage) {
+          failureReason = validation.misplacedBlockErrorMessage;
+        } else if (validation.hasArraySelectorDirectActionError && validation.arraySelectorErrorMessage) {
+          failureReason = validation.arraySelectorErrorMessage;
+        } else if (validation.hasTypoOrCaseError && validation.typoErrorMessage) {
+          failureReason = validation.typoErrorMessage;
+        } else if (validation.usedBroadNukeSelector) {
+          failureReason = `Selector '${validation.broadSelectorTarget || '*'}' is too broad! Target specific greenhouse elements.`;
+        } else if (!validation.isVentsOpened) {
+          failureReason = "Greenhouse temperature critical! You must open the ventilation fans first.";
+        } else if (validation.isStarFlowerFertilizeFail) {
+          failureReason = "The Star Lily was scorched! Open the vents before fertilizing.";
+        } else if (!validation.isAllShrubsWatered || !validation.isAllFlowersWatered) {
+          failureReason = "Not all plants were revived. Make sure you fertilize all shrubs and water all flowers.";
+        } else if (!validation.isLilyWatered) {
+          if (validation.isStarFlowerNeedsWater) {
+            failureReason = "The Star Lily needs water to bloom!";
+          } else if (validation.isStarFlowerNeedsFertilizer) {
+            failureReason = "The Star Lily needs fertilizer to bloom!";
+          } else {
+            failureReason = "The Star Lily has not been fully revived!";
+          }
+        }
+
+        const tFail = setTimeout(() => {
+          if (onSimulationComplete) {
+            onSimulationComplete(false, failureReason);
+          }
+        }, Math.max(currentTime, 1000));
+        animTimersRef.current.push(tFail);
       }
     }
 

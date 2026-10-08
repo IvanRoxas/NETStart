@@ -648,7 +648,7 @@ export default function ModuleDetailsClient({
       <div className="relative z-10 max-w-7xl w-full mx-auto px-6 py-12 flex-grow flex flex-col gap-10">
         
         {/* Navigation / Header Area */}
-        <div className="relative flex items-center justify-between mt-2 w-full">
+        <div className="relative z-30 flex items-center justify-between mt-2 w-full">
           {/* Back Button (Yellow Circle on Left) */}
           <Link 
             href="/modules"
@@ -663,7 +663,7 @@ export default function ModuleDetailsClient({
           </h1>
 
           {/* Right Header Actions: Music Toggle & Story Archive */}
-          <div className="flex items-center gap-3 shrink-0 z-10">
+          <div className="flex items-center gap-3 shrink-0 z-30">
             <MusicToggleButton 
               variant="circle" 
               size="md" 

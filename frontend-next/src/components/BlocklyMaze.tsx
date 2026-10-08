@@ -1133,6 +1133,7 @@ export const advancedToolbox = {
       name: 'Movement',
       colour: '#EAB308',
       contents: [
+        { kind: 'block', type: 'action_move' },
         { kind: 'block', type: 'action_move_forward' },
         { kind: 'block', type: 'turn_left' },
         { kind: 'block', type: 'turn_right' },
@@ -1320,6 +1321,7 @@ export const getLevelThreeToolboxForSection = (sectionIndex: number) => {
     name: 'Movement',
     colour: '#EAB308',
     contents: [
+      { kind: 'block', type: 'action_move' },
       { kind: 'block', type: 'action_move_forward' },
       { kind: 'block', type: 'turn_left' },
       { kind: 'block', type: 'turn_right' },
@@ -2204,6 +2206,7 @@ export default function BlocklyMaze() {
 
   const handleMercury3TabChange = useCallback((newTab: Mercury3TabId) => {
     if (newTab === mercury3ActiveTabRef.current) return;
+    if (isRestoringWorkspaceRef.current) return;
     if (workspace.current) {
       try {
         const dom = Blockly.Xml.workspaceToDom(workspace.current);
@@ -2342,13 +2345,13 @@ export default function BlocklyMaze() {
         }
         setTimeout(() => {
           isRestoringWorkspaceRef.current = false;
-        }, 150);
+        }, 200);
       }
     } else {
       setMercury3ActiveTab(newTab);
       mercury3ActiveTabRef.current = newTab;
     }
-  }, [missionId, currentSection, displayTitle, getNetstartItem, setNetstartItem, mercury3HtmlCode, mercury3CssCode, mercury3JsCode]);
+  }, [missionId, currentSection, displayTitle, getNetstartItem, setNetstartItem]);
 
   // Hydrate all Mercury Level 3 tabs (HTML, CSS, JS) on mount/init
   useEffect(() => {
@@ -2372,7 +2375,13 @@ export default function BlocklyMaze() {
         } catch (e) { }
       }
 
-      if (isReplayParam || !savedMissionMatches) {
+      const hasAnySavedTab = Boolean(
+        getNetstartItem(`netstart_mercury3_tab_${missionId}_html`) ||
+        getNetstartItem(`netstart_mercury3_tab_${missionId}_css`) ||
+        getNetstartItem(`netstart_mercury3_tab_${missionId}_js`)
+      );
+
+      if (isReplayParam || (!savedMissionMatches && !hasAnySavedTab)) {
         mercury3WorkspaceStates.current = { html: '', css: '', js: '' };
         setMercury3ActiveTab('html');
         mercury3ActiveTabRef.current = 'html';
@@ -4292,6 +4301,27 @@ export default function BlocklyMaze() {
             return obj;
           }));
         }
+      } else if (isMercuryLevel3) {
+        const activeTab = mercury3ActiveTabRef.current;
+        let tabCode = '';
+        if (activeTab === 'html') {
+          tabCode = compileMercury3Html(ws);
+          mercury3HtmlCodeRef.current = tabCode;
+          setMercury3HtmlCode(tabCode);
+          ws.updateToolbox(getMercury3HtmlToolbox());
+        } else if (activeTab === 'css') {
+          tabCode = compileMercury3Css(ws);
+          mercury3CssCodeRef.current = tabCode;
+          setMercury3CssCode(tabCode);
+          ws.updateToolbox(getMercury3CssToolbox());
+        } else if (activeTab === 'js') {
+          tabCode = compileMercury3Js(ws);
+          mercury3JsCodeRef.current = tabCode;
+          setMercury3JsCode(tabCode);
+          ws.updateToolbox(getMercury3JsToolbox());
+        }
+        setPlainEnglishCode(tabCode);
+        setJsCode(tabCode);
       } else {
         const code = javascriptGenerator.workspaceToCode(ws);
         setJsCode(code);
@@ -7314,10 +7344,6 @@ export default function BlocklyMaze() {
                 setNetstartItem(`netstart_venus3_tab_${missionId}_${venus3ActiveTab}`, xmlText);
                 setNetstartItem(`netstart_venus3_styles_${missionId}`, JSON.stringify(venus3StylesRef.current));
                 venus3WorkspaceStates.current[venus3ActiveTab] = xmlText;
-              }
-              if (isMercuryLevel3) {
-                setNetstartItem(`netstart_mercury3_tab_${missionId}_${mercury3ActiveTab}`, xmlText);
-                mercury3WorkspaceStates.current[mercury3ActiveTab] = xmlText;
               }
               let completedGoals: string[] = [];
               try {
