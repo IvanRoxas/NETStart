@@ -7,6 +7,8 @@ staging/
 # Environment files
 .env*
 **/.env*
+!.env.example
+!**/.env.example
 
 # Documentation / Updates (local only)
 explainer and update docs/
