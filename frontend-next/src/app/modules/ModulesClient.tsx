@@ -550,15 +550,6 @@ export default function ModulesClient({
           </div>
         </div>
 
-        {/* Center: Recommended Orbit Learning Path (from Aptitude Assessment) */}
-        {hasTakenAptitudeTest && recommendedLearningPath && (
-          <div className="hidden xl:flex items-center gap-2 bg-[#ff912d]/10 border border-[#ff912d]/30 px-3.5 py-1.5 rounded-full text-xs font-mono font-bold text-[#ff912d]">
-            <Sparkles size={14} />
-            <span className="text-gray-400">RECOMMENDED PATH:</span>
-            <span className="text-white font-sans font-bold">{recommendedLearningPath}</span>
-          </div>
-        )}
-
         {/* Center/Right: Telemetry Metrics Chips (EXP Threshold Bar, Gears, Missions) */}
         <div className="flex items-center gap-3 flex-wrap">
           
