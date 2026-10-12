@@ -37,6 +37,7 @@ MAPPING RULES
    - Do NOT output identical affinities for all planets; introduce slight logical variance.
 4. Summary & Reasons:
    - Keep the summary short (1-2 sentences) and highly encouraging. Do NOT address the student by name or as "Operator".
+   - Conclude the summary paragraph with a sparkle emoji "✨".
    - Provide a brief (maximum 15 words) reason for each planet's affinity. Do NOT address the student by name or as "Operator".
    - NEVER use negative, discouraging, or judgmental words like "weak", "poor", "failed", "low", or "struggled". Frame everything positively as an "opportunity", "starting point", or "discovery area", even if scores are 1/5 or 0/5.
 `;
@@ -45,7 +46,7 @@ MAPPING RULES
 export function getAptitudeFallback(context: AptitudeAIContext): import("../schemas/aptitudeSchema").AptitudeResult {
   return {
     track: null,
-    summary: `Solid diagnostic baseline (${context.totalScore}). Your flight path has been unlocked!`,
+    summary: `Solid diagnostic baseline (${context.totalScore}). Your flight path has been unlocked! 🌟`,
     planets: [
       { planet: "MARS", affinity: 80, reason: "A great place to start your journey." },
       { planet: "VENUS", affinity: 75, reason: "Learn styling in a colorful world." },

@@ -3244,17 +3244,21 @@ export default function BlocklyMaze() {
         setAiHint(prev => ({
           ...prev,
           isLoading: false,
-          text: 'Nova suggests reviewing the mission directives on the left panel to verify your next move.',
+          text: 'Nova suggests reviewing the mission directives on the left panel to verify your next move. 🌟',
         }));
         return;
       }
 
       const data = await res.json();
       if (data?.hint_text) {
+        const text = data.hint_text.trim();
+        const formattedText = (text.endsWith('✨') || text.endsWith('🌟'))
+          ? text
+          : `${text} ${data.fallbackUsed ? '🌟' : '✨'}`;
         setAiHint({
           show: true,
           isLoading: false,
-          text: data.hint_text,
+          text: formattedText,
           hintId: data.hint_id,
         });
       }
@@ -3271,7 +3275,7 @@ export default function BlocklyMaze() {
       setAiHint(prev => ({
         ...prev,
         isLoading: false,
-        text: 'Nova suggests reviewing the mission directives on the left panel to verify your next move.',
+        text: 'Nova suggests reviewing the mission directives on the left panel to verify your next move. 🌟',
       }));
     }
   }, [currentSection, hasShownVideoModal, jsCode, missionId, plainEnglishCode]);

@@ -92,6 +92,10 @@ export async function runPlaygroundEvaluation(input: {
     }
   }
 
+  // Suffix emoji indicator: ✨ for Gemini, 🌟 for Fallback
+  const cleanHintText = chosenHintText.replace(/[\s✨🌟]+$/, "");
+  chosenHintText = `${cleanHintText} ${fallbackUsed ? "🌟" : "✨"}`;
+
   return {
     missionId,
     promptVersion: EVALUATE_PROMPT_VERSION,

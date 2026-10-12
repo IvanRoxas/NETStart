@@ -132,6 +132,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, message: "Still failing, fallback used." });
     }
 
+    // Suffix Gemini emoji indicator ✨
+    const cleanSummary = result.summary.replace(/[\s✨🌟]+$/, "");
+    result.summary = `${cleanSummary} ✨`;
+
     const finalResult = {
       ...apt,
       aiInsight: {

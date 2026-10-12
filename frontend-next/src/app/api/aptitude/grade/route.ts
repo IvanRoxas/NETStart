@@ -320,6 +320,11 @@ export async function POST(req: Request) {
     
     const finalFallbackStatus = isFallback || fallbackUsedInFetch;
 
+    // Suffix emoji indicator: ✨ for Gemini, 🌟 for Fallback
+    const indicator = finalFallbackStatus ? "🌟" : "✨";
+    const cleanSummary = result.summary.replace(/[\s✨🌟]+$/, "");
+    result.summary = `${cleanSummary} ${indicator}`;
+
     const finalResult = {
       ...baseResult,
       aiInsight: {

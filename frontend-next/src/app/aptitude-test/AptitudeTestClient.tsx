@@ -765,7 +765,13 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
               <Sparkles size={16} /> Nova AI Diagnostic Evaluation
             </div>
             <p className="text-sm text-gray-100 leading-relaxed font-sans font-medium">
-              {results.aiInsight.summary}
+              {(() => {
+                const summary = results.aiInsight.summary?.trim() || "";
+                if (!summary) return "";
+                if (summary.endsWith("✨") || summary.endsWith("🌟")) return summary;
+                const isFallback = results.aiInsight.source === "fallback" || (results as any).isFallback;
+                return `${summary} ${isFallback ? "🌟" : "✨"}`;
+              })()}
             </p>
             <div className="pt-2 border-t border-purple-500/20 text-xs text-purple-200 leading-relaxed">
               <span className="font-bold text-white uppercase tracking-wider font-mono">

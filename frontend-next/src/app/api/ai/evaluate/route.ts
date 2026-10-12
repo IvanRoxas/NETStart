@@ -165,6 +165,10 @@ export async function POST(req: Request) {
       }
     }
 
+    // Suffix emoji indicator: ✨ for Gemini, 🌟 for Fallback
+    const cleanHintText = chosenHintText.replace(/[\s✨🌟]+$/, "");
+    chosenHintText = `${cleanHintText} ${fallbackUsed ? "🌟" : "✨"}`;
+
     // 7. Database Updates: increment failureCount and log intervention
     const [progress] = await prisma.$transaction([
       prisma.missionProgress.upsert({
