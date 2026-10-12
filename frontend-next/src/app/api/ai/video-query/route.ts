@@ -17,12 +17,16 @@ interface YouTubeSearchResult {
   source: "youtube_api" | "curated_fallback";
 }
 
+const cooldownMap = new Map<string, number>();
+const COOLDOWN_MS = 3000;
+
 /**
  * Searches YouTube Data API v3 if key is present, otherwise falls back gracefully
  */
 async function queryYouTubeOrFallback(
   missionId: string,
-  topicQuery?: string
+  topicQuery?: string,
+  canQueryLiveYouTube: boolean = false
 ): Promise<YouTubeSearchResult | null> {
   const fallback = getVideoFallbackForMission(missionId);
   const apiKey = process.env.YOUTUBE_API_KEY;
@@ -31,7 +35,7 @@ async function queryYouTubeOrFallback(
     return null;
   }
 
-  if (!apiKey) {
+  if (!apiKey || !canQueryLiveYouTube) {
     return {
       videoId: fallback.youtubeVideoId,
       embedUrl: fallback.embedUrl,
@@ -121,8 +125,31 @@ export async function POST(req: Request) {
 
     const session = await getServerSession(authOptions);
     const userId = (session?.user as any)?.id;
+    let isBanned = Boolean((session?.user as any)?.isBanned);
 
-    const video = await queryYouTubeOrFallback(missionId, topic);
+    if (userId && !isBanned) {
+      try {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { isBanned: true },
+        });
+        isBanned = Boolean(dbUser?.isBanned);
+      } catch (e) {
+        // Fall back to session token flag
+      }
+    }
+
+    const now = Date.now();
+    const lastCalled = userId ? (cooldownMap.get(userId) || 0) : 0;
+    const cooldownPassed = (now - lastCalled) >= COOLDOWN_MS;
+
+    const canQueryLiveYouTube = Boolean(userId && !isBanned && cooldownPassed);
+
+    if (canQueryLiveYouTube && userId) {
+      cooldownMap.set(userId, now);
+    }
+
+    const video = await queryYouTubeOrFallback(missionId, topic, canQueryLiveYouTube);
 
     if (!video) {
       return NextResponse.json({
@@ -133,8 +160,8 @@ export async function POST(req: Request) {
       });
     }
 
-    // If student is logged in, log intervention to database
-    if (userId) {
+    // If student is logged in and not banned, log intervention to database
+    if (userId && !isBanned) {
       try {
         await prisma.interventionLog.create({
           data: {
