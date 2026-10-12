@@ -15,6 +15,7 @@ import { runWebChecks } from '@/lib/sandbox/projects/webChecker';
 import CoachPanel from './CoachPanel';
 import ProjectPicker, { ProjectProgress } from './ProjectPicker';
 import { projects } from '@/lib/sandbox/projects';
+import MusicToggleButton from '@/components/MusicToggleButton';
 
 export type ProjectState = {
   files: Record<string, string>;
@@ -708,6 +709,9 @@ export default function SandboxClient() {
         </div>
         
         <div className="flex items-center gap-2 sm:gap-3">
+          {/* Music Volume & Mute Controls (Modules Page Style) */}
+          <MusicToggleButton variant="circle" size="md" />
+
           {sandboxMode === 'free' && (
             <button
               onClick={() => setShowRestoreModal(true)}
