@@ -50,6 +50,23 @@ export async function POST(req: Request) {
 
     const userId = (session.user as any).id;
 
+    // Check if user is suspended
+    let isBanned = Boolean((session.user as any)?.isBanned);
+    if (!isBanned) {
+      const dbUser = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { isBanned: true },
+      });
+      isBanned = Boolean(dbUser?.isBanned);
+    }
+
+    if (isBanned) {
+      return NextResponse.json(
+        { success: false, message: "Account suspended." },
+        { status: 403 }
+      );
+    }
+
     // 2. Server-side per-user cooldown check (3 seconds)
     const now = Date.now();
     const lastCalled = cooldownMap.get(userId) || 0;

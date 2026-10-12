@@ -24,12 +24,20 @@ export async function POST(req: Request) {
       where: { id: userId },
       select: { 
         hasTakenAptitudeTest: true, 
+        isBanned: true,
         isFallback: true, 
         aptitudeResult: true,
         fallbackRetryAttempts: true,
         lastFallbackRetryAt: true
       }
     });
+
+    if (dbUser?.isBanned) {
+      return NextResponse.json(
+        { success: false, message: "Account suspended." },
+        { status: 403 }
+      );
+    }
 
     if (!dbUser || !dbUser.hasTakenAptitudeTest || !dbUser.isFallback) {
       return NextResponse.json({ success: true, message: "No retry needed." });
