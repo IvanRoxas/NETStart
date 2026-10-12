@@ -3,8 +3,7 @@ import { HintBankEntry, SectionHints } from "./types";
 export const moonHints: Record<string, SectionHints> = {
   // Moon Tutorial 1: The Assessment
   "moon-1": {
-    // TODO: [Melben] customize generic fallback hint for moon-1
-    generic_hint: "Check your movement blocks and make sure each command guides the rover toward the target tile.",
+    generic_hint: "Telemetry shows the rover is off course. Take another look at your path—make sure each instruction nudges your rover one tile closer to the landing pad.",
     hints: [
       {
         hint_id: "moon_1_syntax_disconnected",
@@ -13,8 +12,7 @@ export const moonHints: Record<string, SectionHints> = {
         error_type: "syntax",
         concept_tag: "block_connection",
         applies_when: "Blocks are placed on the workspace but not connected to the main starting block.",
-        // TODO: [Melben] customize hint copy
-        hint_text: "Ensure all your movement blocks snap tightly under the main start block so the rover receives the instructions.",
+        hint_text: "Telemetry link is quiet! Check that your instructions are snapped securely into the sequence so the rover can hear them.",
       },
       {
         hint_id: "moon_1_logic_direction",
@@ -23,8 +21,7 @@ export const moonHints: Record<string, SectionHints> = {
         error_type: "logic",
         concept_tag: "turning_direction",
         applies_when: "The rover turns left instead of right or turns into an obstacle.",
-        // TODO: [Melben] customize hint copy
-        hint_text: "Double-check your turn blocks. Make sure you are turning in the correct direction to face the open path.",
+        hint_text: "Notice where the rover is facing after each turn. A quick check of your left and right will point you toward clear ground.",
       },
       {
         hint_id: "moon_1_missing_step_short",
@@ -33,8 +30,7 @@ export const moonHints: Record<string, SectionHints> = {
         error_type: "missing_step",
         concept_tag: "step_count",
         applies_when: "The rover stops short of the destination landing marker.",
-        // TODO: [Melben] customize hint copy
-        hint_text: "You are on the right track, but the rover needs one or more additional move forward steps to reach the target.",
+        hint_text: "You have the right heading! Count the remaining tiles—your rover just needs a little extra distance to reach the marker.",
       },
       {
         hint_id: "moon_1_wrong_output_overshoot",
@@ -43,16 +39,14 @@ export const moonHints: Record<string, SectionHints> = {
         error_type: "wrong_output",
         concept_tag: "step_bounds",
         applies_when: "The rover moves too many steps and overshoots the landing point.",
-        // TODO: [Melben] customize hint copy
-        hint_text: "Count the tiles between your start and the landing marker to avoid moving too far.",
+        hint_text: "Whoa, plenty of momentum! Count each tile step along the way so your rover stops right on the landing zone.",
       },
     ],
   },
 
   // Moon Tutorial 2: Mini Sorting Game
   "moon-2": {
-    // TODO: [Melben] customize generic fallback hint for moon-2
-    generic_hint: "Review each item type and verify that your sorting conditions route it to the right bay.",
+    generic_hint: "Good work organizing the cargo bay! Check that every item matches the rules for its container before you store it.",
     hints: [
       {
         hint_id: "moon_2_syntax_slot",
@@ -61,8 +55,7 @@ export const moonHints: Record<string, SectionHints> = {
         error_type: "syntax",
         concept_tag: "sorting_containers",
         applies_when: "Sorting commands are placed outside of the sorting handler.",
-        // TODO: [Melben] customize hint copy
-        hint_text: "Place your sorting conditions inside the container handler block.",
+        hint_text: "The sorter needs clear boundaries! Group your sorting rules inside the container zone so the scanner knows where to look.",
       },
       {
         hint_id: "moon_2_logic_mismatch",
@@ -71,8 +64,7 @@ export const moonHints: Record<string, SectionHints> = {
         error_type: "logic",
         concept_tag: "classification",
         applies_when: "An item is routed to the wrong container category.",
-        // TODO: [Melben] customize hint copy
-        hint_text: "Check your item criteria. Compare the item label with the box label before sorting.",
+        hint_text: "Take a closer look at the cargo labels. Check what makes each item unique before choosing where it belongs.",
       },
       {
         hint_id: "moon_2_missing_step_unprocessed",
@@ -81,16 +73,14 @@ export const moonHints: Record<string, SectionHints> = {
         error_type: "missing_step",
         concept_tag: "loop_completion",
         applies_when: "Some items remain unclassified in the input tray.",
-        // TODO: [Melben] customize hint copy
-        hint_text: "Make sure your loop continues until every single item in the cargo bay is sorted.",
+        hint_text: "Almost finished! Keep the sorting cycle repeating until every last piece of cargo is safely stowed away.",
       },
     ],
   },
 
   // Moon Tutorial 3: Reboot the Spaceship
   "moon-3": {
-    // TODO: [Melben] customize generic fallback hint for moon-3
-    generic_hint: "Follow the spaceship console checklist to reboot the subsystems in the proper sequence.",
+    generic_hint: "The console is waiting for your boot checklist! Make sure each spaceship system powers up in the right sequence.",
     hints: [
       {
         hint_id: "moon_3_syntax_init",
@@ -99,8 +89,7 @@ export const moonHints: Record<string, SectionHints> = {
         error_type: "syntax",
         concept_tag: "initialization",
         applies_when: "The boot procedure lacks a starting execution trigger.",
-        // TODO: [Melben] customize hint copy
-        hint_text: "Attach the subsystem sequence directly under the reboot startup trigger.",
+        hint_text: "The ship's computer needs a launch signal to begin. Connect your checklist right at the very beginning of the boot stream.",
       },
       {
         hint_id: "moon_3_logic_subsystem_order",
@@ -109,8 +98,7 @@ export const moonHints: Record<string, SectionHints> = {
         error_type: "logic",
         concept_tag: "sequence_order",
         applies_when: "Thrusters are fired before life support or power is restored.",
-        // TODO: [Melben] customize hint copy
-        hint_text: "Power systems must come online before you can ignite the main engine thrusters.",
+        hint_text: "Think about dependencies! Main power must be online and stable before the engines can draw any energy.",
       },
       {
         hint_id: "moon_3_missing_step_fuel",
@@ -119,8 +107,7 @@ export const moonHints: Record<string, SectionHints> = {
         error_type: "missing_step",
         concept_tag: "prerequisites",
         applies_when: "Fuel calibration was skipped before engine test.",
-        // TODO: [Melben] customize hint copy
-        hint_text: "Remember to include the fuel calibration step so the thrusters receive enough propellant.",
+        hint_text: "Double-check your pre-flight prep. The engines need a steady propellant flow before you run ignition.",
       },
     ],
   },
