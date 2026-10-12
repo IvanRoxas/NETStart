@@ -27,6 +27,8 @@ export default async function AptitudeTestPage() {
       isVerified: true,
       isBanned: true,
       hasTakenAptitudeTest: true,
+      isFallback: true,
+      pathOrder: true,
       logicScore: true,
       patternRecognitionScore: true,
       taskDecompositionScore: true,

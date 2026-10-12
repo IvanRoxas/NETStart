@@ -142,7 +142,60 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
     title: string;
     message: string;
     unansweredIds?: number[];
+    isRetakeBlocked?: boolean;
+    buttonText?: string;
+    action?: () => void;
   } | null>(null);
+
+  const renderToastNotificationModal = () => {
+    if (!toastNotification?.show) return null;
+
+    const isRetakeBlocked =
+      toastNotification.isRetakeBlocked ||
+      toastNotification.buttonText?.toLowerCase().includes("profile") ||
+      toastNotification.message?.toLowerCase().includes("already completed") ||
+      toastNotification.message?.toLowerCase().includes("valid path");
+
+    const handleButtonClick = () => {
+      if (toastNotification.action) {
+        toastNotification.action();
+      } else if (isRetakeBlocked) {
+        router.push("/profile");
+      }
+      setToastNotification(null);
+    };
+
+    const buttonLabel = isRetakeBlocked
+      ? "Back to Profile"
+      : toastNotification.buttonText ||
+        (toastNotification.unansweredIds && toastNotification.unansweredIds.length > 0
+          ? "Review Unanswered Problems"
+          : "Close");
+
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-150">
+        <div className="w-full max-w-md bg-[#1e0a2d] border border-amber-500/60 rounded-3xl p-6 sm:p-8 shadow-[0_0_40px_rgba(245,158,11,0.3)] space-y-5 text-center relative">
+          <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/40 text-amber-400 mx-auto flex items-center justify-center">
+            <AlertTriangle size={28} />
+          </div>
+          <div className="space-y-2">
+            <h3 className="text-xl font-bold font-display text-white uppercase tracking-wider">
+              {toastNotification.title}
+            </h3>
+            <p className="text-xs sm:text-sm text-gray-300 leading-relaxed font-sans">
+              {toastNotification.message}
+            </p>
+          </div>
+          <button
+            onClick={handleButtonClick}
+            className="w-full py-3 bg-[#ff912d] hover:bg-[#ff912d]/90 text-black font-bold text-xs uppercase tracking-widest rounded-xl transition-all cursor-pointer active:scale-95"
+          >
+            {buttonLabel}
+          </button>
+        </div>
+      </div>
+    );
+  };
 
   const [confirmSubmitModal, setConfirmSubmitModal] = useState(false);
 
@@ -242,10 +295,18 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
         }
         setViewState("COMPLETED");
       } else {
+        const isRetakeBlock =
+          data.message?.toLowerCase().includes("already completed") ||
+          data.message?.toLowerCase().includes("valid path") ||
+          data.isRetakeBlocked;
+
         setToastNotification({
           show: true,
           title: "Submission Error",
           message: data.message || "Could not grade assessment. Please try again.",
+          isRetakeBlocked: Boolean(isRetakeBlock),
+          buttonText: isRetakeBlock ? "Back to Profile" : "Close",
+          action: isRetakeBlock ? () => router.push("/profile") : undefined,
         });
       }
     } catch (err: any) {
@@ -505,29 +566,7 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
         </div>
 
         {/* Custom Toast Warning Modal (No browser alert) */}
-        {toastNotification?.show && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-150">
-            <div className="w-full max-w-md bg-[#1e0a2d] border border-amber-500/60 rounded-3xl p-6 sm:p-8 shadow-[0_0_40px_rgba(245,158,11,0.3)] space-y-5 text-center relative">
-              <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/40 text-amber-400 mx-auto flex items-center justify-center">
-                <AlertTriangle size={28} />
-              </div>
-              <div className="space-y-2">
-                <h3 className="text-xl font-bold font-display text-white uppercase tracking-wider">
-                  {toastNotification.title}
-                </h3>
-                <p className="text-xs sm:text-sm text-gray-300 leading-relaxed font-sans">
-                  {toastNotification.message}
-                </p>
-              </div>
-              <button
-                onClick={() => setToastNotification(null)}
-                className="w-full py-3 bg-[#ff912d] hover:bg-[#ff912d]/90 text-black font-bold text-xs uppercase tracking-widest rounded-xl transition-all cursor-pointer"
-              >
-                Review Unanswered Problems
-              </button>
-            </div>
-          </div>
-        )}
+        {renderToastNotificationModal()}
 
         {/* Custom Confirm Submission Modal */}
         {confirmSubmitModal && (
@@ -799,6 +838,27 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
         <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
           <button
             onClick={() => {
+              const isFallbackUser = Boolean(
+                initialUser?.isFallback ?? (initialUser?.aptitudeResult as any)?.isFallback
+              );
+              const hasValidPath = Boolean(
+                (initialUser?.pathOrder && initialUser.pathOrder.length > 0) ||
+                initialUser?.recommendedLearningPath
+              );
+              const isBlocked = initialUser?.hasTakenAptitudeTest && !isFallbackUser && hasValidPath;
+
+              if (isBlocked) {
+                setToastNotification({
+                  show: true,
+                  title: "Submission Error",
+                  message: "You have already completed the aptitude test and have a valid path.",
+                  isRetakeBlocked: true,
+                  buttonText: "Back to Profile",
+                  action: () => router.push("/profile"),
+                });
+                return;
+              }
+
               setViewState("QUIZ");
               setSelectedAnswers({});
               setCurrentIndex(0);
@@ -816,6 +876,9 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
           </button>
         </div>
       </div>
+
+      {/* Custom Toast Warning Modal in Completed View */}
+      {renderToastNotificationModal()}
     </div>
   );
 }
