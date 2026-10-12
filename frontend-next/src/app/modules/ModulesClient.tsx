@@ -90,8 +90,11 @@ export default function ModulesClient({
     }
   }, [fromCutscene]);
 
+  const retryFiredRef = useRef(false);
+
   useEffect(() => {
-    if (isFallback) {
+    if (isFallback && !retryFiredRef.current) {
+      retryFiredRef.current = true;
       // Trigger background silent retry
       fetch('/api/aptitude/retry', { method: 'POST' }).catch(err => {
         console.warn('Silent fallback retry failed:', err);

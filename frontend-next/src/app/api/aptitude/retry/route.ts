@@ -23,48 +23,46 @@ export async function POST(req: Request) {
     const dbUser = await prisma.user.findUnique({
       where: { id: userId },
       select: { 
-        hasTakenAptitudeTest: true, 
         isBanned: true,
-        isFallback: true, 
         aptitudeResult: true,
-        fallbackRetryAttempts: true,
-        lastFallbackRetryAt: true
       }
     });
 
-    if (dbUser?.isBanned) {
+    if (!dbUser) {
+      return NextResponse.json({ success: false, message: "User not found." }, { status: 404 });
+    }
+
+    if (dbUser.isBanned) {
       return NextResponse.json(
         { success: false, message: "Account suspended." },
         { status: 403 }
       );
     }
 
-    if (!dbUser || !dbUser.hasTakenAptitudeTest || !dbUser.isFallback) {
-      return NextResponse.json({ success: true, message: "No retry needed." });
-    }
-
     const MAX_RETRIES = parseInt(process.env.GEMINI_MAX_RETRIES || "5", 10);
     const COOLDOWN_MINUTES = parseInt(process.env.GEMINI_RETRY_COOLDOWN_MIN || "10", 10);
+    const cutoff = new Date(Date.now() - COOLDOWN_MINUTES * 60 * 1000);
 
-    if (dbUser.fallbackRetryAttempts >= MAX_RETRIES) {
-      return NextResponse.json({ success: false, message: "Max retries reached." });
-    }
-
-    if (dbUser.lastFallbackRetryAt) {
-      const minutesSinceLastRetry = (Date.now() - dbUser.lastFallbackRetryAt.getTime()) / (1000 * 60);
-      if (minutesSinceLastRetry < COOLDOWN_MINUTES) {
-        return NextResponse.json({ success: false, message: "Cooldown active." });
-      }
-    }
-
-    // Update attempt count and timestamp early to prevent parallel retries
-    await prisma.user.update({
-      where: { id: userId },
+    const claim = await prisma.user.updateMany({
+      where: {
+        id: userId,
+        isFallback: true,
+        hasTakenAptitudeTest: true,
+        fallbackRetryAttempts: { lt: MAX_RETRIES },
+        OR: [
+          { lastFallbackRetryAt: null },
+          { lastFallbackRetryAt: { lte: cutoff } }
+        ]
+      },
       data: {
         fallbackRetryAttempts: { increment: 1 },
         lastFallbackRetryAt: new Date()
       }
     });
+
+    if (claim.count === 0) {
+      return NextResponse.json({ success: true, message: "No retry needed or cooldown active." });
+    }
 
     const apt = dbUser.aptitudeResult as any;
     if (!apt || !apt.categories) {
