@@ -37,8 +37,15 @@ export async function POST(req: Request) {
     
     const dbUser = await prisma.user.findUnique({
       where: { id: userId },
-      select: { hasTakenAptitudeTest: true, isFallback: true, pathOrder: true, logicScore: true, patternRecognitionScore: true, taskDecompositionScore: true, aptitudeResult: true }
+      select: { hasTakenAptitudeTest: true, isBanned: true, isFallback: true, pathOrder: true, logicScore: true, patternRecognitionScore: true, taskDecompositionScore: true, aptitudeResult: true }
     });
+
+    if (dbUser?.isBanned) {
+      return NextResponse.json(
+        { success: false, message: "Account suspended." },
+        { status: 403 }
+      );
+    }
 
     let isRegenerating = false;
 
