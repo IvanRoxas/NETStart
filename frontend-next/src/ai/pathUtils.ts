@@ -68,9 +68,18 @@ export function processAIPathResponse(
     // All equal: skip affinity ordering, use default sequence
     pathOrder.push(...WEB_ORDER, ...LOGIC_DEFAULT);
   } else if (computedTrack === "BALANCED") {
-    // Interleave starting with WEB
-    for (let i = 0; i < 3; i++) {
-      pathOrder.push(WEB_ORDER[i], LOGIC_ORDER[i]);
+    const webPlanets = parsed.planets.filter(p => WEB_ORDER.includes(p.planet));
+    const webAvg = webPlanets.length > 0
+      ? webPlanets.reduce((acc, p) => acc + p.affinity, 0) / webPlanets.length
+      : 0;
+    const logicAvg = logicPlanets.length > 0
+      ? logicPlanets.reduce((acc, p) => acc + p.affinity, 0) / logicPlanets.length
+      : 0;
+
+    if (logicAvg > webAvg) {
+      pathOrder.push(...LOGIC_ORDER, ...WEB_ORDER);
+    } else {
+      pathOrder.push(...WEB_ORDER, ...LOGIC_ORDER);
     }
   } else if (computedTrack === "WEB") {
     pathOrder.push(...WEB_ORDER, ...LOGIC_ORDER);
