@@ -16,6 +16,7 @@ export function mockAptitudeResponse(): AptitudeResult {
   return {
     track: "BALANCED",
     summary: "Mock AI Summary: Outstanding pattern recognition.",
+    advice: "Mock AI Advice: Focus on reinforcing foundational concepts.",
     planets: [
       { planet: "MARS", affinity: 80, reason: "Mock reason" },
       { planet: "VENUS", affinity: 75, reason: "Mock reason" },

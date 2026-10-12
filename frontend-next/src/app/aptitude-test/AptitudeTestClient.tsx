@@ -812,12 +812,14 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
                 return `${summary} ${isFallback ? "🌟" : "✨"}`;
               })()}
             </p>
-            <div className="pt-2 border-t border-purple-500/20 text-xs text-purple-200 leading-relaxed">
-              <span className="font-bold text-white uppercase tracking-wider font-mono">
-                Mission Directive:{" "}
-              </span>
-              {results.aiInsight.advice}
-            </div>
+            {Boolean(results.aiInsight.advice?.trim()) && (
+              <div className="pt-2 border-t border-purple-500/20 text-xs text-purple-200 leading-relaxed">
+                <span className="font-bold text-white uppercase tracking-wider font-mono">
+                  Mission Directive:{" "}
+                </span>
+                {results.aiInsight.advice}
+              </div>
+            )}
           </div>
         )}
 

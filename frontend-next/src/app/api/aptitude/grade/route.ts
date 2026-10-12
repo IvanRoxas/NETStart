@@ -288,6 +288,7 @@ export async function POST(req: Request) {
           properties: {
             track: { type: "STRING" },
             summary: { type: "STRING" },
+            advice: { type: "STRING" },
             planets: {
               type: "ARRAY",
               items: {
@@ -301,7 +302,7 @@ export async function POST(req: Request) {
               }
             }
           },
-          required: ["track", "summary", "planets"]
+          required: ["track", "summary", "advice", "planets"]
         },
         () => getAptitudeFallback(aiContext),
         mockAptitudeResponse,

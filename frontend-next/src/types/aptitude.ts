@@ -35,6 +35,8 @@ export interface CategorySummary {
 export interface AptitudeAIInsight {
   summary: string;
   advice: string;
+  track?: "WEB" | "LOGIC" | "BALANCED" | null;
+  planets?: Array<{ planet: string; affinity: number; reason: string }>;
   source?: "gemini" | "mock" | "fallback";
 }
 
