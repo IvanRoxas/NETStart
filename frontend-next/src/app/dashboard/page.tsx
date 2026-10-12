@@ -9,7 +9,7 @@ import { getXPDetails } from "@/lib/leveling";
 import { XP_REWARDS } from "@/lib/xpEconomy";
 import { Zap, Settings, Rocket, Award, ShieldCheck, Compass, ArrowRight, Lock, CheckCircle2, Circle, Sparkles, Play, Gift, Clock, Flame, Brain, Check } from "lucide-react";
 import DashboardAvatarCard from "@/components/DashboardAvatarCard";
-import { computeUnlockStatus } from "@/lib/unlockLogic";
+import { computeUnlockStatus, normalizePathOrder } from "@/lib/unlockLogic";
 import { mapMissionIdToPlanet } from "@/lib/missionMapper";
 
 export default async function DashboardPage() {
@@ -129,9 +129,7 @@ export default async function DashboardPage() {
   const isTutorialComplete = completedMoonLevels >= 3;
 
   // Path order and unlock status computation
-  const userPathOrder = (dbUser?.pathOrder && dbUser.pathOrder.length > 0)
-    ? dbUser.pathOrder
-    : ["MOON", "MARS", "VENUS", "MERCURY", "JUPITER", "SATURN", "EARTH"];
+  const userPathOrder = normalizePathOrder(dbUser?.pathOrder);
 
   const missionProgressRows = campaignCompletedMissions.map(m => ({
     missionId: m.missionId,

@@ -6,7 +6,7 @@ import { aptitudeSchema } from "@/ai/schemas/aptitudeSchema";
 import { getAptitudePrompt, getAptitudeFallback } from "@/ai/prompts/aptitude";
 import { NOVA_SYSTEM_INSTRUCTION } from "@/ai/prompts/shared";
 import { mockAptitudeResponse } from "@/ai/mock";
-import { processAIPathResponse } from "@/ai/pathUtils";
+import { processAIPathResponse, normalizePathOrder } from "@/ai/pathUtils";
 import { AptitudeAIContext } from "@/types/aptitude";
 
 export const dynamic = "force-dynamic";
@@ -136,7 +136,7 @@ export async function POST(req: Request) {
       where: { id: userId },
       data: {
         aptitudeResult: finalResult as any,
-        pathOrder,
+        pathOrder: normalizePathOrder(pathOrder),
         track: result.track,
         aiSummary: result.summary,
         planetReasons: result.planets.map(p => ({ planet: p.planet, reason: p.reason })),

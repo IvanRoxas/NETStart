@@ -5,14 +5,64 @@ interface MissionProgressRow {
   status: string;
 }
 
+const VALID_PLANETS = new Set(["MOON", "MARS", "VENUS", "MERCURY", "JUPITER", "SATURN", "EARTH"]);
+export const DEFAULT_PATH_ORDER = ["MOON", "MARS", "VENUS", "MERCURY", "JUPITER", "SATURN", "EARTH"];
+const WEB_ORDER = ["MARS", "VENUS", "MERCURY"];
+const LOGIC_DEFAULT = ["JUPITER", "SATURN", "EARTH"];
+
+export function normalizePathOrder(order?: string[] | null): string[] {
+  if (!order || !Array.isArray(order) || order.length === 0) {
+    return [...DEFAULT_PATH_ORDER];
+  }
+
+  // 1. Uppercase, dedupe, drop unknown ids
+  const seen = new Set<string>();
+  const cleaned: string[] = [];
+  for (const raw of order) {
+    if (typeof raw !== 'string') continue;
+    const upper = raw.trim().toUpperCase();
+    if (VALID_PLANETS.has(upper) && !seen.has(upper)) {
+      seen.add(upper);
+      cleaned.push(upper);
+    }
+  }
+
+  if (cleaned.length === 0) {
+    return [...DEFAULT_PATH_ORDER];
+  }
+
+  // 2. Separate Moon (Moon is always first)
+  const nonMoon = cleaned.filter(p => p !== "MOON");
+
+  // 3. Find where the earliest web planet appeared
+  const firstWebIndex = nonMoon.findIndex(p => WEB_ORDER.includes(p));
+
+  // 4. Logic planets keep their relative order, append missing logic planets
+  const logicInOrder = nonMoon.filter(p => LOGIC_DEFAULT.includes(p));
+  for (const lp of LOGIC_DEFAULT) {
+    if (!logicInOrder.includes(lp)) {
+      logicInOrder.push(lp);
+    }
+  }
+
+  // 5. Assemble sequence: MARS, VENUS, MERCURY contiguous placed where earliest web planet appeared
+  let finalNonMoon: string[];
+  if (firstWebIndex === -1) {
+    finalNonMoon = [...logicInOrder, ...WEB_ORDER];
+  } else {
+    const logicBefore = nonMoon.slice(0, firstWebIndex).filter(p => LOGIC_DEFAULT.includes(p));
+    const logicAfter = logicInOrder.filter(p => !logicBefore.includes(p));
+    finalNonMoon = [...logicBefore, ...WEB_ORDER, ...logicAfter];
+  }
+
+  return ["MOON", ...finalNonMoon];
+}
+
 export function computeUnlockStatus(
-  pathOrder: string[],
+  pathOrder: string[] | null | undefined,
   userMissions: MissionProgressRow[]
 ) {
-  // Fall back to main's fixed sequence if pathOrder is null, undefined, or empty
-  const activePathOrder = (!pathOrder || pathOrder.length === 0)
-    ? ["MOON", "MARS", "VENUS", "MERCURY", "JUPITER", "SATURN", "EARTH"]
-    : pathOrder;
+  const activePathOrder = normalizePathOrder(pathOrder);
 
   // 1. Identify all planets with any progress (started or completed)
   const startedPlanets = new Set<string>();

@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { ArrowLeft, Lock } from 'lucide-react';
 import ModuleDetailsClient from './ModuleDetailsClient';
 import { DEMO_MODE_COOKIE } from "@/lib/demoMode";
+import { normalizePathOrder } from "@/lib/unlockLogic";
 
 const MODULE_MISSIONS: Record<string, { id: string; title: string; desc: string; tag?: string; subtitle?: string }[]> = {
   moon: [
@@ -134,6 +135,7 @@ export default async function ModuleMissionsPage({ params }: { params: Promise<P
         id: true,
         isBanned: true,
         canUseDemoMode: true,
+        pathOrder: true,
       }
     });
   } catch (err: any) {
@@ -142,6 +144,7 @@ export default async function ModuleMissionsPage({ params }: { params: Promise<P
       select: {
         id: true,
         isBanned: true,
+        pathOrder: true,
       }
     });
     if (dbUser) {
@@ -161,6 +164,8 @@ export default async function ModuleMissionsPage({ params }: { params: Promise<P
   if (dbUser.isBanned) {
     redirect("/login?error=suspended");
   }
+
+  const userPathOrder = normalizePathOrder(dbUser.pathOrder);
 
   const cookieStore = await cookies();
   const canUseDemoMode = dbUser.canUseDemoMode === true;

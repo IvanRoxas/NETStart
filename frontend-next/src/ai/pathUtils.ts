@@ -3,6 +3,7 @@ import { AptitudeAIContext } from "@/types/aptitude";
 import { getAptitudeFallback } from "./prompts/aptitude";
 
 export const DEFAULT_PLANET_SEQUENCE = ["MARS", "VENUS", "MERCURY", "JUPITER", "SATURN", "EARTH"];
+export { normalizePathOrder } from "@/lib/unlockLogic";
 
 export function processAIPathResponse(
   rawResponse: any,

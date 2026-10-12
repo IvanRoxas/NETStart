@@ -10,7 +10,7 @@ import DemoToggle from '@/components/DemoToggle';
 import { useDemoMode } from '@/lib/demoMode';
 import StoryArchiveModal from '@/components/StoryArchiveModal';
 import { mapMissionIdToPlanet } from '@/lib/missionMapper';
-import { computeUnlockStatus } from '@/lib/unlockLogic';
+import { computeUnlockStatus, normalizePathOrder } from '@/lib/unlockLogic';
 
 interface LiveStats {
   level: number;
@@ -239,10 +239,7 @@ export default function ModulesClient({
   ];
 
   const pathNodes = useMemo(() => {
-    let order = pathOrder;
-    if (!order || order.length === 0) {
-      order = defaultPathNodes.map(n => n.id.toUpperCase());
-    }
+    const order = normalizePathOrder(pathOrder);
 
     return order.map((planetId, index) => {
       const slot = defaultPathNodes[index];
