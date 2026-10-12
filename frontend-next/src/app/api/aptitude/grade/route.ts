@@ -220,7 +220,7 @@ export async function POST(req: Request) {
         });
       });
 
-      await addXPAndCheckLevelUp(userId, 150);
+      await addXPAndCheckLevelUp(userId, 200);
 
       await logSystemAction({
         actorId: userId,
@@ -237,7 +237,7 @@ export async function POST(req: Request) {
             logic: categoriesFormatted.logical_reasoning.percent,
           },
           missedConceptsCount: missed.length,
-          xpAwarded: 150,
+          xpAwarded: 200,
           gearsAwarded: 50,
         },
       });
@@ -347,7 +347,7 @@ export async function POST(req: Request) {
     return NextResponse.json({
       success: true,
       result: finalResult,
-      xpAwarded: isRegenerating ? 0 : 150,
+      xpAwarded: isRegenerating ? 0 : 200,
       gearsAwarded: isRegenerating ? 0 : 50,
     });
   } catch (error: any) {
