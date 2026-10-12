@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { ArrowLeft, Lock } from 'lucide-react';
 import ModuleDetailsClient from './ModuleDetailsClient';
 import { DEMO_MODE_COOKIE } from "@/lib/demoMode";
-import { normalizePathOrder } from "@/lib/unlockLogic";
+import { normalizePathOrder, computeUnlockStatus } from "@/lib/unlockLogic";
 
 const MODULE_MISSIONS: Record<string, { id: string; title: string; desc: string; tag?: string; subtitle?: string }[]> = {
   moon: [
@@ -195,46 +195,30 @@ export default async function ModuleMissionsPage({ params }: { params: Promise<P
     }
   });
 
-  const getCompletedCount = (modId: string) => {
-    return completedMissions.filter(m => {
-      const mid = m.missionId.toLowerCase();
-      if (modId === 'moon') return mid.startsWith('moon') || mid.startsWith('html-1') || mid.startsWith('html-2') || mid.startsWith('html-3');
-      if (modId === 'mars') return mid.startsWith('mars') || (mid.startsWith('html') && !['html-1', 'html-2', 'html-3'].includes(mid));
-      if (modId === 'venus') return mid.startsWith('venus') || mid.startsWith('css');
-      if (modId === 'mercury') return mid.startsWith('mercury') || mid.startsWith('javascript') || mid.startsWith('js');
-      if (modId === 'jupiter') return mid.startsWith('jupiter') || mid.startsWith('java');
-      if (modId === 'saturn') return mid.startsWith('saturn') || mid.startsWith('cpp');
-      if (modId === 'earth') return mid.startsWith('earth') || mid.startsWith('python');
-      return mid.startsWith(modId.toLowerCase());
-    }).length;
-  };
+  const missionProgressRows = completedMissions.map(m => ({
+    missionId: m.missionId,
+    status: "COMPLETED",
+  }));
 
-  // Enforce 7-Planet Progression Chain (3 missions per planet)
-  const hasCompletedFinal = (planetId: string) => {
-    return completedMissions.some(m => {
-      const mid = m.missionId.toLowerCase();
-      return mid === `${planetId}-3` || mid === `html-3-${planetId}` || mid === `css-3-${planetId}`;
-    });
-  };
+  const unlockInfo = computeUnlockStatus(userPathOrder, missionProgressRows);
 
-  const moonCompleted = getCompletedCount("moon") >= 3 || hasCompletedFinal("moon");
-  const marsCompleted = getCompletedCount("mars") >= 3 || hasCompletedFinal("mars");
-  const venusCompleted = getCompletedCount("venus") >= 3 || hasCompletedFinal("venus");
-  const mercuryCompleted = getCompletedCount("mercury") >= 3 || hasCompletedFinal("mercury");
-  const jupiterCompleted = getCompletedCount("jupiter") >= 3 || hasCompletedFinal("jupiter");
-  const saturnCompleted = getCompletedCount("saturn") >= 3 || hasCompletedFinal("saturn");
-  const earthCompleted = getCompletedCount("earth") >= 3 || hasCompletedFinal("earth");
+  const canonicalPlanetId = (() => {
+    if (moduleId === "html") return "mars";
+    if (moduleId === "css") return "venus";
+    if (moduleId === "javascript" || moduleId === "js") return "mercury";
+    if (moduleId === "java") return "jupiter";
+    if (moduleId === "cpp") return "saturn";
+    if (moduleId === "python") return "earth";
+    return moduleId;
+  })();
+
+  const planetIndex = userPathOrder.findIndex(p => p.toLowerCase() === canonicalPlanetId);
+  const planetStatus = planetIndex !== -1 ? unlockInfo.statuses[planetIndex] : 'LOCKED';
 
   const isModuleLocked = () => {
     if (isDemoMode) return false;
-    if (moduleId === "moon") return false;
-    if (moduleId === "mars" || moduleId === "html") return !moonCompleted;
-    if (moduleId === "venus" || moduleId === "css") return !(moonCompleted && marsCompleted);
-    if (moduleId === "mercury" || moduleId === "javascript" || moduleId === "js") return !(moonCompleted && marsCompleted && venusCompleted);
-    if (moduleId === "jupiter" || moduleId === "java") return !(moonCompleted && marsCompleted && venusCompleted && mercuryCompleted);
-    if (moduleId === "saturn" || moduleId === "cpp") return !(moonCompleted && marsCompleted && venusCompleted && mercuryCompleted && jupiterCompleted);
-    if (moduleId === "earth" || moduleId === "python") return !(moonCompleted && marsCompleted && venusCompleted && mercuryCompleted && jupiterCompleted && saturnCompleted);
-    return false;
+    if (canonicalPlanetId === "moon") return false;
+    return planetStatus !== 'CURRENT' && planetStatus !== 'COMPLETED';
   };
 
   const isLocked = isModuleLocked();
