@@ -81,7 +81,7 @@ export async function generateStructuredResponse<T>(
 
   const genAI = new GoogleGenAI({ apiKey });
 
-  const tryCall = async (): Promise<T> => {
+  const tryCall = async (disableThinking = false): Promise<T> => {
     let timer: NodeJS.Timeout;
     const timeoutSeconds = parseInt(process.env.GEMINI_TIMEOUT_SECONDS || "10", 10);
     const timeoutPromise = new Promise<never>((_, reject) => {
@@ -89,18 +89,25 @@ export async function generateStructuredResponse<T>(
     });
 
     const callPromise = (async () => {
+      const thinkingLevel = (process.env.GEMINI_THINKING_LEVEL as any) || ThinkingLevel.LOW;
+      const thinkingConfig = (!disableThinking && thinkingLevel !== "OFF")
+        ? { thinkingLevel }
+        : undefined;
+
+      const config: any = {
+        systemInstruction: systemInstruction,
+        temperature: temperature,
+        responseMimeType: "application/json",
+        responseSchema: jsonSchema,
+      };
+      if (thinkingConfig) {
+        config.thinkingConfig = thinkingConfig;
+      }
+
       const response = await genAI.models.generateContent({
         model: model,
         contents: promptText,
-        config: {
-          systemInstruction: systemInstruction,
-          temperature: temperature,
-          responseMimeType: "application/json",
-          responseSchema: jsonSchema,
-          thinkingConfig: {
-            thinkingLevel: (process.env.GEMINI_THINKING_LEVEL as any) || ThinkingLevel.MINIMAL
-          }
-        },
+        config: config,
       });
 
       if (!response.text) throw new Error("No response text returned by model");
@@ -127,7 +134,7 @@ export async function generateStructuredResponse<T>(
     };
   } catch (error) {
     try {
-      const result = await tryCall();
+      const result = await tryCall(true);
       console.log(
         `[AI_TELEMETRY] module=${moduleName} | mode=live | result=success_on_retry | source=gemini`
       );
