@@ -65,6 +65,7 @@ import { getUserStorageItem, setUserStorageItem, removeUserStorageItem } from '@
 import { XP_REWARDS } from '@/lib/leveling';
 import { isDemoModeActive } from '@/lib/demoMode';
 import LevelSolutionGuideModal from '@/components/LevelSolutionGuideModal';
+import { YouTubeFallbackModal } from '@/components/YouTubeFallbackModal';
 import {
   getSectionConveyorQueue,
   validateConveyorVictory,
@@ -2745,6 +2746,54 @@ export default function BlocklyMaze() {
   const [showSolutionModal, setShowSolutionModal] = useState<boolean>(false);
   const [isLightbulbHovered, setIsLightbulbHovered] = useState<boolean>(false);
 
+  // 5 Failed Attempts YouTube Fallback Intervention States
+  const [failedAttempts, setFailedAttempts] = useState<number>(() => {
+    if (typeof window === 'undefined') return 0;
+    try {
+      const stored = sessionStorage.getItem(`netstart_failed_attempts_${missionId}_sec${currentSection}`);
+      return stored ? parseInt(stored, 10) || 0 : 0;
+    } catch (e) {
+      return 0;
+    }
+  });
+  const [showYouTubeModal, setShowYouTubeModal] = useState<boolean>(false);
+  const [hasShownVideoModal, setHasShownVideoModal] = useState<boolean>(false);
+
+  // Sync failed attempts on section or mission change
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const stored = sessionStorage.getItem(`netstart_failed_attempts_${missionId}_sec${currentSection}`);
+      const count = stored ? parseInt(stored, 10) || 0 : 0;
+      setFailedAttempts(count);
+      setHasShownVideoModal(false);
+    } catch (e) {}
+  }, [missionId, currentSection]);
+
+  const handleAttemptFailure = useCallback((_reason?: string) => {
+    setFailedAttempts(prev => {
+      const nextCount = prev + 1;
+      try {
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem(`netstart_failed_attempts_${missionId}_sec${currentSection}`, nextCount.toString());
+        }
+      } catch (e) {}
+
+      // Automatically trigger YouTube fallback intervention popup at 5 failed attempts
+      if (nextCount >= 5 && !hasShownVideoModal && !missionId.includes('moon')) {
+        setShowYouTubeModal(true);
+        setHasShownVideoModal(true);
+      }
+      return nextCount;
+    });
+  }, [missionId, currentSection, hasShownVideoModal]);
+
+  useEffect(() => {
+    if (showErrorToast && errorToastMessage) {
+      handleAttemptFailure(errorToastMessage);
+    }
+  }, [showErrorToast, errorToastMessage, handleAttemptFailure]);
+
   // 3-Minute Solution Timer effect
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -2974,6 +3023,15 @@ export default function BlocklyMaze() {
   }, [missionId, userId, getNetstartItem, removeNetstartItem]);
 
   const recordSectionCompleted = useCallback((secIdx: number) => {
+    // Reset failure counter on successful section completion
+    setFailedAttempts(0);
+    setHasShownVideoModal(false);
+    try {
+      if (typeof window !== 'undefined') {
+        sessionStorage.removeItem(`netstart_failed_attempts_${missionId}_sec${secIdx}`);
+      }
+    } catch (e) {}
+
     setCompletedSections(prev => {
       if (!prev.includes(secIdx)) {
         const updated = [...prev, secIdx];
@@ -7883,6 +7941,15 @@ export default function BlocklyMaze() {
     setSolutionSecondsLeft(180);
     setIsSolutionGuideUnlocked(false);
 
+    // Reset 5 Failed Attempts YouTube Fallback Counter on level restart
+    setFailedAttempts(0);
+    setHasShownVideoModal(false);
+    try {
+      if (typeof window !== 'undefined') {
+        sessionStorage.removeItem(`netstart_failed_attempts_${missionId}_sec${currentSection}`);
+      }
+    } catch (e) {}
+
     let isAlreadyCompletedMission = false;
     try {
       const completedMissions: string[] = JSON.parse(getNetstartItem('netstart_completed_missions') || '[]');
@@ -11642,6 +11709,7 @@ export default function BlocklyMaze() {
             triggerMissionCompletion(code);
           }
         } else {
+          handleAttemptFailure("Rover completed instructions without reaching the target landing marker.");
           setIsWarningPulse(true);
           if (endToastTimer.current) clearTimeout(endToastTimer.current);
           setShowEndToast(true);
@@ -11651,6 +11719,9 @@ export default function BlocklyMaze() {
     } catch (e: any) {
       if (currentExecutingBlockId && workspace.current && e?.message !== 'SIMULATION_CANCELLED') {
         markBlockError(workspace.current, currentExecutingBlockId);
+      }
+      if (e?.message !== 'SIMULATION_CANCELLED') {
+        handleAttemptFailure(e?.message || 'Execution error');
       }
       if (
         e.message !== "System Overload" &&
@@ -12105,6 +12176,21 @@ export default function BlocklyMaze() {
               </div>
             )}
           </div>
+
+          {/* YouTube Concept Tutorial Button (Appears when >= 5 failed attempts) */}
+          {failedAttempts >= 5 && !missionId.includes('moon') && (
+            <button
+              onClick={() => setShowYouTubeModal(true)}
+              className="p-2.5 rounded-xl border border-red-500/60 bg-gradient-to-r from-red-600/30 to-rose-600/30 hover:from-red-600/50 hover:to-rose-600/50 text-red-300 hover:text-white transition-all duration-300 cursor-pointer shadow-[0_0_15px_rgba(239,68,68,0.4)] animate-pulse flex items-center gap-1.5"
+              title={`Concept Tutorial Video (${failedAttempts} failed attempts) - Click to review`}
+              aria-label="Concept Tutorial Video"
+            >
+              <Play size={16} className="fill-red-500 text-red-500" />
+              <span className="hidden md:inline text-xs font-bold font-mono uppercase tracking-wider text-red-200">
+                Tutorial
+              </span>
+            </button>
+          )}
         </div>
       </header>
 
@@ -14457,6 +14543,15 @@ export default function BlocklyMaze() {
         onClose={() => setShowSolutionModal(false)}
         missionId={missionId}
         currentSectionIndex={currentSection}
+        missionTitle={displayTitle}
+      />
+
+      {/* YouTube Concept Intervention Fallback Modal (5 Failed Attempts) */}
+      <YouTubeFallbackModal
+        isOpen={showYouTubeModal}
+        onClose={() => setShowYouTubeModal(false)}
+        missionId={missionId}
+        failureCount={Math.max(5, failedAttempts)}
         missionTitle={displayTitle}
       />
 
