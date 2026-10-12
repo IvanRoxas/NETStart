@@ -3262,13 +3262,6 @@ export default function BlocklyMaze() {
           hintId: data.hint_id,
         });
       }
-
-      // Check if backend database recorded failed attempts at or above threshold for this mission
-      if (typeof data?.failureCount === 'number' && data.failureCount >= VIDEO_FALLBACK_FAIL_THRESHOLD && !hasShownVideoModal && !missionId.includes('moon')) {
-        setFailedAttempts(prev => Math.max(prev, data.failureCount));
-        setShowYouTubeModal(true);
-        setHasShownVideoModal(true);
-      }
     } catch (err) {
       console.warn('[AI_EVALUATE_EXCEPTION]', err);
       // AI failure must never break the UI
@@ -3278,7 +3271,7 @@ export default function BlocklyMaze() {
         text: 'Nova suggests reviewing the mission directives on the left panel to verify your next move. 🌟',
       }));
     }
-  }, [currentSection, hasShownVideoModal, jsCode, missionId, plainEnglishCode]);
+  }, [currentSection, jsCode, missionId, plainEnglishCode]);
 
   useEffect(() => {
     if (showErrorToast && errorToastMessage) {
