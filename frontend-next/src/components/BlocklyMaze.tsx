@@ -65,7 +65,7 @@ import { getUserStorageItem, setUserStorageItem, removeUserStorageItem } from '@
 import { XP_REWARDS } from '@/lib/leveling';
 import { isDemoModeActive } from '@/lib/demoMode';
 import LevelSolutionGuideModal from '@/components/LevelSolutionGuideModal';
-import { YouTubeFallbackModal } from '@/components/YouTubeFallbackModal';
+import { YouTubeFallbackModal, VIDEO_FALLBACK_FAIL_THRESHOLD } from '@/components/YouTubeFallbackModal';
 import {
   getSectionConveyorQueue,
   validateConveyorVictory,
@@ -2746,7 +2746,7 @@ export default function BlocklyMaze() {
   const [showSolutionModal, setShowSolutionModal] = useState<boolean>(false);
   const [isLightbulbHovered, setIsLightbulbHovered] = useState<boolean>(false);
 
-  // 5 Failed Attempts YouTube Fallback Intervention States
+  // YouTube Fallback Intervention States (VIDEO_FALLBACK_FAIL_THRESHOLD)
   const [failedAttempts, setFailedAttempts] = useState<number>(() => {
     if (typeof window === 'undefined') return 0;
     try {
@@ -2779,8 +2779,8 @@ export default function BlocklyMaze() {
         }
       } catch (e) {}
 
-      // Automatically trigger YouTube fallback intervention popup at 5 failed attempts
-      if (nextCount >= 5 && !hasShownVideoModal && !missionId.includes('moon')) {
+      // Automatically trigger YouTube fallback intervention popup at VIDEO_FALLBACK_FAIL_THRESHOLD failed attempts
+      if (nextCount >= VIDEO_FALLBACK_FAIL_THRESHOLD && !hasShownVideoModal && !missionId.includes('moon')) {
         setShowYouTubeModal(true);
         setHasShownVideoModal(true);
       }
@@ -3263,8 +3263,8 @@ export default function BlocklyMaze() {
         });
       }
 
-      // Check if backend database recorded 5+ failed attempts for this mission
-      if (typeof data?.failureCount === 'number' && data.failureCount >= 5 && !hasShownVideoModal && !missionId.includes('moon')) {
+      // Check if backend database recorded failed attempts at or above threshold for this mission
+      if (typeof data?.failureCount === 'number' && data.failureCount >= VIDEO_FALLBACK_FAIL_THRESHOLD && !hasShownVideoModal && !missionId.includes('moon')) {
         setFailedAttempts(prev => Math.max(prev, data.failureCount));
         setShowYouTubeModal(true);
         setHasShownVideoModal(true);
@@ -8049,7 +8049,7 @@ export default function BlocklyMaze() {
     setSolutionSecondsLeft(180);
     setIsSolutionGuideUnlocked(false);
 
-    // Reset 5 Failed Attempts YouTube Fallback Counter on level restart
+    // Reset YouTube Fallback Counter on level restart
     setFailedAttempts(0);
     setHasShownVideoModal(false);
     try {
@@ -12287,8 +12287,8 @@ export default function BlocklyMaze() {
             )}
           </div>
 
-          {/* YouTube Concept Tutorial Button (Appears when >= 5 failed attempts) */}
-          {failedAttempts >= 5 && !missionId.includes('moon') && (
+          {/* YouTube Concept Tutorial Button (Appears when >= VIDEO_FALLBACK_FAIL_THRESHOLD failed attempts) */}
+          {failedAttempts >= VIDEO_FALLBACK_FAIL_THRESHOLD && !missionId.includes('moon') && (
             <button
               onClick={() => setShowYouTubeModal(true)}
               className="p-2.5 rounded-xl border border-red-500/60 bg-gradient-to-r from-red-600/30 to-rose-600/30 hover:from-red-600/50 hover:to-rose-600/50 text-red-300 hover:text-white transition-all duration-300 cursor-pointer shadow-[0_0_15px_rgba(239,68,68,0.4)] animate-pulse flex items-center gap-1.5"
@@ -14058,7 +14058,7 @@ export default function BlocklyMaze() {
                   <p className="text-xs text-cyan-100/90 font-sans mt-1 leading-snug">
                     {aiHint.text}
                   </p>
-                  {failedAttempts >= 5 && !missionId.includes('moon') && (
+                  {failedAttempts >= VIDEO_FALLBACK_FAIL_THRESHOLD && !missionId.includes('moon') && (
                     <button
                       onClick={() => setShowYouTubeModal(true)}
                       className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-red-600/30 hover:bg-red-600/50 border border-red-500/50 text-[11px] font-bold text-red-200 hover:text-white transition-all cursor-pointer shadow-sm animate-pulse"
@@ -14699,12 +14699,12 @@ export default function BlocklyMaze() {
         missionTitle={displayTitle}
       />
 
-      {/* YouTube Concept Intervention Fallback Modal (5 Failed Attempts) */}
+      {/* YouTube Concept Intervention Fallback Modal */}
       <YouTubeFallbackModal
         isOpen={showYouTubeModal}
         onClose={() => setShowYouTubeModal(false)}
         missionId={missionId}
-        failureCount={Math.max(5, failedAttempts)}
+        failureCount={Math.max(VIDEO_FALLBACK_FAIL_THRESHOLD, failedAttempts)}
         missionTitle={displayTitle}
       />
 

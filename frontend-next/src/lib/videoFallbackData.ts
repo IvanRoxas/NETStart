@@ -2,9 +2,11 @@
  * Video Fallback Registry & YouTube Integration
  * 
  * Provides curated educational tutorial videos for each mission/planet concept.
- * Used when students encounter 5 failed attempts on a challenge, and as an
+ * Used when students encounter consecutive failed attempts on a challenge, and as an
  * automatic fallback when the YouTube Data API key is missing or quota is exhausted.
  */
+
+export const VIDEO_FALLBACK_FAIL_THRESHOLD = 2;
 
 export interface EducationalVideoInfo {
   missionId: string;

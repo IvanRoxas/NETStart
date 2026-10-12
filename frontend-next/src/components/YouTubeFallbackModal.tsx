@@ -13,8 +13,11 @@ import {
 } from 'lucide-react';
 import { 
   getVideoFallbackForMission, 
-  EducationalVideoInfo 
+  EducationalVideoInfo,
+  VIDEO_FALLBACK_FAIL_THRESHOLD
 } from '@/lib/videoFallbackData';
+
+export { VIDEO_FALLBACK_FAIL_THRESHOLD };
 
 interface YouTubeFallbackModalProps {
   isOpen: boolean;
@@ -29,7 +32,7 @@ export function YouTubeFallbackModal({
   isOpen,
   onClose,
   missionId,
-  failureCount = 5,
+  failureCount = VIDEO_FALLBACK_FAIL_THRESHOLD,
   missionTitle,
   onRetry,
 }: YouTubeFallbackModalProps) {

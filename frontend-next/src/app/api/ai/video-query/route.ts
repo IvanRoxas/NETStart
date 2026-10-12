@@ -3,7 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions, prisma } from "@/lib/auth";
 import { 
   getVideoFallbackForMission, 
-  normalizeVideoMissionId 
+  normalizeVideoMissionId,
+  VIDEO_FALLBACK_FAIL_THRESHOLD
 } from "@/lib/videoFallbackData";
 
 interface YouTubeSearchResult {
@@ -121,7 +122,7 @@ export async function POST(req: Request) {
     const body = await req.json().catch(() => ({}));
     const missionId = body?.missionId || "moon-1";
     const topic = body?.topic;
-    const failureCount = Number(body?.failureCount) || 5;
+    const failureCount = Number(body?.failureCount) || VIDEO_FALLBACK_FAIL_THRESHOLD;
 
     const session = await getServerSession(authOptions);
     const userId = (session?.user as any)?.id;
@@ -167,7 +168,7 @@ export async function POST(req: Request) {
           data: {
             userId,
             missionId: normalizeVideoMissionId(missionId),
-            errorType: "5_failed_attempts_video_fallback",
+            errorType: "failed_attempts_video_fallback",
             hintId: `video_${video.videoId}`,
             promptVersion: "youtube_v1",
             confidence: "high",
@@ -204,7 +205,7 @@ export async function POST(req: Request) {
         source: "curated_fallback",
       },
       missionId: "mars-1",
-      failureCount: 5,
+      failureCount: VIDEO_FALLBACK_FAIL_THRESHOLD,
     });
   }
 }
@@ -213,7 +214,7 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const missionId = searchParams.get("missionId") || "moon-1";
   const topic = searchParams.get("topic") || undefined;
-  const failureCount = Number(searchParams.get("failureCount")) || 5;
+  const failureCount = Number(searchParams.get("failureCount")) || VIDEO_FALLBACK_FAIL_THRESHOLD;
 
   const video = await queryYouTubeOrFallback(missionId, topic);
 
