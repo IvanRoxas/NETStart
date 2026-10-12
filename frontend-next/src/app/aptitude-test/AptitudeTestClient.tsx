@@ -317,7 +317,7 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
                 3 Cognitive Domains
               </span>
               <span className="px-3.5 py-1.5 rounded-xl bg-[#ff912d]/15 border border-[#ff912d]/30 text-xs font-mono text-[#ff912d] font-bold">
-                +150 XP & +50 Gears
+                +200 XP & +50 Gears
               </span>
             </div>
 
