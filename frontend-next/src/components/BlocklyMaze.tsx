@@ -2747,37 +2747,25 @@ export default function BlocklyMaze() {
   const [isLightbulbHovered, setIsLightbulbHovered] = useState<boolean>(false);
 
   // YouTube Fallback Intervention States (VIDEO_FALLBACK_FAIL_THRESHOLD)
-  const [failedAttempts, setFailedAttempts] = useState<number>(() => {
-    if (typeof window === 'undefined') return 0;
-    try {
-      const stored = sessionStorage.getItem(`netstart_failed_attempts_${missionId}_sec${currentSection}`);
-      return stored ? parseInt(stored, 10) || 0 : 0;
-    } catch (e) {
-      return 0;
-    }
-  });
+  const [failedAttempts, setFailedAttempts] = useState<number>(0);
   const [showYouTubeModal, setShowYouTubeModal] = useState<boolean>(false);
   const [hasShownVideoModal, setHasShownVideoModal] = useState<boolean>(false);
 
-  // Sync failed attempts on section or mission change
+  // Reset failed attempts, video modal state, and clear legacy sessionStorage on level entry/mount or section change
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    try {
-      const stored = sessionStorage.getItem(`netstart_failed_attempts_${missionId}_sec${currentSection}`);
-      const count = stored ? parseInt(stored, 10) || 0 : 0;
-      setFailedAttempts(count);
-      setHasShownVideoModal(false);
-    } catch (e) {}
+    setFailedAttempts(0);
+    setHasShownVideoModal(false);
+    setShowYouTubeModal(false);
+    if (typeof window !== 'undefined') {
+      try {
+        sessionStorage.removeItem(`netstart_failed_attempts_${missionId}_sec${currentSection}`);
+      } catch (e) {}
+    }
   }, [missionId, currentSection]);
 
   const handleAttemptFailure = useCallback((_reason?: string) => {
     setFailedAttempts(prev => {
       const nextCount = prev + 1;
-      try {
-        if (typeof window !== 'undefined') {
-          sessionStorage.setItem(`netstart_failed_attempts_${missionId}_sec${currentSection}`, nextCount.toString());
-        }
-      } catch (e) {}
 
       // Automatically trigger YouTube fallback intervention popup at VIDEO_FALLBACK_FAIL_THRESHOLD failed attempts
       if (nextCount >= VIDEO_FALLBACK_FAIL_THRESHOLD && !hasShownVideoModal && !missionId.includes('moon')) {
@@ -2786,7 +2774,7 @@ export default function BlocklyMaze() {
       }
       return nextCount;
     });
-  }, [missionId, currentSection, hasShownVideoModal]);
+  }, [missionId, hasShownVideoModal]);
 
   // 3-Minute Solution Timer effect
   useEffect(() => {
@@ -3020,6 +3008,7 @@ export default function BlocklyMaze() {
     // Reset failure counter on successful section completion
     setFailedAttempts(0);
     setHasShownVideoModal(false);
+    setShowYouTubeModal(false);
     try {
       if (typeof window !== 'undefined') {
         sessionStorage.removeItem(`netstart_failed_attempts_${missionId}_sec${secIdx}`);
@@ -8045,6 +8034,7 @@ export default function BlocklyMaze() {
     // Reset YouTube Fallback Counter on level restart
     setFailedAttempts(0);
     setHasShownVideoModal(false);
+    setShowYouTubeModal(false);
     try {
       if (typeof window !== 'undefined') {
         sessionStorage.removeItem(`netstart_failed_attempts_${missionId}_sec${currentSection}`);
