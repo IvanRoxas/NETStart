@@ -10,6 +10,7 @@ import { getAptitudePrompt, getAptitudeFallback } from "@/ai/prompts/aptitude";
 import { NOVA_SYSTEM_INSTRUCTION } from "@/ai/prompts/shared";
 import { mockAptitudeResponse } from "@/ai/mock";
 import { processAIPathResponse, normalizePathOrder } from "@/ai/pathUtils";
+import { normalizeAptitudeCategory } from "@/lib/aptitudeQuestionsHelper";
 import {
   AptitudeCategory,
   AptitudeTestResult,
@@ -68,7 +69,43 @@ export async function POST(req: Request) {
       );
     }
 
-    const masterQuestions = questionsData.questions;
+    // Dynamic master questions from DB with JSON fallback
+    let masterQuestions: Array<{
+      id: string;
+      category: AptitudeCategory;
+      number: number;
+      answer: string;
+      concept: string;
+    }> = [];
+
+    try {
+      const dbQuestions = await prisma.aptitudeQuestion.findMany({
+        where: { isActive: true },
+        orderBy: { createdAt: "asc" }
+      });
+      if (dbQuestions.length > 0) {
+        const letters = ["A", "B", "C", "D", "E", "F"];
+        masterQuestions = dbQuestions.map((q, idx) => ({
+          id: q.id,
+          category: normalizeAptitudeCategory(q.category),
+          number: idx + 1,
+          answer: letters[q.correctAnswer ?? 0] || "A",
+          concept: q.explanation || `${q.category} Reasoning`,
+        }));
+      }
+    } catch (e) {
+      console.warn("[APTITUDE_GRADE] Failed to query active questions from DB:", e);
+    }
+
+    if (masterQuestions.length === 0) {
+      masterQuestions = questionsData.questions.map((q) => ({
+        id: q.id,
+        category: q.category as AptitudeCategory,
+        number: q.number,
+        answer: q.answer,
+        concept: q.concept,
+      }));
+    }
     
     let aiContext: AptitudeAIContext;
     let baseResult: any = dbUser?.aptitudeResult;
@@ -83,14 +120,14 @@ export async function POST(req: Request) {
       const missed: MissedQuestionItem[] = [];
       const validChoices = new Set(["A", "B", "C", "D"]);
 
-      // Validate that all 15 questions are answered
+      // Validate that all questions are answered
       for (const q of masterQuestions) {
         const chosen = rawAnswers[q.id];
         if (!chosen || typeof chosen !== "string" || !validChoices.has(chosen.trim().toUpperCase())) {
           return NextResponse.json(
             {
               success: false,
-              message: `Missing or invalid option selected for question ${q.number} (${q.id}). All 15 questions must be answered.`,
+              message: `Missing or invalid option selected for question ${q.number} (${q.id}). All ${masterQuestions.length} questions must be answered.`,
             },
             { status: 422 }
           );
@@ -105,6 +142,9 @@ export async function POST(req: Request) {
         const userChoice = String(rawAnswers[q.id]).trim().toUpperCase();
         const isCorrect = userChoice === q.answer.trim().toUpperCase();
 
+        if (!categoryTotals[cat]) {
+          categoryTotals[cat] = { correct: 0, total: 0 };
+        }
         categoryTotals[cat].total += 1;
 
         if (isCorrect) {
@@ -119,8 +159,12 @@ export async function POST(req: Request) {
         }
       });
 
-      const totalQuestions = masterQuestions.length; // 15
+      const totalQuestions = masterQuestions.length || 1;
       const totalPercent = Math.round((totalCorrect / totalQuestions) * 100);
+
+      const pTotal = Math.max(1, categoryTotals.pattern_recognition.total);
+      const tTotal = Math.max(1, categoryTotals.task_decomposition.total);
+      const lTotal = Math.max(1, categoryTotals.logical_reasoning.total);
 
       const categoriesFormatted: AptitudeTestResult["categories"] = {
         pattern_recognition: {
@@ -128,29 +172,24 @@ export async function POST(req: Request) {
           name: "Pattern Recognition",
           correct: categoryTotals.pattern_recognition.correct,
           total: categoryTotals.pattern_recognition.total,
-          percent: Math.round(
-            (categoryTotals.pattern_recognition.correct / categoryTotals.pattern_recognition.total) * 100
-          ),
+          percent: Math.round((categoryTotals.pattern_recognition.correct / pTotal) * 100),
         },
         task_decomposition: {
           category: "task_decomposition",
           name: "Task Decomposition",
           correct: categoryTotals.task_decomposition.correct,
           total: categoryTotals.task_decomposition.total,
-          percent: Math.round(
-            (categoryTotals.task_decomposition.correct / categoryTotals.task_decomposition.total) * 100
-          ),
+          percent: Math.round((categoryTotals.task_decomposition.correct / tTotal) * 100),
         },
         logical_reasoning: {
           category: "logical_reasoning",
           name: "Logical Reasoning",
           correct: categoryTotals.logical_reasoning.correct,
           total: categoryTotals.logical_reasoning.total,
-          percent: Math.round(
-            (categoryTotals.logical_reasoning.correct / categoryTotals.logical_reasoning.total) * 100
-          ),
+          percent: Math.round((categoryTotals.logical_reasoning.correct / lTotal) * 100),
         },
       };
+
 
       // Calculate strongest and weakest categories
       const categoryList: CategoryScore[] = Object.values(categoriesFormatted);

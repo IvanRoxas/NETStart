@@ -34,6 +34,9 @@ export default async function AptitudeTestPage() {
       taskDecompositionScore: true,
       aptitudeResult: true,
       recommendedLearningPath: true,
+      track: true,
+      aiSummary: true,
+      planetReasons: true,
     }
   });
 

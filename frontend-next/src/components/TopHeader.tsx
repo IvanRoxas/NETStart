@@ -8,12 +8,15 @@ import { X, Brain, AlertTriangle, ChevronRight } from 'lucide-react';
 import NotificationDropdown from './NotificationDropdown';
 import VerifyModal from './VerifyModal';
 import MusicToggleButton from './MusicToggleButton';
+import DemoToggle from './DemoToggle';
 
 interface TopHeaderProps {
   title: string;
+  showDemoToggle?: boolean;
+  children?: React.ReactNode;
 }
 
-export default function TopHeader({ title }: TopHeaderProps) {
+export default function TopHeader({ title, showDemoToggle = false, children }: TopHeaderProps) {
   const router = useRouter();
   const sessionContext = React.useContext(SessionContext);
   const session = sessionContext?.data;
@@ -190,6 +193,14 @@ export default function TopHeader({ title }: TopHeaderProps) {
       
       <div className="flex items-center gap-4 sm:gap-6">
 
+        {/* Optional Demo Mode Toggle Button in Header */}
+        {(showDemoToggle || children) && (
+          <div className="flex items-center gap-3">
+            {showDemoToggle && <DemoToggle compact />}
+            {children}
+          </div>
+        )}
+
         {/* Verification Button for Unverified Users */}
         {session?.user && (session.user as any).type !== 'admin' && !(session.user as any).isVerified && (
           <button 
@@ -201,10 +212,10 @@ export default function TopHeader({ title }: TopHeaderProps) {
           </button>
         )}
         
-        {/* Top Bar Icon Controls: Aptitude Test & Notifications */}
-        {session?.user && (session.user as any).type !== 'admin' && (
-          <div className="flex items-center gap-3">
-            {/* Aptitude Test Icon */}
+        {/* Top Bar Icon Controls: Aptitude Test & Notifications & Music */}
+        <div className="flex items-center gap-3">
+          {/* Aptitude Test Icon (Students Only) */}
+          {session?.user && (session.user as any).type !== 'admin' && (
             <div className="relative group/aptitude">
               <button
                 onClick={handleAptitudeClick}
@@ -219,71 +230,71 @@ export default function TopHeader({ title }: TopHeaderProps) {
               </button>
 
               {/* Futuristic Glassmorphic Dropdown Container (Zero-gap Hover Bridge) */}
-              <div className="absolute right-0 top-full pt-2 w-72 sm:w-80 z-[60] opacity-0 group-hover/aptitude:opacity-100 transition-opacity duration-150 pointer-events-none group-hover/aptitude:pointer-events-auto">
-                <div className="p-4 sm:p-5 rounded-2xl bg-[#130927]/98 backdrop-blur-xl border border-[#ff912d]/40 shadow-[0_10px_40px_rgba(0,0,0,0.85),0_0_25px_rgba(255,145,45,0.25)] flex flex-col text-left">
+              <div className="absolute right-0 top-full pt-2 w-80 sm:w-96 z-[60] opacity-0 group-hover/aptitude:opacity-100 transition-opacity duration-150 pointer-events-none group-hover/aptitude:pointer-events-auto">
+                <div className="p-5 rounded-2xl bg-[#130927]/98 backdrop-blur-xl border border-[#ff912d]/40 shadow-[0_10px_40px_rgba(0,0,0,0.85),0_0_25px_rgba(255,145,45,0.25)] flex flex-col text-left">
                   {hasTakenAptitudeTest ? (
-                    <div className="space-y-3.5">
+                    <div className="space-y-4">
                       {/* Header */}
                       <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                        <div className="flex items-center gap-2">
-                          <div className="p-1.5 rounded-lg bg-[#ff912d]/20 text-[#ff912d]">
-                            <Brain size={16} />
+                        <div className="flex items-center gap-2.5">
+                          <div className="p-2 rounded-lg bg-[#ff912d]/20 text-[#ff912d]">
+                            <Brain size={18} />
                           </div>
                           <div>
-                            <h4 className="text-white font-bold text-xs uppercase tracking-wider font-display">
+                            <h4 className="text-white font-bold text-sm uppercase tracking-wider font-display">
                               Diagnostic Profile
                             </h4>
-                            <span className="text-[10px] text-emerald-400 font-mono font-semibold flex items-center gap-1">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> Calibrated & Verified
+                            <span className="text-xs text-emerald-400 font-mono font-semibold flex items-center gap-1.5 mt-0.5">
+                              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" /> Calibrated & Verified
                             </span>
                           </div>
                         </div>
-                        <div className="px-2 py-0.5 rounded-md bg-[#ff912d]/15 border border-[#ff912d]/30 text-[#ff912d] text-xs font-mono font-bold">
+                        <div className="px-2.5 py-1 rounded-md bg-[#ff912d]/15 border border-[#ff912d]/30 text-[#ff912d] text-xs font-mono font-bold">
                           {overallScore}% AVG
                         </div>
                       </div>
 
                       {/* Recommended Flight Path */}
-                      <div className="p-2.5 rounded-xl bg-white/5 border border-white/10 space-y-1">
-                        <span className="text-[9px] font-mono uppercase text-gray-400 tracking-wider font-bold">
+                      <div className="p-3 rounded-xl bg-white/5 border border-white/10 space-y-1">
+                        <span className="text-[11px] font-mono uppercase text-[#ff912d] tracking-wider font-bold">
                           Recommended Flight Path
                         </span>
-                        <p className="text-xs font-bold text-white leading-snug line-clamp-2">
+                        <p className="text-sm font-bold text-white leading-snug line-clamp-2">
                           {recommendedPath}
                         </p>
                       </div>
 
                       {/* Category Metric Mini-Bars */}
-                      <div className="space-y-2 pt-0.5">
+                      <div className="space-y-2.5 pt-0.5">
                         {/* Pattern Recognition */}
                         <div className="space-y-1">
-                          <div className="flex justify-between text-[11px] font-mono">
-                            <span className="text-gray-300">Pattern Recognition</span>
+                          <div className="flex justify-between text-xs sm:text-[13px] font-mono">
+                            <span className="text-gray-200">Pattern Recognition</span>
                             <span className="text-[#ff912d] font-bold">{patternScore}%</span>
                           </div>
-                          <div className="h-1.5 bg-black/60 rounded-full overflow-hidden border border-white/5">
+                          <div className="h-2 bg-black/60 rounded-full overflow-hidden border border-white/5">
                             <div className="h-full bg-gradient-to-r from-[#ff912d] to-amber-400 rounded-full" style={{ width: `${patternScore}%` }} />
                           </div>
                         </div>
 
                         {/* Task Decomposition */}
                         <div className="space-y-1">
-                          <div className="flex justify-between text-[11px] font-mono">
-                            <span className="text-gray-300">Task Decomposition</span>
+                          <div className="flex justify-between text-xs sm:text-[13px] font-mono">
+                            <span className="text-gray-200">Task Decomposition</span>
                             <span className="text-sky-400 font-bold">{decompositionScore}%</span>
                           </div>
-                          <div className="h-1.5 bg-black/60 rounded-full overflow-hidden border border-white/5">
+                          <div className="h-2 bg-black/60 rounded-full overflow-hidden border border-white/5">
                             <div className="h-full bg-gradient-to-r from-sky-500 to-cyan-400 rounded-full" style={{ width: `${decompositionScore}%` }} />
                           </div>
                         </div>
 
                         {/* Logical Reasoning */}
                         <div className="space-y-1">
-                          <div className="flex justify-between text-[11px] font-mono">
-                            <span className="text-gray-300">Logical Reasoning</span>
+                          <div className="flex justify-between text-xs sm:text-[13px] font-mono">
+                            <span className="text-gray-200">Logical Reasoning</span>
                             <span className="text-purple-400 font-bold">{logicScore}%</span>
                           </div>
-                          <div className="h-1.5 bg-black/60 rounded-full overflow-hidden border border-white/5">
+                          <div className="h-2 bg-black/60 rounded-full overflow-hidden border border-white/5">
                             <div className="h-full bg-gradient-to-r from-purple-500 to-violet-400 rounded-full" style={{ width: `${logicScore}%` }} />
                           </div>
                         </div>
@@ -292,25 +303,25 @@ export default function TopHeader({ title }: TopHeaderProps) {
                       {/* Full Report Action Button */}
                       <button
                         onClick={handleAptitudeClick}
-                        className="w-full py-2 bg-gradient-to-r from-[#ff912d] to-[#ff5722] hover:opacity-95 text-black font-black text-[11px] uppercase tracking-wider rounded-xl transition-all shadow-md shadow-[#ff912d]/20 cursor-pointer active:scale-95 flex items-center justify-center gap-1.5 mt-1"
+                        className="w-full py-2.5 bg-gradient-to-r from-[#ff912d] to-[#ff5722] hover:opacity-95 text-black font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-md shadow-[#ff912d]/20 cursor-pointer active:scale-95 flex items-center justify-center gap-1.5 mt-1"
                       >
                         VIEW FULL REPORT <ChevronRight size={14} />
                       </button>
                     </div>
                   ) : (
-                    <div className="flex flex-col items-center text-center space-y-2">
-                      <div className="w-10 h-10 rounded-xl bg-[#ff912d]/15 border border-[#ff912d]/30 text-[#ff912d] flex items-center justify-center">
-                        <Brain size={20} className="animate-pulse" />
+                    <div className="flex flex-col items-center text-center space-y-2.5 p-1">
+                      <div className="w-12 h-12 rounded-xl bg-[#ff912d]/15 border border-[#ff912d]/30 text-[#ff912d] flex items-center justify-center">
+                        <Brain size={24} className="animate-pulse" />
                       </div>
-                      <h4 className="text-white font-bold text-sm tracking-wide font-display">
+                      <h4 className="text-white font-bold text-base tracking-wide font-display">
                         Diagnostic Pending
                       </h4>
-                      <p className="text-gray-400 text-xs">
+                      <p className="text-gray-300 text-xs sm:text-sm">
                         Complete your 15-question diagnostic to unlock your flight path and planetary missions.
                       </p>
                       <button
                         onClick={handleAptitudeClick}
-                        className="w-full py-2 bg-[#ff912d] hover:bg-[#ff912d]/90 text-[#130927] font-black text-xs uppercase tracking-wider rounded-lg transition-all shadow-[0_0_12px_rgba(255,145,45,0.4)] cursor-pointer active:scale-95 mt-1"
+                        className="w-full py-2.5 bg-[#ff912d] hover:bg-[#ff912d]/90 text-[#130927] font-black text-xs sm:text-sm uppercase tracking-wider rounded-lg transition-all shadow-[0_0_12px_rgba(255,145,45,0.4)] cursor-pointer active:scale-95 mt-1"
                       >
                         START TEST
                       </button>
@@ -319,11 +330,13 @@ export default function TopHeader({ title }: TopHeaderProps) {
                 </div>
               </div>
             </div>
+          )}
 
-            {/* Music Mute / Unmute Toggle Button */}
-            <MusicToggleButton variant="circle" size="md" />
+          {/* Music Volume & Mute Toggle Button - Always available */}
+          <MusicToggleButton variant="circle" size="md" />
 
-            {/* Notification Bell */}
+          {/* Notification Bell */}
+          {session?.user && (
             <button 
               ref={bellRef} 
               onClick={handleBellClick} 
@@ -337,8 +350,8 @@ export default function TopHeader({ title }: TopHeaderProps) {
                 </span>
               )}
             </button>
-          </div>
-        )}
+          )}
+        </div>
 
       </div>
 

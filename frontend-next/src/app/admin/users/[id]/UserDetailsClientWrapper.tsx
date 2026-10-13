@@ -3,12 +3,12 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, ShieldAlert, CheckCircle, Ban, Zap, Star, Trophy, Package, Target, Users as UsersIcon, X, Check, RefreshCcw, History, Trash2, Brain, GraduationCap, Unlock, Lock, Sparkles } from 'lucide-react';
+import { ArrowLeft, ShieldAlert, CheckCircle, Ban, Zap, Star, Trophy, Package, Target, Users as UsersIcon, X, Check, RefreshCcw, History, Trash2, Brain, GraduationCap, Unlock, Lock, Sparkles, AlertTriangle, Compass, Video, Bot, CheckCircle2, Clock } from 'lucide-react';
 import Image from 'next/image';
-import { editGamificationStats, deleteUser, adminResetAptitudeTest, adminSetAptitudeStatus, assignStudentToSection, removeStudentFromSection, toggleUserDemoModePrivilege, toggleUserVerification } from '@/app/admin/actions';
+import { deleteUser, adminResetAptitudeTest, adminSetAptitudeStatus, assignStudentToSection, removeStudentFromSection, toggleUserDemoModePrivilege, toggleUserVerification } from '@/app/admin/actions';
 import AdminToast from '@/components/AdminToast';
 import ConfirmModal from '@/components/ConfirmModal';
-import { getXPDetails, LEVEL_THRESHOLDS } from '@/lib/leveling';
+import { getXPDetails } from '@/lib/leveling';
 import TitleBadge from '@/components/TitleBadge';
 
 export default function UserDetailsClientWrapper({ 
@@ -24,12 +24,6 @@ export default function UserDetailsClientWrapper({
   const [user, setUser] = useState(initialUser);
   const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
   
-  // Edit Gamification Modal State
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState<'XP_LEVEL' | 'GEARS'>('GEARS');
-  const [editTarget, setEditTarget] = useState<'XP' | 'GEARS' | 'LEVEL'>('GEARS');
-  const [editAction, setEditAction] = useState<'ADD' | 'REMOVE' | 'SET'>('ADD');
-  const [editValue, setEditValue] = useState<number>(0);
   const [loading, setLoading] = useState(false);
   const [showResetAptitudeModal, setShowResetAptitudeModal] = useState(false);
   const [showDeleteUserModal, setShowDeleteUserModal] = useState(false);
@@ -125,43 +119,6 @@ export default function UserDetailsClientWrapper({
     }
   };
 
-  const handleEditStats = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (editValue < 0) return;
-    
-    try {
-      setLoading(true);
-      await editGamificationStats(user.id, editAction, editTarget, editValue);
-      
-      setModalOpen(false);
-      setToast({ message: `Successfully updated ${editTarget}.`, type: 'success' });
-      
-      // Update local state without full-page reload
-      setUser((prev: any) => {
-        let newXp = prev.xp;
-        let newGears = prev.gears;
-        if (editTarget === 'XP') {
-          if (editAction === 'ADD') newXp = prev.xp + editValue;
-          else if (editAction === 'REMOVE') newXp = Math.max(0, prev.xp - editValue);
-          else if (editAction === 'SET') newXp = editValue;
-        } else if (editTarget === 'GEARS') {
-          if (editAction === 'ADD') newGears = prev.gears + editValue;
-          else if (editAction === 'REMOVE') newGears = Math.max(0, prev.gears - editValue);
-          else if (editAction === 'SET') newGears = editValue;
-        } else if (editTarget === 'LEVEL') {
-          if (editValue <= 1) newXp = 0;
-          else if (editValue >= 10) newXp = LEVEL_THRESHOLDS[8].cumulativeXp;
-          else newXp = LEVEL_THRESHOLDS[editValue - 2].cumulativeXp;
-        }
-        return { ...prev, xp: newXp, gears: newGears };
-      });
-    } catch (err: any) {
-      console.error(err);
-      setToast({ message: err.message || "Failed to update stats.", type: 'error' });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleDeleteUser = async () => {
     setShowDeleteUserModal(false);
@@ -268,9 +225,16 @@ export default function UserDetailsClientWrapper({
 
           <div className="flex-1 flex flex-col md:flex-row justify-between items-start md:items-end gap-4 z-10">
             <div>
-              <h1 className="text-3xl font-black text-white tracking-wide">
-                {user.displayName || 'No Display Name'}
-              </h1>
+              <div className="flex items-center gap-3">
+                <h1 className="text-3xl font-black text-white tracking-wide">
+                  {user.displayName || 'No Display Name'}
+                </h1>
+                {user.studentId && (
+                  <span className="px-2.5 py-1 rounded-lg bg-[#ff912d]/15 border border-[#ff912d]/30 text-[#ff912d] text-xs font-mono font-bold">
+                    {user.studentId}
+                  </span>
+                )}
+              </div>
               <p className="text-gray-400 font-medium">{user.email}</p>
               
               <div className="flex flex-wrap items-center gap-3 mt-3">
@@ -359,12 +323,9 @@ export default function UserDetailsClientWrapper({
               <div className="text-xs text-gray-500 mt-1">{xpToNextLevel} XP to Level {level + 1}</div>
             </div>
           </div>
-          <button 
-            onClick={() => { setModalMode('XP_LEVEL'); setEditTarget('XP'); setEditAction('ADD'); setEditValue(0); setModalOpen(true); }} 
-            className="w-full py-3 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 font-bold text-sm transition-colors border-t border-blue-500/20 cursor-pointer"
-          >
-            Edit XP/Level
-          </button>
+          <div className="w-full py-2.5 px-4 bg-white/[0.02] border-t border-white/5 text-[11px] text-gray-400 text-center font-medium">
+            Earned via Sandbox Missions
+          </div>
         </div>
 
         <div className="bg-[#1e0a2d] border border-white/5 rounded-3xl shadow-xl flex flex-col overflow-hidden">
@@ -380,12 +341,9 @@ export default function UserDetailsClientWrapper({
               </div>
             </div>
           </div>
-          <button 
-            onClick={() => { setModalMode('GEARS'); setEditTarget('GEARS'); setEditAction('ADD'); setEditValue(0); setModalOpen(true); }} 
-            className="w-full py-3 bg-[#ff912d]/10 hover:bg-[#ff912d]/20 text-[#ff912d] font-bold text-sm transition-colors border-t border-[#ff912d]/20 cursor-pointer"
-          >
-            Edit Currency
-          </button>
+          <div className="w-full py-2.5 px-4 bg-white/[0.02] border-t border-white/5 text-[11px] text-[#ff912d]/80 text-center font-medium">
+            Earned via Missions & Streak Rewards
+          </div>
         </div>
 
         {/* Aptitude Test Status & Admin Reset Control Card */}
@@ -543,89 +501,150 @@ export default function UserDetailsClientWrapper({
         
       </div>
 
-      {/* Gamification Modal */}
-      {modalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="bg-[#1e0a2d] border border-white/10 rounded-3xl p-8 max-w-md w-full relative flex flex-col shadow-2xl">
-            <div className="flex justify-center">
-              <div className={`w-16 h-16 mb-6 rounded-full border-2 flex items-center justify-center ${
-                modalMode === 'GEARS' ? 'bg-[#ff912d]/20 border-[#ff912d]/50 text-[#ff912d]' : 'bg-blue-500/20 border-blue-500/50 text-blue-400'
-              }`}>
-                {modalMode === 'GEARS' ? <Zap size={32} /> : <Star size={32} />}
-              </div>
+      {/* Student Progress & Remediation Monitoring Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Mission Progression & Sandbox Performance */}
+        <div className="bg-[#1e0a2d] border border-white/5 rounded-3xl p-6 shadow-xl flex flex-col h-[440px]">
+          <div className="flex items-center gap-3 mb-4">
+            <Compass className="text-emerald-400" size={24} />
+            <div>
+              <h2 className="text-lg font-bold text-white">Curriculum & Sandbox Progress</h2>
+              <p className="text-xs text-gray-400">Lesson missions and completion status</p>
             </div>
-            
-            <h2 className="text-2xl font-bold text-white mb-2 text-center">
-              {modalMode === 'GEARS' ? 'Edit Currency' : 'Edit XP/Level'}
-            </h2>
-            <p className="text-sm text-gray-400 mb-6 text-center">
-              Editing: <strong className="text-white">{user.email}</strong>
-            </p>
+            <span className="ml-auto bg-black/40 text-emerald-400 border border-emerald-500/20 px-3 py-1 rounded-full text-xs font-bold">
+              {user.missionProgresses?.length || 0} Missions
+            </span>
+          </div>
 
-            <form onSubmit={handleEditStats} className="w-full flex flex-col gap-4">
-              
-              {modalMode === 'XP_LEVEL' && (
-                <div>
-                  <label className="block text-sm font-bold text-gray-400 mb-1">Target</label>
-                  <select 
-                    value={editTarget} 
-                    onChange={(e) => setEditTarget(e.target.value as any)}
-                    className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
-                  >
-                    <option value="XP" className="bg-[#1e0a2d]">Experience Points (XP)</option>
-                    <option value="LEVEL" className="bg-[#1e0a2d]">Level</option>
-                  </select>
-                </div>
-              )}
-
-              <div>
-                <label className="block text-sm font-bold text-gray-400 mb-1">Action</label>
-                <select 
-                  value={editAction} 
-                  onChange={(e) => setEditAction(e.target.value as any)}
-                  className={`w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none ${modalMode === 'GEARS' ? 'focus:border-[#ff912d]' : 'focus:border-blue-500'}`}
-                >
-                  <option value="ADD" className="bg-[#1e0a2d]">Add (Grant)</option>
-                  <option value="REMOVE" className="bg-[#1e0a2d]">Remove (Take)</option>
-                  <option value="SET" className="bg-[#1e0a2d]">Set Exact Value</option>
-                </select>
+          <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+            {(!user.missionProgresses || user.missionProgresses.length === 0) ? (
+              <div className="w-full h-full flex flex-col items-center justify-center text-gray-500">
+                <Compass size={44} className="opacity-20 mb-2" />
+                <p className="text-sm">No sandbox missions attempted yet.</p>
+                <p className="text-xs text-gray-600 mt-1">Student has not started any coding exercises.</p>
               </div>
-
-              <div>
-                <label className="block text-sm font-bold text-gray-400 mb-1">Amount / Value</label>
-                <input 
-                  type="number"
-                  min="0"
-                  step="1"
-                  required
-                  value={editValue}
-                  onChange={(e) => setEditValue(parseInt(e.target.value) || 0)}
-                  className={`w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none ${modalMode === 'GEARS' ? 'focus:border-[#ff912d]' : 'focus:border-blue-500'}`}
-                />
+            ) : (
+              <div className="flex flex-col gap-2.5">
+                {user.missionProgresses.map((mp: any) => {
+                  const isCompleted = mp.status === 'COMPLETED';
+                  const isStruggling = (mp.failureCount || 0) >= 3;
+                  return (
+                    <div 
+                      key={mp.id} 
+                      className={`p-3.5 rounded-2xl border transition-all ${
+                        isStruggling 
+                          ? 'bg-amber-500/10 border-amber-500/30' 
+                          : isCompleted 
+                            ? 'bg-black/20 border-white/5 hover:border-emerald-500/20' 
+                            : 'bg-black/20 border-white/5'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          {isCompleted ? (
+                            <CheckCircle2 size={16} className="text-emerald-400 shrink-0" />
+                          ) : (
+                            <Clock size={16} className="text-blue-400 shrink-0" />
+                          )}
+                          <span className="text-sm font-bold text-white truncate font-mono">
+                            {mp.missionId}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {isStruggling && (
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1">
+                              <AlertTriangle size={10} />
+                              {mp.failureCount} Retries (Struggling)
+                            </span>
+                          )}
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+                            isCompleted 
+                              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
+                              : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                          }`}>
+                            {mp.status}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between mt-2 text-[11px] text-gray-400 pt-2 border-t border-white/5">
+                        <span>Retries Recorded: <strong className="text-gray-300">{mp.failureCount || 0}</strong></span>
+                        <span>
+                          {mp.completedAt ? `Completed: ${new Date(mp.completedAt).toLocaleDateString()}` : 'In Progress'}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-
-              <div className="flex gap-3 mt-4">
-                <button 
-                  type="button"
-                  onClick={() => setModalOpen(false)}
-                  className="flex-1 py-3 px-4 rounded-xl border border-white/10 text-white font-bold hover:bg-white/5 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button 
-                  type="submit"
-                  disabled={loading || editValue < 0}
-                  className={`flex-1 py-3 px-4 rounded-xl font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-2 text-white ${
-                    modalMode === 'GEARS' ? 'bg-[#ff912d] hover:bg-[#e07b22]' : 'bg-blue-500 hover:bg-blue-600'
-                  }`}
-                >
-                  {loading ? <RefreshCcw className="animate-spin" size={20} /> : 'Save Changes'}
-                </button>
-              </div>
-            </form>
+            )}
           </div>
         </div>
-      )}
+
+        {/* AI Assistance & Remediation Telemetry */}
+        <div className="bg-[#1e0a2d] border border-white/5 rounded-3xl p-6 shadow-xl flex flex-col h-[440px]">
+          <div className="flex items-center gap-3 mb-4">
+            <Bot className="text-purple-400" size={24} />
+            <div>
+              <h2 className="text-lg font-bold text-white">AI Diagnostics & Intervention Logs</h2>
+              <p className="text-xs text-gray-400">Gemini scaffolding and video fallback telemetry</p>
+            </div>
+            <span className="ml-auto bg-black/40 text-purple-400 border border-purple-500/20 px-3 py-1 rounded-full text-xs font-bold">
+              {user.interventionLogs?.length || 0} Events
+            </span>
+          </div>
+
+          <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+            {(!user.interventionLogs || user.interventionLogs.length === 0) ? (
+              <div className="w-full h-full flex flex-col items-center justify-center text-gray-500">
+                <Bot size={44} className="opacity-20 mb-2" />
+                <p className="text-sm">No remediation events recorded.</p>
+                <p className="text-xs text-gray-600 mt-1">Student has completed missions without code failovers.</p>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2.5">
+                {user.interventionLogs.map((log: any) => (
+                  <div 
+                    key={log.id} 
+                    className={`p-3.5 rounded-2xl border transition-all ${
+                      log.fallbackUsed 
+                        ? 'bg-purple-950/20 border-purple-500/30' 
+                        : 'bg-black/20 border-white/5'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs font-mono font-bold text-white bg-white/5 px-2 py-0.5 rounded border border-white/10">
+                        {log.missionId}
+                      </span>
+                      {log.fallbackUsed ? (
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-pink-500/20 text-pink-300 border border-pink-500/30 flex items-center gap-1">
+                          <Video size={10} />
+                          YouTube Fallback Triggered
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30 flex items-center gap-1">
+                          <Sparkles size={10} />
+                          AI Hint Provided
+                        </span>
+                      )}
+                    </div>
+                    <div className="mt-2 text-xs text-gray-300">
+                      <span className="text-gray-400">Error Pattern:</span> <span className="text-[#ff912d] font-semibold">{log.errorType}</span>
+                    </div>
+                    {log.hintId && (
+                      <div className="mt-1 text-[11px] text-gray-400">
+                        Remediation Key: <span className="font-mono text-gray-300">{log.hintId}</span>
+                      </div>
+                    )}
+                    <div className="mt-2 pt-1.5 border-t border-white/5 text-[10px] text-gray-500">
+                      {new Date(log.timestamp).toLocaleString()}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
 
       {/* Confirmation Modals */}
       <ConfirmModal
@@ -684,9 +703,20 @@ export default function UserDetailsClientWrapper({
               </button>
             </div>
 
-            <p className="text-sm text-gray-300 mb-4">
+            <p className="text-sm text-gray-300 mb-2">
               Select a section for <span className="font-bold text-white">{user.displayName || user.email}</span>.
             </p>
+
+            {user.section ? (
+              <div className="mb-4 p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300 flex items-center justify-between">
+                <span>Current Section: <strong className="text-white">{user.section.name}</strong></span>
+                <span className="text-[10px] bg-amber-500/20 px-2 py-0.5 rounded text-amber-200">Reassignment</span>
+              </div>
+            ) : (
+              <div className="mb-4 p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-xs text-blue-300">
+                Current Status: <span className="text-white font-semibold">Unassigned Student</span>
+              </div>
+            )}
 
             <form onSubmit={handleSaveSection} className="flex flex-col gap-4">
               <div>

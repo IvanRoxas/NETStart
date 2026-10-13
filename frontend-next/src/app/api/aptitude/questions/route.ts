@@ -1,26 +1,18 @@
 import { NextResponse } from "next/server";
 import questionsData from "@/server/data/aptitude_questions.server.json";
-import { ClientAptitudeQuestion } from "@/types/aptitude";
+import { getActiveClientQuestions } from "@/lib/aptitudeQuestionsHelper";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    // Serve questions strictly WITHOUT answer, explanation, or reference fields
-    const sanitizedQuestions: ClientAptitudeQuestion[] = questionsData.questions.map((q) => ({
-      id: q.id,
-      category: q.category as ClientAptitudeQuestion["category"],
-      number: q.number,
-      title: q.title,
-      question: q.question,
-      options: q.options,
-    }));
+    const { questions } = await getActiveClientQuestions();
 
     return NextResponse.json({
       success: true,
-      totalQuestions: sanitizedQuestions.length,
+      totalQuestions: questions.length,
       categories: questionsData.categories,
-      questions: sanitizedQuestions,
+      questions,
     });
   } catch (error: any) {
     console.error("[APTITUDE_API] Failed to serve diagnostic questions:", error);
@@ -30,3 +22,4 @@ export async function GET() {
     );
   }
 }
+

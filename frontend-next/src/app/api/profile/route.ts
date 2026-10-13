@@ -99,7 +99,7 @@ export async function GET(req: Request) {
           data: {
             userId: user.id,
             notificationType: 'achievement_unlocked',
-            data: { badgeId: 'b_create_account', badgeName: 'Ready for Blast Off!', badgeImage: '/assets/planets/celestial/Planet 1.svg' }
+            data: { badgeId: 'b_create_account', badgeName: 'Ready for Blast Off!', badgeImage: '/assets/global/badges/milestones/CreateAccount.svg' }
           }
         });
       }

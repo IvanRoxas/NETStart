@@ -12,3 +12,7 @@ staging/
 
 # Documentation / Updates (local only)
 explainer and update docs/
+env credentials.md
+*.download
+*.pdf
+APPENDIX_F_SYSTEM_USER_MANUAL.md

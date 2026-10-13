@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Settings, Rocket } from 'lucide-react';
+import { Settings, Rocket, Brain, Sparkles, Bell } from 'lucide-react';
 import QuillIcon from '@/components/icons/QuillIcon';
 
 interface NotificationDropdownProps {
@@ -105,7 +105,12 @@ export default function NotificationDropdown({
               const isProcessing = processingIds.includes(notif.id);
               const isUnread = !notif.read_at;
               const notifData = typeof notif.data === 'string' ? JSON.parse(notif.data) : (notif.data || {});
-              const badgeImg = notifData?.badgeImage || notifData?.badgeIcon || notifData?.iconUrl || notifData?.image;
+              let badgeImg = notifData?.badgeImage || notifData?.badgeIcon || notifData?.iconUrl || notifData?.image;
+              const badgeName = String(notifData?.badgeName || '').toLowerCase();
+              const badgeId = String(notifData?.badgeId || '').toLowerCase();
+              if (badgeName.includes('ready for blast off') || badgeId === 'b_create_account') {
+                badgeImg = '/assets/global/badges/milestones/CreateAccount.svg';
+              }
               const isBadgeImage = badgeImg && (badgeImg.startsWith('/') || badgeImg.startsWith('http') || badgeImg.startsWith('data:'));
 
               const getPlanetImageSrc = (data: any) => {
@@ -144,6 +149,10 @@ export default function NotificationDropdown({
                       <div className="w-full h-full flex items-center justify-center bg-[#ff912d]/20 rounded-full shadow-inner text-[#ff912d]">
                         <Settings size={18} />
                       </div>
+                    ) : (notif.type === 'aptitude_completed' || notif.notification_type === 'aptitude_completed') ? (
+                      <div className="w-full h-full flex items-center justify-center bg-[#ff912d]/20 rounded-full shadow-inner text-[#ff912d]">
+                        <Brain size={18} />
+                      </div>
                     ) : (notif.type === 'title_unlocked' || notif.notification_type === 'title_unlocked') ? (
                       <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-amber-500/20 via-purple-600/30 to-amber-500/10 rounded-full shadow-inner border border-[#ff912d]/40 text-[#ffb703]">
                         <QuillIcon className="w-5 h-5 text-[#ffb703] drop-shadow-[0_0_6px_rgba(255,183,3,0.7)]" />
@@ -166,8 +175,12 @@ export default function NotificationDropdown({
                       </div>
                     ) : notif.sender?.avatar_url ? (
                       <Image src={notif.sender.avatar_url} alt="" width={40} height={40} className="w-full h-full object-cover rounded-full" />
+                    ) : (notif.sender?.displayName || notif.sender?.name) ? (
+                      <span className="text-[#ff912d] font-bold text-base">{(notif.sender?.displayName || notif.sender?.name)?.charAt(0)}</span>
                     ) : (
-                      <span className="text-[#ff912d] font-bold text-base">{(notif.sender?.displayName || notif.sender?.name)?.charAt(0) || '?'}</span>
+                      <div className="w-full h-full flex items-center justify-center bg-[#ff912d]/20 rounded-full text-[#ff912d]">
+                        <Sparkles size={18} />
+                      </div>
                     )}
                   </div>
 
@@ -182,6 +195,11 @@ export default function NotificationDropdown({
                         <>
                           <strong className="text-[#ff912d] font-bold block mb-0.5">Verification Reward!</strong>
                           You received {notifData?.amount || 225} Gears for verifying your account.
+                        </>
+                      ) : (notif.type === 'aptitude_completed' || notif.notification_type === 'aptitude_completed') ? (
+                        <>
+                          <strong className="text-[#ff912d] font-bold block mb-0.5">Aptitude Diagnostic Completed!</strong>
+                          <span>{notifData?.message || 'Diagnostic calibrated. Your flight path has been unlocked!'}</span>
                         </>
                       ) : (notif.type === 'title_unlocked' || notif.notification_type === 'title_unlocked') ? (
                         <>

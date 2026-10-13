@@ -44,19 +44,20 @@ export async function assertCanAccessStudent(adminSession: any, studentId: strin
 
   if (role === "SUPER_ADMIN") return true;
 
-  // Teacher check: student must belong to a section assigned to this teacher
+  // Teacher check: student must belong to a section assigned to this teacher OR be unassigned (eligible for enrollment)
   const student = await prisma.user.findFirst({
     where: {
       id: studentId,
-      section: {
-        teacherId: adminId
-      }
+      OR: [
+        { section: { teacherId: adminId } },
+        { sectionId: null }
+      ]
     },
-    select: { id: true }
+    select: { id: true, sectionId: true }
   });
 
   if (!student) {
-    throw new Error("Forbidden: You can only view or manage students in your assigned sections.");
+    throw new Error("Forbidden: You can only view or manage students in your assigned sections or unassigned candidates.");
   }
   return true;
 }
@@ -70,15 +71,23 @@ export async function getUsers(searchQuery?: string, sectionId?: string) {
   
   if (role === "TEACHER") {
     if (sectionId && sectionId !== "ALL") {
-      const ownedSection = await prisma.section.findFirst({
-        where: { id: sectionId, teacherId: adminId }
-      });
-      if (!ownedSection) {
-        throw new Error("Forbidden: You can only filter by your assigned sections.");
+      if (sectionId === "UNASSIGNED") {
+        whereClause.sectionId = null;
+      } else {
+        const ownedSection = await prisma.section.findFirst({
+          where: { id: sectionId, teacherId: adminId }
+        });
+        if (!ownedSection) {
+          throw new Error("Forbidden: You can only filter by your assigned sections.");
+        }
+        whereClause.sectionId = sectionId;
       }
-      whereClause.sectionId = sectionId;
     } else {
-      whereClause.section = { teacherId: adminId };
+      // By default: show teacher's enrolled students AND unassigned students available to enroll
+      whereClause.OR = [
+        { section: { teacherId: adminId } },
+        { sectionId: null }
+      ];
     }
   } else {
     if (sectionId && sectionId !== "ALL") {
@@ -90,14 +99,25 @@ export async function getUsers(searchQuery?: string, sectionId?: string) {
     }
   }
 
-  if (searchQuery) {
+  if (searchQuery && searchQuery.trim()) {
+    const q = searchQuery.trim();
     const searchFilter = {
       OR: [
-        { email: { contains: searchQuery, mode: 'insensitive' as const } },
-        { displayName: { contains: searchQuery, mode: 'insensitive' as const } }
+        { email: { contains: q, mode: 'insensitive' as const } },
+        { displayName: { contains: q, mode: 'insensitive' as const } },
+        { studentId: { contains: q, mode: 'insensitive' as const } }
       ]
     };
-    whereClause = { ...whereClause, ...searchFilter };
+    if (whereClause.OR) {
+      whereClause = {
+        AND: [
+          { OR: whereClause.OR },
+          searchFilter
+        ]
+      };
+    } else {
+      whereClause = { ...whereClause, ...searchFilter };
+    }
   }
 
   const users = await prisma.user.findMany({
@@ -105,10 +125,15 @@ export async function getUsers(searchQuery?: string, sectionId?: string) {
     select: {
       id: true,
       email: true,
+      studentId: true,
       isVerified: true,
       isBanned: true,
       hasTakenAptitudeTest: true,
       canUseDemoMode: true,
+      logicScore: true,
+      patternRecognitionScore: true,
+      taskDecompositionScore: true,
+      recommendedLearningPath: true,
       xp: true,
       gears: true,
       createdAt: true,
@@ -121,6 +146,13 @@ export async function getUsers(searchQuery?: string, sectionId?: string) {
           gradeLevel: true,
           strand: true,
           schoolYear: true,
+          teacherId: true,
+          teacher: {
+            select: {
+              displayName: true,
+              username: true
+            }
+          }
         }
       }
     },
@@ -326,50 +358,102 @@ export async function assignStudentToSection(userId: string, sectionId: string) 
   const adminId = (session.user as any).id;
   const role = (session.user as any).role || "SUPER_ADMIN";
 
-  // Validate the target section exists
-  const section = await prisma.section.findUnique({
-    where: { id: sectionId }
-  });
-
-  if (!section) {
-    throw new Error("Target section not found.");
-  }
-
-  // Teachers may only assign students to sections they teach, and cannot take students already assigned to another teacher
-  if (role === "TEACHER") {
-    if (section.teacherId !== adminId) {
-      throw new Error("Forbidden: You can only assign students to your own sections.");
-    }
-    const currentStudent = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        section: {
-          select: { teacherId: true, name: true }
+  return await prisma.$transaction(async (tx) => {
+    // 1. Validate target section
+    const targetSection = await tx.section.findUnique({
+      where: { id: sectionId },
+      include: {
+        teacher: {
+          select: { id: true, username: true, displayName: true }
         }
       }
     });
-    if (currentStudent?.section?.teacherId && currentStudent.section.teacherId !== adminId) {
-      throw new Error(`Forbidden: This student is already enrolled in another teacher's section (${currentStudent.section.name}).`);
+
+    if (!targetSection) {
+      throw new Error("Target section not found.");
     }
-  }
 
-  await prisma.user.update({
-    where: { id: userId },
-    data: { sectionId }
+    if (targetSection.isArchived) {
+      throw new Error(`Cannot enroll students into an archived section ("${targetSection.name}").`);
+    }
+
+    // 2. Validate student state
+    const currentStudent = await tx.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        displayName: true,
+        email: true,
+        isBanned: true,
+        sectionId: true,
+        section: {
+          select: {
+            id: true,
+            name: true,
+            teacherId: true,
+            teacher: { select: { username: true, displayName: true } }
+          }
+        }
+      }
+    });
+
+    if (!currentStudent) {
+      throw new Error("Student account not found.");
+    }
+
+    if (currentStudent.isBanned) {
+      throw new Error("Cannot enroll a banned student account into a section.");
+    }
+
+    // 3. Teacher authorization & Cross-Teacher Conflict Resolution
+    if (role === "TEACHER") {
+      if (targetSection.teacherId !== adminId) {
+        throw new Error("Forbidden: You can only enroll students into your own assigned sections.");
+      }
+
+      // Check if student is already enrolled in another teacher's section
+      if (currentStudent.sectionId && currentStudent.section?.teacherId && currentStudent.section.teacherId !== adminId) {
+        const otherTeacher = currentStudent.section.teacher?.displayName || currentStudent.section.teacher?.username || "another instructor";
+        throw new Error(`Enrollment Conflict: ${currentStudent.displayName || currentStudent.email} is already enrolled in section "${currentStudent.section.name}" managed by ${otherTeacher}. Please contact the instructor or an administrator to reassign this student.`);
+      }
+
+      // If student is already in this section, no-op
+      if (currentStudent.sectionId === sectionId) {
+        return { success: true, message: "Student is already enrolled in this section." };
+      }
+    }
+
+    // 4. Atomic assignment
+    const previousSectionId = currentStudent.sectionId;
+    const previousSectionName = currentStudent.section?.name || null;
+    const previousTeacherId = currentStudent.section?.teacherId || null;
+
+    await tx.user.update({
+      where: { id: userId },
+      data: { sectionId }
+    });
+
+    await logSystemAction({
+      actorId: adminId,
+      actorRole: role,
+      action: "ASSIGNED_STUDENT_SECTION",
+      targetUserId: userId,
+      details: { 
+        sectionId, 
+        sectionName: targetSection.name,
+        previousSectionId,
+        previousSectionName,
+        previousTeacherId
+      }
+    });
+
+    return { success: true };
+  }).then(async (res) => {
+    revalidatePath('/admin');
+    revalidatePath('/admin/sections');
+    revalidatePath(`/admin/users/${userId}`);
+    return res;
   });
-
-  await logSystemAction({
-    actorId: adminId,
-    actorRole: role,
-    action: "ASSIGNED_STUDENT_SECTION",
-    targetUserId: userId,
-    details: { sectionId, sectionName: section.name }
-  });
-
-  revalidatePath('/admin');
-  revalidatePath('/admin/sections');
-  revalidatePath(`/admin/users/${userId}`);
-  return { success: true };
 }
 
 export async function toggleUserDemoModePrivilege(userId: string, currentStatus: boolean) {
@@ -392,6 +476,7 @@ export async function toggleUserDemoModePrivilege(userId: string, currentStatus:
   });
 
   revalidatePath('/admin');
+  revalidatePath('/admin/sections');
   revalidatePath(`/admin/users/${userId}`);
   return { success: true, canUseDemoMode: updatedUser.canUseDemoMode };
 }
@@ -404,7 +489,10 @@ export async function removeStudentFromSection(userId: string) {
 
   await prisma.user.update({
     where: { id: userId },
-    data: { sectionId: null }
+    data: { 
+      sectionId: null,
+      canUseDemoMode: false // Automatically revoke demonstration mode upon unenrollment
+    }
   });
 
   await logSystemAction({

@@ -89,6 +89,25 @@ export async function createSection(data: {
   if (!schoolYear) {
     throw new Error("School year is required (e.g. 2026-2027).");
   }
+  const schoolYearRegex = /^\d{4}-\d{4}$/;
+  if (!schoolYearRegex.test(schoolYear)) {
+    throw new Error("School year must be in format YYYY-YYYY (e.g. 2026-2027).");
+  }
+
+  // Duplicate active section check
+  const duplicate = await prisma.section.findFirst({
+    where: {
+      name: { equals: name, mode: "insensitive" },
+      gradeLevel,
+      strand,
+      schoolYear,
+      isArchived: false
+    }
+  });
+
+  if (duplicate) {
+    throw new Error(`A section named "${name}" already exists for Grade ${gradeLevel} ${strand} in SY ${schoolYear}.`);
+  }
 
   // Determine assigned teacher
   let assignedTeacherId = adminId;
@@ -235,6 +254,7 @@ export async function getSectionRoster(sectionId: string) {
         select: {
           id: true,
           email: true,
+          studentId: true,
           displayName: true,
           xp: true,
           gears: true,
@@ -242,6 +262,18 @@ export async function getSectionRoster(sectionId: string) {
           isBanned: true,
           hasTakenAptitudeTest: true,
           canUseDemoMode: true,
+          logicScore: true,
+          patternRecognitionScore: true,
+          taskDecompositionScore: true,
+          recommendedLearningPath: true,
+          missionProgresses: {
+            select: {
+              missionId: true,
+              status: true,
+              failureCount: true,
+              completedAt: true,
+            }
+          }
         },
         orderBy: { displayName: "asc" }
       }
@@ -257,4 +289,44 @@ export async function getSectionRoster(sectionId: string) {
   }
 
   return section;
+}
+
+export async function getUnassignedStudents(searchQuery?: string) {
+  const session = await requireAdmin();
+
+  const where: any = {
+    sectionId: null,
+    isBanned: false
+  };
+
+  if (searchQuery && searchQuery.trim()) {
+    const q = searchQuery.trim();
+    where.OR = [
+      { email: { contains: q, mode: 'insensitive' as const } },
+      { displayName: { contains: q, mode: 'insensitive' as const } },
+      { studentId: { contains: q, mode: 'insensitive' as const } }
+    ];
+  }
+
+  const unassigned = await prisma.user.findMany({
+    where,
+    select: {
+      id: true,
+      email: true,
+      studentId: true,
+      displayName: true,
+      xp: true,
+      gears: true,
+      isVerified: true,
+      hasTakenAptitudeTest: true,
+      recommendedLearningPath: true,
+      logicScore: true,
+      patternRecognitionScore: true,
+      taskDecompositionScore: true,
+    },
+    take: 50,
+    orderBy: { displayName: "asc" }
+  });
+
+  return unassigned;
 }

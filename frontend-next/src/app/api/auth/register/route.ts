@@ -100,7 +100,7 @@ export async function POST(req: Request) {
         data: {
           badgeId: 'b_create_account',
           badgeName: 'Ready for Blast Off!',
-          badgeImage: '/assets/planets/celestial/Planet 1.svg'
+          badgeImage: '/assets/global/badges/milestones/CreateAccount.svg'
         }
       }
     });

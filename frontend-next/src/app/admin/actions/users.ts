@@ -30,7 +30,13 @@ export async function getUserDetails(id: string) {
       inventory: {
         include: { shopItem: true }
       },
-      missionProgresses: true,
+      missionProgresses: {
+        orderBy: { startedAt: 'desc' }
+      },
+      interventionLogs: {
+        orderBy: { timestamp: 'desc' },
+        take: 20
+      },
       friendshipsSent: true,
       friendshipsReceived: true,
     }

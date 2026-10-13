@@ -131,6 +131,30 @@ export default function ModuleDetailsClient({
   const [hoveredCardId, setHoveredCardId] = useState<string | null>(null);
   const [savedMissionId, setSavedMissionId] = useState<string | null>(null);
   const [showStoryArchive, setShowStoryArchive] = useState(false);
+  
+  const [isSidebarMinimized, setIsSidebarMinimized] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('sidebar_minimized') === 'true';
+    }
+    return false;
+  });
+
+  useEffect(() => {
+    const handleSidebarChange = (e: any) => {
+      if (e.detail?.isMinimized !== undefined) {
+        setIsSidebarMinimized(e.detail.isMinimized);
+      } else {
+        setIsSidebarMinimized(localStorage.getItem('sidebar_minimized') === 'true');
+      }
+    };
+    window.addEventListener('sidebar_change', handleSidebarChange);
+    window.addEventListener('storage', handleSidebarChange);
+    return () => {
+      window.removeEventListener('sidebar_change', handleSidebarChange);
+      window.removeEventListener('storage', handleSidebarChange);
+    };
+  }, []);
+
   // Server completion set is authoritative
   const serverCompletedSet = useMemo(() => new Set(completedMissions.map(m => m.missionId.toLowerCase())), [completedMissions]);
 
@@ -916,9 +940,13 @@ export default function ModuleDetailsClient({
         </div>
       )}
 
-      {/* Floating Demo Mode Toggle Button (bottom-left corner) */}
+      {/* Floating Demo Mode Toggle Button (dynamically adjusts to sidebar expanded/collapsed state) */}
       {canUseDemoMode && (
-        <div className="fixed bottom-6 left-24 z-50">
+        <div 
+          className={`fixed bottom-6 z-50 transition-all duration-300 ease-in-out ${
+            isSidebarMinimized ? 'left-24' : 'left-72'
+          }`}
+        >
           <DemoToggle canUseDemoMode={canUseDemoMode} />
         </div>
       )}

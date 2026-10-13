@@ -270,7 +270,7 @@ export default function ShopPage() {
   return (
     <div className="flex h-full text-white overflow-hidden font-sans bg-transparent">
       <div className="flex-1 flex flex-col h-full overflow-hidden">
-        <TopHeader title="Rewards Shop" />
+        <TopHeader title="Rewards Shop" showDemoToggle />
 
         <div className="flex flex-1 overflow-hidden relative">
 
@@ -282,7 +282,6 @@ export default function ShopPage() {
                 <p className="text-amber-400/80 text-[11px] font-bold tracking-widest uppercase">
                   Your Balance
                 </p>
-                <DemoToggle compact />
               </div>
 
               <div className="flex items-center gap-3">
@@ -373,7 +372,6 @@ export default function ShopPage() {
                     <Settings size={16} className="text-[#ff912d]" />
                     <span className="font-bold text-amber-300">{gears.toLocaleString()} Gears</span>
                   </div>
-                  <DemoToggle compact />
                 </div>
               </div>
 

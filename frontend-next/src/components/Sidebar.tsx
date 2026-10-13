@@ -16,8 +16,12 @@ export default function Sidebar() {
   useEffect(() => {
     setIsMounted(true);
     const storedState = localStorage.getItem("sidebar_minimized");
-    if (storedState === "true") {
+    const isMin = storedState === "true";
+    if (isMin) {
       setIsMinimized(true);
+    }
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("sidebar_change", { detail: { isMinimized: isMin } }));
     }
   }, []);
 
@@ -25,6 +29,9 @@ export default function Sidebar() {
     setIsMinimized(prev => {
       const nextState = !prev;
       localStorage.setItem("sidebar_minimized", String(nextState));
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("sidebar_change", { detail: { isMinimized: nextState } }));
+      }
       return nextState;
     });
   };

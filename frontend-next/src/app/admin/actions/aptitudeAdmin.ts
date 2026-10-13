@@ -3,6 +3,7 @@
 import { requireSuperAdmin } from "@/app/admin/actions";
 import { prisma } from "@/lib/auth";
 import { logSystemAction } from "@/lib/logger";
+import { ensureDefaultAptitudeQuestionsInDb } from "@/lib/aptitudeQuestionsHelper";
 
 export interface CreateQuestionInput {
   question: string;
@@ -16,6 +17,8 @@ export interface CreateQuestionInput {
 
 export async function getAdminAptitudeQuestions() {
   await requireSuperAdmin();
+
+  await ensureDefaultAptitudeQuestionsInDb();
 
   const questions = await prisma.aptitudeQuestion.findMany({
     orderBy: { createdAt: "desc" }

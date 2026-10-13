@@ -19,6 +19,7 @@ import {
   TrendingUp,
   Target,
   Compass,
+  Globe,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
@@ -61,6 +62,17 @@ const CATEGORY_META: Record<
   },
 };
 
+const getPlanetIcon = (planet: string) => {
+  const p = (planet || "").toLowerCase();
+  if (p.includes("earth")) return "/assets/planets/celestial/Earth.svg";
+  if (p.includes("mars")) return "/assets/planets/celestial/Mars.svg";
+  if (p.includes("venus")) return "/assets/planets/celestial/Venus.svg";
+  if (p.includes("mercury")) return "/assets/planets/celestial/Mercury.svg";
+  if (p.includes("saturn")) return "/assets/planets/celestial/Saturn.svg";
+  if (p.includes("jupiter")) return "/assets/planets/celestial/Jupiter.svg";
+  return "/assets/planets/celestial/Mars.svg";
+};
+
 export default function AptitudeTestClient({ initialUser }: AptitudeTestClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -82,7 +94,30 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [results, setResults] = useState<AptitudeTestResult | null>(() => {
-    if (initialUser?.aptitudeResult) return initialUser.aptitudeResult;
+    if (initialUser?.aptitudeResult) {
+      const res = { ...initialUser.aptitudeResult };
+      if (!res.aiInsight && (initialUser.aiSummary || initialUser.track || initialUser.planetReasons)) {
+        res.aiInsight = {
+          summary: initialUser.aiSummary || "",
+          advice: "",
+          track: initialUser.track,
+          planets: Array.isArray(initialUser.planetReasons)
+            ? initialUser.planetReasons.map((pr: any) => ({
+                planet: pr.planet,
+                reason: pr.reason,
+                affinity: pr.affinity ?? 75,
+              }))
+            : undefined,
+        };
+      } else if (res.aiInsight && (!res.aiInsight.planets || res.aiInsight.planets.length === 0) && Array.isArray(initialUser.planetReasons)) {
+        res.aiInsight.planets = initialUser.planetReasons.map((pr: any) => ({
+          planet: pr.planet,
+          reason: pr.reason,
+          affinity: pr.affinity ?? 75,
+        }));
+      }
+      return res;
+    }
     if (initialUser?.hasTakenAptitudeTest) {
       const pScore = initialUser.patternRecognitionScore ?? 0;
       const tScore = initialUser.taskDecompositionScore ?? 0;
@@ -131,6 +166,18 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
         missed: [],
         recommendedLearningPath: initialUser.recommendedLearningPath ?? "Fullstack Web & Distributed Systems",
         completedAt: new Date().toISOString(),
+        aiInsight: (initialUser.aiSummary || initialUser.track || initialUser.planetReasons) ? {
+          summary: initialUser.aiSummary || "",
+          advice: "",
+          track: initialUser.track,
+          planets: Array.isArray(initialUser.planetReasons)
+            ? initialUser.planetReasons.map((pr: any) => ({
+                planet: pr.planet,
+                reason: pr.reason,
+                affinity: pr.affinity ?? 75,
+              }))
+            : undefined,
+        } : undefined,
       };
     }
     return null;
@@ -631,60 +678,70 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
       <div className="bg-[#1e0a2d] border border-emerald-500/30 rounded-2xl p-5 flex items-center justify-between shadow-lg">
         <div className="flex items-center gap-3">
           <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
-            <CheckCircle2 size={22} />
+            <CheckCircle2 size={24} />
           </div>
           <div>
-            <div className="text-xs font-mono font-bold text-emerald-400 uppercase tracking-wider">
+            <div className="text-sm font-mono font-bold text-emerald-400 uppercase tracking-wider">
               [DIAGNOSTIC STATUS: CALIBRATED & VERIFIED]
             </div>
-            <div className="text-sm font-bold text-white">System Profile Successfully Generated</div>
+            <div className="text-base font-bold text-white">System Profile Successfully Generated</div>
           </div>
         </div>
 
-        <div className="hidden sm:flex items-center gap-2 bg-[#ff912d]/10 border border-[#ff912d]/30 px-3 py-1.5 rounded-xl text-[#ff912d] font-mono text-xs font-bold">
-          <Award size={14} />
+        <div className="hidden sm:flex items-center gap-2 bg-[#ff912d]/10 border border-[#ff912d]/30 px-3.5 py-2 rounded-xl text-[#ff912d] font-mono text-sm font-bold">
+          <Award size={16} />
           <span>+200 XP & +50 Gears</span>
         </div>
       </div>
 
       {/* Main Report Card */}
       <div className="bg-[#1e0a2d] border border-white/10 rounded-3xl p-6 sm:p-10 shadow-2xl space-y-8">
-        <div className="text-center space-y-2 border-b border-white/10 pb-6">
-          <h2 className="text-2xl sm:text-3xl font-black font-display text-white uppercase tracking-wider">
+        <div className="text-center space-y-2.5 border-b border-white/10 pb-6">
+          <h2 className="text-3xl sm:text-4xl font-black font-display text-white uppercase tracking-wider">
             Diagnostic Profile Report
           </h2>
-          <p className="text-xs sm:text-sm text-gray-300 font-sans">
+          <p className="text-sm sm:text-base text-gray-200 font-sans max-w-2xl mx-auto">
             Comprehensive skill calibration across Pattern Recognition, Task Decomposition, and Logical Reasoning.
           </p>
 
-          <div className="inline-flex items-center gap-3 mt-3 px-5 py-2 rounded-2xl bg-white/5 border border-white/10">
-            <span className="text-xs font-mono text-gray-400 uppercase">Overall Calibration:</span>
-            <span className="text-xl sm:text-2xl font-black text-[#ff912d] font-display">
-              {results?.totalCorrect ?? 0} / {results?.totalQuestions ?? 15}
-            </span>
-            <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-md bg-[#ff912d]/20 text-[#ff912d] border border-[#ff912d]/40">
-              {results?.totalPercent ?? 0}% Accuracy
-            </span>
+          <div className="flex flex-wrap items-center justify-center gap-3.5 mt-3">
+            <div className="inline-flex items-center gap-3 px-5 py-2.5 rounded-2xl bg-white/5 border border-white/10">
+              <span className="text-sm font-mono text-gray-300 uppercase font-semibold">Overall Calibration:</span>
+              <span className="text-2xl sm:text-3xl font-black text-[#ff912d] font-display">
+                {results?.totalCorrect ?? 0} / {results?.totalQuestions ?? 15}
+              </span>
+              <span className="text-sm font-mono font-bold px-3 py-1 rounded-lg bg-[#ff912d]/20 text-[#ff912d] border border-[#ff912d]/40">
+                {results?.totalPercent ?? 0}% Accuracy
+              </span>
+            </div>
+            {results?.aiInsight?.track && (
+              <div className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-purple-500/10 border border-purple-500/30 text-purple-300 font-mono text-sm font-bold">
+                <span className="text-gray-400 uppercase">Cognitive Track:</span>
+                <span className="text-white uppercase font-black">{results.aiInsight.track} SYSTEMS</span>
+              </div>
+            )}
           </div>
         </div>
 
         {/* 3 Domain Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {/* Pattern Recognition Card */}
-          <div className="bg-black/30 border border-white/10 rounded-2xl p-5 space-y-3">
-            <div className="flex items-center justify-between text-xs font-mono uppercase text-gray-400">
-              <span className="flex items-center gap-1.5 text-[#ff912d]">
-                <Cpu size={14} /> Pattern Recognition
+          <div className="bg-black/30 border border-white/10 rounded-2xl p-6 space-y-3.5">
+            <div className="flex items-center justify-between font-mono uppercase">
+              <span className="flex items-center gap-2 text-sm sm:text-base font-bold text-[#ff912d]">
+                <Cpu size={18} /> Pattern Recognition
               </span>
-              <span className="text-[#ff912d] font-bold">
+              <span className="text-base sm:text-lg text-[#ff912d] font-black">
                 {results?.categories.pattern_recognition.percent ?? 0}%
               </span>
             </div>
-            <div className="text-2xl font-black font-display text-white">
+            <div className="text-3xl sm:text-4xl font-black font-display text-white">
               {results?.categories.pattern_recognition.correct ?? 0}{" "}
-              <span className="text-xs text-gray-400 font-normal">/ 5 correct</span>
+              <span className="text-sm sm:text-base text-gray-300 font-normal">
+                / {results?.categories.pattern_recognition.total ?? 5} correct
+              </span>
             </div>
-            <div className="h-2 bg-black/50 rounded-full overflow-hidden border border-white/10">
+            <div className="h-2.5 bg-black/50 rounded-full overflow-hidden border border-white/10">
               <div
                 className="h-full bg-gradient-to-r from-[#ff912d] to-amber-400 rounded-full transition-all duration-500"
                 style={{ width: `${results?.categories.pattern_recognition.percent ?? 0}%` }}
@@ -693,20 +750,22 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
           </div>
 
           {/* Task Decomposition Card */}
-          <div className="bg-black/30 border border-white/10 rounded-2xl p-5 space-y-3">
-            <div className="flex items-center justify-between text-xs font-mono uppercase text-gray-400">
-              <span className="flex items-center gap-1.5 text-sky-400">
-                <Layers size={14} /> Task Decomposition
+          <div className="bg-black/30 border border-white/10 rounded-2xl p-6 space-y-3.5">
+            <div className="flex items-center justify-between font-mono uppercase">
+              <span className="flex items-center gap-2 text-sm sm:text-base font-bold text-sky-400">
+                <Layers size={18} /> Task Decomposition
               </span>
-              <span className="text-sky-400 font-bold">
+              <span className="text-base sm:text-lg text-sky-400 font-black">
                 {results?.categories.task_decomposition.percent ?? 0}%
               </span>
             </div>
-            <div className="text-2xl font-black font-display text-white">
+            <div className="text-3xl sm:text-4xl font-black font-display text-white">
               {results?.categories.task_decomposition.correct ?? 0}{" "}
-              <span className="text-xs text-gray-400 font-normal">/ 5 correct</span>
+              <span className="text-sm sm:text-base text-gray-300 font-normal">
+                / {results?.categories.task_decomposition.total ?? 5} correct
+              </span>
             </div>
-            <div className="h-2 bg-black/50 rounded-full overflow-hidden border border-white/10">
+            <div className="h-2.5 bg-black/50 rounded-full overflow-hidden border border-white/10">
               <div
                 className="h-full bg-gradient-to-r from-sky-500 to-cyan-400 rounded-full transition-all duration-500"
                 style={{ width: `${results?.categories.task_decomposition.percent ?? 0}%` }}
@@ -715,20 +774,22 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
           </div>
 
           {/* Logical Reasoning Card */}
-          <div className="bg-black/30 border border-white/10 rounded-2xl p-5 space-y-3">
-            <div className="flex items-center justify-between text-xs font-mono uppercase text-gray-400">
-              <span className="flex items-center gap-1.5 text-purple-400">
-                <Brain size={14} /> Logical Reasoning
+          <div className="bg-black/30 border border-white/10 rounded-2xl p-6 space-y-3.5">
+            <div className="flex items-center justify-between font-mono uppercase">
+              <span className="flex items-center gap-2 text-sm sm:text-base font-bold text-purple-400">
+                <Brain size={18} /> Logical Reasoning
               </span>
-              <span className="text-purple-400 font-bold">
+              <span className="text-base sm:text-lg text-purple-400 font-black">
                 {results?.categories.logical_reasoning.percent ?? 0}%
               </span>
             </div>
-            <div className="text-2xl font-black font-display text-white">
+            <div className="text-3xl sm:text-4xl font-black font-display text-white">
               {results?.categories.logical_reasoning.correct ?? 0}{" "}
-              <span className="text-xs text-gray-400 font-normal">/ 5 correct</span>
+              <span className="text-sm sm:text-base text-gray-300 font-normal">
+                / {results?.categories.logical_reasoning.total ?? 5} correct
+              </span>
             </div>
-            <div className="h-2 bg-black/50 rounded-full overflow-hidden border border-white/10">
+            <div className="h-2.5 bg-black/50 rounded-full overflow-hidden border border-white/10">
               <div
                 className="h-full bg-gradient-to-r from-purple-500 to-violet-400 rounded-full transition-all duration-500"
                 style={{ width: `${results?.categories.logical_reasoning.percent ?? 0}%` }}
@@ -739,30 +800,30 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
 
         {/* Strongest & Weakest Category Highlights */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-emerald-500/20 text-emerald-400">
-              <TrendingUp size={20} />
+          <div className="p-5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center gap-3.5">
+            <div className="p-3 rounded-xl bg-emerald-500/20 text-emerald-400 shrink-0">
+              <TrendingUp size={22} />
             </div>
             <div>
-              <div className="text-xs font-mono uppercase text-emerald-400 font-bold">
+              <div className="text-xs sm:text-sm font-mono uppercase text-emerald-400 font-bold tracking-wider">
                 Strongest Domain
               </div>
-              <div className="text-sm font-bold text-white">
+              <div className="text-base sm:text-lg font-bold text-white mt-0.5">
                 {results?.strongestCategory.name ?? "Pattern Recognition"} (
                 {results?.strongestCategory.percent ?? 0}%)
               </div>
             </div>
           </div>
 
-          <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-amber-500/20 text-amber-400">
-              <Target size={20} />
+          <div className="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center gap-3.5">
+            <div className="p-3 rounded-xl bg-amber-500/20 text-amber-400 shrink-0">
+              <Target size={22} />
             </div>
             <div>
-              <div className="text-xs font-mono uppercase text-amber-400 font-bold">
+              <div className="text-xs sm:text-sm font-mono uppercase text-amber-400 font-bold tracking-wider">
                 Primary Growth Area
               </div>
-              <div className="text-sm font-bold text-white">
+              <div className="text-base sm:text-lg font-bold text-white mt-0.5">
                 {results?.weakestCategory.name ?? "Task Decomposition"} (
                 {results?.weakestCategory.percent ?? 0}%)
               </div>
@@ -772,18 +833,18 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
 
         {/* Missed Concepts Breakdown (If Any) */}
         {results?.missed && results.missed.length > 0 ? (
-          <div className="bg-black/25 border border-white/10 rounded-2xl p-5 sm:p-6 space-y-3">
-            <div className="flex items-center gap-2 text-xs font-mono text-amber-400 font-bold uppercase tracking-wider">
-              <AlertTriangle size={15} /> Targeted Concepts for Reinforcement ({results.missed.length})
+          <div className="bg-black/25 border border-white/10 rounded-2xl p-6 sm:p-7 space-y-3.5">
+            <div className="flex items-center gap-2 text-sm sm:text-base font-mono text-amber-400 font-bold uppercase tracking-wider">
+              <AlertTriangle size={18} /> Targeted Concepts for Reinforcement ({results.missed.length})
             </div>
-            <p className="text-xs text-gray-300">
+            <p className="text-sm sm:text-base text-gray-200">
               The following computational concepts were identified for additional practice during your upcoming planetary missions:
             </p>
-            <div className="flex flex-wrap gap-2 pt-1">
+            <div className="flex flex-wrap gap-2.5 pt-1">
               {results.missed.map((m) => (
                 <div
                   key={m.id}
-                  className="px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-xs font-mono text-gray-200 flex items-center gap-2"
+                  className="px-3.5 py-2 rounded-xl bg-white/5 border border-white/10 text-sm font-mono text-gray-100 flex items-center gap-2 font-medium"
                 >
                   <span className="text-[#ff912d] font-bold">[{m.id.toUpperCase()}]</span>
                   <span>{m.concept}</span>
@@ -792,18 +853,18 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
             </div>
           </div>
         ) : (
-          <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-4 flex items-center gap-3 text-emerald-400 text-xs font-mono font-bold">
-            <CheckCircle2 size={18} /> Zero telemetry errors detected! Flawless diagnostic calibration.
+          <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-5 flex items-center gap-3 text-emerald-400 text-sm sm:text-base font-mono font-bold">
+            <CheckCircle2 size={22} /> Zero telemetry errors detected! Flawless diagnostic calibration.
           </div>
         )}
 
         {/* Nova's AI Diagnostic Evaluation (from Gemini) */}
         {results?.aiInsight && (
-          <div className="bg-gradient-to-br from-purple-900/30 via-[#260c44] to-[#160528] border border-purple-500/40 rounded-2xl p-6 space-y-3 relative overflow-hidden shadow-lg">
-            <div className="flex items-center gap-2 text-xs font-mono text-[#ff912d] font-bold uppercase tracking-wider">
-              <Sparkles size={16} /> Nova AI Diagnostic Evaluation
+          <div className="bg-gradient-to-br from-purple-900/30 via-[#260c44] to-[#160528] border border-purple-500/40 rounded-2xl p-6 sm:p-7 space-y-3.5 relative overflow-hidden shadow-lg">
+            <div className="flex items-center gap-2.5 text-sm sm:text-base font-mono text-[#ff912d] font-bold uppercase tracking-wider">
+              <Sparkles size={18} /> Nova AI Diagnostic Evaluation
             </div>
-            <p className="text-sm text-gray-100 leading-relaxed font-sans font-medium">
+            <p className="text-base sm:text-lg text-gray-100 leading-relaxed font-sans font-medium">
               {(() => {
                 const summary = results.aiInsight.summary?.trim() || "";
                 if (!summary) return "";
@@ -813,7 +874,7 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
               })()}
             </p>
             {Boolean(results.aiInsight.advice?.trim()) && (
-              <div className="pt-2 border-t border-purple-500/20 text-xs text-purple-200 leading-relaxed">
+              <div className="pt-3 border-t border-purple-500/20 text-sm sm:text-base text-purple-200 leading-relaxed">
                 <span className="font-bold text-white uppercase tracking-wider font-mono">
                   Mission Directive:{" "}
                 </span>
@@ -823,21 +884,76 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
           </div>
         )}
 
-        {/* Recommended Orbit Learning Path */}
-        <div className="bg-gradient-to-r from-[#ff912d]/10 to-purple-900/20 border border-[#ff912d]/30 rounded-2xl p-6 space-y-2">
-          <div className="flex items-center gap-2 text-xs font-mono text-[#ff912d] font-bold uppercase tracking-wider">
-            <Compass size={16} /> Recommended Orbit Path
+        {/* Planetary Affinity Alignment (Nova AI Computed Curriculum Mapping) */}
+        {results?.aiInsight?.planets && results.aiInsight.planets.length > 0 && (
+          <div className="bg-black/25 border border-white/10 rounded-2xl p-6 sm:p-7 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/10 pb-3">
+              <div className="flex items-center gap-2.5 text-sm sm:text-base font-mono text-[#ff912d] font-bold uppercase tracking-wider">
+                <Globe size={18} /> Planetary Affinity Alignment ({results.aiInsight.planets.length} Celestial Sectors)
+              </div>
+              <span className="text-xs font-mono text-gray-400">
+                Calibrated to your cognitive profile
+              </span>
+            </div>
+            <p className="text-sm sm:text-base text-gray-200">
+              Nova AI has analyzed your diagnostic results and mapped your affinities across the celestial sectors of your learning orbit:
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 pt-1">
+              {results.aiInsight.planets.map((p) => {
+                const iconSrc = getPlanetIcon(p.planet);
+                return (
+                  <div
+                    key={p.planet}
+                    className="p-4 rounded-xl bg-white/5 border border-white/10 flex flex-col justify-between gap-3 hover:border-[#ff912d]/40 transition-colors"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2.5">
+                        <img
+                          src={iconSrc}
+                          alt={p.planet}
+                          className="w-7 h-7 object-contain drop-shadow"
+                        />
+                        <span className="font-bold text-white uppercase text-sm font-display tracking-wider">
+                          {p.planet}
+                        </span>
+                      </div>
+                      <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-md bg-[#ff912d]/20 text-[#ff912d] border border-[#ff912d]/40">
+                        {p.affinity}% Affinity
+                      </span>
+                    </div>
+                    {/* Affinity Bar */}
+                    <div className="h-1.5 bg-black/40 rounded-full overflow-hidden border border-white/5">
+                      <div
+                        className="h-full bg-gradient-to-r from-[#ff912d] to-amber-300 rounded-full transition-all duration-500"
+                        style={{ width: `${Math.min(100, Math.max(10, p.affinity))}%` }}
+                      />
+                    </div>
+                    {/* Reason */}
+                    <p className="text-xs sm:text-sm text-gray-300 leading-relaxed font-sans">
+                      {p.reason}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-          <div className="text-lg font-bold text-white font-display">
+        )}
+
+        {/* Recommended Orbit Learning Path */}
+        <div className="bg-gradient-to-r from-[#ff912d]/10 to-purple-900/20 border border-[#ff912d]/30 rounded-2xl p-6 sm:p-7 space-y-2.5">
+          <div className="flex items-center gap-2 text-sm sm:text-base font-mono text-[#ff912d] font-bold uppercase tracking-wider">
+            <Compass size={18} /> Recommended Orbit Path
+          </div>
+          <div className="text-xl sm:text-2xl font-black text-white font-display">
             {results?.recommendedLearningPath ?? "Fullstack Systems & Distributed Architecture"}
           </div>
-          <p className="text-xs text-gray-300 leading-relaxed">
+          <p className="text-sm sm:text-base text-gray-200 leading-relaxed">
             Based on your analytical calibration, your learning trajectory is optimized. All planetary sectors are now primed.
           </p>
         </div>
 
         {/* Action Controls */}
-        <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+        <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-4">
           <button
             onClick={() => {
               const isFallbackUser = Boolean(
@@ -866,15 +982,15 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
               setCurrentIndex(0);
               loadDiagnosticQuestions();
             }}
-            className="w-full sm:w-auto px-6 py-4 bg-white/10 hover:bg-white/20 text-white font-bold text-xs sm:text-sm uppercase tracking-widest rounded-xl transition-all border border-white/10 flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full sm:w-auto px-7 py-4 bg-white/10 hover:bg-white/20 text-white font-bold text-sm uppercase tracking-wider rounded-xl transition-all border border-white/10 flex items-center justify-center gap-2.5 cursor-pointer active:scale-95"
           >
-            <RefreshCw size={16} /> Recalibrate Assessment
+            <RefreshCw size={18} /> Recalibrate Assessment
           </button>
           <button
             onClick={() => setViewState("CUTSCENE")}
-            className="w-full sm:w-auto px-8 py-4 bg-[#ff912d] hover:bg-[#ff912d]/90 text-black font-black text-xs sm:text-sm uppercase tracking-widest rounded-xl shadow-[0_0_25px_rgba(255,145,45,0.4)] transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full sm:w-auto px-9 py-4 bg-[#ff912d] hover:bg-[#ff912d]/90 text-black font-black text-sm uppercase tracking-wider rounded-xl shadow-[0_0_25px_rgba(255,145,45,0.4)] transition-all active:scale-95 flex items-center justify-center gap-2.5 cursor-pointer"
           >
-            Start Journey <Rocket size={18} />
+            Start Journey <Rocket size={20} />
           </button>
         </div>
       </div>

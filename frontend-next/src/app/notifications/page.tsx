@@ -162,7 +162,7 @@ export default function NotificationsPage() {
         if (type === 'planet_unlocked') return 'Planet Unlocked!';
         if (type === 'title_unlocked') return 'Title Unlocked!';
         if (type === 'system_verify_reward') return 'Verification Reward!';
-        if (type === 'aptitude_completed') return 'Aptitude Test';
+        if (type === 'aptitude_completed') return 'Aptitude Diagnostic Completed!';
         if (type === 'achievement_unlocked') return 'Achievement Unlocked!';
         if (type === 'level_up') return 'Level Up!';
         if (type === 'friend_request') return notif.sender?.name || notif.sender?.username || 'Friend Request';
@@ -701,17 +701,29 @@ export default function NotificationsPage() {
                                                         <Brain size={28} />
                                                     </div>
                                                 ) : (notif.type === 'achievement_unlocked' || notif.notification_type === 'achievement_unlocked' || notif.type === 'level_up' || notif.notification_type === 'level_up') ? (
-                                                    notif.data?.badgeImage ? (
-                                                        <img src={notif.data.badgeImage} alt={notif.data.badgeName} />
-                                                    ) : (notif.type === 'level_up' || notif.notification_type === 'level_up') ? (
-                                                        <div className="w-full h-full flex items-center justify-center bg-[#ffb703] rounded-full shadow-inner">
-                                                            <span className="text-black font-black text-3xl">{notif.data?.level || notif.data?.badgeName?.replace(/\D/g, '') || ''}</span>
-                                                        </div>
-                                                    ) : (
-                                                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-500/20 to-purple-600/20 rounded-full">
-                                                            <span className="text-[#ff912d] font-bold text-xl">{notif.data?.badgeIcon || '🏆'}</span>
-                                                        </div>
-                                                    )
+                                                    (() => {
+                                                        let bImg = notif.data?.badgeImage || notif.data?.iconUrl || notif.data?.image;
+                                                        const bName = String(notif.data?.badgeName || '').toLowerCase();
+                                                        const bId = String(notif.data?.badgeId || '').toLowerCase();
+                                                        if (bName.includes('ready for blast off') || bId === 'b_create_account') {
+                                                            bImg = '/assets/global/badges/milestones/CreateAccount.svg';
+                                                        }
+                                                        if (bImg) {
+                                                            return <img src={bImg} alt={notif.data?.badgeName || 'Badge'} className="w-full h-full object-contain drop-shadow" />;
+                                                        }
+                                                        if (notif.type === 'level_up' || notif.notification_type === 'level_up') {
+                                                            return (
+                                                                <div className="w-full h-full flex items-center justify-center bg-[#ffb703] rounded-full shadow-inner">
+                                                                    <span className="text-black font-black text-3xl">{notif.data?.level || notif.data?.badgeName?.replace(/\D/g, '') || ''}</span>
+                                                                </div>
+                                                            );
+                                                        }
+                                                        return (
+                                                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-500/20 to-purple-600/20 rounded-full">
+                                                                <span className="text-[#ff912d] font-bold text-xl">{notif.data?.badgeIcon || '🏆'}</span>
+                                                            </div>
+                                                        );
+                                                    })()
                                                 ) : notif.sender?.avatar_url ? (
                                                     <img src={notif.sender.avatar_url} alt="" />
                                                 ) : (

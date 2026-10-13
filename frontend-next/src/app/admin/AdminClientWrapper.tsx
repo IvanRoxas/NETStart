@@ -70,7 +70,8 @@ export default function AdminClientWrapper({
   const filteredUsers = users.filter(u => {
     const query = searchQuery.toLowerCase();
     const matchesSearch = (u.email?.toLowerCase() || '').includes(query) ||
-                          (u.displayName?.toLowerCase() || '').includes(query);
+                          (u.displayName?.toLowerCase() || '').includes(query) ||
+                          (u.studentId?.toLowerCase() || '').includes(query);
     
     let matchesStatus = true;
     if (statusFilter === 'VERIFIED') matchesStatus = u.isVerified;
@@ -296,10 +297,17 @@ export default function AdminClientWrapper({
               ) : paginatedUsers.map((user) => (
                 <tr key={user.id} className="hover:bg-white/5 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex flex-col">
-                      <span className="text-sm font-semibold text-white">{user.email || 'No Email'}</span>
-                      {user.displayName && <span className="text-xs text-gray-500">{user.displayName}</span>}
-                    </div>
+                    <Link href={`/admin/users/${user.id}`} className="group flex flex-col hover:opacity-80 transition-opacity">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-sm font-semibold text-white group-hover:text-[#ff912d] transition-colors">{user.email || 'No Email'}</span>
+                        {user.studentId && (
+                          <span className="text-[10px] bg-purple-500/15 text-purple-300 border border-purple-500/30 px-1.5 py-0.2 rounded font-mono font-bold">
+                            {user.studentId}
+                          </span>
+                        )}
+                      </div>
+                      {user.displayName && <span className="text-xs text-gray-500 group-hover:text-gray-300 transition-colors">{user.displayName}</span>}
+                    </Link>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     {user.section ? (
@@ -332,22 +340,29 @@ export default function AdminClientWrapper({
                     </button>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <button
-                      type="button"
-                      onClick={() => handleToggleAptitude(user.id, user.hasTakenAptitudeTest)}
-                      disabled={loadingAction === `aptitude-${user.id}`}
-                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium cursor-pointer transition-all ${
-                        user.hasTakenAptitudeTest ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/25' : 'bg-amber-500/15 text-amber-400 border border-amber-500/30 hover:bg-amber-500/25'
-                      }`}
-                      title={user.hasTakenAptitudeTest ? "Click to require aptitude test (mark pending)" : "Click to waive aptitude test (mark completed)"}
-                    >
-                      {loadingAction === `aptitude-${user.id}` ? (
-                        <RefreshCcw className="animate-spin" size={13} />
-                      ) : (
-                        <Brain size={14} />
+                    <div className="flex flex-col gap-1">
+                      <button
+                        type="button"
+                        onClick={() => handleToggleAptitude(user.id, user.hasTakenAptitudeTest)}
+                        disabled={loadingAction === `aptitude-${user.id}`}
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium cursor-pointer transition-all ${
+                          user.hasTakenAptitudeTest ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/25' : 'bg-amber-500/15 text-amber-400 border border-amber-500/30 hover:bg-amber-500/25'
+                        }`}
+                        title={user.hasTakenAptitudeTest ? "Click to require aptitude test (mark pending)" : "Click to waive aptitude test (mark completed)"}
+                      >
+                        {loadingAction === `aptitude-${user.id}` ? (
+                          <RefreshCcw className="animate-spin" size={13} />
+                        ) : (
+                          <Brain size={14} />
+                        )}
+                        {user.hasTakenAptitudeTest ? 'Completed' : 'Pending'}
+                      </button>
+                      {user.hasTakenAptitudeTest && user.recommendedLearningPath && (
+                        <span className="text-[10px] text-gray-400 truncate max-w-[150px]" title={user.recommendedLearningPath}>
+                          {user.recommendedLearningPath} (L: {user.logicScore ?? 0}%)
+                        </span>
                       )}
-                      {user.hasTakenAptitudeTest ? 'Completed' : 'Pending'}
-                    </button>
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
@@ -482,14 +497,26 @@ export default function AdminClientWrapper({
               </button>
             </div>
 
-            <p className="text-sm text-gray-300 mb-4">
-              Set the section for <span className="font-bold text-white">{assignTargetUser.displayName || assignTargetUser.email}</span>.
+            <p className="text-sm text-gray-300 mb-2">
+              Set the section for <span className="font-bold text-white">{assignTargetUser.displayName || assignTargetUser.email}</span>
+              {assignTargetUser.studentId && <span className="ml-1.5 text-xs text-[#ff912d] font-mono">({assignTargetUser.studentId})</span>}.
             </p>
+
+            {assignTargetUser.section ? (
+              <div className="mb-4 p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300 flex items-center justify-between">
+                <span>Current Section: <strong className="text-white">{assignTargetUser.section.name}</strong></span>
+                <span className="text-[10px] bg-amber-500/20 px-2 py-0.5 rounded text-amber-200">Reassignment</span>
+              </div>
+            ) : (
+              <div className="mb-4 p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-xs text-blue-300">
+                Current Status: <span className="text-white font-semibold">Unassigned Student</span>
+              </div>
+            )}
 
             <form onSubmit={handleSaveSectionAssignment} className="flex flex-col gap-4">
               <div>
                 <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-1.5">
-                  Choose Section
+                  Choose Target Section
                 </label>
                 <select
                   value={targetSectionId}

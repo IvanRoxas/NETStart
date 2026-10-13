@@ -14,10 +14,14 @@ import {
   UserX,
   BookOpen,
   Pencil,
-  Brain
+  Brain,
+  Unlock,
+  Lock,
+  BarChart3,
+  UserPlus
 } from 'lucide-react';
-import { createSection, updateSection, archiveSection, getSectionRoster } from '@/app/admin/actions/sections';
-import { removeStudentFromSection, toggleUserVerification, adminSetAptitudeStatus } from '@/app/admin/actions';
+import { createSection, updateSection, archiveSection, getSectionRoster, getUnassignedStudents } from '@/app/admin/actions/sections';
+import { removeStudentFromSection, toggleUserVerification, adminSetAptitudeStatus, toggleUserDemoModePrivilege, assignStudentToSection } from '@/app/admin/actions';
 import AdminToast from '@/components/AdminToast';
 import ConfirmModal from '@/components/ConfirmModal';
 
@@ -46,12 +50,24 @@ interface SectionItem {
 interface StudentRosterItem {
   id: string;
   email: string;
+  studentId?: string | null;
   displayName: string | null;
   xp: number;
   gears: number;
   isVerified: boolean;
   isBanned: boolean;
   hasTakenAptitudeTest: boolean;
+  canUseDemoMode?: boolean;
+  logicScore?: number | null;
+  patternRecognitionScore?: number | null;
+  taskDecompositionScore?: number | null;
+  recommendedLearningPath?: string | null;
+  missionProgresses?: {
+    missionId: string;
+    status: string;
+    failureCount: number;
+    completedAt?: Date | string | null;
+  }[];
 }
 
 export default function SectionsClient({
@@ -94,6 +110,13 @@ export default function SectionsClient({
   const [rosterSection, setRosterSection] = useState<SectionItem | null>(null);
   const [rosterStudents, setRosterStudents] = useState<StudentRosterItem[]>([]);
   const [isLoadingRoster, setIsLoadingRoster] = useState(false);
+
+  // Enroll Student Modal State (In-Roster Enrollment)
+  const [isEnrollOpen, setIsEnrollOpen] = useState(false);
+  const [unassignedSearch, setUnassignedSearch] = useState('');
+  const [unassignedList, setUnassignedList] = useState<any[]>([]);
+  const [isLoadingUnassigned, setIsLoadingUnassigned] = useState(false);
+  const [enrollingId, setEnrollingId] = useState<string | null>(null);
 
   // Remove from Section Confirm
   const [removeStudentTarget, setRemoveStudentTarget] = useState<StudentRosterItem | null>(null);
@@ -231,16 +254,102 @@ export default function SectionsClient({
     }
   };
 
+  const handleToggleDemoModeInRoster = async (student: StudentRosterItem) => {
+    try {
+      const res = await toggleUserDemoModePrivilege(student.id, Boolean(student.canUseDemoMode));
+      setRosterStudents(prev => prev.map(s => s.id === student.id ? { ...s, canUseDemoMode: res.canUseDemoMode } : s));
+      setToast({ 
+        message: `Classroom Demonstration Mode ${res.canUseDemoMode ? 'granted' : 'revoked'} for ${student.displayName || student.email}.`, 
+        type: 'success' 
+      });
+    } catch (err: any) {
+      setToast({ message: err.message || "Failed to update demonstration mode.", type: 'error' });
+    }
+  };
+
   const handleOpenRoster = async (section: SectionItem) => {
     setRosterSection(section);
     setIsLoadingRoster(true);
     try {
       const data = await getSectionRoster(section.id);
-      setRosterStudents(data.students as StudentRosterItem[]);
+      setRosterStudents(((data as any)?.students || []) as StudentRosterItem[]);
     } catch (err: any) {
       setToast({ message: err.message || "Failed to load section roster.", type: 'error' });
     } finally {
       setIsLoadingRoster(false);
+    }
+  };
+
+  const handleOpenEnrollModal = async () => {
+    setIsEnrollOpen(true);
+    setUnassignedSearch('');
+    setIsLoadingUnassigned(true);
+    try {
+      const candidates = await getUnassignedStudents('');
+      setUnassignedList(candidates);
+    } catch (err: any) {
+      setToast({ message: err.message || "Failed to load unassigned students.", type: 'error' });
+    } finally {
+      setIsLoadingUnassigned(false);
+    }
+  };
+
+  const handleSearchUnassigned = async (q: string) => {
+    setUnassignedSearch(q);
+    setIsLoadingUnassigned(true);
+    try {
+      const candidates = await getUnassignedStudents(q);
+      setUnassignedList(candidates);
+    } catch (err: any) {
+      console.error(err);
+    } finally {
+      setIsLoadingUnassigned(false);
+    }
+  };
+
+  const handleEnrollCandidate = async (candidate: any) => {
+    if (!rosterSection) return;
+    try {
+      setEnrollingId(candidate.id);
+      await assignStudentToSection(candidate.id, rosterSection.id);
+      
+      // Update local roster list
+      setRosterStudents(prev => [...prev, {
+        id: candidate.id,
+        email: candidate.email,
+        studentId: candidate.studentId,
+        displayName: candidate.displayName,
+        xp: candidate.xp,
+        gears: candidate.gears,
+        isVerified: candidate.isVerified,
+        isBanned: false,
+        hasTakenAptitudeTest: candidate.hasTakenAptitudeTest,
+        canUseDemoMode: false,
+        logicScore: candidate.logicScore,
+        patternRecognitionScore: candidate.patternRecognitionScore,
+        taskDecompositionScore: candidate.taskDecompositionScore,
+        recommendedLearningPath: candidate.recommendedLearningPath,
+        missionProgresses: []
+      }]);
+
+      // Remove from candidate list
+      setUnassignedList(prev => prev.filter(c => c.id !== candidate.id));
+
+      // Synchronize section student count badge on card
+      setSections(prev => prev.map(sec => 
+        sec.id === rosterSection.id 
+          ? { ...sec, _count: { students: sec._count.students + 1 } }
+          : sec
+      ));
+
+      setToast({ 
+        message: `${candidate.displayName || candidate.email} enrolled into ${rosterSection.name} successfully.`, 
+        type: 'success' 
+      });
+    } catch (err: any) {
+      setToast({ message: err.message || "Enrollment failed.", type: 'error' });
+    } finally {
+      setEnrollingId(null);
     }
   };
 
@@ -565,7 +674,7 @@ export default function SectionsClient({
       {/* Roster Modal */}
       {rosterSection && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className="bg-[#1e0a2d] border border-white/10 rounded-2xl w-full max-w-2xl p-6 shadow-2xl relative max-h-[85vh] flex flex-col">
+          <div className="bg-[#1e0a2d] border border-white/10 rounded-2xl w-full max-w-4xl p-6 shadow-2xl relative max-h-[90vh] flex flex-col">
             <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-4">
               <div>
                 <div className="flex items-center gap-2">
@@ -582,36 +691,90 @@ export default function SectionsClient({
                   </button>
                 </div>
                 <p className="text-xs text-gray-400 mt-0.5">
-                  Grade {rosterSection.gradeLevel} • {rosterSection.strand} • {rosterStudents.length} Students
+                  Grade {rosterSection.gradeLevel} • {rosterSection.strand} • {rosterStudents.length} Students enrolled
                 </p>
               </div>
-              <button
-                onClick={() => setRosterSection(null)}
-                className="text-gray-400 hover:text-white p-1 rounded-lg cursor-pointer"
-              >
-                <X size={18} />
-              </button>
+              <div className="flex items-center gap-2">
+                {!rosterSection.isArchived && (
+                  <button
+                    type="button"
+                    onClick={handleOpenEnrollModal}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-[#ff912d] hover:bg-[#ff912d]/90 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-[#ff912d]/20 cursor-pointer"
+                  >
+                    <UserPlus size={14} />
+                    Enroll Student
+                  </button>
+                )}
+                <button
+                  onClick={() => setRosterSection(null)}
+                  className="text-gray-400 hover:text-white p-1 rounded-lg cursor-pointer"
+                >
+                  <X size={18} />
+                </button>
+              </div>
             </div>
+
+            {/* Section Roster Analytics Banner (FR-10) */}
+            {rosterStudents.length > 0 && (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4 bg-black/20 p-3.5 rounded-xl border border-white/5">
+                <div className="flex flex-col">
+                  <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Total Enrolled</span>
+                  <span className="text-lg font-black text-white">{rosterStudents.length} Students</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Verified Accounts</span>
+                  <span className="text-lg font-black text-green-400">
+                    {rosterStudents.filter(s => s.isVerified).length} / {rosterStudents.length}
+                    <span className="text-xs font-normal text-gray-400 ml-1">
+                      ({Math.round((rosterStudents.filter(s => s.isVerified).length / rosterStudents.length) * 100)}%)
+                    </span>
+                  </span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Aptitude Diagnostic</span>
+                  <span className="text-lg font-black text-purple-400">
+                    {rosterStudents.filter(s => s.hasTakenAptitudeTest).length} / {rosterStudents.length}
+                    <span className="text-xs font-normal text-gray-400 ml-1">
+                      (Avg: {rosterStudents.filter(s => s.hasTakenAptitudeTest).length > 0 
+                        ? Math.round(rosterStudents.filter(s => s.hasTakenAptitudeTest).reduce((acc, s) => acc + (s.logicScore || 0), 0) / rosterStudents.filter(s => s.hasTakenAptitudeTest).length)
+                        : 0}%)
+                    </span>
+                  </span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Demo Mode (FR-05)</span>
+                  <span className="text-lg font-black text-amber-400">
+                    {rosterStudents.filter(s => s.canUseDemoMode).length} Active
+                  </span>
+                </div>
+              </div>
+            )}
 
             <div className="flex-1 overflow-y-auto pr-1">
               {isLoadingRoster ? (
                 <div className="py-12 text-center text-gray-400">Loading student roster...</div>
               ) : rosterStudents.length === 0 ? (
-                <div className="py-12 text-center text-gray-400">
-                  No students assigned to this section yet.
-                  <p className="text-xs text-gray-500 mt-1">
-                    Assign students from the User Management page.
-                  </p>
+                <div className="py-12 text-center text-gray-400 flex flex-col items-center">
+                  <p>No students assigned to this section yet.</p>
+                  {!rosterSection.isArchived && (
+                    <button
+                      type="button"
+                      onClick={handleOpenEnrollModal}
+                      className="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-[#ff912d] hover:bg-[#ff912d]/90 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-[#ff912d]/20 cursor-pointer"
+                    >
+                      <UserPlus size={14} />
+                      Enroll Students Now
+                    </button>
+                  )}
                 </div>
               ) : (
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="border-b border-white/10 text-xs font-semibold text-gray-400 uppercase tracking-wider">
                       <th className="py-2.5 px-3">Student</th>
-                      <th className="py-2.5 px-3">XP</th>
-                      <th className="py-2.5 px-3">Gears</th>
+                      <th className="py-2.5 px-3">Diagnostic Aptitude</th>
                       <th className="py-2.5 px-3">Verification</th>
-                      <th className="py-2.5 px-3">Aptitude Test</th>
+                      <th className="py-2.5 px-3">Demo Mode (FR-05)</th>
                       <th className="py-2.5 px-3 text-right">Actions</th>
                     </tr>
                   </thead>
@@ -624,10 +787,50 @@ export default function SectionsClient({
                               {student.displayName || "Anonymous"}
                             </span>
                             <span className="text-xs text-gray-400">{student.email}</span>
+                            <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                              {student.studentId && (
+                                <span className="text-[10px] bg-purple-500/15 text-purple-300 border border-purple-500/30 px-1.5 py-0.2 rounded font-mono font-bold">
+                                  {student.studentId}
+                                </span>
+                              )}
+                              <span className="text-[10px] text-gray-400 font-mono">
+                                Level {Math.floor((student.xp || 0) / 100) + 1} • {student.xp} XP
+                              </span>
+                              {student.missionProgresses && (
+                                <span className="text-[10px] bg-indigo-500/15 text-indigo-300 px-1.5 py-0.5 rounded font-mono">
+                                  {student.missionProgresses.filter(m => m.status === 'COMPLETED').length} Done
+                                </span>
+                              )}
+                              {student.missionProgresses?.some(m => m.failureCount >= 3) && (
+                                <span className="text-[10px] bg-red-500/20 text-red-300 border border-red-500/30 px-1.5 py-0.2 rounded font-bold" title="Student struggled on a mission (3+ retries / video fallback triggered)">
+                                  Needs Help (3+ Retries)
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </td>
-                        <td className="py-3 px-3 text-gray-300 font-mono text-xs">{student.xp}</td>
-                        <td className="py-3 px-3 text-[#ff912d] font-mono text-xs">{student.gears}</td>
+
+                        {/* Aptitude Diagnostic Column */}
+                        <td className="py-3 px-3">
+                          {student.hasTakenAptitudeTest ? (
+                            <div className="flex flex-col gap-0.5">
+                              <span className="text-xs font-bold text-white flex items-center gap-1">
+                                <Brain size={12} className="text-purple-400" />
+                                {student.recommendedLearningPath || "Path Diagnostic Done"}
+                              </span>
+                              <div className="text-[10px] text-gray-400 font-mono">
+                                Logic: <span className="text-[#ff912d] font-bold">{student.logicScore ?? 0}%</span> | Pattern: <span className="text-purple-400 font-bold">{student.patternRecognitionScore ?? 0}%</span> | Decomp: <span className="text-blue-400 font-bold">{student.taskDecompositionScore ?? 0}%</span>
+                              </div>
+                            </div>
+                          ) : (
+                            <span className="text-[11px] text-gray-500 italic flex items-center gap-1">
+                              <Brain size={12} className="text-gray-500" />
+                              Diagnostic Pending
+                            </span>
+                          )}
+                        </td>
+
+                        {/* Verification Column */}
                         <td className="py-3 px-3">
                           <button
                             type="button"
@@ -643,37 +846,31 @@ export default function SectionsClient({
                             {student.isVerified ? 'Verified' : 'Unverified'}
                           </button>
                         </td>
+
+                        {/* Demonstration Mode (FR-05 & FR-10) */}
                         <td className="py-3 px-3">
                           <button
                             type="button"
-                            onClick={() => handleToggleAptitudeInRoster(student)}
-                            title={student.hasTakenAptitudeTest ? "Click to require aptitude test" : "Click to waive aptitude test"}
-                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold cursor-pointer transition-colors ${
-                              student.hasTakenAptitudeTest 
-                                ? 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30' 
-                                : 'bg-amber-500/20 text-amber-400 hover:bg-amber-500/30'
+                            onClick={() => handleToggleDemoModeInRoster(student)}
+                            title={student.canUseDemoMode ? "Click to disable classroom demonstration mode" : "Click to enable classroom demonstration mode"}
+                            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded text-[11px] font-bold cursor-pointer transition-colors ${
+                              student.canUseDemoMode
+                                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30 hover:bg-amber-500/30'
+                                : 'bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10 hover:text-white'
                             }`}
                           >
-                            <Brain size={10} />
-                            {student.hasTakenAptitudeTest ? 'Completed' : 'Pending'}
+                            {student.canUseDemoMode ? <Unlock size={12} className="text-amber-400" /> : <Lock size={12} className="text-gray-400" />}
+                            {student.canUseDemoMode ? 'Demo Active' : 'Demo Off'}
                           </button>
                         </td>
+
+                        {/* Actions */}
                         <td className="py-3 px-3 text-right">
                           <div className="flex items-center justify-end gap-1.5">
                             <button
                               type="button"
-                              onClick={() => handleToggleVerificationInRoster(student)}
-                              title={student.isVerified ? "Revoke Verification" : "Verify Student"}
-                              className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                                student.isVerified ? 'bg-green-500/10 text-green-400 hover:bg-red-500/20 hover:text-red-400' : 'bg-red-500/10 text-red-400 hover:bg-green-500/20 hover:text-green-400'
-                              }`}
-                            >
-                              <CheckCircle size={14} />
-                            </button>
-                            <button
-                              type="button"
                               onClick={() => handleToggleAptitudeInRoster(student)}
-                              title={student.hasTakenAptitudeTest ? "Require Aptitude Test" : "Waive Aptitude Test"}
+                              title={student.hasTakenAptitudeTest ? "Reset to Pending" : "Waive Diagnostic"}
                               className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
                                 student.hasTakenAptitudeTest ? 'bg-emerald-500/10 text-emerald-400 hover:bg-amber-500/20 hover:text-amber-400' : 'bg-amber-500/10 text-amber-400 hover:bg-emerald-500/20 hover:text-emerald-400'
                               }`}
@@ -702,6 +899,101 @@ export default function SectionsClient({
                 className="px-4 py-2 text-sm font-semibold bg-white/10 hover:bg-white/20 text-white rounded-xl transition-colors cursor-pointer"
               >
                 Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Enroll Student Modal (In-Roster Enrollment) */}
+      {isEnrollOpen && rosterSection && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
+          <div className="bg-[#1e0a2d] border border-white/10 rounded-2xl w-full max-w-2xl p-6 shadow-2xl relative max-h-[85vh] flex flex-col">
+            <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-4">
+              <div>
+                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                  <UserPlus className="text-[#ff912d]" size={20} />
+                  Enroll Students: {rosterSection.name}
+                </h3>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  Select unassigned students to enroll into this section.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsEnrollOpen(false)}
+                className="text-gray-400 hover:text-white p-1 rounded-lg cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Live Search */}
+            <div className="relative mb-4">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+              <input
+                type="text"
+                placeholder="Search unassigned by student name, email, or Student ID..."
+                value={unassignedSearch}
+                onChange={(e) => handleSearchUnassigned(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 bg-black/20 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-[#ff912d]"
+              />
+            </div>
+
+            {/* List */}
+            <div className="flex-1 overflow-y-auto pr-1">
+              {isLoadingUnassigned ? (
+                <div className="py-12 text-center text-gray-400">Loading eligible students...</div>
+              ) : unassignedList.length === 0 ? (
+                <div className="py-12 text-center text-gray-400">
+                  No unassigned students found matching your search.
+                </div>
+              ) : (
+                <div className="divide-y divide-white/5">
+                  {unassignedList.map(cand => (
+                    <div key={cand.id} className="py-3 px-2 flex items-center justify-between gap-4 hover:bg-white/[0.02] rounded-xl transition-colors">
+                      <div className="flex flex-col min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-white text-sm">
+                            {cand.displayName || "Anonymous"}
+                          </span>
+                          {cand.studentId && (
+                            <span className="text-[10px] bg-purple-500/15 text-purple-300 border border-purple-500/30 px-1.5 py-0.2 rounded font-mono font-bold">
+                              {cand.studentId}
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-xs text-gray-400 truncate">{cand.email}</span>
+                        <div className="flex items-center gap-2 mt-1 text-[11px] text-gray-400">
+                          <span>Level {Math.floor((cand.xp || 0) / 100) + 1}</span>
+                          <span>•</span>
+                          <span className="text-purple-400 font-medium">
+                            {cand.hasTakenAptitudeTest ? (cand.recommendedLearningPath || "Diagnostic Done") : "Aptitude Pending"}
+                          </span>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleEnrollCandidate(cand)}
+                        disabled={enrollingId === cand.id}
+                        className="px-3.5 py-1.5 bg-[#ff912d] hover:bg-[#ff912d]/90 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-[#ff912d]/20 disabled:opacity-50 cursor-pointer shrink-0"
+                      >
+                        {enrollingId === cand.id ? "Enrolling..." : "Enroll"}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="mt-4 pt-4 border-t border-white/10 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setIsEnrollOpen(false)}
+                className="px-4 py-2 text-sm font-semibold bg-white/10 hover:bg-white/20 text-white rounded-xl transition-colors cursor-pointer"
+              >
+                Done
               </button>
             </div>
           </div>
