@@ -1,0 +1,6 @@
+*
+!frontend-next/
+frontend-next/node_modules/
+frontend-next/.next/
+frontend-next/.env*
+!frontend-next/.env.example
