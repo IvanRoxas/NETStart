@@ -5226,6 +5226,12 @@ export default function BlocklyMaze() {
             }
           });
         }
+        if (data.sandboxUnlocked) {
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('sandbox_unlocked'));
+            window.dispatchEvent(new Event('notifications_updated'));
+          }
+        }
         try {
           removeNetstartItem('netstart_active_saved_level');
           removeNetstartItem(`netstart_completed_sections_${missionId}`);

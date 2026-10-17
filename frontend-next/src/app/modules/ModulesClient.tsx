@@ -479,6 +479,24 @@ export default function ModulesClient({
     };
   }, [realUnlockedIndex, activePlanetId]);
 
+  // Check if redirected here because code-sandbox was accessed while locked
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('locked') === 'sandbox') {
+      setUnlockToast({
+        visible: true,
+        title: 'Code Sandbox Locked 🔒',
+        message: 'Complete the Moon tutorial and all its levels to unlock the Sandbox!',
+      });
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+      toastTimerRef.current = setTimeout(() => {
+        setUnlockToast(prev => prev ? { ...prev, visible: false } : null);
+      }, 5000);
+      window.history.replaceState({}, '', '/modules');
+    }
+  }, []);
+
   // Detect if an unlock animation needs to play (plays strictly once upon completing a planet)
   // Demo mode: always skips travel animation and unlocks all planets immediately
   useEffect(() => {
@@ -973,6 +991,34 @@ export default function ModulesClient({
             <Rocket size={18} className="shrink-0" />
           </Link>
         </div>
+      )}
+
+      {/* Sliding Unlock / Locked Alert Toast */}
+      {unlockToast && unlockToast.visible && (
+        <aside
+          aria-live="polite"
+          className="fixed top-24 right-6 z-[999999] transition-all duration-500 ease-out transform animate-in slide-in-from-top-4 fade-in pointer-events-auto"
+        >
+          <div className="w-[320px] sm:w-[360px] bg-[#1a082c]/95 backdrop-blur-xl border border-amber-400/50 rounded-2xl p-3.5 shadow-[0_12px_40px_rgba(0,0,0,0.6),0_0_20px_rgba(245,158,11,0.2)] flex items-center gap-3">
+            <div className="w-10 h-10 shrink-0 rounded-xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-amber-300">
+              {unlockToast.icon ? (
+                <img src={unlockToast.icon} alt="" className="w-7 h-7 object-contain" />
+              ) : (
+                <span className="text-xl">🔒</span>
+              )}
+            </div>
+            <div className="flex-1 min-w-0 pr-2">
+              <h4 className="text-white font-bold text-sm leading-tight truncate">{unlockToast.title}</h4>
+              <p className="text-white/70 text-xs mt-0.5 leading-snug">{unlockToast.message}</p>
+            </div>
+            <button
+              onClick={() => setUnlockToast(null)}
+              className="text-white/40 hover:text-white rounded-full p-1 cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </aside>
       )}
 
     </div>

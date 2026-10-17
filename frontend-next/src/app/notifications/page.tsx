@@ -120,7 +120,7 @@ export default function NotificationsPage() {
         const type = (notif.type || notif.notification_type || '').toLowerCase();
         if (type.includes('friend')) return 'social';
         if (type.includes('achievement') || type.includes('level') || type.includes('reward') || type.includes('gear')) return 'rewards';
-        if (type.includes('planet') || type.includes('aptitude') || type.includes('module') || type.includes('mission')) return 'learning';
+        if (type.includes('planet') || type.includes('aptitude') || type.includes('module') || type.includes('mission') || type.includes('sandbox')) return 'learning';
         return 'system';
     };
 
@@ -161,6 +161,7 @@ export default function NotificationsPage() {
         const type = notif.type || notif.notification_type || '';
         if (type === 'planet_unlocked') return 'Planet Unlocked!';
         if (type === 'title_unlocked') return 'Title Unlocked!';
+        if (type === 'sandbox_unlocked') return 'Code Sandbox Unlocked!';
         if (type === 'system_verify_reward') return 'Verification Reward!';
         if (type === 'aptitude_completed') return 'Aptitude Diagnostic Completed!';
         if (type === 'achievement_unlocked') return 'Achievement Unlocked!';
@@ -177,6 +178,9 @@ export default function NotificationsPage() {
         }
         if (type === 'title_unlocked') {
             return `You unlocked the title "${notif.data?.titleName || notif.data?.badgeName || 'New Title'}"${notif.data?.planetName ? ` for conquering ${notif.data.planetName}` : ''}! Equip it on your Profile page.`;
+        }
+        if (type === 'sandbox_unlocked') {
+            return notif.data?.message || "You've completed all Moon missions! The Code Sandbox is now accessible in the sidebar.";
         }
         if (type === 'system_verify_reward') {
             return `You received ${notif.data?.amount || 225} Gears for verifying your account.`;
@@ -699,6 +703,12 @@ export default function NotificationsPage() {
                                                 ) : (notif.type === 'aptitude_completed' || notif.notification_type === 'aptitude_completed') ? (
                                                     <div className="w-full h-full flex items-center justify-center bg-[#ff912d]/20 rounded-full shadow-inner text-[#ff912d]">
                                                         <Brain size={28} />
+                                                    </div>
+                                                ) : (notif.type === 'sandbox_unlocked' || notif.notification_type === 'sandbox_unlocked') ? (
+                                                    <div className="w-full h-full flex items-center justify-center bg-[#ff912d]/20 rounded-full shadow-inner text-[#ff912d]">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                            <path d="M16 18l6-6-6-6M8 6l-6 6 6 6" />
+                                                        </svg>
                                                     </div>
                                                 ) : (notif.type === 'achievement_unlocked' || notif.notification_type === 'achievement_unlocked' || notif.type === 'level_up' || notif.notification_type === 'level_up') ? (
                                                     (() => {

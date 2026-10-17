@@ -157,6 +157,12 @@ export default function NotificationDropdown({
                       <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-amber-500/20 via-purple-600/30 to-amber-500/10 rounded-full shadow-inner border border-[#ff912d]/40 text-[#ffb703]">
                         <QuillIcon className="w-5 h-5 text-[#ffb703] drop-shadow-[0_0_6px_rgba(255,183,3,0.7)]" />
                       </div>
+                    ) : (notif.type === 'sandbox_unlocked' || notif.notification_type === 'sandbox_unlocked') ? (
+                      <div className="w-full h-full flex items-center justify-center bg-[#ff912d]/20 rounded-full shadow-inner text-[#ff912d]">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M16 18l6-6-6-6M8 6l-6 6 6 6" />
+                        </svg>
+                      </div>
                     ) : (notif.type === 'achievement_unlocked' || notif.notification_type === 'achievement_unlocked' || notif.type === 'level_up' || notif.notification_type === 'level_up') ? (
                       isBadgeImage ? (
                         <img src={badgeImg} alt={notifData?.badgeName || "Badge"} className="w-full h-full object-contain drop-shadow" />
@@ -206,6 +212,11 @@ export default function NotificationDropdown({
                           <strong className="text-[#ff912d] font-bold block mb-0.5">Title Unlocked!</strong>
                           You unlocked the title <span className="text-[#ffb703] font-semibold">"{notifData?.titleName || notifData?.badgeName || 'New Title'}"</span>
                           {notifData?.planetName ? ` for completing ${notifData.planetName}` : ''}.
+                        </>
+                      ) : (notif.type === 'sandbox_unlocked' || notif.notification_type === 'sandbox_unlocked') ? (
+                        <>
+                          <strong className="text-[#ff912d] font-bold block mb-0.5">Code Sandbox Unlocked!</strong>
+                          <span>{notifData?.message || 'Congratulations Cadet! You completed all Moon missions. The Code Sandbox is now unlocked in your sidebar!'}</span>
                         </>
                       ) : (notif.type === 'achievement_unlocked' || notif.notification_type === 'achievement_unlocked') ? (
                         <>

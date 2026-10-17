@@ -87,6 +87,7 @@ export async function POST(req: Request) {
     });
 
     const { progress, xpEarned, gearsEarned, wasCompleted } = result;
+    let sandboxJustUnlocked = false;
 
     // 3. After transaction: check if a new planet was just unlocked (first completion of this mission)
     if (!wasCompleted) {
@@ -148,6 +149,29 @@ export async function POST(req: Request) {
 
         // If exactly 3 are done, this unlocks the next planet and awards the planet completion badge
         if (completedForThisPlanet === 3) {
+          if (completedPlanet.id === 'moon') {
+            sandboxJustUnlocked = true;
+            const existingSandboxNotif = await prisma.notification.findFirst({
+              where: {
+                userId,
+                notificationType: 'sandbox_unlocked',
+              },
+            });
+
+            if (!existingSandboxNotif) {
+              await prisma.notification.create({
+                data: {
+                  userId,
+                  notificationType: 'sandbox_unlocked',
+                  data: {
+                    title: 'Code Sandbox Unlocked!',
+                    message: 'Congratulations Cadet! You have completed all Moon missions. The Code Sandbox is now unlocked in your sidebar!'
+                  },
+                },
+              });
+            }
+          }
+
           if (completedPlanet.nextId) {
             // Avoid duplicate planet_unlocked notifications for the same planet
             const existing = await prisma.notification.findFirst({
@@ -425,6 +449,7 @@ export async function POST(req: Request) {
       gearsEarned: result.gearsEarned,
       alreadyCompleted: wasCompleted,
       isGameCompleted: isEarth3,
+      sandboxUnlocked: sandboxJustUnlocked,
       completedDailyTasks,
     });
   } catch (error: any) {
