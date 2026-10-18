@@ -73,6 +73,8 @@ const getPlanetIcon = (planet: string) => {
   return "/assets/planets/celestial/Mars.svg";
 };
 
+const SHOW_PLANET_AFFINITY = false;
+
 export default function AptitudeTestClient({ initialUser }: AptitudeTestClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -885,7 +887,7 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
         )}
 
         {/* Planetary Affinity Alignment (Nova AI Computed Curriculum Mapping) */}
-        {results?.aiInsight?.planets && results.aiInsight.planets.length > 0 && (
+        {SHOW_PLANET_AFFINITY && results?.aiInsight?.planets && results.aiInsight.planets.length > 0 && (
           <div className="bg-black/25 border border-white/10 rounded-2xl p-6 sm:p-7 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/10 pb-3">
               <div className="flex items-center gap-2.5 text-sm sm:text-base font-mono text-[#ff912d] font-bold uppercase tracking-wider">
