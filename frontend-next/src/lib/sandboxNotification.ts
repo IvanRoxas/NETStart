@@ -33,5 +33,5 @@ export async function ensureSandboxUnlockedNotification(userId: string) {
     });
 
     return { created: true, notification: created };
-  }, { timeout: 60000, maxWait: 60000 });
+  }, { timeout: 10000, maxWait: 10000 });
 }
