@@ -358,7 +358,7 @@ export async function assignStudentToSection(userId: string, sectionId: string) 
   const adminId = (session.user as any).id;
   const role = (session.user as any).role || "SUPER_ADMIN";
 
-  return await prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
     // 1. Validate target section
     const targetSection = await tx.section.findUnique({
       where: { id: sectionId },
@@ -419,7 +419,7 @@ export async function assignStudentToSection(userId: string, sectionId: string) 
 
       // If student is already in this section, no-op
       if (currentStudent.sectionId === sectionId) {
-        return { success: true, message: "Student is already enrolled in this section." };
+        return { success: true, message: "Student is already enrolled in this section.", logPayload: null };
       }
     }
 
@@ -433,27 +433,34 @@ export async function assignStudentToSection(userId: string, sectionId: string) 
       data: { sectionId }
     });
 
-    await logSystemAction({
-      actorId: adminId,
-      actorRole: role,
-      action: "ASSIGNED_STUDENT_SECTION",
-      targetUserId: userId,
-      details: { 
-        sectionId, 
-        sectionName: targetSection.name,
-        previousSectionId,
-        previousSectionName,
-        previousTeacherId
+    return {
+      success: true,
+      logPayload: {
+        actorId: adminId,
+        actorRole: role,
+        action: "ASSIGNED_STUDENT_SECTION",
+        targetUserId: userId,
+        details: { 
+          sectionId, 
+          sectionName: targetSection.name,
+          previousSectionId,
+          previousSectionName,
+          previousTeacherId
+        }
       }
-    });
+    };
+  }, { timeout: 15000, maxWait: 15000 });
 
-    return { success: true };
-  }).then(async (res) => {
-    revalidatePath('/admin');
-    revalidatePath('/admin/sections');
-    revalidatePath(`/admin/users/${userId}`);
-    return res;
-  });
+  // 5. Post-commit logging & cache revalidation
+  if (result.logPayload) {
+    await logSystemAction(result.logPayload);
+  }
+
+  revalidatePath('/admin');
+  revalidatePath('/admin/sections');
+  revalidatePath(`/admin/users/${userId}`);
+
+  return { success: true, ...(result.message ? { message: result.message } : {}) };
 }
 
 export async function toggleUserDemoModePrivilege(userId: string, currentStatus: boolean) {
