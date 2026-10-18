@@ -308,7 +308,7 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
       setToastNotification({
         show: true,
         title: "Unanswered Questions Detected",
-        message: `All 15 questions must be answered before grading. Uncompleted: Question ${unansweredIndices.join(
+        message: `All ${questions.length} questions must be answered before grading. Uncompleted: Question ${unansweredIndices.join(
           ", "
         )}.`,
         unansweredIds: unansweredIndices,

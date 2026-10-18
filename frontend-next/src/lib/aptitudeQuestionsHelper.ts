@@ -46,36 +46,70 @@ export async function ensureDefaultAptitudeQuestionsInDb() {
   }
 }
 
-export async function getActiveClientQuestions(): Promise<{
-  questions: ClientAptitudeQuestion[];
+export const MIN_DB_QUESTIONS = 15;
+
+export interface StudentQuestion {
+  id: string;
+  category: AptitudeCategory;
+  number: number;
+  title: string;
+  question: string;
+  options: Record<string, string>;
+  answer: string;
+  concept: string;
+}
+
+export function isStudentRenderableQuestion(q: any): boolean {
+  if (!q) return false;
+  const qType = (q.questionType || "MULTIPLE_CHOICE").toUpperCase();
+  if (qType !== "MULTIPLE_CHOICE") return false;
+
+  let opts: any[] = [];
+  if (Array.isArray(q.options)) {
+    opts = q.options;
+  } else if (typeof q.options === "string") {
+    try {
+      const parsed = JSON.parse(q.options);
+      if (Array.isArray(parsed)) opts = parsed;
+    } catch {
+      return false;
+    }
+  } else {
+    return false;
+  }
+
+  if (opts.length !== 4) return false;
+  if (typeof q.correctAnswer !== "number" || !Number.isInteger(q.correctAnswer) || q.correctAnswer < 0 || q.correctAnswer >= 4) {
+    return false;
+  }
+
+  return true;
+}
+
+export async function getStudentQuestionSet(): Promise<{
+  questions: StudentQuestion[];
   source: "database" | "json";
 }> {
   try {
-    let dbQuestions = await prisma.aptitudeQuestion.findMany({
+    const dbQuestions = await prisma.aptitudeQuestion.findMany({
       where: { isActive: true },
       orderBy: { createdAt: "asc" }
     });
 
-    if (dbQuestions.length === 0) {
-      await ensureDefaultAptitudeQuestionsInDb();
-      dbQuestions = await prisma.aptitudeQuestion.findMany({
-        where: { isActive: true },
-        orderBy: { createdAt: "asc" }
-      });
-    }
+    const validQuestions = dbQuestions.filter(isStudentRenderableQuestion);
 
-    if (dbQuestions.length > 0) {
-      const clientQuestions: ClientAptitudeQuestion[] = dbQuestions.map((q, idx) => {
-        let optsRecord: Record<string, string> = {};
-        if (Array.isArray(q.options)) {
-          const letters = ["A", "B", "C", "D", "E", "F"];
-          (q.options as string[]).forEach((opt, oIdx) => {
-            const letter = letters[oIdx] || String(oIdx + 1);
-            optsRecord[letter] = String(opt);
-          });
-        } else if (q.options && typeof q.options === "object") {
-          optsRecord = q.options as Record<string, string>;
-        }
+    if (validQuestions.length >= MIN_DB_QUESTIONS) {
+      const letters = ["A", "B", "C", "D"];
+      const studentQuestions: StudentQuestion[] = validQuestions.map((q, idx) => {
+        const optsRecord: Record<string, string> = {};
+        const optsArray = Array.isArray(q.options)
+          ? (q.options as string[])
+          : (JSON.parse(q.options as string) as string[]);
+
+        optsArray.forEach((opt, oIdx) => {
+          const letter = letters[oIdx] || String(oIdx + 1);
+          optsRecord[letter] = String(opt);
+        });
 
         return {
           id: q.id,
@@ -83,25 +117,47 @@ export async function getActiveClientQuestions(): Promise<{
           number: idx + 1,
           title: q.question.length > 40 ? q.question.slice(0, 37) + "..." : q.question,
           question: q.question,
-          options: optsRecord
+          options: optsRecord,
+          answer: letters[q.correctAnswer ?? 0] || "A",
+          concept: q.explanation || `${q.category} Reasoning`,
         };
       });
 
-      return { questions: clientQuestions, source: "database" };
+      return { questions: studentQuestions, source: "database" };
     }
   } catch (err) {
     console.warn("[APTITUDE] Failed to load questions from database, falling back to static json:", err);
   }
 
   // Fallback to static JSON file
-  const fallbackQuestions: ClientAptitudeQuestion[] = questionsData.questions.map((q) => ({
+  const fallbackQuestions: StudentQuestion[] = questionsData.questions.map((q) => ({
     id: q.id,
     category: q.category as AptitudeCategory,
     number: q.number,
     title: q.title,
     question: q.question,
     options: q.options,
+    answer: q.answer,
+    concept: q.concept,
   }));
 
   return { questions: fallbackQuestions, source: "json" };
 }
+
+export async function getActiveClientQuestions(): Promise<{
+  questions: ClientAptitudeQuestion[];
+  source: "database" | "json";
+}> {
+  const { questions, source } = await getStudentQuestionSet();
+  const clientQuestions: ClientAptitudeQuestion[] = questions.map((q) => ({
+    id: q.id,
+    category: q.category,
+    number: q.number,
+    title: q.title,
+    question: q.question,
+    options: q.options,
+  }));
+
+  return { questions: clientQuestions, source };
+}
+

@@ -3,14 +3,13 @@ import { getServerSession } from "next-auth/next";
 import { authOptions, prisma } from "@/lib/auth";
 import { addXPAndCheckLevelUp } from "@/lib/xp";
 import { logSystemAction } from "@/lib/logger";
-import questionsData from "@/server/data/aptitude_questions.server.json";
 import { generateStructuredResponse } from "@/ai/client";
 import { aptitudeSchema } from "@/ai/schemas/aptitudeSchema";
 import { getAptitudePrompt, getAptitudeFallback } from "@/ai/prompts/aptitude";
 import { NOVA_SYSTEM_INSTRUCTION } from "@/ai/prompts/shared";
 import { mockAptitudeResponse } from "@/ai/mock";
 import { processAIPathResponse, normalizePathOrder } from "@/ai/pathUtils";
-import { normalizeAptitudeCategory } from "@/lib/aptitudeQuestionsHelper";
+import { getStudentQuestionSet } from "@/lib/aptitudeQuestionsHelper";
 import {
   AptitudeCategory,
   AptitudeTestResult,
@@ -69,43 +68,15 @@ export async function POST(req: Request) {
       );
     }
 
-    // Dynamic master questions from DB with JSON fallback
-    let masterQuestions: Array<{
-      id: string;
-      category: AptitudeCategory;
-      number: number;
-      answer: string;
-      concept: string;
-    }> = [];
-
-    try {
-      const dbQuestions = await prisma.aptitudeQuestion.findMany({
-        where: { isActive: true },
-        orderBy: { createdAt: "asc" }
-      });
-      if (dbQuestions.length > 0) {
-        const letters = ["A", "B", "C", "D", "E", "F"];
-        masterQuestions = dbQuestions.map((q, idx) => ({
-          id: q.id,
-          category: normalizeAptitudeCategory(q.category),
-          number: idx + 1,
-          answer: letters[q.correctAnswer ?? 0] || "A",
-          concept: q.explanation || `${q.category} Reasoning`,
-        }));
-      }
-    } catch (e) {
-      console.warn("[APTITUDE_GRADE] Failed to query active questions from DB:", e);
-    }
-
-    if (masterQuestions.length === 0) {
-      masterQuestions = questionsData.questions.map((q) => ({
-        id: q.id,
-        category: q.category as AptitudeCategory,
-        number: q.number,
-        answer: q.answer,
-        concept: q.concept,
-      }));
-    }
+    // Master questions via shared getStudentQuestionSet helper
+    const { questions: studentQuestions } = await getStudentQuestionSet();
+    const masterQuestions = studentQuestions.map((q) => ({
+      id: q.id,
+      category: q.category,
+      number: q.number,
+      answer: q.answer,
+      concept: q.concept,
+    }));
     
     let aiContext: AptitudeAIContext;
     let baseResult: any = dbUser?.aptitudeResult;
