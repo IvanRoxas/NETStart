@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth/next';
 import { cookies } from 'next/headers';
 import { authOptions, prisma } from '@/lib/auth';
 import { DEMO_MODE_COOKIE } from '@/lib/demoMode';
+import { ensureSandboxUnlockedNotification } from '@/lib/sandboxNotification';
 
 export async function GET() {
   try {
@@ -45,25 +46,7 @@ export async function GET() {
 
     // If unlocked via Moon completion, check if a sandbox_unlocked notification exists; if not, create one retroactively
     if (isMoonCompleted) {
-      const existingNotif = await prisma.notification.findFirst({
-        where: {
-          userId,
-          notificationType: 'sandbox_unlocked'
-        }
-      });
-
-      if (!existingNotif) {
-        await prisma.notification.create({
-          data: {
-            userId,
-            notificationType: 'sandbox_unlocked',
-            data: {
-              title: 'Code Sandbox Unlocked!',
-              message: 'Congratulations Cadet! You have completed all Moon missions. The Code Sandbox is now unlocked in your sidebar!'
-            }
-          }
-        });
-      }
+      await ensureSandboxUnlockedNotification(userId);
     }
 
     return NextResponse.json({

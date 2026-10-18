@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions, prisma } from "@/lib/auth";
 import { XP_REWARDS } from "@/lib/xpEconomy";
+import { ensureSandboxUnlockedNotification } from "@/lib/sandboxNotification";
 
 export async function POST(req: Request) {
   try {
@@ -151,25 +152,7 @@ export async function POST(req: Request) {
         if (completedForThisPlanet === 3) {
           if (completedPlanet.id === 'moon') {
             sandboxJustUnlocked = true;
-            const existingSandboxNotif = await prisma.notification.findFirst({
-              where: {
-                userId,
-                notificationType: 'sandbox_unlocked',
-              },
-            });
-
-            if (!existingSandboxNotif) {
-              await prisma.notification.create({
-                data: {
-                  userId,
-                  notificationType: 'sandbox_unlocked',
-                  data: {
-                    title: 'Code Sandbox Unlocked!',
-                    message: 'Congratulations Cadet! You have completed all Moon missions. The Code Sandbox is now unlocked in your sidebar!'
-                  },
-                },
-              });
-            }
+            await ensureSandboxUnlockedNotification(userId);
           }
 
           if (completedPlanet.nextId) {

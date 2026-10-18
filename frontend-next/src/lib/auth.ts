@@ -14,7 +14,7 @@ const globalForPrisma = global as unknown as { prisma: PrismaClient };
 export let prisma: PrismaClient;
 
 const createPrismaClient = () => {
-  const pool = new Pool({ connectionString });
+  const pool = new Pool({ connectionString, max: 4 });
   const adapter = new PrismaPg(pool);
   return new PrismaClient({ adapter });
 };
