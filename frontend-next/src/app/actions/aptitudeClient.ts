@@ -160,13 +160,20 @@ export async function submitAptitudeTest(userAnswers: Record<string, number | st
   const logicScore = logicTotal > 0 ? Math.round((logicCorrect / logicTotal) * 100) : 80;
   const patternRecognitionScore = patternTotal > 0 ? Math.round((patternCorrect / patternTotal) * 100) : 85;
 
-  let recommendedLearningPath = "Fullstack Web & Distributed Systems";
-  if (logicScore >= 80 && patternRecognitionScore >= 80) {
-    recommendedLearningPath = "Fullstack Systems & Advanced Architecture (HTML/CSS/JS/React/Node)";
-  } else if (logicScore >= 70) {
-    recommendedLearningPath = "Frontend Engineering & Component Architecture (HTML/CSS/JS)";
+  const diff = patternRecognitionScore - logicScore;
+  let recommendedLearningPath = "Fullstack Systems & Distributed Architecture";
+  if (diff < 0) {
+    recommendedLearningPath = logicScore >= 80
+      ? "Backend Engineering & Systems Architecture (Java / C++ / Python)"
+      : "Foundational Logic & Systems Architecture (Java / C++ / Python)";
+  } else if (diff > 0) {
+    recommendedLearningPath = patternRecognitionScore >= 80
+      ? "Frontend Engineering & Component Architecture (HTML / CSS / JavaScript)"
+      : "Foundational Web Development & UI Architecture (HTML / CSS / JavaScript)";
   } else {
-    recommendedLearningPath = "Foundational Logic & Interactive Web Technologies";
+    recommendedLearningPath = (logicScore >= 80 && patternRecognitionScore >= 80)
+      ? "Fullstack Systems & Advanced Architecture (Full Planetary Sequence)"
+      : "Fullstack Web & Distributed Systems";
   }
 
   await prisma.$transaction(async (tx) => {

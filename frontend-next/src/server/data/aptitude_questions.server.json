@@ -29,7 +29,7 @@
         "D": "🕚"
       },
       "answer": "B",
-      "concept": "Raven's Progressive Matrices (non-verbal pattern-completion test)",
+      "concept": "Visual Rotation & Angle Progression",
       "explanation": "The time on the clock advances by exactly 2 hours in each step."
     },
     {
@@ -45,7 +45,7 @@
         "D": "◼️◻️◼️◻️◼️"
       },
       "answer": "C",
-      "concept": "Raven's Progressive Matrices (non-verbal pattern-completion test)",
+      "concept": "Geometric Shading & Quantity Alternation",
       "explanation": "The number of squares increases by one each time, and the shading strictly alternates between all-white and all-black."
     },
     {
@@ -61,7 +61,7 @@
         "D": "◻️ ◼️ ◻️"
       },
       "answer": "B",
-      "concept": "Raven's Progressive Matrices (non-verbal pattern-completion test)",
+      "concept": "Spatial Grid Traversal & Cyclic Wrap-Around",
       "explanation": "The black square moves one space to the right in each step. Once it reaches the end, it wraps back around to the first position."
     },
     {
@@ -77,7 +77,7 @@
         "D": "42"
       },
       "answer": "C",
-      "concept": "Raven's Progressive Matrices (non-verbal pattern-completion test)",
+      "concept": "Arithmetic Delta Progression (+3, +5, +7, +9)",
       "explanation": "The differences between the numbers are +3, +5, +7, and +9. The next logical difference is +11, so 27 + 11 = 38."
     },
     {
@@ -93,7 +93,7 @@
         "D": "30"
       },
       "answer": "B",
-      "concept": "Raven's Progressive Matrices (non-verbal pattern-completion test)",
+      "concept": "Dual-Phase Alternating Arithmetic Operations",
       "explanation": "The pattern alternates between subtracting 5 and adding 10. The last step was adding 10 to get 20, so the next step is subtracting 5 to get 15."
     },
     {

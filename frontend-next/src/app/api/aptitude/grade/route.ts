@@ -37,7 +37,7 @@ export async function POST(req: Request) {
     
     const dbUser = await prisma.user.findUnique({
       where: { id: userId },
-      select: { hasTakenAptitudeTest: true, isBanned: true, isFallback: true, pathOrder: true, logicScore: true, patternRecognitionScore: true, taskDecompositionScore: true, aptitudeResult: true }
+      select: { hasTakenAptitudeTest: true, isBanned: true, isFallback: true, pathOrder: true, logicScore: true, patternRecognitionScore: true, taskDecompositionScore: true, aptitudeResult: true, recommendedLearningPath: true }
     });
 
     if (dbUser?.isBanned) {
@@ -80,6 +80,7 @@ export async function POST(req: Request) {
     
     let aiContext: AptitudeAIContext;
     let baseResult: any = dbUser?.aptitudeResult;
+    let recommendedLearningPath: string = dbUser?.recommendedLearningPath || "Fullstack Systems & Distributed Architecture";
 
     if (!isRegenerating) {
       const categoryTotals: Record<AptitudeCategory, { correct: number; total: number }> = {
@@ -176,14 +177,24 @@ export async function POST(req: Request) {
         percent: sortedDesc[sortedDesc.length - 1].percent,
       };
 
-      // Determine recommended learning path based on performance
-      let recommendedLearningPath = "Fullstack Web & Distributed Systems";
-      if (categoriesFormatted.pattern_recognition.percent >= 80 && categoriesFormatted.logical_reasoning.percent >= 80) {
-        recommendedLearningPath = "Fullstack Systems & Advanced Architecture (HTML/CSS/JS/React/Node)";
-      } else if (categoriesFormatted.logical_reasoning.percent >= 60) {
-        recommendedLearningPath = "Frontend Engineering & Component Architecture (HTML/CSS/JS)";
+      // Determine recommended learning path based on cognitive track and performance
+      const patternPct = categoriesFormatted.pattern_recognition.percent;
+      const logicPct = categoriesFormatted.logical_reasoning.percent;
+      const trackDiff = patternPct - logicPct;
+
+      recommendedLearningPath = "Fullstack Systems & Distributed Architecture";
+      if (trackDiff < 0) {
+        recommendedLearningPath = logicPct >= 80
+          ? "Backend Engineering & Systems Architecture (Java / C++ / Python)"
+          : "Foundational Logic & Systems Architecture (Java / C++ / Python)";
+      } else if (trackDiff > 0) {
+        recommendedLearningPath = patternPct >= 80
+          ? "Frontend Engineering & Component Architecture (HTML / CSS / JavaScript)"
+          : "Foundational Web Development & UI Architecture (HTML / CSS / JavaScript)";
       } else {
-        recommendedLearningPath = "Foundational Logic & Interactive Web Technologies";
+        recommendedLearningPath = (logicPct >= 80 && patternPct >= 80)
+          ? "Fullstack Systems & Advanced Architecture (Full Planetary Sequence)"
+          : "Fullstack Web & Distributed Systems";
       }
 
       const completedAt = new Date().toISOString();
@@ -351,6 +362,7 @@ export async function POST(req: Request) {
           aptitudeResult: finalResult as any,
           pathOrder: normalizePathOrder(pathOrder),
           track: result.track,
+          recommendedLearningPath,
           aiSummary: result.summary,
           planetReasons: result.planets.map(p => ({ planet: p.planet, reason: p.reason })),
           isFallback: finalFallbackStatus

@@ -1,10 +1,56 @@
 import { injectBuiltInAssets } from '../assets';
 
+const LOOP_GUARD_TIMEOUT_MS = 2500;
+const LOOP_GUARD_CHECK = `if (Date.now() - __netstartLoopStart > ${LOOP_GUARD_TIMEOUT_MS}) { throw new Error("Execution timed out: Potential infinite loop detected (exceeded 2.5s)."); }`;
+
+/**
+ * Preprocesses student JavaScript to protect against infinite loops
+ * (e.g., while(true), unbounded for loops, or do-while constructs)
+ * by injecting execution timers and loop-break guards.
+ */
+export function injectLoopGuards(jsCode: string): string {
+  if (!jsCode || !jsCode.trim()) return jsCode;
+
+  let processed = jsCode;
+
+  // 1. Handle single-line braceless while/for ending with semicolon:
+  // e.g. while(true); or for(;;);
+  // Must not be the trailing while of a do-while loop (i.e. not preceded by '}')
+  processed = processed.replace(
+    /(?<!\}\s*)\b((?:while|for)\s*\((?:[^()]+|\((?:[^()]+|\([^()]*\))*\))*\))\s*;/g,
+    `$1 { ${LOOP_GUARD_CHECK} }`
+  );
+
+  // 2. Handle single-line braceless while/for with single statement:
+  // e.g. while(true) count++;
+  // Must not match if already followed by { or loop-guard check
+  processed = processed.replace(
+    /(?<!\}\s*)\b((?:while|for)\s*\((?:[^()]+|\((?:[^()]+|\([^()]*\))*\))*\))\s*(?!\{|if\s*\(\s*Date\.now)([^;{}\r\n]+;)/g,
+    `$1 { ${LOOP_GUARD_CHECK} $2 }`
+  );
+
+  // 3. Handle standard braced while/for loops:
+  // e.g. while(...) { or for(...) {
+  // Use negative lookahead so we don't inject twice if already instrumented
+  processed = processed.replace(
+    /\b((?:while|for)\s*\((?:[^()]+|\((?:[^()]+|\([^()]*\))*\))*\)\s*\{)(?!\s*if\s*\(\s*Date\.now)/g,
+    `$1 ${LOOP_GUARD_CHECK} `
+  );
+
+  // 4. Handle do { loops:
+  processed = processed.replace(
+    /\b(do\s*\{)(?!\s*if\s*\(\s*Date\.now)/g,
+    `$1 ${LOOP_GUARD_CHECK} `
+  );
+
+  return `try {\n  let __netstartLoopStart = Date.now();\n${processed}\n} catch (err) {\n  console.error(err);\n}`;
+}
+
 export function generateWebRunnerSrc(html: string, css: string, js: string): string {
   const assets = injectBuiltInAssets(html, css, js);
   html = assets.html;
   css = assets.css;
-  js = assets.js;
+  js = injectLoopGuards(assets.js);
 
   const interceptorCode = `
       (function() {

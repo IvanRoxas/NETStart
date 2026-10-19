@@ -32,10 +32,10 @@ async function main() {
   let adminsExisting = 0;
 
   // ----------------------------------------------------
-  // 1. Seed 10 Student Accounts
+  // 1. Seed 20 Student Accounts (team 1 through team 20)
   // ----------------------------------------------------
-  console.log("Seeding student accounts...");
-  for (let i = 1; i <= 10; i++) {
+  console.log("Seeding student accounts (team 1 through team 20)...");
+  for (let i = 1; i <= 20; i++) {
     const username = `team ${i}`;
     const email = `team${i}@gmail.com`;
     const rawPassword = `team ${i}`;

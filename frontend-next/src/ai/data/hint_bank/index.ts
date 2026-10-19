@@ -1,5 +1,10 @@
 import { moonHints } from "./moon";
 import { marsHints } from "./mars";
+import { venusHints } from "./venus";
+import { mercuryHints } from "./mercury";
+import { jupiterHints } from "./jupiter";
+import { saturnHints } from "./saturn";
+import { earthHints } from "./earth";
 import { HintBankEntry, SectionHints } from "./types";
 
 export * from "./types";
@@ -7,6 +12,11 @@ export * from "./types";
 const ALL_HINTS: Record<string, SectionHints> = {
   ...moonHints,
   ...marsHints,
+  ...venusHints,
+  ...mercuryHints,
+  ...jupiterHints,
+  ...saturnHints,
+  ...earthHints,
 };
 
 export function getSectionHints(missionId: string): SectionHints {

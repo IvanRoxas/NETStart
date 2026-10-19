@@ -82,6 +82,111 @@ const PRESET_TEST_CASES: TestCase[] = [
     generatedJs: "<a>Connect to Network</a>",
     errorMessage: "Accessibility & Validation Error: <a> element missing required href attribute.",
   },
+  {
+    name: "11. Venus-1: Missing Equipment CSS Color",
+    missionId: "venus-1",
+    plainEnglishCode: "Spawn 3 items, style border only without colors",
+    generatedJs: "spawnItem('microscope'); setBorder('2px solid white');",
+    errorMessage: "Laboratory equipment is unstyled: missing background-color and text color.",
+  },
+  {
+    name: "12. Venus-2: Misaligned Sensors (Flexbox)",
+    missionId: "venus-2",
+    plainEnglishCode: "Target screen 1, set display flex without justification",
+    generatedJs: "screen1.style.display = 'flex';",
+    errorMessage: "Sensor readout misaligned: display: flex detected but justify-content or align-items missing.",
+  },
+  {
+    name: "13. Venus-3: Unlinked External Stylesheet",
+    missionId: "venus-3",
+    plainEnglishCode: "Link alpha and beta, but missing gamma stylesheet",
+    generatedJs: "<link rel='stylesheet' href='alpha.css'><link rel='stylesheet' href='beta.css'>",
+    errorMessage: "Environment sector gamma offline: missing <link rel='stylesheet' href='gamma.css'>.",
+  },
+  {
+    name: "14. Mercury-1: Cooler Style Inactive",
+    missionId: "mercury-1",
+    plainEnglishCode: "Select cooler with querySelector but do not set display block",
+    generatedJs: "let cooler = document.querySelector('#cooler');",
+    errorMessage: "Greenhouse temperature rising: cooler.style.display is not set to 'block'.",
+  },
+  {
+    name: "15. Mercury-2: Conveyor Wrong Crate Route",
+    missionId: "mercury-2",
+    plainEnglishCode: "Check if crate is Energy Core route to warehouse instead of reactor",
+    generatedJs: "if (crate === 'Energy Core') { routeToWarehouse(); }",
+    errorMessage: "Hazardous routing! Energy Core directed to warehouse instead of reactor.",
+  },
+  {
+    name: "16. Mercury-3: Missing Button Event Listener",
+    missionId: "mercury-3",
+    plainEnglishCode: "Create send button but forget click listener",
+    generatedJs: "let btn = document.querySelector('#sendBtn');",
+    errorMessage: "Signal offline: sendBtn is missing addEventListener('click', ...).",
+  },
+  {
+    name: "17. Jupiter-1: Quoted Boolean String Mismatch",
+    missionId: "jupiter-1",
+    plainEnglishCode: "Declare String securityCode, int level, and boolean gateOverride = 'true'",
+    generatedJs: "String securityCode = \"ALPHA\"; int clearanceLevel = 5; boolean gateOverride = \"true\"; unlockGates();",
+    errorMessage: "Type Mismatch: Do not wrap booleans in quotes. Use boolean true/false, not \"true\".",
+  },
+  {
+    name: "18. Jupiter-2: Unhandled Exception in Wave",
+    missionId: "jupiter-2",
+    plainEnglishCode: "Try scan data stream without catch handlers",
+    generatedJs: "try { scanDataStream(); }",
+    errorMessage: "DEFENSE GRID OFFLINE: Snap at least one When [error] occurs: rule into the unless: slot of the Try Running: block to intercept threats.",
+  },
+  {
+    name: "19. Jupiter-3: Missing Encapsulated Private Fields",
+    missionId: "jupiter-3",
+    plainEnglishCode: "Create UserProfile class with public fields",
+    generatedJs: "public class UserProfile { public int clearanceLevel; }",
+    errorMessage: "Security audit failed: clearanceLevel must be declared private for encapsulation.",
+  },
+  {
+    name: "20. Saturn-1: Stream Closed Early (Missing Loop)",
+    missionId: "saturn-1",
+    plainEnglishCode: "int main() with cin >> sensor once without stream loop",
+    generatedJs: "int main() { string data; cin >> data; cout << data; return 0; }",
+    errorMessage: "Stream closed early: Telemetry loop missing!",
+  },
+  {
+    name: "21. Saturn-2: Unhandled Ring Debris in Switch",
+    missionId: "saturn-2",
+    plainEnglishCode: "Switch material with Ice and Rock only",
+    generatedJs: "switch(material) { case 'Ice': melt(); break; case 'Rock': crush(); break; }",
+    errorMessage: "Ring collision alert: unhandled debris type 'Metal' in switch statement.",
+  },
+  {
+    name: "22. Saturn-3: Reactor Memory Leak",
+    missionId: "saturn-3",
+    plainEnglishCode: "Allocate EnergyCore on heap with new, transfer energy, but do not delete",
+    generatedJs: "EnergyCore* core = new EnergyCore(); core->transferEnergy();",
+    errorMessage: "CRITICAL: Memory leak detected! Allocated heap memory was not freed with delete.",
+  },
+  {
+    name: "23. Earth-1: Telemetry Slicing Bounds Error",
+    missionId: "earth-1",
+    plainEnglishCode: "Load raw data and slice with incorrect offset [0:5]",
+    generatedJs: "clean_record = raw_data[0:5]; print(clean_record)",
+    errorMessage: "Checksum mismatch: sliced record contains corrupted header characters.",
+  },
+  {
+    name: "24. Earth-2: Master Archive Append Missing",
+    missionId: "earth-2",
+    plainEnglishCode: "Created all planet dicts in Tab 1, but Tab 2 list append is empty",
+    generatedJs: "master_archive = []",
+    errorMessage: "Master archive empty: planet dictionaries were not appended to master_archive list.",
+  },
+  {
+    name: "25. Earth-3: Reboot Function Defined But Not Called",
+    missionId: "earth-3",
+    plainEnglishCode: "Import all 6 modules, define reboot function, never call it",
+    generatedJs: "import moon, mars, venus, mercury, jupiter, saturn\ndef reboot_planetary_network():\n    moon.reboot()\n",
+    errorMessage: "Function defined, but never called. The system is waiting for you to synchronize the execution.",
+  },
 ];
 
 export default function PlaygroundClient({ isMock }: { isMock: boolean }) {
@@ -124,9 +229,9 @@ export default function PlaygroundClient({ isMock }: { isMock: boolean }) {
       {/* Preset Buttons */}
       <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl">
         <h3 className="text-sm font-semibold uppercase text-cyan-400 mb-3 tracking-wider">
-          Quick Preset Test Cases (10 Scenarios)
+          Quick Preset Test Cases ({PRESET_TEST_CASES.length} Planetary Scenarios)
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-72 overflow-y-auto pr-1">
           {PRESET_TEST_CASES.map((tc, idx) => (
             <button
               key={idx}
@@ -158,13 +263,42 @@ export default function PlaygroundClient({ isMock }: { isMock: boolean }) {
             onChange={(e) => setMissionId(e.target.value)}
             className="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-white text-sm"
           >
-            <option value="moon-1">moon-1 (Movement)</option>
-            <option value="moon-2">moon-2 (Sorting)</option>
-            <option value="moon-3">moon-3 (Reboot)</option>
-            <option value="mars-1">mars-1 (Headings & Paragraphs)</option>
-            <option value="mars-1-part2">mars-1-part2 (Containers)</option>
-            <option value="mars-2">mars-2 (Images)</option>
-            <option value="mars-3">mars-3 (Hyperlinks)</option>
+            <optgroup label="The Moon (Basics & Movement)">
+              <option value="moon-1">moon-1 (Movement)</option>
+              <option value="moon-2">moon-2 (Sorting)</option>
+              <option value="moon-3">moon-3 (Reboot Protocol)</option>
+            </optgroup>
+            <optgroup label="Mars (HTML Web Architecture)">
+              <option value="mars-1">mars-1 (Headings & Paragraphs)</option>
+              <option value="mars-1-part2">mars-1-part2 (Containers)</option>
+              <option value="mars-2">mars-2 (Images & Void Tags)</option>
+              <option value="mars-3">mars-3 (Hyperlinks & Navigation)</option>
+            </optgroup>
+            <optgroup label="Venus (CSS Styling & Layout)">
+              <option value="venus-1">venus-1 (Colors & Borders)</option>
+              <option value="venus-2">venus-2 (Flexbox Alignment)</option>
+              <option value="venus-3">venus-3 (External Stylesheets)</option>
+            </optgroup>
+            <optgroup label="Mercury (JavaScript & DOM)">
+              <option value="mercury-1">mercury-1 (DOM Manipulation)</option>
+              <option value="mercury-2">mercury-2 (Conveyor Belt Logic)</option>
+              <option value="mercury-3">mercury-3 (Interactive Interface)</option>
+            </optgroup>
+            <optgroup label="Jupiter (Java & OOP)">
+              <option value="jupiter-1">jupiter-1 (Strong Typing & Variables)</option>
+              <option value="jupiter-2">jupiter-2 (Try/Catch Defense Waves)</option>
+              <option value="jupiter-3">jupiter-3 (Classes & Encapsulation)</option>
+            </optgroup>
+            <optgroup label="Saturn (C++ & Memory)">
+              <option value="saturn-1">saturn-1 (Streams & cin/cout)</option>
+              <option value="saturn-2">saturn-2 (Switch-Case Debris Routing)</option>
+              <option value="saturn-3">saturn-3 (Heap Memory & Pointers)</option>
+            </optgroup>
+            <optgroup label="Earth (Python & Integration)">
+              <option value="earth-1">earth-1 (String Slicing & Ledger)</option>
+              <option value="earth-2">earth-2 (Dictionaries & Master List)</option>
+              <option value="earth-3">earth-3 (Master Reboot Modules)</option>
+            </optgroup>
           </select>
         </div>
 
