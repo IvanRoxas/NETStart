@@ -111,7 +111,9 @@ export async function generateStructuredResponse<T>(
       });
 
       if (!response.text) throw new Error("No response text returned by model");
-      const parsed = JSON.parse(response.text);
+      let cleanText = response.text.trim();
+      cleanText = cleanText.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
+      const parsed = JSON.parse(cleanText);
       return zodSchema.parse(parsed);
     })();
 
@@ -132,7 +134,18 @@ export async function generateStructuredResponse<T>(
       source: "gemini",
       confidence: (result as any).confidence || "high",
     };
-  } catch (error) {
+  } catch (error: any) {
+    const errStr = String(error?.message || error).toLowerCase();
+    const isTimeout = errStr.includes("timed out") || errStr.includes("timeout");
+
+    if (isTimeout) {
+      const reason = getFallbackReason(error);
+      console.log(
+        `[AI_TELEMETRY] module=${moduleName} | mode=live | result=fallback | source=fallback | reason=${reason} (skipped retry to prevent cumulative timeout)`
+      );
+      return { data: fallbackFn(), source: "fallback", confidence: "low" };
+    }
+
     try {
       const result = await tryCall(true);
       console.log(

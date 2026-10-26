@@ -8,7 +8,11 @@ import { aptitudeSchema } from "@/ai/schemas/aptitudeSchema";
 import { getAptitudePrompt, getAptitudeFallback } from "@/ai/prompts/aptitude";
 import { NOVA_SYSTEM_INSTRUCTION } from "@/ai/prompts/shared";
 import { mockAptitudeResponse } from "@/ai/mock";
-import { processAIPathResponse, normalizePathOrder } from "@/ai/pathUtils";
+import {
+  processAIPathResponse,
+  normalizePathOrder,
+  computeDeterministicOrbitAndAffinities,
+} from "@/ai/pathUtils";
 import { getStudentQuestionSet } from "@/lib/aptitudeQuestionsHelper";
 import {
   AptitudeCategory,
@@ -17,6 +21,7 @@ import {
   CategorySummary,
   MissedQuestionItem,
   AptitudeAIContext,
+  SubcategoryScore,
 } from "@/types/aptitude";
 
 export const dynamic = "force-dynamic";
@@ -34,10 +39,20 @@ export async function POST(req: Request) {
     const userId = session.user.id;
     const body = await req.json().catch(() => ({}));
     const rawAnswers = body.answers || body;
-    
+
     const dbUser = await prisma.user.findUnique({
       where: { id: userId },
-      select: { hasTakenAptitudeTest: true, isBanned: true, isFallback: true, pathOrder: true, logicScore: true, patternRecognitionScore: true, taskDecompositionScore: true, aptitudeResult: true, recommendedLearningPath: true }
+      select: {
+        hasTakenAptitudeTest: true,
+        isBanned: true,
+        isFallback: true,
+        pathOrder: true,
+        logicScore: true,
+        patternRecognitionScore: true,
+        taskDecompositionScore: true,
+        aptitudeResult: true,
+        recommendedLearningPath: true,
+      },
     });
 
     if (dbUser?.isBanned) {
@@ -47,6 +62,7 @@ export async function POST(req: Request) {
       );
     }
 
+    const isFirstTime = !dbUser?.hasTakenAptitudeTest;
     let isRegenerating = false;
 
     if (dbUser?.hasTakenAptitudeTest) {
@@ -61,41 +77,45 @@ export async function POST(req: Request) {
       }
     }
 
-    if (!isRegenerating && (!rawAnswers || typeof rawAnswers !== "object")) {
+    // Single Source of Truth: Canonical 18 questions
+    const { questions: masterQuestions } = await getStudentQuestionSet();
+
+    const hasSubmittedAnswers =
+      rawAnswers && typeof rawAnswers === "object" && Object.keys(rawAnswers).length > 0;
+
+    if (!isRegenerating && !hasSubmittedAnswers) {
       return NextResponse.json(
         { success: false, message: "Invalid payload format. Expected answers object." },
         { status: 400 }
       );
     }
 
-    // Master questions via shared getStudentQuestionSet helper
-    const { questions: studentQuestions } = await getStudentQuestionSet();
-    const masterQuestions = studentQuestions.map((q) => ({
-      id: q.id,
-      category: q.category,
-      number: q.number,
-      answer: q.answer,
-      concept: q.concept,
-    }));
-    
     let aiContext: AptitudeAIContext;
     let baseResult: any = dbUser?.aptitudeResult;
-    let recommendedLearningPath: string = dbUser?.recommendedLearningPath || "Fullstack Systems & Distributed Architecture";
+    let recommendedLearningPath: string =
+      dbUser?.recommendedLearningPath || "Fullstack Web & Distributed Systems";
 
-    if (!isRegenerating) {
-      const categoryTotals: Record<AptitudeCategory, { correct: number; total: number }> = {
-        pattern_recognition: { correct: 0, total: 0 },
-        task_decomposition: { correct: 0, total: 0 },
-        logical_reasoning: { correct: 0, total: 0 },
-      };
+    let categoriesFormatted: AptitudeTestResult["categories"];
+    let subcategoriesFormatted: AptitudeTestResult["subcategories"];
+    let strongestCategory: CategorySummary;
+    let weakestCategory: CategorySummary;
+    let missed: MissedQuestionItem[] = [];
+    let totalCorrect = 0;
+    let totalPercent = 0;
+    let deterministicOrbit: ReturnType<typeof computeDeterministicOrbitAndAffinities>;
 
-      const missed: MissedQuestionItem[] = [];
+    // Case A: Fresh submission OR Fallback student re-answering all 18 questions
+    if (hasSubmittedAnswers) {
       const validChoices = new Set(["A", "B", "C", "D"]);
 
       // Validate that all questions are answered
       for (const q of masterQuestions) {
         const chosen = rawAnswers[q.id];
-        if (!chosen || typeof chosen !== "string" || !validChoices.has(chosen.trim().toUpperCase())) {
+        if (
+          !chosen ||
+          typeof chosen !== "string" ||
+          !validChoices.has(chosen.trim().toUpperCase())
+        ) {
           return NextResponse.json(
             {
               success: false,
@@ -106,21 +126,27 @@ export async function POST(req: Request) {
         }
       }
 
-      // Local Algorithmic Grading
-      let totalCorrect = 0;
+      // 6 Subcategories Tracking (3 questions each)
+      const subcategoryTotals: Record<string, { correct: number; total: number; name: string }> = {
+        pattern_recognition: { correct: 0, total: 0, name: "Pattern Recognition" },
+        task_decomposition: { correct: 0, total: 0, name: "Task Decomposition & Logic" },
+        web_dev: { correct: 0, total: 0, name: "Web Development" },
+        cpp: { correct: 0, total: 0, name: "C++ Fundamentals" },
+        python: { correct: 0, total: 0, name: "Python Fundamentals" },
+        java: { correct: 0, total: 0, name: "Java Fundamentals" },
+      };
 
       masterQuestions.forEach((q) => {
-        const cat = q.category as AptitudeCategory;
         const userChoice = String(rawAnswers[q.id]).trim().toUpperCase();
         const isCorrect = userChoice === q.answer.trim().toUpperCase();
 
-        if (!categoryTotals[cat]) {
-          categoryTotals[cat] = { correct: 0, total: 0 };
-        }
-        categoryTotals[cat].total += 1;
+        const subcat = (q.subcategory || q.category) as string;
+        const targetSub = subcategoryTotals[subcat] ? subcat : "pattern_recognition";
+
+        subcategoryTotals[targetSub].total += 1;
 
         if (isCorrect) {
-          categoryTotals[cat].correct += 1;
+          subcategoryTotals[targetSub].correct += 1;
           totalCorrect += 1;
         } else {
           missed.push({
@@ -131,170 +157,221 @@ export async function POST(req: Request) {
         }
       });
 
-      const totalQuestions = masterQuestions.length || 1;
-      const totalPercent = Math.round((totalCorrect / totalQuestions) * 100);
+      const totalQuestions = masterQuestions.length || 18;
+      totalPercent = Math.round((totalCorrect / totalQuestions) * 100);
 
-      const pTotal = Math.max(1, categoryTotals.pattern_recognition.total);
-      const tTotal = Math.max(1, categoryTotals.task_decomposition.total);
-      const lTotal = Math.max(1, categoryTotals.logical_reasoning.total);
+      const prCorrect = subcategoryTotals.pattern_recognition.correct;
+      const tdCorrect = subcategoryTotals.task_decomposition.correct;
+      const webCorrect = subcategoryTotals.web_dev.correct;
+      const cppCorrect = subcategoryTotals.cpp.correct;
+      const pyCorrect = subcategoryTotals.python.correct;
+      const javaCorrect = subcategoryTotals.java.correct;
 
-      const categoriesFormatted: AptitudeTestResult["categories"] = {
+      // Legacy 3 Categories (for backwards compatibility with existing UI components)
+      // pattern_recognition = Part 1 Pattern (3) + Part 2 Web (3) = 6 questions
+      // task_decomposition = Part 1 Task Decomposition (3) = 3 questions
+      // logical_reasoning = Part 2 C++ (3) + Python (3) + Java (3) = 9 questions
+      const legacyPatternCorrect = prCorrect + webCorrect;
+      const legacyPatternTotal = 6;
+      const legacyTaskCorrect = tdCorrect;
+      const legacyTaskTotal = 3;
+      const legacyLogicCorrect = cppCorrect + pyCorrect + javaCorrect;
+      const legacyLogicTotal = 9;
+
+      categoriesFormatted = {
         pattern_recognition: {
           category: "pattern_recognition",
           name: "Pattern Recognition",
-          correct: categoryTotals.pattern_recognition.correct,
-          total: categoryTotals.pattern_recognition.total,
-          percent: Math.round((categoryTotals.pattern_recognition.correct / pTotal) * 100),
+          correct: legacyPatternCorrect,
+          total: legacyPatternTotal,
+          percent: Math.round((legacyPatternCorrect / legacyPatternTotal) * 100),
         },
         task_decomposition: {
           category: "task_decomposition",
           name: "Task Decomposition",
-          correct: categoryTotals.task_decomposition.correct,
-          total: categoryTotals.task_decomposition.total,
-          percent: Math.round((categoryTotals.task_decomposition.correct / tTotal) * 100),
+          correct: legacyTaskCorrect,
+          total: legacyTaskTotal,
+          percent: Math.round((legacyTaskCorrect / legacyTaskTotal) * 100),
         },
         logical_reasoning: {
           category: "logical_reasoning",
           name: "Logical Reasoning",
-          correct: categoryTotals.logical_reasoning.correct,
-          total: categoryTotals.logical_reasoning.total,
-          percent: Math.round((categoryTotals.logical_reasoning.correct / lTotal) * 100),
+          correct: legacyLogicCorrect,
+          total: legacyLogicTotal,
+          percent: Math.round((legacyLogicCorrect / legacyLogicTotal) * 100),
         },
       };
 
+      subcategoriesFormatted = {
+        pattern_recognition: {
+          id: "pattern_recognition",
+          name: "Pattern Recognition",
+          correct: prCorrect,
+          total: 3,
+          percent: Math.round((prCorrect / 3) * 100),
+        },
+        task_decomposition: {
+          id: "task_decomposition",
+          name: "Task Decomposition & Logic",
+          correct: tdCorrect,
+          total: 3,
+          percent: Math.round((tdCorrect / 3) * 100),
+        },
+        web_dev: {
+          id: "web_dev",
+          name: "Web Development",
+          correct: webCorrect,
+          total: 3,
+          percent: Math.round((webCorrect / 3) * 100),
+        },
+        cpp: {
+          id: "cpp",
+          name: "C++ Fundamentals",
+          correct: cppCorrect,
+          total: 3,
+          percent: Math.round((cppCorrect / 3) * 100),
+        },
+        python: {
+          id: "python",
+          name: "Python Fundamentals",
+          correct: pyCorrect,
+          total: 3,
+          percent: Math.round((pyCorrect / 3) * 100),
+        },
+        java: {
+          id: "java",
+          name: "Java Fundamentals",
+          correct: javaCorrect,
+          total: 3,
+          percent: Math.round((javaCorrect / 3) * 100),
+        },
+      };
 
       // Calculate strongest and weakest categories
       const categoryList: CategoryScore[] = Object.values(categoriesFormatted);
       const sortedDesc = [...categoryList].sort((a, b) => b.percent - a.percent);
-      const strongestCategory: CategorySummary = {
+      strongestCategory = {
         category: sortedDesc[0].category,
         name: sortedDesc[0].name,
         percent: sortedDesc[0].percent,
       };
-      const weakestCategory: CategorySummary = {
+      weakestCategory = {
         category: sortedDesc[sortedDesc.length - 1].category,
         name: sortedDesc[sortedDesc.length - 1].name,
         percent: sortedDesc[sortedDesc.length - 1].percent,
       };
 
-      // Determine recommended learning path based on cognitive track and performance
-      const patternPct = categoriesFormatted.pattern_recognition.percent;
-      const logicPct = categoriesFormatted.logical_reasoning.percent;
-      const trackDiff = patternPct - logicPct;
+      // Deterministic Orbit & Planet Affinities (No AI Guessing)
+      deterministicOrbit = computeDeterministicOrbitAndAffinities({
+        patternRecognition: prCorrect,
+        taskDecomposition: tdCorrect,
+        webDev: webCorrect,
+        cpp: cppCorrect,
+        python: pyCorrect,
+        java: javaCorrect,
+      });
 
-      recommendedLearningPath = "Fullstack Systems & Distributed Architecture";
-      if (trackDiff < 0) {
-        recommendedLearningPath = logicPct >= 80
-          ? "Backend Engineering & Systems Architecture (Java / C++ / Python)"
-          : "Foundational Logic & Systems Architecture (Java / C++ / Python)";
-      } else if (trackDiff > 0) {
-        recommendedLearningPath = patternPct >= 80
-          ? "Frontend Engineering & Component Architecture (HTML / CSS / JavaScript)"
-          : "Foundational Web Development & UI Architecture (HTML / CSS / JavaScript)";
+      // Assign recommended learning path
+      const webDevPct = subcategoriesFormatted.web_dev.percent;
+      const logicAvgPct = Math.round(
+        (subcategoriesFormatted.cpp.percent +
+          subcategoriesFormatted.python.percent +
+          subcategoriesFormatted.java.percent) /
+          3
+      );
+
+      if (deterministicOrbit.track === "WEB") {
+        recommendedLearningPath =
+          webDevPct >= 80
+            ? "Frontend Engineering & Component Architecture (HTML / CSS / JavaScript)"
+            : "Foundational Web Development & UI Architecture (HTML / CSS / JavaScript)";
+      } else if (deterministicOrbit.track === "LOGIC") {
+        recommendedLearningPath =
+          logicAvgPct >= 80
+            ? "Backend Engineering & Systems Architecture (Java / C++ / Python)"
+            : "Foundational Logic & Systems Architecture (Java / C++ / Python)";
       } else {
-        recommendedLearningPath = (logicPct >= 80 && patternPct >= 80)
-          ? "Fullstack Systems & Advanced Architecture (Full Planetary Sequence)"
-          : "Fullstack Web & Distributed Systems";
+        recommendedLearningPath =
+          deterministicOrbit.webReadiness >= 80 && deterministicOrbit.logicReadiness >= 80
+            ? "Fullstack Systems & Advanced Architecture (Full Planetary Sequence)"
+            : "Fullstack Web & Distributed Systems";
       }
-
-      const completedAt = new Date().toISOString();
 
       baseResult = {
         totalCorrect,
         totalQuestions,
         totalPercent,
         categories: categoriesFormatted,
+        subcategories: subcategoriesFormatted,
         strongestCategory,
         weakestCategory,
         missed,
         recommendedLearningPath,
-        completedAt,
+        completedAt: new Date().toISOString(),
       };
 
-      await prisma.$transaction(async (tx) => {
-        await tx.user.update({
-          where: { id: userId },
-          data: {
-            hasTakenAptitudeTest: true,
-            logicScore: categoriesFormatted.logical_reasoning.percent,
-            patternRecognitionScore: categoriesFormatted.pattern_recognition.percent,
-            taskDecompositionScore: categoriesFormatted.task_decomposition.percent,
-            recommendedLearningPath,
-            aptitudeResult: baseResult as any,
-            gears: { increment: 50 },
-          },
-        });
-
-        await tx.notification.create({
-          data: {
-            userId,
-            notificationType: "aptitude_completed",
-            data: {
-              title: "Aptitude Diagnostic Completed",
-              message: `Diagnostic calibrated with an overall score of ${totalPercent}%. Your flight path has been unlocked!`,
-              logicScore: categoriesFormatted.logical_reasoning.percent,
-              patternRecognitionScore: categoriesFormatted.pattern_recognition.percent,
-              taskDecompositionScore: categoriesFormatted.task_decomposition.percent,
-              totalPercent,
-            },
-          },
-        });
-      });
-
-      await addXPAndCheckLevelUp(userId, 200);
-
-      await logSystemAction({
-        actorId: userId,
-        actorRole: "STUDENT",
-        action: "APTITUDE_TEST_COMPLETED",
-        targetUserId: userId,
-        details: {
-          totalCorrect,
-          totalQuestions,
-          totalPercent,
-          categories: {
-            pattern: categoriesFormatted.pattern_recognition.percent,
-            task: categoriesFormatted.task_decomposition.percent,
-            logic: categoriesFormatted.logical_reasoning.percent,
-          },
-          missedConceptsCount: missed.length,
-          xpAwarded: 200,
-          gearsAwarded: 50,
-        },
-      });
-      
       aiContext = {
         totalCorrect,
         totalPercent,
         totalScore: `${totalCorrect}/${totalQuestions} (${totalPercent}%)`,
         categories: {
-          patternRecognition: categoriesFormatted.pattern_recognition.correct,
-          taskDecomposition: categoriesFormatted.task_decomposition.correct,
-          logicalReasoning: categoriesFormatted.logical_reasoning.correct,
+          patternRecognition: prCorrect,
+          taskDecomposition: tdCorrect,
+          webDev: webCorrect,
+          cpp: cppCorrect,
+          python: pyCorrect,
+          java: javaCorrect,
         },
+        computedTrack: deterministicOrbit.track,
         strongestCategory: `${strongestCategory.name} (${strongestCategory.percent}%)`,
         weakestCategory: `${weakestCategory.name} (${weakestCategory.percent}%)`,
         missedConcepts: missed.map((m) => m.concept),
       };
     } else {
-      // Regenerating context from stored dbUser
-      const apt = dbUser!.aptitudeResult as any;
+      // Case B: Regenerating context from stored dbUser
+      const apt = (dbUser?.aptitudeResult as any) || {};
+      const sub = apt.subcategories || {};
+
+      const prCorrect = sub.pattern_recognition?.correct ?? Math.round(((apt.categories?.pattern_recognition?.correct ?? 0) / 2));
+      const tdCorrect = sub.task_decomposition?.correct ?? (apt.categories?.task_decomposition?.correct ?? 0);
+      const webCorrect = sub.web_dev?.correct ?? Math.round(((apt.categories?.pattern_recognition?.correct ?? 0) / 2));
+      const cppCorrect = sub.cpp?.correct ?? 1;
+      const pyCorrect = sub.python?.correct ?? 1;
+      const javaCorrect = sub.java?.correct ?? 1;
+
+      deterministicOrbit = computeDeterministicOrbitAndAffinities({
+        patternRecognition: prCorrect,
+        taskDecomposition: tdCorrect,
+        webDev: webCorrect,
+        cpp: cppCorrect,
+        python: pyCorrect,
+        java: javaCorrect,
+      });
+
       aiContext = {
-        totalCorrect: apt.totalCorrect,
-        totalPercent: apt.totalPercent,
-        totalScore: `${apt.totalCorrect}/${apt.totalQuestions} (${apt.totalPercent}%)`,
+        totalCorrect: apt.totalCorrect ?? 0,
+        totalPercent: apt.totalPercent ?? 0,
+        totalScore: `${apt.totalCorrect ?? 0}/${apt.totalQuestions ?? 18} (${apt.totalPercent ?? 0}%)`,
         categories: {
-          patternRecognition: apt.categories.pattern_recognition.correct,
-          taskDecomposition: apt.categories.task_decomposition.correct,
-          logicalReasoning: apt.categories.logical_reasoning.correct,
+          patternRecognition: prCorrect,
+          taskDecomposition: tdCorrect,
+          webDev: webCorrect,
+          cpp: cppCorrect,
+          python: pyCorrect,
+          java: javaCorrect,
         },
-        strongestCategory: `${apt.strongestCategory.name} (${apt.strongestCategory.percent}%)`,
-        weakestCategory: `${apt.weakestCategory.name} (${apt.weakestCategory.percent}%)`,
-        missedConcepts: apt.missed.map((m: any) => m.concept),
+        computedTrack: deterministicOrbit.track,
+        strongestCategory: apt.strongestCategory?.name
+          ? `${apt.strongestCategory.name} (${apt.strongestCategory.percent}%)`
+          : "Pattern Recognition",
+        weakestCategory: apt.weakestCategory?.name
+          ? `${apt.weakestCategory.name} (${apt.weakestCategory.percent}%)`
+          : "Logical Reasoning",
+        missedConcepts: (apt.missed ?? []).map((m: any) => m.concept),
       };
     }
 
-    // Call Gemini API layer
+    // Call Gemini API for personalized evaluation summary & advice
     let rawResponse: any;
     let fallbackUsedInFetch = false;
 
@@ -317,19 +394,19 @@ export async function POST(req: Request) {
                 properties: {
                   planet: { type: "STRING" },
                   affinity: { type: "NUMBER" },
-                  reason: { type: "STRING" }
+                  reason: { type: "STRING" },
                 },
-                required: ["planet", "affinity", "reason"]
-              }
-            }
+                required: ["planet", "affinity", "reason"],
+              },
+            },
           },
-          required: ["track", "summary", "advice", "planets"]
+          required: ["track", "summary", "advice", "planets"],
         },
         () => getAptitudeFallback(aiContext),
         mockAptitudeResponse,
         0.2
       );
-      
+
       rawResponse = response.data;
       if (response.source === "fallback") fallbackUsedInFetch = true;
     } catch (err) {
@@ -338,8 +415,8 @@ export async function POST(req: Request) {
       fallbackUsedInFetch = true;
     }
 
+    // Enforce deterministic orbit and deterministic planet affinities (No AI Guessing)
     const { isFallback, result, pathOrder } = processAIPathResponse(rawResponse, aiContext);
-    
     const finalFallbackStatus = isFallback || fallbackUsedInFetch;
 
     // Suffix emoji indicator: ✨ for Gemini, 🌟 for Fallback
@@ -352,36 +429,113 @@ export async function POST(req: Request) {
       aiInsight: {
         ...result,
         source: finalFallbackStatus ? "fallback" : "gemini",
-      }
+      },
     };
 
-    try {
-      await prisma.user.update({
+    // SINGLE ATOMIC DATABASE COMMIT (Eliminates Zombie Lockout Vulnerability)
+    await prisma.$transaction(async (tx) => {
+      // Concurrency check inside transaction to prevent double rewards
+      const currentDbUser = await tx.user.findUnique({
+        where: { id: userId },
+        select: { hasTakenAptitudeTest: true, isFallback: true },
+      });
+
+      if (
+        currentDbUser?.hasTakenAptitudeTest &&
+        !currentDbUser.isFallback &&
+        !isRegenerating
+      ) {
+        throw new Error("ALREADY_COMPLETED");
+      }
+
+      await tx.user.update({
         where: { id: userId },
         data: {
+          hasTakenAptitudeTest: true,
+          logicScore: baseResult.categories.logical_reasoning.percent,
+          patternRecognitionScore: baseResult.categories.pattern_recognition.percent,
+          taskDecompositionScore: baseResult.categories.task_decomposition.percent,
+          recommendedLearningPath,
           aptitudeResult: finalResult as any,
           pathOrder: normalizePathOrder(pathOrder),
           track: result.track,
-          recommendedLearningPath,
           aiSummary: result.summary,
-          planetReasons: result.planets.map(p => ({ planet: p.planet, reason: p.reason })),
-          isFallback: finalFallbackStatus
+          planetReasons: result.planets.map((p) => ({
+            planet: p.planet,
+            reason: p.reason,
+            affinity: p.affinity,
+          })),
+          isFallback: finalFallbackStatus,
+          ...(isFirstTime ? { gears: { increment: 50 } } : {}),
         },
       });
-    } catch (err) {
-      console.warn("[APTITUDE_API] Failed to update user with AI insights:", err);
+
+      if (isFirstTime) {
+        await tx.notification.create({
+          data: {
+            userId,
+            notificationType: "aptitude_completed",
+            data: {
+              title: "Aptitude Diagnostic Completed",
+              message: `Diagnostic calibrated with an overall score of ${baseResult.totalPercent}%. Your flight path has been unlocked!`,
+              logicScore: baseResult.categories.logical_reasoning.percent,
+              patternRecognitionScore: baseResult.categories.pattern_recognition.percent,
+              taskDecompositionScore: baseResult.categories.task_decomposition.percent,
+              totalPercent: baseResult.totalPercent,
+            },
+          },
+        });
+      }
+    });
+
+    if (isFirstTime) {
+      await addXPAndCheckLevelUp(userId, 200);
+
+      await logSystemAction({
+        actorId: userId,
+        actorRole: "STUDENT",
+        action: "APTITUDE_TEST_COMPLETED",
+        targetUserId: userId,
+        details: {
+          totalCorrect: baseResult.totalCorrect,
+          totalQuestions: baseResult.totalQuestions,
+          totalPercent: baseResult.totalPercent,
+          categories: {
+            pattern: baseResult.categories.pattern_recognition.percent,
+            task: baseResult.categories.task_decomposition.percent,
+            logic: baseResult.categories.logical_reasoning.percent,
+          },
+          subcategories: baseResult.subcategories,
+          missedConceptsCount: baseResult.missed.length,
+          xpAwarded: 200,
+          gearsAwarded: 50,
+        },
+      });
     }
 
     return NextResponse.json({
       success: true,
       result: finalResult,
-      xpAwarded: isRegenerating ? 0 : 200,
-      gearsAwarded: isRegenerating ? 0 : 50,
+      xpAwarded: isFirstTime ? 200 : 0,
+      gearsAwarded: isFirstTime ? 50 : 0,
     });
   } catch (error: any) {
+    if (error?.message === "ALREADY_COMPLETED") {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "You have already completed the aptitude test and have a valid path.",
+        },
+        { status: 400 }
+      );
+    }
+
     console.error("[APTITUDE_API] Grading error:", error);
     return NextResponse.json(
-      { success: false, message: error?.message || "Internal server error during assessment grading" },
+      {
+        success: false,
+        message: error?.message || "Internal server error during assessment grading",
+      },
       { status: 500 }
     );
   }

@@ -85,9 +85,7 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
   const [viewState, setViewState] = useState<"BRIEFING" | "QUIZ" | "COMPLETED" | "CUTSCENE">(
     initialUser?.hasTakenAptitudeTest
       ? "COMPLETED"
-      : shouldOpenModal
-      ? "BRIEFING"
-      : "QUIZ"
+      : "BRIEFING"
   );
 
   const [questions, setQuestions] = useState<ClientAptitudeQuestion[]>([]);
@@ -124,11 +122,11 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
       const pScore = initialUser.patternRecognitionScore ?? 0;
       const tScore = initialUser.taskDecompositionScore ?? 0;
       const lScore = initialUser.logicScore ?? 0;
-      const pCorrect = Math.round((pScore / 100) * 5);
-      const tCorrect = Math.round((tScore / 100) * 5);
-      const lCorrect = Math.round((lScore / 100) * 5);
+      const pCorrect = Math.round((pScore / 100) * 6);
+      const tCorrect = Math.round((tScore / 100) * 3);
+      const lCorrect = Math.round((lScore / 100) * 9);
       const totCorrect = pCorrect + tCorrect + lCorrect;
-      const totPercent = Math.round(((pScore + tScore + lScore) / 300) * 100);
+      const totPercent = Math.round((totCorrect / 18) * 100);
 
       const cats = [
         { category: "pattern_recognition" as const, name: "Pattern Recognition", percent: pScore },
@@ -138,28 +136,28 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
 
       return {
         totalCorrect: totCorrect,
-        totalQuestions: 15,
+        totalQuestions: 18,
         totalPercent: totPercent,
         categories: {
           pattern_recognition: {
             category: "pattern_recognition",
             name: "Pattern Recognition",
             correct: pCorrect,
-            total: 5,
+            total: 6,
             percent: pScore,
           },
           task_decomposition: {
             category: "task_decomposition",
             name: "Task Decomposition",
             correct: tCorrect,
-            total: 5,
+            total: 3,
             percent: tScore,
           },
           logical_reasoning: {
             category: "logical_reasoning",
             name: "Logical Reasoning",
             correct: lCorrect,
-            total: 5,
+            total: 9,
             percent: lScore,
           },
         },
@@ -382,7 +380,7 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
             Calibrating Diagnostic Console...
           </h3>
           <p className="text-xs text-gray-400 font-mono">
-            Loading 15 server-verified algorithmic aptitude problems...
+            Loading {questions.length || 18} server-verified algorithmic aptitude problems across 6 skill sectors...
           </p>
         </div>
       </div>
@@ -414,17 +412,17 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
                 Calibrate Your Space Coding Path
               </h1>
               <p className="text-xs sm:text-sm text-gray-300 leading-relaxed font-sans pr-4">
-                Evaluate your core aptitude across 15 scenario-based questions: Pattern Recognition,
-                Task Decomposition, and Logical Reasoning. Completing this unlocks all planetary sectors!
+                Evaluate your core aptitude across {questions.length || 18} scenario-based questions covering Pattern Recognition,
+                Task Decomposition & Logic, Web Development, C++, Python, and Java. Completing this unlocks all planetary sectors!
               </p>
             </div>
 
             <div className="flex items-center gap-2.5 flex-wrap">
               <span className="px-3.5 py-1.5 rounded-xl bg-white/5 border border-white/10 text-xs font-mono text-gray-300 font-bold">
-                15 Diagnostic Questions
+                {questions.length || 18} Diagnostic Questions
               </span>
               <span className="px-3.5 py-1.5 rounded-xl bg-white/5 border border-white/10 text-xs font-mono text-gray-300 font-bold">
-                3 Cognitive Domains
+                6 Skill Sectors
               </span>
               <span className="px-3.5 py-1.5 rounded-xl bg-[#ff912d]/15 border border-[#ff912d]/30 text-xs font-mono text-[#ff912d] font-bold">
                 +200 XP & +50 Gears
@@ -497,8 +495,11 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
             </div>
           </div>
 
-          {/* 15-Segment Progress Bar */}
-          <div className="grid grid-cols-15 gap-1.5 sm:gap-2 w-full pt-1">
+          {/* Dynamic Segment Progress Bar */}
+          <div
+            className="grid gap-1.5 sm:gap-2 w-full pt-1"
+            style={{ gridTemplateColumns: `repeat(${questions.length || 18}, minmax(0, 1fr))` }}
+          >
             {questions.map((q, i) => {
               const active = i === currentIndex;
               const answered = Boolean(selectedAnswers[q.id]);
@@ -629,7 +630,7 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
                   Confirm Submission
                 </h3>
                 <p className="text-xs sm:text-sm text-gray-300 leading-relaxed">
-                  All 15 diagnostic questions have been recorded. Your answers will be graded locally and
+                  All {questions.length || 18} diagnostic questions have been recorded. Your answers will be graded locally and
                   saved to your profile.
                 </p>
               </div>
@@ -710,7 +711,7 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
             <div className="inline-flex items-center gap-3 px-5 py-2.5 rounded-2xl bg-white/5 border border-white/10">
               <span className="text-sm font-mono text-gray-300 uppercase font-semibold">Overall Calibration:</span>
               <span className="text-2xl sm:text-3xl font-black text-[#ff912d] font-display">
-                {results?.totalCorrect ?? 0} / {results?.totalQuestions ?? 15}
+                {results?.totalCorrect ?? 0} / {results?.totalQuestions ?? 18}
               </span>
               <span className="text-sm font-mono font-bold px-3 py-1 rounded-lg bg-[#ff912d]/20 text-[#ff912d] border border-[#ff912d]/40">
                 {results?.totalPercent ?? 0}% Accuracy
@@ -956,38 +957,38 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
 
         {/* Action Controls */}
         <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-4">
-          <button
-            onClick={() => {
-              const isFallbackUser = Boolean(
-                initialUser?.isFallback ?? (initialUser?.aptitudeResult as any)?.isFallback
-              );
-              const hasValidPath = Boolean(
-                (initialUser?.pathOrder && initialUser.pathOrder.length > 0) ||
-                initialUser?.recommendedLearningPath
-              );
-              const isBlocked = initialUser?.hasTakenAptitudeTest && !isFallbackUser && hasValidPath;
+          {(() => {
+            const isFallbackUser = Boolean(
+              initialUser?.isFallback ?? (initialUser?.aptitudeResult as any)?.isFallback ?? results?.aiInsight?.source === "fallback"
+            );
+            const hasValidPath = Boolean(
+              (initialUser?.pathOrder && initialUser.pathOrder.length > 0) ||
+              results?.recommendedLearningPath ||
+              initialUser?.recommendedLearningPath
+            );
+            const isRetakeLocked = Boolean(initialUser?.hasTakenAptitudeTest && !isFallbackUser && hasValidPath);
 
-              if (isBlocked) {
-                setToastNotification({
-                  show: true,
-                  title: "Submission Error",
-                  message: "You have already completed the aptitude test and have a valid path.",
-                  isRetakeBlocked: true,
-                  buttonText: "Back to Profile",
-                  action: () => router.push("/profile"),
-                });
-                return;
-              }
-
-              setViewState("QUIZ");
-              setSelectedAnswers({});
-              setCurrentIndex(0);
-              loadDiagnosticQuestions();
-            }}
-            className="w-full sm:w-auto px-7 py-4 bg-white/10 hover:bg-white/20 text-white font-bold text-sm uppercase tracking-wider rounded-xl transition-all border border-white/10 flex items-center justify-center gap-2.5 cursor-pointer active:scale-95"
-          >
-            <RefreshCw size={18} /> Recalibrate Assessment
-          </button>
+            return isRetakeLocked ? (
+              <button
+                onClick={() => router.push("/profile")}
+                className="w-full sm:w-auto px-7 py-4 bg-white/10 hover:bg-white/20 text-white font-bold text-sm uppercase tracking-wider rounded-xl transition-all border border-white/10 flex items-center justify-center gap-2.5 cursor-pointer active:scale-95"
+              >
+                <Compass size={18} /> View Profile Orbit
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  setViewState("QUIZ");
+                  setSelectedAnswers({});
+                  setCurrentIndex(0);
+                  loadDiagnosticQuestions();
+                }}
+                className="w-full sm:w-auto px-7 py-4 bg-white/10 hover:bg-white/20 text-white font-bold text-sm uppercase tracking-wider rounded-xl transition-all border border-white/10 flex items-center justify-center gap-2.5 cursor-pointer active:scale-95"
+              >
+                <RefreshCw size={18} /> Recalibrate Assessment
+              </button>
+            );
+          })()}
           <button
             onClick={() => setViewState("CUTSCENE")}
             className="w-full sm:w-auto px-9 py-4 bg-[#ff912d] hover:bg-[#ff912d]/90 text-black font-black text-sm uppercase tracking-wider rounded-xl shadow-[0_0_25px_rgba(255,145,45,0.4)] transition-all active:scale-95 flex items-center justify-center gap-2.5 cursor-pointer"

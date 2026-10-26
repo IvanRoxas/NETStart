@@ -1,6 +1,6 @@
 {
   "test": "NETStart Aptitude Test",
-  "totalQuestions": 15,
+  "totalQuestions": 18,
   "categories": {
     "pattern_recognition": {
       "id": "pattern_recognition",
@@ -15,61 +15,57 @@
       "name": "Logical Reasoning"
     }
   },
+  "subcategories": {
+    "pattern_recognition": {
+      "id": "pattern_recognition",
+      "name": "Pattern Recognition"
+    },
+    "task_decomposition": {
+      "id": "task_decomposition",
+      "name": "Task Decomposition & Logic"
+    },
+    "web_dev": {
+      "id": "web_dev",
+      "name": "Web Development (HTML/CSS/JS)"
+    },
+    "cpp": {
+      "id": "cpp",
+      "name": "C++ Fundamentals"
+    },
+    "python": {
+      "id": "python",
+      "name": "Python Fundamentals"
+    },
+    "java": {
+      "id": "java",
+      "name": "Java Fundamentals"
+    }
+  },
   "questions": [
     {
       "id": "pr-1",
       "category": "pattern_recognition",
+      "subcategory": "pattern_recognition",
       "number": 1,
-      "title": "Visual Rotation (Image Pattern)",
-      "question": "Observe the following sequence of clock faces:\n🕐 🕒 🕔 🕖 ?\nWhich image comes next in the pattern?",
+      "title": "Time Interval Progression",
+      "question": "Look at the clock times: 1:00, 3:00, 5:00, 7:00, ? Which time comes next?",
       "options": {
-        "A": "🕗",
-        "B": "🕘",
-        "C": "🕙",
-        "D": "🕚"
+        "A": "8:00",
+        "B": "9:00",
+        "C": "10:00",
+        "D": "11:00"
       },
       "answer": "B",
-      "concept": "Visual Rotation & Angle Progression",
-      "explanation": "The time on the clock advances by exactly 2 hours in each step."
+      "concept": "Linear Time Interval Progression",
+      "explanation": "The time goes up by exactly 2 hours each step."
     },
     {
       "id": "pr-2",
       "category": "pattern_recognition",
+      "subcategory": "pattern_recognition",
       "number": 2,
-      "title": "Shading and Quantity Progression (Image Pattern)",
-      "question": "Observe the following sequence of shapes:\n◻️, ◼️◼️, ◻️◻️◻️, ◼️◼️◼️◼️, ?\nWhich image correctly continues the sequence?",
-      "options": {
-        "A": "◻️◻️◻️◻️",
-        "B": "◼️◼️◼️◼️◼️",
-        "C": "◻️◻️◻️◻️◻️",
-        "D": "◼️◻️◼️◻️◼️"
-      },
-      "answer": "C",
-      "concept": "Geometric Shading & Quantity Alternation",
-      "explanation": "The number of squares increases by one each time, and the shading strictly alternates between all-white and all-black."
-    },
-    {
-      "id": "pr-3",
-      "category": "pattern_recognition",
-      "number": 3,
-      "title": "Spatial Movement (Image Pattern)",
-      "question": "Observe the position of the black square in this sequence of 3-block grids:\nGrid 1: ◼️ ◻️ ◻️\nGrid 2: ◻️ ◼️ ◻️\nGrid 3: ◻️ ◻️ ◼️\nWhat should Grid 4 look like?",
-      "options": {
-        "A": "◻️ ◻️ ◻️",
-        "B": "◼️ ◻️ ◻️",
-        "C": "◼️ ◼️ ◼️",
-        "D": "◻️ ◼️ ◻️"
-      },
-      "answer": "B",
-      "concept": "Spatial Grid Traversal & Cyclic Wrap-Around",
-      "explanation": "The black square moves one space to the right in each step. Once it reaches the end, it wraps back around to the first position."
-    },
-    {
-      "id": "pr-4",
-      "category": "pattern_recognition",
-      "number": 4,
-      "title": "Number Sequence",
-      "question": "Look at the following sequence: 3, 6, 11, 18, 27, ?\nWhat number comes next?",
+      "title": "Number Gap Progression",
+      "question": "Look at this number pattern: 3, 6, 11, 18, 27, ? What number comes next?",
       "options": {
         "A": "34",
         "B": "36",
@@ -77,15 +73,16 @@
         "D": "42"
       },
       "answer": "C",
-      "concept": "Arithmetic Delta Progression (+3, +5, +7, +9)",
-      "explanation": "The differences between the numbers are +3, +5, +7, and +9. The next logical difference is +11, so 27 + 11 = 38."
+      "concept": "Increasing Difference Number Sequence",
+      "explanation": "The gaps are +3, +5, +7, +9. The next gap is +11, so 27 + 11 = 38."
     },
     {
-      "id": "pr-5",
+      "id": "pr-3",
       "category": "pattern_recognition",
-      "number": 5,
-      "title": "Alternating Logic",
-      "question": "Analyze this system's output sequence: 10, 5, 15, 10, 20, ?\nWhat is the next output?",
+      "subcategory": "pattern_recognition",
+      "number": 3,
+      "title": "Alternating Output Pattern",
+      "question": "Look at this output pattern: 10, 5, 15, 10, 20, ? What comes next?",
       "options": {
         "A": "10",
         "B": "15",
@@ -93,168 +90,263 @@
         "D": "30"
       },
       "answer": "B",
-      "concept": "Dual-Phase Alternating Arithmetic Operations",
-      "explanation": "The pattern alternates between subtracting 5 and adding 10. The last step was adding 10 to get 20, so the next step is subtracting 5 to get 15."
+      "concept": "Alternating Arithmetic Progression",
+      "explanation": "The pattern goes minus 5, then plus 10. The last step was plus 10, so next is minus 5. 20 - 5 = 15."
     },
     {
       "id": "td-1",
       "category": "task_decomposition",
-      "number": 1,
-      "title": "Task Ordering (Visual Routing)",
-      "question": "A delivery drone 🚁 must drop off packages at three distinct locations:\n📍 Location A\n📍 Location B\n📍 Location C\nIt must follow these two strict programming rules: Location B must be visited before Location C, and Location A must be visited last. What is the only valid delivery route?",
+      "subcategory": "task_decomposition",
+      "number": 4,
+      "title": "Delivery Drone Routing",
+      "question": "A delivery drone must drop packages at locations A, B, and C. Rule 1: B must be visited before C. Rule 2: A must be visited last. What is the only valid route?",
       "options": {
-        "A": "🚁 ➡️ A ➡️ B ➡️ C",
-        "B": "🚁 ➡️ B ➡️ A ➡️ C",
-        "C": "🚁 ➡️ C ➡️ B ➡️ A",
-        "D": "🚁 ➡️ B ➡️ C ➡️ A"
+        "A": "A, B, C",
+        "B": "B, A, C",
+        "C": "C, B, A",
+        "D": "B, C, A"
       },
       "answer": "D",
-      "concept": "Precedence-constraint ordering (topological sorting)",
-      "explanation": "To satisfy both rules, B comes before C, and A is at the very end."
+      "concept": "Precedence-Constraint Ordering (Topological Sort)",
+      "explanation": "Only this route follows both rules at the same time."
     },
     {
       "id": "td-2",
       "category": "task_decomposition",
-      "number": 2,
-      "title": "Process Optimization (Visual Sorting)",
-      "question": "You need to organize 5 numbered boxes in ascending order (1 to 5). They are currently arranged on a digital shelf like this:\n📦[3] 📦[1] 📦[4] 📦[5] 📦[2]\nIf your system can only swap two adjacent (side-by-side) boxes at a time, what is the most logical first swap to begin sorting them efficiently?",
+      "subcategory": "task_decomposition",
+      "number": 5,
+      "title": "Irrigation System Conditionals",
+      "question": "An irrigation rule says: \"Activate IF (Soil is Dry) AND (Weather is NOT Raining).\" Under which condition will it water the garden?",
       "options": {
-        "A": "Swap 📦[4] and 📦[5]",
-        "B": "Swap 📦[3] and 📦[1]",
-        "C": "Swap 📦[5] and 📦[2]",
-        "D": "Swap 📦[1] and 📦[4]"
+        "A": "Wet soil, Sunny",
+        "B": "Dry soil, Raining heavily",
+        "C": "Dry soil, Cloudy but not raining",
+        "D": "Wet soil, Raining"
       },
-      "answer": "B",
-      "concept": "Bubble sort algorithm",
-      "explanation": "Swapping 3 and 1 moves the lowest number to the front, creating the better sequence: 1, 3, 4, 5, 2."
+      "answer": "C",
+      "concept": "Boolean AND / NOT Conditionals",
+      "explanation": "Both conditions are met: the soil is dry and it is not raining."
     },
     {
       "id": "td-3",
       "category": "task_decomposition",
-      "number": 3,
-      "title": "Troubleshooting a Sequence (Flowchart)",
-      "question": "A system processes files through a 4-step automated pipeline:\n📄 (1. Read) ➡️ 🗜️ (2. Compress) ➡️ 🔒 (3. Encrypt with Password) ➡️ 📤 (4. Send)\nA user receives a file but cannot open it because they do not have the password. Which step in the pipeline successfully executed but caused the user's current issue?",
+      "subcategory": "task_decomposition",
+      "number": 6,
+      "title": "Permission Contrapositive",
+      "question": "The rule is: \"If a user is a Teacher, they have permission to delete files.\" Which statement must be true?",
       "options": {
-        "A": "Step 1 📄",
-        "B": "Step 2 🗜️",
-        "C": "Step 3 🔒",
-        "D": "Step 4 📤"
-      },
-      "answer": "C",
-      "concept": "Troubleshooting a Sequence (Flowchart)",
-      "explanation": "The encryption step worked exactly as intended by locking the file, which now requires a password to open."
-    },
-    {
-      "id": "td-4",
-      "category": "task_decomposition",
-      "number": 4,
-      "title": "Real-World Conditionals (Logic Gates)",
-      "question": "A smart irrigation system 🚿 is programmed with the following rule:\n\"Activate 🚿 IF (Soil is 🏜️ Dry) AND (Weather is NOT 🌧️ Raining).\"\nUnder which visual condition will the system successfully water the garden?",
-      "options": {
-        "A": "Soil is 💧 Wet, and Weather is ☀️ Sunny.",
-        "B": "Soil is 🏜️ Dry, and Weather is 🌧️ Raining heavily.",
-        "C": "Soil is 🏜️ Dry, and Weather is ☁️ Cloudy but not raining.",
-        "D": "Soil is 💧 Wet, and Weather is 🌧️ Raining."
-      },
-      "answer": "C",
-      "concept": "Boolean AND / OR logic",
-      "explanation": "Both conditions are met: the soil is dry, and it is not raining."
-    },
-    {
-      "id": "td-5",
-      "category": "task_decomposition",
-      "number": 5,
-      "title": "Iteration and Looping (System Cycle)",
-      "question": "A water pump ⚙️ fills a 100-liter tank 🛢️ by adding 10 liters per minute. To prevent overheating, the pump is programmed to follow this loop:\n🔄 Pump 40 Liters ➡️ 🛑 Pause for 2 minutes ➡️ Repeat\nHow many minutes in total will it take to completely fill the empty tank to 100 Liters?",
-      "options": {
-        "A": "10 minutes",
-        "B": "12 minutes",
-        "C": "14 minutes",
-        "D": "16 minutes"
-      },
-      "answer": "C",
-      "concept": "Iteration and Looping (System Cycle)",
-      "explanation": "It takes 10 minutes of active pumping. It pauses at 40 liters for 2 mins, and at 80 liters for 2 mins. 10 + 2 + 2 = 14 minutes."
-    },
-    {
-      "id": "lr-1",
-      "category": "logical_reasoning",
-      "number": 1,
-      "title": "Syllogism (Data Storage)",
-      "question": "If 🖥️ Server X can store more data 💾 than 🖥️ Server Y, and 🖥️ Server Z can store less data 💾 than 🖥️ Server Y, which of the following statements must be true?",
-      "options": {
-        "A": "🖥️ Server X stores the least amount of data.",
-        "B": "🖥️ Server Z stores the most amount of data.",
-        "C": "🖥️ Server X stores more data than Server Z.",
-        "D": "🖥️ Server Y stores more data than Server X."
-      },
-      "answer": "C",
-      "concept": "Syllogism",
-      "explanation": "The order from most to least storage is X, Y, Z. Therefore, X definitely holds more than Z."
-    },
-    {
-      "id": "lr-2",
-      "category": "logical_reasoning",
-      "number": 2,
-      "title": "Boolean Logic (AND/OR Vault)",
-      "question": "A highly secure digital vault 🏦 is programmed with this exact unlock condition:\n🔓 UNLOCK IF: (💳 Card A OR 💳 Card B) AND (🔢 PIN Code)\nWhich combination of actions will successfully open the vault?",
-      "options": {
-        "A": "Swiping 💳 Card A and 💳 Card B.",
-        "B": "Swiping 💳 Card A and entering the 🔢 PIN Code.",
-        "C": "Swiping 💳 Card B only.",
-        "D": "Entering the 🔢 PIN Code twice."
+        "A": "Delete permission means the user is a Teacher.",
+        "B": "A user who cannot delete files is not a Teacher.",
+        "C": "Students can also delete files.",
+        "D": "Teachers delete files every day."
       },
       "answer": "B",
-      "concept": "Boolean Logic (AND/OR Vault)",
-      "explanation": "You need at least one of the cards, plus the PIN code."
+      "concept": "Logical Contrapositive Rules",
+      "explanation": "This is the contrapositive of the original rule (if not delete, then not Teacher), so it is always true."
     },
     {
-      "id": "lr-3",
-      "category": "logical_reasoning",
-      "number": 3,
-      "title": "Process of Elimination (Truth Puzzle)",
-      "question": "You are investigating a system with three locked folders. Only ONE contains the 🕵️‍♂️ Hidden File. Each folder has a note written on it, but only ONE note is telling the truth:\n📁 Folder 1: \"The file is in here.\"\n📁 Folder 2: \"The file is NOT in here.\"\n📁 Folder 3: \"The file is NOT in Folder 1.\"\nIf only one of these statements is true, which folder actually has the file?",
+      "id": "web-1",
+      "category": "pattern_recognition",
+      "subcategory": "web_dev",
+      "number": 7,
+      "title": "HTML Hyperlinks",
+      "question": "Which tag makes a link to another web page?",
       "options": {
-        "A": "📁 Folder 1",
-        "B": "📁 Folder 2",
-        "C": "📁 Folder 3",
-        "D": "None of them"
+        "A": "<link>",
+        "B": "<a>",
+        "C": "<href>",
+        "D": "<url>"
       },
       "answer": "B",
-      "concept": "Knights and Knaves truth puzzle",
-      "explanation": "If the file is in Folder 2, Folder 1's statement is false, Folder 2's statement is false, and Folder 3's statement is true. This perfectly satisfies the rule that exactly one statement is true."
+      "concept": "HTML Hyperlinks (<a> tag)",
+      "explanation": "The <a> tag makes a link. Its href attribute holds the address."
     },
     {
-      "id": "lr-4",
-      "category": "logical_reasoning",
-      "number": 4,
-      "title": "Venn Diagram Logic (Mobile Users)",
-      "question": "In an IT class of 40 senior high school students 🧑‍🎓:\n25 use 🤖 Android phones.\n20 use 🍎 iPhones.\n10 students use BOTH 🤖 and 🍎 devices.\nHow many students use 🚫 NEITHER type of phone?",
+      "id": "web-2",
+      "category": "pattern_recognition",
+      "subcategory": "web_dev",
+      "number": 8,
+      "title": "CSS Paragraph Color",
+      "question": "Which CSS rule changes the text color of paragraphs to blue?",
       "options": {
-        "A": "0",
-        "B": "5",
-        "C": "10",
-        "D": "15"
+        "A": "p { text-color: blue; }",
+        "B": "p { color: blue; }",
+        "C": "p { font-color: blue; }",
+        "D": "p { paragraph: blue; }"
       },
       "answer": "B",
-      "concept": "Venn diagram / inclusion–exclusion",
-      "explanation": "To find the total number of phone users: 25 + 20 - 10 = 35 students. 40 total students - 35 phone users = 5 students who use neither."
+      "concept": "CSS Text Color Styling",
+      "explanation": "p picks the paragraphs. color sets the text color."
     },
     {
-      "id": "lr-5",
-      "category": "logical_reasoning",
-      "number": 5,
-      "title": "Cause and Effect (Contrapositive Rules)",
-      "question": "A system administrator 👨‍💻 sets a strict security rule on the school network:\n📜 RULE: \"If a user is a 👨‍🏫 Teacher, they have 🗑️ permission to delete files.\"\nBased exclusively on this rule, which of the following statements is logically guaranteed to be true?",
+      "id": "web-3",
+      "category": "pattern_recognition",
+      "subcategory": "web_dev",
+      "number": 9,
+      "title": "JavaScript Variable Reassignment",
+      "question": "What does this code show in the console?\nlet x = 5;\nx = x + 3;\nconsole.log(x);",
       "options": {
-        "A": "If a user has 🗑️ permission to delete files, they are a 👨‍🏫 Teacher.",
-        "B": "If a user CANNOT 🚫 delete files, they are NOT a 👨‍🏫 Teacher.",
-        "C": "🧑‍🎓 Students can also 🗑️ delete files.",
-        "D": "👨‍🏫 Teachers 🗑️ delete files every day."
+        "A": "5",
+        "B": "3",
+        "C": "8",
+        "D": "53"
+      },
+      "answer": "C",
+      "concept": "JavaScript Variable Reassignment",
+      "explanation": "x starts at 5. Adding 3 makes it 8."
+    },
+    {
+      "id": "cpp-1",
+      "category": "logical_reasoning",
+      "subcategory": "cpp",
+      "number": 10,
+      "title": "C++ Standard Output",
+      "question": "Which line prints Hello on the screen in C++?",
+      "options": {
+        "A": "print(\"Hello\");",
+        "B": "cout << \"Hello\";",
+        "C": "echo \"Hello\";",
+        "D": "System.out.println(\"Hello\");"
       },
       "answer": "B",
-      "concept": "Logical contrapositive",
-      "explanation": "This is the logical contrapositive. If being a Teacher guarantees the ability to delete files, then lacking that ability guarantees the user is not a Teacher."
+      "concept": "C++ Standard Output (cout)",
+      "explanation": "C++ uses cout with the << operator to print."
+    },
+    {
+      "id": "cpp-2",
+      "category": "logical_reasoning",
+      "subcategory": "cpp",
+      "number": 11,
+      "title": "C++ Integer Division",
+      "question": "What does this code print?\nint a = 7;\nint b = 2;\ncout << a / b;",
+      "options": {
+        "A": "3.5",
+        "B": "3",
+        "C": "4",
+        "D": "3.0"
+      },
+      "answer": "B",
+      "concept": "C++ Integer Division Truncation",
+      "explanation": "Both numbers are int, so C++ drops the decimal part. 7 / 2 gives 3."
+    },
+    {
+      "id": "cpp-3",
+      "category": "logical_reasoning",
+      "subcategory": "cpp",
+      "number": 12,
+      "title": "C++ For-Loop Iteration",
+      "question": "What does this loop print?\nfor (int i = 1; i <= 3; i++) {\n  cout << i;\n}",
+      "options": {
+        "A": "123",
+        "B": "012",
+        "C": "3",
+        "D": "321"
+      },
+      "answer": "A",
+      "concept": "C++ For-Loop Iteration",
+      "explanation": "The loop starts at 1 and stops after 3. It prints 1, then 2, then 3."
+    },
+    {
+      "id": "py-1",
+      "category": "logical_reasoning",
+      "subcategory": "python",
+      "number": 13,
+      "title": "Python List Creation",
+      "question": "Which line creates a list in Python?",
+      "options": {
+        "A": "(1, 2, 3)",
+        "B": "{1, 2, 3}",
+        "C": "[1, 2, 3]",
+        "D": "<1, 2, 3>"
+      },
+      "answer": "C",
+      "concept": "Python List Syntax",
+      "explanation": "Square brackets make a list. Round brackets make a tuple. Curly brackets make a set."
+    },
+    {
+      "id": "py-2",
+      "category": "logical_reasoning",
+      "subcategory": "python",
+      "number": 14,
+      "title": "Python Exponentiation",
+      "question": "What does this code print?\nprint(2 ** 3)",
+      "options": {
+        "A": "6",
+        "B": "8",
+        "C": "5",
+        "D": "25"
+      },
+      "answer": "B",
+      "concept": "Python Exponentiation Operator (**)",
+      "explanation": "The ** sign means power. 2 to the power of 3 is 8."
+    },
+    {
+      "id": "py-3",
+      "category": "logical_reasoning",
+      "subcategory": "python",
+      "number": 15,
+      "title": "Python If-Else Branching",
+      "question": "What does this code print?\nscore = 80\nif score >= 75:\n  print(\"Pass\")\nelse:\n  print(\"Fail\")",
+      "options": {
+        "A": "Pass",
+        "B": "Fail",
+        "C": "80",
+        "D": "Nothing"
+      },
+      "answer": "A",
+      "concept": "Python Conditional If-Else Branching",
+      "explanation": "80 is greater than or equal to 75. So the program prints Pass."
+    },
+    {
+      "id": "java-1",
+      "category": "logical_reasoning",
+      "subcategory": "java",
+      "number": 16,
+      "title": "Java Program Entry Point",
+      "question": "Which line is the correct starting point of a Java program?",
+      "options": {
+        "A": "public static void main(String[] args)",
+        "B": "void main()",
+        "C": "public void start()",
+        "D": "static int run()"
+      },
+      "answer": "A",
+      "concept": "Java Main Method Entry Point",
+      "explanation": "Java begins running from the main method with this exact form."
+    },
+    {
+      "id": "java-2",
+      "category": "logical_reasoning",
+      "subcategory": "java",
+      "number": 17,
+      "title": "Java Increment Operator",
+      "question": "What does this code print?\nint x = 5;\nx++;\nSystem.out.println(x);",
+      "options": {
+        "A": "5",
+        "B": "4",
+        "C": "6",
+        "D": "55"
+      },
+      "answer": "C",
+      "concept": "Java Increment Operator (++)",
+      "explanation": "x++ adds 1 to x. So x becomes 6."
+    },
+    {
+      "id": "java-3",
+      "category": "logical_reasoning",
+      "subcategory": "java",
+      "number": 18,
+      "title": "Java Boolean Data Type",
+      "question": "Which data type is used to store only true or false values?",
+      "options": {
+        "A": "int",
+        "B": "String",
+        "C": "boolean",
+        "D": "char"
+      },
+      "answer": "C",
+      "concept": "Java Boolean Data Type",
+      "explanation": "A boolean holds only true or false."
     }
   ]
 }

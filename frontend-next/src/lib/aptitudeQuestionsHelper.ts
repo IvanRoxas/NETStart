@@ -16,20 +16,29 @@ export function categoryToDbCategory(cat: string): "LOGIC" | "PATTERN" | "CODING
   return "LOGIC";
 }
 
+let syncInitiated = false;
+
 export async function ensureDefaultAptitudeQuestionsInDb() {
   try {
-    const existingCount = await prisma.aptitudeQuestion.count();
-    if (existingCount > 0) return;
-
-    console.log("[APTITUDE] Auto-seeding default questions into database...");
     const letterMap: Record<string, number> = { A: 0, B: 1, C: 2, D: 3 };
+    const canonicalIds = questionsData.questions.map((q) => q.id);
 
     for (const q of questionsData.questions) {
       const optsArray = [q.options.A, q.options.B, q.options.C, q.options.D].filter(Boolean);
       const correctIdx = letterMap[q.answer?.trim().toUpperCase()] ?? 0;
 
-      await prisma.aptitudeQuestion.create({
-        data: {
+      await prisma.aptitudeQuestion.upsert({
+        where: { id: q.id },
+        update: {
+          question: q.question,
+          questionType: "MULTIPLE_CHOICE",
+          category: categoryToDbCategory(q.category),
+          options: optsArray,
+          correctAnswer: correctIdx,
+          explanation: q.explanation || null,
+          isActive: true,
+        },
+        create: {
           id: q.id,
           question: q.question,
           questionType: "MULTIPLE_CHOICE",
@@ -37,20 +46,30 @@ export async function ensureDefaultAptitudeQuestionsInDb() {
           options: optsArray,
           correctAnswer: correctIdx,
           explanation: q.explanation || null,
-          isActive: true
-        }
+          isActive: true,
+        },
       });
     }
+
+    // Auto-deactivate legacy questions that are not part of the 18 canonical questions
+    await prisma.aptitudeQuestion.updateMany({
+      where: {
+        id: { notIn: canonicalIds },
+        isActive: true,
+      },
+      data: { isActive: false },
+    });
   } catch (err) {
-    console.warn("[APTITUDE] Could not auto-seed default questions into DB:", err);
+    console.warn("[APTITUDE] Auto-sync of default questions into DB caught warning:", err);
   }
 }
 
-export const MIN_DB_QUESTIONS = 15;
+export const MIN_DB_QUESTIONS = 18;
 
 export interface StudentQuestion {
   id: string;
   category: AptitudeCategory;
+  subcategory?: string;
   number: number;
   title: string;
   question: string;
@@ -79,7 +98,12 @@ export function isStudentRenderableQuestion(q: any): boolean {
   }
 
   if (opts.length !== 4) return false;
-  if (typeof q.correctAnswer !== "number" || !Number.isInteger(q.correctAnswer) || q.correctAnswer < 0 || q.correctAnswer >= 4) {
+  if (
+    typeof q.correctAnswer !== "number" ||
+    !Number.isInteger(q.correctAnswer) ||
+    q.correctAnswer < 0 ||
+    q.correctAnswer >= 4
+  ) {
     return false;
   }
 
@@ -90,49 +114,19 @@ export async function getStudentQuestionSet(): Promise<{
   questions: StudentQuestion[];
   source: "database" | "json";
 }> {
-  try {
-    const dbQuestions = await prisma.aptitudeQuestion.findMany({
-      where: { isActive: true },
-      orderBy: { createdAt: "asc" }
+  // Trigger background auto-sync to DB so Admin panel remains consistent with canonical JSON
+  if (!syncInitiated) {
+    syncInitiated = true;
+    ensureDefaultAptitudeQuestionsInDb().catch((err) => {
+      console.warn("[APTITUDE] Background DB auto-sync error:", err);
     });
-
-    const validQuestions = dbQuestions.filter(isStudentRenderableQuestion);
-
-    if (validQuestions.length >= MIN_DB_QUESTIONS) {
-      const letters = ["A", "B", "C", "D"];
-      const studentQuestions: StudentQuestion[] = validQuestions.map((q, idx) => {
-        const optsRecord: Record<string, string> = {};
-        const optsArray = Array.isArray(q.options)
-          ? (q.options as string[])
-          : (JSON.parse(q.options as string) as string[]);
-
-        optsArray.forEach((opt, oIdx) => {
-          const letter = letters[oIdx] || String(oIdx + 1);
-          optsRecord[letter] = String(opt);
-        });
-
-        return {
-          id: q.id,
-          category: normalizeAptitudeCategory(q.category),
-          number: idx + 1,
-          title: q.question.length > 40 ? q.question.slice(0, 37) + "..." : q.question,
-          question: q.question,
-          options: optsRecord,
-          answer: letters[q.correctAnswer ?? 0] || "A",
-          concept: q.explanation || `${q.category} Reasoning`,
-        };
-      });
-
-      return { questions: studentQuestions, source: "database" };
-    }
-  } catch (err) {
-    console.warn("[APTITUDE] Failed to load questions from database, falling back to static json:", err);
   }
 
-  // Fallback to static JSON file
-  const fallbackQuestions: StudentQuestion[] = questionsData.questions.map((q) => ({
+  // Canonical JSON is the Single Source of Truth
+  const canonicalQuestions: StudentQuestion[] = questionsData.questions.map((q) => ({
     id: q.id,
     category: q.category as AptitudeCategory,
+    subcategory: (q as any).subcategory || q.category,
     number: q.number,
     title: q.title,
     question: q.question,
@@ -141,7 +135,7 @@ export async function getStudentQuestionSet(): Promise<{
     concept: q.concept,
   }));
 
-  return { questions: fallbackQuestions, source: "json" };
+  return { questions: canonicalQuestions, source: "json" };
 }
 
 export async function getActiveClientQuestions(): Promise<{
@@ -152,6 +146,7 @@ export async function getActiveClientQuestions(): Promise<{
   const clientQuestions: ClientAptitudeQuestion[] = questions.map((q) => ({
     id: q.id,
     category: q.category,
+    subcategory: q.subcategory,
     number: q.number,
     title: q.title,
     question: q.question,
@@ -160,4 +155,3 @@ export async function getActiveClientQuestions(): Promise<{
 
   return { questions: clientQuestions, source };
 }
-

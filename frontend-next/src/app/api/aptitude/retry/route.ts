@@ -6,7 +6,11 @@ import { aptitudeSchema } from "@/ai/schemas/aptitudeSchema";
 import { getAptitudePrompt, getAptitudeFallback } from "@/ai/prompts/aptitude";
 import { NOVA_SYSTEM_INSTRUCTION } from "@/ai/prompts/shared";
 import { mockAptitudeResponse } from "@/ai/mock";
-import { processAIPathResponse, normalizePathOrder } from "@/ai/pathUtils";
+import {
+  processAIPathResponse,
+  normalizePathOrder,
+  computeDeterministicOrbitAndAffinities,
+} from "@/ai/pathUtils";
 import { AptitudeAIContext } from "@/types/aptitude";
 
 export const dynamic = "force-dynamic";
@@ -19,13 +23,13 @@ export async function POST(req: Request) {
     }
 
     const userId = session.user.id;
-    
+
     const dbUser = await prisma.user.findUnique({
       where: { id: userId },
-      select: { 
+      select: {
         isBanned: true,
         aptitudeResult: true,
-      }
+      },
     });
 
     if (!dbUser) {
@@ -51,36 +55,64 @@ export async function POST(req: Request) {
         fallbackRetryAttempts: { lt: MAX_RETRIES },
         OR: [
           { lastFallbackRetryAt: null },
-          { lastFallbackRetryAt: { lte: cutoff } }
-        ]
+          { lastFallbackRetryAt: { lte: cutoff } },
+        ],
       },
       data: {
         fallbackRetryAttempts: { increment: 1 },
-        lastFallbackRetryAt: new Date()
-      }
+        lastFallbackRetryAt: new Date(),
+      },
     });
 
     if (claim.count === 0) {
       return NextResponse.json({ success: true, message: "No retry needed or cooldown active." });
     }
 
-    const apt = dbUser.aptitudeResult as any;
-    if (!apt || !apt.categories) {
-      return NextResponse.json({ success: false, message: "Invalid stored context." }, { status: 400 });
-    }
+    const apt = (dbUser.aptitudeResult as any) || {};
+    const sub = apt.subcategories || {};
+
+    const prCorrect =
+      sub.pattern_recognition?.correct ??
+      Math.round((apt.categories?.pattern_recognition?.correct ?? 0) / 2);
+    const tdCorrect =
+      sub.task_decomposition?.correct ??
+      (apt.categories?.task_decomposition?.correct ?? 0);
+    const webCorrect =
+      sub.web_dev?.correct ??
+      Math.round((apt.categories?.pattern_recognition?.correct ?? 0) / 2);
+    const cppCorrect = sub.cpp?.correct ?? 1;
+    const pyCorrect = sub.python?.correct ?? 1;
+    const javaCorrect = sub.java?.correct ?? 1;
+
+    const deterministic = computeDeterministicOrbitAndAffinities({
+      patternRecognition: prCorrect,
+      taskDecomposition: tdCorrect,
+      webDev: webCorrect,
+      cpp: cppCorrect,
+      python: pyCorrect,
+      java: javaCorrect,
+    });
 
     const aiContext: AptitudeAIContext = {
-      totalCorrect: apt.totalCorrect,
-      totalPercent: apt.totalPercent,
-      totalScore: `${apt.totalCorrect}/${apt.totalQuestions} (${apt.totalPercent}%)`,
+      totalCorrect: apt.totalCorrect ?? 0,
+      totalPercent: apt.totalPercent ?? 0,
+      totalScore: `${apt.totalCorrect ?? 0}/${apt.totalQuestions ?? 18} (${apt.totalPercent ?? 0}%)`,
       categories: {
-        patternRecognition: apt.categories.pattern_recognition.correct,
-        taskDecomposition: apt.categories.task_decomposition.correct,
-        logicalReasoning: apt.categories.logical_reasoning.correct,
+        patternRecognition: prCorrect,
+        taskDecomposition: tdCorrect,
+        webDev: webCorrect,
+        cpp: cppCorrect,
+        python: pyCorrect,
+        java: javaCorrect,
       },
-      strongestCategory: `${apt.strongestCategory.name} (${apt.strongestCategory.percent}%)`,
-      weakestCategory: `${apt.weakestCategory.name} (${apt.weakestCategory.percent}%)`,
-      missedConcepts: apt.missed?.map((m: any) => m.concept) || [],
+      computedTrack: deterministic.track,
+      strongestCategory: apt.strongestCategory?.name
+        ? `${apt.strongestCategory.name} (${apt.strongestCategory.percent ?? 0}%)`
+        : "Pattern Recognition",
+      weakestCategory: apt.weakestCategory?.name
+        ? `${apt.weakestCategory.name} (${apt.weakestCategory.percent ?? 0}%)`
+        : "Logical Reasoning",
+      missedConcepts: (apt.missed ?? []).map((m: any) => m?.concept).filter(Boolean),
     };
 
     let rawResponse: any;
@@ -105,19 +137,19 @@ export async function POST(req: Request) {
                 properties: {
                   planet: { type: "STRING" },
                   affinity: { type: "NUMBER" },
-                  reason: { type: "STRING" }
+                  reason: { type: "STRING" },
                 },
-                required: ["planet", "affinity", "reason"]
-              }
-            }
+                required: ["planet", "affinity", "reason"],
+              },
+            },
           },
-          required: ["track", "summary", "advice", "planets"]
+          required: ["track", "summary", "advice", "planets"],
         },
         () => getAptitudeFallback(aiContext),
         mockAptitudeResponse,
         0.2
       );
-      
+
       rawResponse = response.data;
       if (response.source === "fallback") fallbackUsedInFetch = true;
     } catch (err) {
@@ -126,9 +158,9 @@ export async function POST(req: Request) {
     }
 
     const { isFallback, result, pathOrder } = processAIPathResponse(rawResponse, aiContext);
-    
+
     if (isFallback || fallbackUsedInFetch) {
-      return NextResponse.json({ success: false, message: "Still failing, fallback used." });
+      return NextResponse.json({ success: false, message: "Still failing, fallback retained." });
     }
 
     // Suffix Gemini emoji indicator ✨
@@ -140,7 +172,7 @@ export async function POST(req: Request) {
       aiInsight: {
         ...result,
         source: "gemini",
-      }
+      },
     };
 
     await prisma.user.update({
@@ -150,8 +182,12 @@ export async function POST(req: Request) {
         pathOrder: normalizePathOrder(pathOrder),
         track: result.track,
         aiSummary: result.summary,
-        planetReasons: result.planets.map(p => ({ planet: p.planet, reason: p.reason })),
-        isFallback: false
+        planetReasons: result.planets.map((p) => ({
+          planet: p.planet,
+          reason: p.reason,
+          affinity: p.affinity,
+        })),
+        isFallback: false,
       },
     });
 

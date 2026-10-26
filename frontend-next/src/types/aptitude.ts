@@ -6,6 +6,7 @@ export type AptitudeCategory =
 export interface ClientAptitudeQuestion {
   id: string;
   category: AptitudeCategory;
+  subcategory?: string;
   number: number;
   title: string;
   question: string;
@@ -14,6 +15,14 @@ export interface ClientAptitudeQuestion {
 
 export interface CategoryScore {
   category: AptitudeCategory;
+  name: string;
+  correct: number;
+  total: number;
+  percent: number;
+}
+
+export interface SubcategoryScore {
+  id: string;
   name: string;
   correct: number;
   total: number;
@@ -49,6 +58,14 @@ export interface AptitudeTestResult {
     task_decomposition: CategoryScore;
     logical_reasoning: CategoryScore;
   };
+  subcategories?: {
+    pattern_recognition: SubcategoryScore;
+    task_decomposition: SubcategoryScore;
+    web_dev: SubcategoryScore;
+    cpp: SubcategoryScore;
+    python: SubcategoryScore;
+    java: SubcategoryScore;
+  };
   strongestCategory: CategorySummary;
   weakestCategory: CategorySummary;
   missed: MissedQuestionItem[];
@@ -64,8 +81,13 @@ export interface AptitudeAIContext {
   categories: {
     patternRecognition: string | number;
     taskDecomposition: string | number;
-    logicalReasoning: string | number;
+    logicalReasoning?: string | number;
+    webDev?: string | number;
+    cpp?: string | number;
+    python?: string | number;
+    java?: string | number;
   };
+  computedTrack?: "WEB" | "LOGIC" | "BALANCED";
   strongestCategory: string;
   weakestCategory: string;
   missedConcepts: string[];
