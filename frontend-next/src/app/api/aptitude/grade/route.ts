@@ -12,6 +12,7 @@ import {
   processAIPathResponse,
   normalizePathOrder,
   computeDeterministicOrbitAndAffinities,
+  extractSubcategoriesFromUserOrResult,
 } from "@/ai/pathUtils";
 import { getStudentQuestionSet } from "@/lib/aptitudeQuestionsHelper";
 import {
@@ -330,36 +331,24 @@ export async function POST(req: Request) {
     } else {
       // Case B: Regenerating context from stored dbUser
       const apt = (dbUser?.aptitudeResult as any) || {};
-      const sub = apt.subcategories || {};
+      const subs = extractSubcategoriesFromUserOrResult(dbUser);
 
-      const prCorrect = sub.pattern_recognition?.correct ?? Math.round(((apt.categories?.pattern_recognition?.correct ?? 0) / 2));
-      const tdCorrect = sub.task_decomposition?.correct ?? (apt.categories?.task_decomposition?.correct ?? 0);
-      const webCorrect = sub.web_dev?.correct ?? Math.round(((apt.categories?.pattern_recognition?.correct ?? 0) / 2));
-      const cppCorrect = sub.cpp?.correct ?? 1;
-      const pyCorrect = sub.python?.correct ?? 1;
-      const javaCorrect = sub.java?.correct ?? 1;
+      deterministicOrbit = computeDeterministicOrbitAndAffinities(subs);
 
-      deterministicOrbit = computeDeterministicOrbitAndAffinities({
-        patternRecognition: prCorrect,
-        taskDecomposition: tdCorrect,
-        webDev: webCorrect,
-        cpp: cppCorrect,
-        python: pyCorrect,
-        java: javaCorrect,
-      });
+      const calcTotalCorrect =
+        subs.patternRecognition +
+        subs.taskDecomposition +
+        subs.webDev +
+        subs.cpp +
+        subs.python +
+        subs.java;
+      const calcTotalPercent = Math.round((calcTotalCorrect / 18) * 100);
 
       aiContext = {
-        totalCorrect: apt.totalCorrect ?? 0,
-        totalPercent: apt.totalPercent ?? 0,
-        totalScore: `${apt.totalCorrect ?? 0}/${apt.totalQuestions ?? 18} (${apt.totalPercent ?? 0}%)`,
-        categories: {
-          patternRecognition: prCorrect,
-          taskDecomposition: tdCorrect,
-          webDev: webCorrect,
-          cpp: cppCorrect,
-          python: pyCorrect,
-          java: javaCorrect,
-        },
+        totalCorrect: apt.totalCorrect ?? calcTotalCorrect,
+        totalPercent: apt.totalPercent ?? calcTotalPercent,
+        totalScore: `${apt.totalCorrect ?? calcTotalCorrect}/${apt.totalQuestions ?? 18} (${apt.totalPercent ?? calcTotalPercent}%)`,
+        categories: subs,
         computedTrack: deterministicOrbit.track,
         strongestCategory: apt.strongestCategory?.name
           ? `${apt.strongestCategory.name} (${apt.strongestCategory.percent}%)`
@@ -367,7 +356,7 @@ export async function POST(req: Request) {
         weakestCategory: apt.weakestCategory?.name
           ? `${apt.weakestCategory.name} (${apt.weakestCategory.percent}%)`
           : "Logical Reasoning",
-        missedConcepts: (apt.missed ?? []).map((m: any) => m.concept),
+        missedConcepts: (apt.missed ?? []).map((m: any) => m?.concept).filter(Boolean),
       };
     }
 
@@ -452,9 +441,18 @@ export async function POST(req: Request) {
         where: { id: userId },
         data: {
           hasTakenAptitudeTest: true,
-          logicScore: baseResult.categories.logical_reasoning.percent,
-          patternRecognitionScore: baseResult.categories.pattern_recognition.percent,
-          taskDecompositionScore: baseResult.categories.task_decomposition.percent,
+          logicScore:
+            baseResult?.categories?.logical_reasoning?.percent ??
+            dbUser?.logicScore ??
+            0,
+          patternRecognitionScore:
+            baseResult?.categories?.pattern_recognition?.percent ??
+            dbUser?.patternRecognitionScore ??
+            0,
+          taskDecompositionScore:
+            baseResult?.categories?.task_decomposition?.percent ??
+            dbUser?.taskDecompositionScore ??
+            0,
           recommendedLearningPath,
           aptitudeResult: finalResult as any,
           pathOrder: normalizePathOrder(pathOrder),
@@ -477,11 +475,20 @@ export async function POST(req: Request) {
             notificationType: "aptitude_completed",
             data: {
               title: "Aptitude Diagnostic Completed",
-              message: `Diagnostic calibrated with an overall score of ${baseResult.totalPercent}%. Your flight path has been unlocked!`,
-              logicScore: baseResult.categories.logical_reasoning.percent,
-              patternRecognitionScore: baseResult.categories.pattern_recognition.percent,
-              taskDecompositionScore: baseResult.categories.task_decomposition.percent,
-              totalPercent: baseResult.totalPercent,
+              message: `Diagnostic calibrated with an overall score of ${baseResult?.totalPercent ?? 0}%. Your flight path has been unlocked!`,
+              logicScore:
+                baseResult?.categories?.logical_reasoning?.percent ??
+                dbUser?.logicScore ??
+                0,
+              patternRecognitionScore:
+                baseResult?.categories?.pattern_recognition?.percent ??
+                dbUser?.patternRecognitionScore ??
+                0,
+              taskDecompositionScore:
+                baseResult?.categories?.task_decomposition?.percent ??
+                dbUser?.taskDecompositionScore ??
+                0,
+              totalPercent: baseResult?.totalPercent ?? 0,
             },
           },
         });

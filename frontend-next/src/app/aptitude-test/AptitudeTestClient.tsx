@@ -96,6 +96,28 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
   const [results, setResults] = useState<AptitudeTestResult | null>(() => {
     if (initialUser?.aptitudeResult) {
       const res = { ...initialUser.aptitudeResult };
+      if (!res.categories) {
+        const pScore = initialUser.patternRecognitionScore ?? 0;
+        const tScore = initialUser.taskDecompositionScore ?? 0;
+        const lScore = initialUser.logicScore ?? 0;
+        const pCorrect = Math.round((pScore / 100) * 6);
+        const tCorrect = Math.round((tScore / 100) * 3);
+        const lCorrect = Math.round((lScore / 100) * 9);
+        res.categories = {
+          pattern_recognition: { category: "pattern_recognition", name: "Pattern Recognition", correct: pCorrect, total: 6, percent: pScore },
+          task_decomposition: { category: "task_decomposition", name: "Task Decomposition", correct: tCorrect, total: 3, percent: tScore },
+          logical_reasoning: { category: "logical_reasoning", name: "Logical Reasoning", correct: lCorrect, total: 9, percent: lScore },
+        };
+      }
+      if (!res.strongestCategory || !res.weakestCategory) {
+        const cats = [
+          { category: "pattern_recognition" as const, name: "Pattern Recognition", percent: res.categories?.pattern_recognition?.percent ?? initialUser.patternRecognitionScore ?? 0 },
+          { category: "task_decomposition" as const, name: "Task Decomposition", percent: res.categories?.task_decomposition?.percent ?? initialUser.taskDecompositionScore ?? 0 },
+          { category: "logical_reasoning" as const, name: "Logical Reasoning", percent: res.categories?.logical_reasoning?.percent ?? initialUser.logicScore ?? 0 },
+        ].sort((a, b) => b.percent - a.percent);
+        if (!res.strongestCategory) res.strongestCategory = cats[0];
+        if (!res.weakestCategory) res.weakestCategory = cats[cats.length - 1];
+      }
       if (!res.aiInsight && (initialUser.aiSummary || initialUser.track || initialUser.planetReasons)) {
         res.aiInsight = {
           summary: initialUser.aiSummary || "",
@@ -735,19 +757,19 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
                 <Cpu size={18} /> Pattern Recognition
               </span>
               <span className="text-base sm:text-lg text-[#ff912d] font-black">
-                {results?.categories.pattern_recognition.percent ?? 0}%
+                {results?.categories?.pattern_recognition?.percent ?? 0}%
               </span>
             </div>
             <div className="text-3xl sm:text-4xl font-black font-display text-white">
-              {results?.categories.pattern_recognition.correct ?? 0}{" "}
+              {results?.categories?.pattern_recognition?.correct ?? 0}{" "}
               <span className="text-sm sm:text-base text-gray-300 font-normal">
-                / {results?.categories.pattern_recognition.total ?? 5} correct
+                / {results?.categories?.pattern_recognition?.total ?? 6} correct
               </span>
             </div>
             <div className="h-2.5 bg-black/50 rounded-full overflow-hidden border border-white/10">
               <div
                 className="h-full bg-gradient-to-r from-[#ff912d] to-amber-400 rounded-full transition-all duration-500"
-                style={{ width: `${results?.categories.pattern_recognition.percent ?? 0}%` }}
+                style={{ width: `${results?.categories?.pattern_recognition?.percent ?? 0}%` }}
               />
             </div>
           </div>
@@ -759,19 +781,19 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
                 <Layers size={18} /> Task Decomposition
               </span>
               <span className="text-base sm:text-lg text-sky-400 font-black">
-                {results?.categories.task_decomposition.percent ?? 0}%
+                {results?.categories?.task_decomposition?.percent ?? 0}%
               </span>
             </div>
             <div className="text-3xl sm:text-4xl font-black font-display text-white">
-              {results?.categories.task_decomposition.correct ?? 0}{" "}
+              {results?.categories?.task_decomposition?.correct ?? 0}{" "}
               <span className="text-sm sm:text-base text-gray-300 font-normal">
-                / {results?.categories.task_decomposition.total ?? 5} correct
+                / {results?.categories?.task_decomposition?.total ?? 3} correct
               </span>
             </div>
             <div className="h-2.5 bg-black/50 rounded-full overflow-hidden border border-white/10">
               <div
                 className="h-full bg-gradient-to-r from-sky-500 to-cyan-400 rounded-full transition-all duration-500"
-                style={{ width: `${results?.categories.task_decomposition.percent ?? 0}%` }}
+                style={{ width: `${results?.categories?.task_decomposition?.percent ?? 0}%` }}
               />
             </div>
           </div>
@@ -783,19 +805,19 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
                 <Brain size={18} /> Logical Reasoning
               </span>
               <span className="text-base sm:text-lg text-purple-400 font-black">
-                {results?.categories.logical_reasoning.percent ?? 0}%
+                {results?.categories?.logical_reasoning?.percent ?? 0}%
               </span>
             </div>
             <div className="text-3xl sm:text-4xl font-black font-display text-white">
-              {results?.categories.logical_reasoning.correct ?? 0}{" "}
+              {results?.categories?.logical_reasoning?.correct ?? 0}{" "}
               <span className="text-sm sm:text-base text-gray-300 font-normal">
-                / {results?.categories.logical_reasoning.total ?? 5} correct
+                / {results?.categories?.logical_reasoning?.total ?? 9} correct
               </span>
             </div>
             <div className="h-2.5 bg-black/50 rounded-full overflow-hidden border border-white/10">
               <div
                 className="h-full bg-gradient-to-r from-purple-500 to-violet-400 rounded-full transition-all duration-500"
-                style={{ width: `${results?.categories.logical_reasoning.percent ?? 0}%` }}
+                style={{ width: `${results?.categories?.logical_reasoning?.percent ?? 0}%` }}
               />
             </div>
           </div>
@@ -812,8 +834,8 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
                 Strongest Domain
               </div>
               <div className="text-base sm:text-lg font-bold text-white mt-0.5">
-                {results?.strongestCategory.name ?? "Pattern Recognition"} (
-                {results?.strongestCategory.percent ?? 0}%)
+                {results?.strongestCategory?.name ?? "Pattern Recognition"} (
+                {results?.strongestCategory?.percent ?? 0}%)
               </div>
             </div>
           </div>
@@ -827,8 +849,8 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
                 Primary Growth Area
               </div>
               <div className="text-base sm:text-lg font-bold text-white mt-0.5">
-                {results?.weakestCategory.name ?? "Task Decomposition"} (
-                {results?.weakestCategory.percent ?? 0}%)
+                {results?.weakestCategory?.name ?? "Task Decomposition"} (
+                {results?.weakestCategory?.percent ?? 0}%)
               </div>
             </div>
           </div>

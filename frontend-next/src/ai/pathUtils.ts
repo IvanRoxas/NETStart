@@ -17,15 +17,79 @@ export interface DeterministicAffinities {
   logicReadiness: number;
 }
 
+export interface ExtractedSubcategories {
+  patternRecognition: number;
+  taskDecomposition: number;
+  webDev: number;
+  cpp: number;
+  python: number;
+  java: number;
+}
+
+export function extractSubcategoriesFromUserOrResult(
+  userOrResult: any
+): ExtractedSubcategories {
+  if (!userOrResult) {
+    return { patternRecognition: 0, taskDecomposition: 0, webDev: 0, cpp: 0, python: 0, java: 0 };
+  }
+
+  const apt = userOrResult.aptitudeResult || userOrResult;
+  const sub = apt.subcategories;
+
+  // If new 18-question subcategories are already stored:
+  if (sub && typeof sub === "object") {
+    const clamp3 = (val: any) => Math.min(3, Math.max(0, Math.round(Number(val) || 0)));
+    return {
+      patternRecognition: clamp3(sub.pattern_recognition?.correct),
+      taskDecomposition: clamp3(sub.task_decomposition?.correct),
+      webDev: clamp3(sub.web_dev?.correct),
+      cpp: clamp3(sub.cpp?.correct),
+      python: clamp3(sub.python?.correct),
+      java: clamp3(sub.java?.correct),
+    };
+  }
+
+  // Legacy 15-question or User DB scores fallback:
+  // Derive percentages from either apt.categories or direct user columns
+  const patPct =
+    apt.categories?.pattern_recognition?.percent ??
+    (apt.categories?.pattern_recognition?.total
+      ? Math.round(((apt.categories.pattern_recognition.correct || 0) / apt.categories.pattern_recognition.total) * 100)
+      : userOrResult.patternRecognitionScore ?? 0);
+
+  const decPct =
+    apt.categories?.task_decomposition?.percent ??
+    (apt.categories?.task_decomposition?.total
+      ? Math.round(((apt.categories.task_decomposition.correct || 0) / apt.categories.task_decomposition.total) * 100)
+      : userOrResult.taskDecompositionScore ?? 0);
+
+  const logPct =
+    apt.categories?.logical_reasoning?.percent ??
+    (apt.categories?.logical_reasoning?.total
+      ? Math.round(((apt.categories.logical_reasoning.correct || 0) / apt.categories.logical_reasoning.total) * 100)
+      : userOrResult.logicScore ?? 0);
+
+  const scaleTo3 = (pct: number) => Math.min(3, Math.max(0, Math.round(((Number(pct) || 0) / 100) * 3)));
+
+  return {
+    patternRecognition: scaleTo3(patPct),
+    taskDecomposition: scaleTo3(decPct),
+    webDev: scaleTo3(patPct),
+    cpp: scaleTo3(logPct),
+    python: scaleTo3(logPct),
+    java: scaleTo3(logPct),
+  };
+}
+
 export function computeDeterministicOrbitAndAffinities(
   categories: AptitudeAIContext["categories"]
 ): DeterministicAffinities {
-  const patternPct = Math.round(((Number(categories.patternRecognition) || 0) / 3) * 100);
-  const taskDecompPct = Math.round(((Number(categories.taskDecomposition) || 0) / 3) * 100);
-  const webDevPct = Math.round(((Number(categories.webDev) || 0) / 3) * 100);
-  const cppPct = Math.round(((Number(categories.cpp) || 0) / 3) * 100);
-  const pythonPct = Math.round(((Number(categories.python) || 0) / 3) * 100);
-  const javaPct = Math.round(((Number(categories.java) || 0) / 3) * 100);
+  const patternPct = Math.min(100, Math.max(0, Math.round(((Number(categories.patternRecognition) || 0) / 3) * 100)));
+  const taskDecompPct = Math.min(100, Math.max(0, Math.round(((Number(categories.taskDecomposition) || 0) / 3) * 100)));
+  const webDevPct = Math.min(100, Math.max(0, Math.round(((Number(categories.webDev) || 0) / 3) * 100)));
+  const cppPct = Math.min(100, Math.max(0, Math.round(((Number(categories.cpp) || 0) / 3) * 100)));
+  const pythonPct = Math.min(100, Math.max(0, Math.round(((Number(categories.python) || 0) / 3) * 100)));
+  const javaPct = Math.min(100, Math.max(0, Math.round(((Number(categories.java) || 0) / 3) * 100)));
 
   // 1. Deterministic planet affinities (Strict User Override):
   // MARS, VENUS, MERCURY = weighted from webDev (60%) + patternRecognition (25%) + taskDecomposition (15%)

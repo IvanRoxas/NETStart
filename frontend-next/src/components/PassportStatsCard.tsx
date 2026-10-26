@@ -12,11 +12,11 @@ import { triggerDailyTaskCompletion } from '@/lib/dailyTasks';
 
 interface PassportStatsCardProps {
   profile: any;
-  completedMissionIds: string[];
+  completedMissionIds?: string[];
   avatarLayers?: AvatarLayers;
 }
 
-export default function PassportStatsCard({ profile, completedMissionIds, avatarLayers }: PassportStatsCardProps) {
+export default function PassportStatsCard({ profile, completedMissionIds = [], avatarLayers }: PassportStatsCardProps) {
   const [isZoomed, setIsZoomed] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadToast, setDownloadToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
@@ -105,7 +105,7 @@ export default function PassportStatsCard({ profile, completedMissionIds, avatar
   // Helper to count unique completed levels (1, 2, 3) for each celestial body
   const getPlanetCompletedCount = (planetKey: string): number => {
     const levels = new Set<number>();
-    completedMissionIds.forEach(rawId => {
+    (completedMissionIds || []).forEach(rawId => {
       const id = (rawId || '').toLowerCase().trim();
       if (planetKey === 'moon') {
         if (id === 'moon-1' || id === '1' || id === 'level-1') levels.add(1);

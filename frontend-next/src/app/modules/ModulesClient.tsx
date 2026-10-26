@@ -271,7 +271,9 @@ export default function ModulesClient({
       const slot = defaultPathNodes[index];
       const data = defaultPathNodes.find(n => n.id.toLowerCase() === planetId.toLowerCase());
       
-      const reasonObj = planetReasons?.find((r: any) => r.planet.toLowerCase() === planetId.toLowerCase());
+      const reasonObj = Array.isArray(planetReasons)
+        ? planetReasons.find((r: any) => r?.planet?.toLowerCase() === planetId.toLowerCase())
+        : undefined;
       const reason = reasonObj ? reasonObj.reason : undefined;
 
       return {

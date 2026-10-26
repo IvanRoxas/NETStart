@@ -10,6 +10,7 @@ import {
   processAIPathResponse,
   normalizePathOrder,
   computeDeterministicOrbitAndAffinities,
+  extractSubcategoriesFromUserOrResult,
 } from "@/ai/pathUtils";
 import { AptitudeAIContext } from "@/types/aptitude";
 
@@ -29,6 +30,9 @@ export async function POST(req: Request) {
       select: {
         isBanned: true,
         aptitudeResult: true,
+        logicScore: true,
+        patternRecognitionScore: true,
+        taskDecompositionScore: true,
       },
     });
 
@@ -69,42 +73,24 @@ export async function POST(req: Request) {
     }
 
     const apt = (dbUser.aptitudeResult as any) || {};
-    const sub = apt.subcategories || {};
+    const subs = extractSubcategoriesFromUserOrResult(dbUser);
 
-    const prCorrect =
-      sub.pattern_recognition?.correct ??
-      Math.round((apt.categories?.pattern_recognition?.correct ?? 0) / 2);
-    const tdCorrect =
-      sub.task_decomposition?.correct ??
-      (apt.categories?.task_decomposition?.correct ?? 0);
-    const webCorrect =
-      sub.web_dev?.correct ??
-      Math.round((apt.categories?.pattern_recognition?.correct ?? 0) / 2);
-    const cppCorrect = sub.cpp?.correct ?? 1;
-    const pyCorrect = sub.python?.correct ?? 1;
-    const javaCorrect = sub.java?.correct ?? 1;
+    const deterministic = computeDeterministicOrbitAndAffinities(subs);
 
-    const deterministic = computeDeterministicOrbitAndAffinities({
-      patternRecognition: prCorrect,
-      taskDecomposition: tdCorrect,
-      webDev: webCorrect,
-      cpp: cppCorrect,
-      python: pyCorrect,
-      java: javaCorrect,
-    });
+    const calcTotalCorrect =
+      subs.patternRecognition +
+      subs.taskDecomposition +
+      subs.webDev +
+      subs.cpp +
+      subs.python +
+      subs.java;
+    const calcTotalPercent = Math.round((calcTotalCorrect / 18) * 100);
 
     const aiContext: AptitudeAIContext = {
-      totalCorrect: apt.totalCorrect ?? 0,
-      totalPercent: apt.totalPercent ?? 0,
-      totalScore: `${apt.totalCorrect ?? 0}/${apt.totalQuestions ?? 18} (${apt.totalPercent ?? 0}%)`,
-      categories: {
-        patternRecognition: prCorrect,
-        taskDecomposition: tdCorrect,
-        webDev: webCorrect,
-        cpp: cppCorrect,
-        python: pyCorrect,
-        java: javaCorrect,
-      },
+      totalCorrect: apt.totalCorrect ?? calcTotalCorrect,
+      totalPercent: apt.totalPercent ?? calcTotalPercent,
+      totalScore: `${apt.totalCorrect ?? calcTotalCorrect}/${apt.totalQuestions ?? 18} (${apt.totalPercent ?? calcTotalPercent}%)`,
+      categories: subs,
       computedTrack: deterministic.track,
       strongestCategory: apt.strongestCategory?.name
         ? `${apt.strongestCategory.name} (${apt.strongestCategory.percent ?? 0}%)`
@@ -169,6 +155,17 @@ export async function POST(req: Request) {
 
     const finalResult = {
       ...apt,
+      totalQuestions: apt.totalQuestions ?? 18,
+      totalCorrect: apt.totalCorrect ?? calcTotalCorrect,
+      totalPercent: apt.totalPercent ?? calcTotalPercent,
+      subcategories: apt.subcategories || {
+        pattern_recognition: { id: "pattern_recognition", name: "Pattern Recognition", correct: subs.patternRecognition, total: 3, percent: Math.round((subs.patternRecognition / 3) * 100) },
+        task_decomposition: { id: "task_decomposition", name: "Task Decomposition", correct: subs.taskDecomposition, total: 3, percent: Math.round((subs.taskDecomposition / 3) * 100) },
+        web_dev: { id: "web_dev", name: "Web Development", correct: subs.webDev, total: 3, percent: Math.round((subs.webDev / 3) * 100) },
+        cpp: { id: "cpp", name: "C++ Systems", correct: subs.cpp, total: 3, percent: Math.round((subs.cpp / 3) * 100) },
+        python: { id: "python", name: "Python Scripting", correct: subs.python, total: 3, percent: Math.round((subs.python / 3) * 100) },
+        java: { id: "java", name: "Java Enterprise", correct: subs.java, total: 3, percent: Math.round((subs.java / 3) * 100) },
+      },
       aiInsight: {
         ...result,
         source: "gemini",
