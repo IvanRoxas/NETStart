@@ -137,3 +137,14 @@ export function computeUnlockStatus(
     completedCounts
   };
 }
+
+export function resolveNextPlanet(order: string[] | null | undefined, currentPlanetId: string): string | null {
+  const activePathOrder = normalizePathOrder(order);
+  const cur = currentPlanetId.trim().toUpperCase();
+  const currentIndex = activePathOrder.findIndex(p => p === cur);
+  if (currentIndex !== -1 && currentIndex + 1 < activePathOrder.length) {
+    return activePathOrder[currentIndex + 1].toLowerCase();
+  }
+  return null;
+}
+

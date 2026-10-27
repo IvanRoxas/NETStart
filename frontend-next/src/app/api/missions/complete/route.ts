@@ -3,6 +3,101 @@ import { getServerSession } from "next-auth/next";
 import { authOptions, prisma } from "@/lib/auth";
 import { XP_REWARDS } from "@/lib/xpEconomy";
 import { ensureSandboxUnlockedNotification } from "@/lib/sandboxNotification";
+import { resolveNextPlanet } from "@/lib/unlockLogic";
+
+const PLANET_METADATA: Record<string, {
+  id: string;
+  name: string;
+  prefixes: string[];
+  src: string;
+  triggerCode: string;
+  title: { id: string; name: string; description: string };
+}> = {
+  moon: {
+    id: 'moon',
+    name: 'The Moon',
+    prefixes: ['moon'],
+    src: '/assets/planets/00_moon/environment/MainMoon.svg',
+    triggerCode: 'B_COMPLETE_MOON',
+    title: {
+      id: 'title-lunar-pioneer',
+      name: 'Syntax Scout',
+      description: 'Mastered coding syntax and foundations on the Moon.',
+    },
+  },
+  mars: {
+    id: 'mars',
+    name: 'Mars',
+    prefixes: ['mars', 'html'],
+    src: '/assets/planets/celestial/Mars.svg',
+    triggerCode: 'B_COMPLETE_MARS',
+    title: {
+      id: 'title-planetary-pioneer',
+      name: 'Web Builder',
+      description: 'Mastered HTML structure and hyperlinks across Mars.',
+    },
+  },
+  venus: {
+    id: 'venus',
+    name: 'Venus',
+    prefixes: ['venus', 'css'],
+    src: '/assets/planets/celestial/Venus.svg',
+    triggerCode: 'B_COMPLETE_VENUS',
+    title: {
+      id: 'title-venusian-voyager',
+      name: 'Style Artist',
+      description: 'Mastered CSS styling, colors, and layout design on Venus.',
+    },
+  },
+  mercury: {
+    id: 'mercury',
+    name: 'Mercury',
+    prefixes: ['mercury', 'javascript', 'js'],
+    src: '/assets/planets/celestial/Mercury.svg',
+    triggerCode: 'B_COMPLETE_MERCURY',
+    title: {
+      id: 'title-mercurian-scout',
+      name: 'Script Runner',
+      description: 'Mastered JavaScript events and dynamic interactivity on Mercury.',
+    },
+  },
+  jupiter: {
+    id: 'jupiter',
+    name: 'Jupiter',
+    prefixes: ['jupiter', 'java'],
+    src: '/assets/planets/celestial/Jupiter.svg',
+    triggerCode: 'B_COMPLETE_JUPITER',
+    title: {
+      id: 'title-jovian-sovereign',
+      name: 'Java Titan',
+      description: 'Mastered Java classes, OOP, and exception handling on Jupiter.',
+    },
+  },
+  saturn: {
+    id: 'saturn',
+    name: 'Saturn',
+    prefixes: ['saturn', 'cpp'],
+    src: '/assets/planets/celestial/Saturn.svg',
+    triggerCode: 'B_COMPLETE_SATURN',
+    title: {
+      id: 'title-void-architect',
+      name: 'System Pilot',
+      description: 'Mastered C++ pointers, memory, and performance loops on Saturn.',
+    },
+  },
+  earth: {
+    id: 'earth',
+    name: 'Earth (HQ)',
+    prefixes: ['earth', 'python'],
+    src: '/assets/planets/celestial/Earth.svg',
+    triggerCode: 'B_COMPLETE_EARTH',
+    title: {
+      id: 'title-terran-maestro',
+      name: 'Python Master',
+      description: 'Mastered Python algorithms and data structures on Earth.',
+    },
+  },
+};
 
 export async function POST(req: Request) {
   try {
@@ -92,19 +187,8 @@ export async function POST(req: Request) {
 
     // 3. After transaction: check if a new planet was just unlocked (first completion of this mission)
     if (!wasCompleted) {
-      // Planet → mission prefix mapping (mirrors ModulesClient.tsx)
-      const planetOrder = [
-        { id: 'moon', name: 'The Moon', prefixes: ['moon'], nextId: 'mars', nextName: 'Mars', nextSrc: '/assets/planets/celestial/Mars.svg' },
-        { id: 'mars', name: 'Mars', prefixes: ['mars', 'html'], nextId: 'venus', nextName: 'Venus', nextSrc: '/assets/planets/celestial/Venus.svg' },
-        { id: 'venus', name: 'Venus', prefixes: ['venus', 'css'], nextId: 'mercury', nextName: 'Mercury', nextSrc: '/assets/planets/celestial/Mercury.svg' },
-        { id: 'mercury', name: 'Mercury', prefixes: ['mercury', 'javascript', 'js'], nextId: 'jupiter', nextName: 'Jupiter', nextSrc: '/assets/planets/celestial/Jupiter.svg' },
-        { id: 'jupiter', name: 'Jupiter', prefixes: ['jupiter', 'java'], nextId: 'saturn', nextName: 'Saturn', nextSrc: '/assets/planets/celestial/Saturn.svg' },
-        { id: 'saturn', name: 'Saturn', prefixes: ['saturn', 'cpp'], nextId: 'earth', nextName: 'Earth (HQ)', nextSrc: '/assets/planets/celestial/Earth.svg' },
-        { id: 'earth', name: 'Earth (HQ)', prefixes: ['earth', 'python'], nextId: null, nextName: null, nextSrc: null },
-      ];
-
       const missionIdLower = missionId.toLowerCase();
-      const completedPlanet = planetOrder.find(p =>
+      const completedPlanet = Object.values(PLANET_METADATA).find(p =>
         p.prefixes.some(prefix => missionIdLower.startsWith(prefix))
       );
 
@@ -155,7 +239,16 @@ export async function POST(req: Request) {
             await ensureSandboxUnlockedNotification(userId);
           }
 
-          if (completedPlanet.nextId) {
+          // Fetch user's pathOrder to dynamically resolve the next planet
+          const dbUser = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { pathOrder: true },
+          });
+
+          const nextPlanetKey = resolveNextPlanet(dbUser?.pathOrder, completedPlanet.id);
+          const nextPlanet = nextPlanetKey ? PLANET_METADATA[nextPlanetKey] : null;
+
+          if (nextPlanet) {
             // Avoid duplicate planet_unlocked notifications for the same planet
             const existing = await prisma.notification.findFirst({
               where: {
@@ -163,7 +256,7 @@ export async function POST(req: Request) {
                 notificationType: 'planet_unlocked',
                 data: {
                   path: ['planetId'],
-                  equals: completedPlanet.nextId,
+                  equals: nextPlanet.id,
                 },
               },
             });
@@ -174,9 +267,9 @@ export async function POST(req: Request) {
                   userId,
                   notificationType: 'planet_unlocked',
                   data: {
-                    planetId: completedPlanet.nextId,
-                    planetName: completedPlanet.nextName,
-                    planetSrc: completedPlanet.nextSrc,
+                    planetId: nextPlanet.id,
+                    planetName: nextPlanet.name,
+                    planetSrc: nextPlanet.src,
                     unlockedFrom: completedPlanet.name,
                   },
                 },
@@ -185,15 +278,7 @@ export async function POST(req: Request) {
           }
 
           // Award the Planet Completion Achievement
-          const planetAchTrigger = {
-            moon: 'B_COMPLETE_MOON',
-            mars: 'B_COMPLETE_MARS',
-            venus: 'B_COMPLETE_VENUS',
-            mercury: 'B_COMPLETE_MERCURY',
-            jupiter: 'B_COMPLETE_JUPITER',
-            saturn: 'B_COMPLETE_SATURN',
-            earth: 'B_COMPLETE_EARTH',
-          }[completedPlanet.id];
+          const planetAchTrigger = completedPlanet.triggerCode;
 
           if (planetAchTrigger) {
             const planetAch = await prisma.achievement.findUnique({ where: { triggerCode: planetAchTrigger } });
@@ -224,45 +309,7 @@ export async function POST(req: Request) {
           }
 
           // Award the Title for completing this individual planet
-          const planetTitleInfo: Record<string, { id: string; name: string; description: string }> = {
-            moon: {
-              id: 'title-lunar-pioneer',
-              name: 'Syntax Scout',
-              description: 'Mastered coding syntax and foundations on the Moon.',
-            },
-            mars: {
-              id: 'title-planetary-pioneer',
-              name: 'Web Builder',
-              description: 'Mastered HTML structure and hyperlinks across Mars.',
-            },
-            venus: {
-              id: 'title-venusian-voyager',
-              name: 'Style Artist',
-              description: 'Mastered CSS styling, colors, and layout design on Venus.',
-            },
-            mercury: {
-              id: 'title-mercurian-scout',
-              name: 'Script Runner',
-              description: 'Mastered JavaScript events and dynamic interactivity on Mercury.',
-            },
-            jupiter: {
-              id: 'title-jovian-sovereign',
-              name: 'Java Titan',
-              description: 'Mastered Java classes, OOP, and exception handling on Jupiter.',
-            },
-            saturn: {
-              id: 'title-void-architect',
-              name: 'System Pilot',
-              description: 'Mastered C++ pointers, memory, and performance loops on Saturn.',
-            },
-            earth: {
-              id: 'title-terran-maestro',
-              name: 'Python Master',
-              description: 'Mastered Python algorithms and data structures on Earth.',
-            },
-          };
-
-          const awardedTitle = planetTitleInfo[completedPlanet.id];
+          const awardedTitle = completedPlanet.title;
           if (awardedTitle) {
             const existingTitleNotif = await prisma.notification.findFirst({
               where: {
@@ -294,7 +341,7 @@ export async function POST(req: Request) {
           }
 
           // Check if all 7 planets are completed
-          const planetsCompleteCount = planetOrder.filter(p => {
+          const planetsCompleteCount = Object.values(PLANET_METADATA).filter(p => {
             return allMissions.filter(m => p.prefixes.some(pre => m.missionId.toLowerCase().startsWith(pre))).length >= 3;
           }).length;
 
