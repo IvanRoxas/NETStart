@@ -196,6 +196,21 @@ export async function ensureDefaultAchievements() {
   }
 }
 
+export async function getAchievementByTrigger(triggerCode: string) {
+  let ach = await prisma.achievement.findUnique({
+    where: { triggerCode }
+  });
+
+  if (!ach) {
+    await ensureDefaultAchievements();
+    ach = await prisma.achievement.findUnique({
+      where: { triggerCode }
+    });
+  }
+
+  return ach;
+}
+
 export async function getUnlockedAchievements() {
   try {
     await ensureDefaultAchievements();

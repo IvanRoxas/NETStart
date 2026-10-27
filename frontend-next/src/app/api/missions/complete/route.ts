@@ -4,6 +4,7 @@ import { authOptions, prisma } from "@/lib/auth";
 import { XP_REWARDS } from "@/lib/xpEconomy";
 import { ensureSandboxUnlockedNotification } from "@/lib/sandboxNotification";
 import { resolveNextPlanet } from "@/lib/unlockLogic";
+import { getAchievementByTrigger } from "@/app/actions/achievements";
 
 const PLANET_METADATA: Record<string, {
   id: string;
@@ -201,7 +202,7 @@ export async function POST(req: Request) {
 
         // 1. Award B_FIRST_MISSION if first ever completed mission
         if (allMissions.length >= 1) {
-          const firstMissionAch = await prisma.achievement.findUnique({ where: { triggerCode: 'B_FIRST_MISSION' } });
+          const firstMissionAch = await getAchievementByTrigger('B_FIRST_MISSION');
           if (firstMissionAch) {
             const hasFirst = await prisma.userAchievement.findUnique({
               where: { userId_achievementId: { userId, achievementId: firstMissionAch.id } }
@@ -281,7 +282,7 @@ export async function POST(req: Request) {
           const planetAchTrigger = completedPlanet.triggerCode;
 
           if (planetAchTrigger) {
-            const planetAch = await prisma.achievement.findUnique({ where: { triggerCode: planetAchTrigger } });
+            const planetAch = await getAchievementByTrigger(planetAchTrigger);
             if (planetAch) {
               const hasPlanetAch = await prisma.userAchievement.findUnique({
                 where: { userId_achievementId: { userId, achievementId: planetAch.id } }
@@ -346,7 +347,7 @@ export async function POST(req: Request) {
           }).length;
 
           if (planetsCompleteCount === 7) {
-            const allPlanetsAch = await prisma.achievement.findUnique({ where: { triggerCode: 'B_COMPLETE_ALL_PLANETS' } });
+            const allPlanetsAch = await getAchievementByTrigger('B_COMPLETE_ALL_PLANETS');
             if (allPlanetsAch) {
               const hasAllAch = await prisma.userAchievement.findUnique({
                 where: { userId_achievementId: { userId, achievementId: allPlanetsAch.id } }

@@ -11,13 +11,11 @@
  * through the runtime compatibility path in pathUtils.ts.
  */
 
-import { PrismaClient } from "@prisma/client";
 import {
   computeDeterministicOrbitAndAffinities,
   extractSubcategoriesFromUserOrResult,
 } from "../src/ai/pathUtils";
-
-const prisma = new PrismaClient();
+import { prisma } from "../src/lib/auth";
 
 async function main() {
   const isLive = process.argv.includes("--live");
