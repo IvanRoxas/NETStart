@@ -30,9 +30,118 @@ import {
   AptitudeTestResult,
   AptitudeCategory,
 } from "@/types/aptitude";
+import { getSectionTotals } from "@/lib/aptitudeTotals";
 
 interface AptitudeTestClientProps {
   initialUser: any;
+}
+
+export interface SectionDisplayConfig {
+  key: "pattern_recognition" | "task_decomposition" | "web_dev" | "cpp" | "python" | "java";
+  name: string;
+  pillLabel: string;
+  icon: typeof Brain;
+  textColor: string;
+  badgeBg: string;
+  borderColor: string;
+  gradient: string;
+}
+
+export const SIX_SECTIONS: SectionDisplayConfig[] = [
+  {
+    key: "pattern_recognition",
+    name: "Pattern Recognition",
+    pillLabel: "PATTERN RECOGNITION",
+    icon: Cpu,
+    textColor: "text-[#ff912d]",
+    badgeBg: "bg-[#ff912d]/10",
+    borderColor: "border-[#ff912d]/30",
+    gradient: "from-[#ff912d] to-amber-400",
+  },
+  {
+    key: "task_decomposition",
+    name: "Task Decomposition",
+    pillLabel: "TASK DECOMPOSITION",
+    icon: Layers,
+    textColor: "text-sky-400",
+    badgeBg: "bg-sky-500/10",
+    borderColor: "border-sky-500/30",
+    gradient: "from-sky-500 to-cyan-400",
+  },
+  {
+    key: "web_dev",
+    name: "Web Development",
+    pillLabel: "WEB DEVELOPMENT",
+    icon: Globe,
+    textColor: "text-amber-400",
+    badgeBg: "bg-amber-500/10",
+    borderColor: "border-amber-500/30",
+    gradient: "from-amber-500 to-yellow-400",
+  },
+  {
+    key: "cpp",
+    name: "C++",
+    pillLabel: "C++",
+    icon: Cpu,
+    textColor: "text-blue-400",
+    badgeBg: "bg-blue-500/10",
+    borderColor: "border-blue-500/30",
+    gradient: "from-blue-500 to-indigo-400",
+  },
+  {
+    key: "python",
+    name: "Python",
+    pillLabel: "PYTHON",
+    icon: Sparkles,
+    textColor: "text-emerald-400",
+    badgeBg: "bg-emerald-500/10",
+    borderColor: "border-emerald-500/30",
+    gradient: "from-emerald-500 to-teal-400",
+  },
+  {
+    key: "java",
+    name: "Java",
+    pillLabel: "JAVA",
+    icon: Brain,
+    textColor: "text-orange-400",
+    badgeBg: "bg-orange-500/10",
+    borderColor: "border-orange-500/30",
+    gradient: "from-orange-500 to-red-400",
+  },
+];
+
+export function getQuestionSectionMeta(q?: ClientAptitudeQuestion) {
+  if (!q) {
+    return {
+      name: "Logical Reasoning",
+      pillLabel: "LOGICAL REASONING",
+      icon: Brain,
+      textColor: "text-purple-400",
+      badgeBg: "bg-purple-500/10",
+      borderColor: "border-purple-500/30",
+      gradient: "from-purple-500 to-violet-400",
+    };
+  }
+
+  const raw = (q.subcategory || q.category || "").toLowerCase().trim();
+
+  if (raw === "pattern_recognition" || raw.includes("pattern")) return SIX_SECTIONS[0];
+  if (raw === "task_decomposition" || raw.includes("decomp") || raw.includes("task")) return SIX_SECTIONS[1];
+  if (raw === "web_dev" || raw.includes("web")) return SIX_SECTIONS[2];
+  if (raw === "cpp" || raw.includes("c++")) return SIX_SECTIONS[3];
+  if (raw === "python" || raw.includes("py")) return SIX_SECTIONS[4];
+  if (raw === "java" || raw.includes("java")) return SIX_SECTIONS[5];
+
+  const legacy = CATEGORY_META[q.category] || CATEGORY_META.logical_reasoning;
+  return {
+    name: legacy.name,
+    pillLabel: legacy.name.toUpperCase(),
+    icon: legacy.icon,
+    textColor: legacy.textColor,
+    badgeBg: legacy.badgeBg,
+    borderColor: legacy.borderColor,
+    gradient: "from-purple-500 to-violet-400",
+  };
 }
 
 const CATEGORY_META: Record<
@@ -204,6 +313,90 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
     }
     return null;
   });
+
+  // Check if results has 6-section subcategories (v2.2+ / v2.4 schema)
+  const hasSubcategories = Boolean(
+    results?.subcategories &&
+      typeof results.subcategories === "object" &&
+      Object.keys(results.subcategories).length > 0 &&
+      (results.subcategories.pattern_recognition ||
+        results.subcategories.task_decomposition ||
+        results.subcategories.web_dev ||
+        results.subcategories.cpp ||
+        results.subcategories.python ||
+        results.subcategories.java)
+  );
+
+  // Compute 6 section display data using stored totals (or getSectionTotals fallback)
+  const sixSectionsData = useMemo(() => {
+    if (!results?.subcategories) return [];
+
+    const defaultTotals = getSectionTotals();
+    const defaultTotalMap: Record<string, number> = {
+      pattern_recognition: defaultTotals.patternRecognition,
+      task_decomposition: defaultTotals.taskDecomposition,
+      web_dev: defaultTotals.webDev,
+      cpp: defaultTotals.cpp,
+      python: defaultTotals.python,
+      java: defaultTotals.java,
+    };
+
+    return SIX_SECTIONS.map((sec) => {
+      const sub = results.subcategories?.[sec.key as keyof typeof results.subcategories];
+      const storedTotal =
+        typeof sub?.total === "number" && !isNaN(sub.total) && sub.total > 0
+          ? sub.total
+          : defaultTotalMap[sec.key];
+      const correct =
+        typeof sub?.correct === "number" && !isNaN(sub.correct)
+          ? sub.correct
+          : 0;
+      const percent =
+        typeof sub?.percent === "number" && !isNaN(sub.percent)
+          ? Math.min(100, Math.max(0, Math.round(sub.percent)))
+          : (storedTotal > 0 ? Math.min(100, Math.max(0, Math.round((correct / storedTotal) * 100))) : 0);
+
+      return {
+        ...sec,
+        correct,
+        total: storedTotal,
+        percent,
+      };
+    });
+  }, [results?.subcategories]);
+
+  // Compute Strongest Domain and Primary Growth Area over the 6 sections by percentage (ties: default order)
+  const { strongestDomain, primaryGrowthArea } = useMemo(() => {
+    if (hasSubcategories && sixSectionsData.length > 0) {
+      // Ties: use the default order.
+      // Array.prototype.sort in ES2019+ is stable, preserving SIX_SECTIONS order upon equal percentages.
+      const sortedDesc = [...sixSectionsData].sort((a, b) => b.percent - a.percent);
+      const sortedAsc = [...sixSectionsData].sort((a, b) => a.percent - b.percent);
+
+      return {
+        strongestDomain: {
+          name: sortedDesc[0].name,
+          percent: sortedDesc[0].percent,
+        },
+        primaryGrowthArea: {
+          name: sortedAsc[0].name,
+          percent: sortedAsc[0].percent,
+        },
+      };
+    }
+
+    // Fallback for legacy 3-category records without subcategories
+    return {
+      strongestDomain: {
+        name: results?.strongestCategory?.name ?? "Pattern Recognition",
+        percent: results?.strongestCategory?.percent ?? 0,
+      },
+      primaryGrowthArea: {
+        name: results?.weakestCategory?.name ?? "Task Decomposition",
+        percent: results?.weakestCategory?.percent ?? 0,
+      },
+    };
+  }, [hasSubcategories, sixSectionsData, results]);
 
   // Custom in-app modal notification state (compliant with project rule: no alert() / confirm())
   const [toastNotification, setToastNotification] = useState<{
@@ -485,8 +678,8 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
   // State 2: Active Assessment Runner (QUIZ)
   if (viewState === "QUIZ" && questions.length > 0) {
     const currentQ = questions[currentIndex];
-    const catMeta = CATEGORY_META[currentQ.category] || CATEGORY_META.logical_reasoning;
-    const CategoryIcon = catMeta.icon;
+    const sectionMeta = getQuestionSectionMeta(currentQ);
+    const SectionIcon = sectionMeta.icon;
     const isLast = currentIndex === questions.length - 1;
     const currentSelected = selectedAnswers[currentQ.id];
     const isAnswered = Boolean(currentSelected);
@@ -499,9 +692,9 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <span
-                className={`text-xs sm:text-sm font-mono font-bold px-3 py-1.5 rounded-xl border uppercase tracking-wider flex items-center gap-2 ${catMeta.badgeBg} ${catMeta.borderColor} ${catMeta.textColor}`}
+                className={`text-xs sm:text-sm font-mono font-bold px-3 py-1.5 rounded-xl border uppercase tracking-wider flex items-center gap-2 ${sectionMeta.badgeBg} ${sectionMeta.borderColor} ${sectionMeta.textColor}`}
               >
-                <CategoryIcon size={16} /> {catMeta.name}
+                <SectionIcon size={16} /> {sectionMeta.pillLabel}
               </span>
               <span className="text-xs sm:text-sm font-mono text-gray-300 font-bold">
                 QUESTION {currentIndex + 1} OF {questions.length}
@@ -726,7 +919,9 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
             Diagnostic Profile Report
           </h2>
           <p className="text-sm sm:text-base text-gray-200 font-sans max-w-2xl mx-auto">
-            Comprehensive skill calibration across Pattern Recognition, Task Decomposition, and Logical Reasoning.
+            {hasSubcategories
+              ? "Comprehensive skill calibration across Pattern Recognition, Task Decomposition, Web Development, C++, Python, and Java."
+              : "Comprehensive skill calibration across Pattern Recognition, Task Decomposition, and Logical Reasoning."}
           </p>
 
           <div className="flex flex-wrap items-center justify-center gap-3.5 mt-3">
@@ -748,80 +943,112 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
           </div>
         </div>
 
-        {/* 3 Domain Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {/* Pattern Recognition Card */}
-          <div className="bg-black/30 border border-white/10 rounded-2xl p-6 space-y-3.5">
-            <div className="flex items-center justify-between font-mono uppercase">
-              <span className="flex items-center gap-2 text-sm sm:text-base font-bold text-[#ff912d]">
-                <Cpu size={18} /> Pattern Recognition
-              </span>
-              <span className="text-base sm:text-lg text-[#ff912d] font-black">
-                {results?.categories?.pattern_recognition?.percent ?? 0}%
-              </span>
-            </div>
-            <div className="text-3xl sm:text-4xl font-black font-display text-white">
-              {results?.categories?.pattern_recognition?.correct ?? 0}{" "}
-              <span className="text-sm sm:text-base text-gray-300 font-normal">
-                / {results?.categories?.pattern_recognition?.total ?? 7} correct
-              </span>
-            </div>
-            <div className="h-2.5 bg-black/50 rounded-full overflow-hidden border border-white/10">
+        {/* 6 Section Domain Cards (or 3-Card Fallback for Legacy Records without Subcategories) */}
+        {hasSubcategories ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {sixSectionsData.map((sec) => (
               <div
-                className="h-full bg-gradient-to-r from-[#ff912d] to-amber-400 rounded-full transition-all duration-500"
-                style={{ width: `${results?.categories?.pattern_recognition?.percent ?? 0}%` }}
-              />
-            </div>
+                key={sec.key}
+                className="bg-black/30 border border-white/10 rounded-2xl p-6 space-y-3.5 hover:border-white/20 transition-all duration-200"
+              >
+                <div className="flex items-center justify-between font-mono uppercase">
+                  <span className={`flex items-center gap-2 text-sm sm:text-base font-bold ${sec.textColor}`}>
+                    <sec.icon size={18} /> {sec.name}
+                  </span>
+                  <span className={`text-base sm:text-lg font-black ${sec.textColor}`}>
+                    {sec.percent}%
+                  </span>
+                </div>
+                <div className="text-3xl sm:text-4xl font-black font-display text-white">
+                  {sec.correct}{" "}
+                  <span className="text-sm sm:text-base text-gray-300 font-normal">
+                    / {sec.total} correct
+                  </span>
+                </div>
+                <div className="h-2.5 bg-black/50 rounded-full overflow-hidden border border-white/10">
+                  <div
+                    className={`h-full bg-gradient-to-r ${sec.gradient} rounded-full transition-all duration-500`}
+                    style={{ width: `${sec.percent}%` }}
+                  />
+                </div>
+              </div>
+            ))}
           </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {/* Pattern Recognition Card */}
+            <div className="bg-black/30 border border-white/10 rounded-2xl p-6 space-y-3.5">
+              <div className="flex items-center justify-between font-mono uppercase">
+                <span className="flex items-center gap-2 text-sm sm:text-base font-bold text-[#ff912d]">
+                  <Cpu size={18} /> Pattern Recognition
+                </span>
+                <span className="text-base sm:text-lg text-[#ff912d] font-black">
+                  {results?.categories?.pattern_recognition?.percent ?? 0}%
+                </span>
+              </div>
+              <div className="text-3xl sm:text-4xl font-black font-display text-white">
+                {results?.categories?.pattern_recognition?.correct ?? 0}{" "}
+                <span className="text-sm sm:text-base text-gray-300 font-normal">
+                  / {results?.categories?.pattern_recognition?.total ?? 6} correct
+                </span>
+              </div>
+              <div className="h-2.5 bg-black/50 rounded-full overflow-hidden border border-white/10">
+                <div
+                  className="h-full bg-gradient-to-r from-[#ff912d] to-amber-400 rounded-full transition-all duration-500"
+                  style={{ width: `${results?.categories?.pattern_recognition?.percent ?? 0}%` }}
+                />
+              </div>
+            </div>
 
-          {/* Task Decomposition Card */}
-          <div className="bg-black/30 border border-white/10 rounded-2xl p-6 space-y-3.5">
-            <div className="flex items-center justify-between font-mono uppercase">
-              <span className="flex items-center gap-2 text-sm sm:text-base font-bold text-sky-400">
-                <Layers size={18} /> Task Decomposition
-              </span>
-              <span className="text-base sm:text-lg text-sky-400 font-black">
-                {results?.categories?.task_decomposition?.percent ?? 0}%
-              </span>
+            {/* Task Decomposition Card */}
+            <div className="bg-black/30 border border-white/10 rounded-2xl p-6 space-y-3.5">
+              <div className="flex items-center justify-between font-mono uppercase">
+                <span className="flex items-center gap-2 text-sm sm:text-base font-bold text-sky-400">
+                  <Layers size={18} /> Task Decomposition
+                </span>
+                <span className="text-base sm:text-lg text-sky-400 font-black">
+                  {results?.categories?.task_decomposition?.percent ?? 0}%
+                </span>
+              </div>
+              <div className="text-3xl sm:text-4xl font-black font-display text-white">
+                {results?.categories?.task_decomposition?.correct ?? 0}{" "}
+                <span className="text-sm sm:text-base text-gray-300 font-normal">
+                  / {results?.categories?.task_decomposition?.total ?? 3} correct
+                </span>
+              </div>
+              <div className="h-2.5 bg-black/50 rounded-full overflow-hidden border border-white/10">
+                <div
+                  className="h-full bg-gradient-to-r from-sky-500 to-cyan-400 rounded-full transition-all duration-500"
+                  style={{ width: `${results?.categories?.task_decomposition?.percent ?? 0}%` }}
+                />
+              </div>
             </div>
-            <div className="text-3xl sm:text-4xl font-black font-display text-white">
-              {results?.categories?.task_decomposition?.correct ?? 0}{" "}
-              <span className="text-sm sm:text-base text-gray-300 font-normal">
-                / {results?.categories?.task_decomposition?.total ?? 3} correct
-              </span>
-            </div>
-            <div className="h-2.5 bg-black/50 rounded-full overflow-hidden border border-white/10">
-              <div
-                className="h-full bg-gradient-to-r from-sky-500 to-cyan-400 rounded-full transition-all duration-500"
-                style={{ width: `${results?.categories?.task_decomposition?.percent ?? 0}%` }}
-              />
-            </div>
-          </div>
 
-          {/* Logical Reasoning Card */}
-          <div className="bg-black/30 border border-white/10 rounded-2xl p-6 space-y-3.5">
-            <div className="flex items-center justify-between font-mono uppercase">
-              <span className="flex items-center gap-2 text-sm sm:text-base font-bold text-purple-400">
-                <Brain size={18} /> Logical Reasoning
-              </span>
-              <span className="text-base sm:text-lg text-purple-400 font-black">
-                {results?.categories?.logical_reasoning?.percent ?? 0}%
-              </span>
-            </div>
-            <div className="text-3xl sm:text-4xl font-black font-display text-white">
-              {results?.categories?.logical_reasoning?.correct ?? 0}{" "}
-              <span className="text-sm sm:text-base text-gray-300 font-normal">
-                / {results?.categories?.logical_reasoning?.total ?? 12} correct
-              </span>
-            </div>
-            <div className="h-2.5 bg-black/50 rounded-full overflow-hidden border border-white/10">
-              <div
-                className="h-full bg-gradient-to-r from-purple-500 to-violet-400 rounded-full transition-all duration-500"
-                style={{ width: `${results?.categories?.logical_reasoning?.percent ?? 0}%` }}
-              />
+            {/* Logical Reasoning Card */}
+            <div className="bg-black/30 border border-white/10 rounded-2xl p-6 space-y-3.5">
+              <div className="flex items-center justify-between font-mono uppercase">
+                <span className="flex items-center gap-2 text-sm sm:text-base font-bold text-purple-400">
+                  <Brain size={18} /> Logical Reasoning
+                </span>
+                <span className="text-base sm:text-lg text-purple-400 font-black">
+                  {results?.categories?.logical_reasoning?.percent ?? 0}%
+                </span>
+              </div>
+              <div className="text-3xl sm:text-4xl font-black font-display text-white">
+                {results?.categories?.logical_reasoning?.correct ?? 0}{" "}
+                <span className="text-sm sm:text-base text-gray-300 font-normal">
+                  / {results?.categories?.logical_reasoning?.total ?? 6} correct
+                </span>
+              </div>
+              <div className="h-2.5 bg-black/50 rounded-full overflow-hidden border border-white/10">
+                <div
+                  className="h-full bg-gradient-to-r from-purple-500 to-violet-400 rounded-full transition-all duration-500"
+                  style={{ width: `${results?.categories?.logical_reasoning?.percent ?? 0}%` }}
+                />
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Strongest & Weakest Category Highlights */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -834,8 +1061,7 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
                 Strongest Domain
               </div>
               <div className="text-base sm:text-lg font-bold text-white mt-0.5">
-                {results?.strongestCategory?.name ?? "Pattern Recognition"} (
-                {results?.strongestCategory?.percent ?? 0}%)
+                {strongestDomain.name} ({strongestDomain.percent}%)
               </div>
             </div>
           </div>
@@ -849,8 +1075,7 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
                 Primary Growth Area
               </div>
               <div className="text-base sm:text-lg font-bold text-white mt-0.5">
-                {results?.weakestCategory?.name ?? "Task Decomposition"} (
-                {results?.weakestCategory?.percent ?? 0}%)
+                {primaryGrowthArea.name} ({primaryGrowthArea.percent}%)
               </div>
             </div>
           </div>
