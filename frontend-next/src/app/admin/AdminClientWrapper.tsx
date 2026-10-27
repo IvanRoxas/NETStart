@@ -28,7 +28,7 @@ import {
 import AdminToast from '@/components/AdminToast';
 import ConfirmModal from '@/components/ConfirmModal';
 import { useSession } from 'next-auth/react';
-import { checkSessionMismatch } from '@/components/AuthSyncProvider';
+import { checkSessionMismatch, useAuthSync } from '@/components/AuthSyncProvider';
 
 interface SectionInfo {
   id: string;
@@ -47,8 +47,7 @@ export default function AdminClientWrapper({
   sections?: SectionInfo[];
   currentUserRole?: string;
 }) {
-  const { data: session } = useSession();
-  const currentAdminId = (session?.user as any)?.id;
+  const { isStale, pinnedUserId } = useAuthSync();
   const [users, setUsers] = useState(initialUsers);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'VERIFIED' | 'UNVERIFIED' | 'BANNED'>('ALL');
@@ -145,12 +144,13 @@ export default function AdminClientWrapper({
 
   const handleSaveSectionAssignment = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isStale) return;
     if (!assignTargetUser) return;
 
     try {
       setIsAssigning(true);
       if (targetSectionId) {
-        const res = await assignStudentToSection(assignTargetUser.id, targetSectionId, currentAdminId);
+        const res = await assignStudentToSection(assignTargetUser.id, targetSectionId, pinnedUserId || undefined);
         if (checkSessionMismatch(res)) return;
         const assignedSection = sections.find(s => s.id === targetSectionId);
         setUsers(users.map(u => u.id === assignTargetUser.id ? {
@@ -169,7 +169,7 @@ export default function AdminClientWrapper({
           type: 'success' 
         });
       } else {
-        const res = await removeStudentFromSection(assignTargetUser.id, currentAdminId);
+        const res = await removeStudentFromSection(assignTargetUser.id, pinnedUserId || undefined);
         if (checkSessionMismatch(res)) return;
         setUsers(users.map(u => u.id === assignTargetUser.id ? {
           ...u,

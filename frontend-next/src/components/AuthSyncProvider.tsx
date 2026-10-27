@@ -7,11 +7,13 @@ import { AlertTriangle, RefreshCw } from "lucide-react";
 interface AuthSyncContextType {
   isStale: boolean;
   currentUserId: string | null;
+  pinnedUserId: string | null;
 }
 
 const AuthSyncContext = createContext<AuthSyncContextType>({
   isStale: false,
   currentUserId: null,
+  pinnedUserId: null,
 });
 
 export const useAuthSync = () => useContext(AuthSyncContext);
@@ -37,6 +39,7 @@ const tabId = typeof window !== "undefined"
   : "server_tab";
 
 import { SessionMismatchResult } from "@/lib/sessionGuard";
+import { buildExpectedUserHeader } from "@/lib/authSyncHeaders";
 
 export function triggerSessionMismatchOverlay() {
   if (typeof window !== "undefined") {
@@ -62,10 +65,19 @@ export default function AuthSyncProvider({
   const currentUserId = (session?.user as any)?.id || null;
 
   const [isStale, setIsStale] = useState(false);
+  const [pinnedUserId, setPinnedUserId] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
   const initialUserIdRef = useRef<string | null>(null);
   const hasInitializedRef = useRef(false);
   const channelRef = useRef<BroadcastChannel | null>(null);
+
+  // Pin the user ID when the session first resolves with a user ID (set once)
+  useEffect(() => {
+    if (status === "loading") return;
+    if (currentUserId && !pinnedUserId) {
+      setPinnedUserId(currentUserId);
+    }
+  }, [currentUserId, status, pinnedUserId]);
 
   useEffect(() => {
     setMounted(true);
@@ -285,7 +297,18 @@ export default function AuthSyncProvider({
         }
       }
 
-      const response = await originalFetch(...args);
+      // For non-GET/HEAD requests to the same origin whose path starts with /api/ and does NOT start with /api/auth/,
+      // set x-expected-user-id to the pinned id, overriding any value the call site set.
+      let callInit = init;
+      const decision = buildExpectedUserHeader(args[0], init, pinnedUserId);
+      if (decision.shouldAttach) {
+        callInit = {
+          ...init,
+          headers: decision.headers,
+        };
+      }
+
+      const response = await originalFetch(args[0], callInit);
 
       if (response.status === 409) {
         try {
@@ -306,10 +329,10 @@ export default function AuthSyncProvider({
     return () => {
       window.fetch = originalFetch;
     };
-  }, [isStale]);
+  }, [isStale, pinnedUserId]);
 
   return (
-    <AuthSyncContext.Provider value={{ isStale, currentUserId }}>
+    <AuthSyncContext.Provider value={{ isStale, currentUserId, pinnedUserId }}>
       {children}
 
       {/* Blocking Modal Overlay on Session Mismatch: Portaled to document.body with max z-index */}

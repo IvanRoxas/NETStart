@@ -11,7 +11,7 @@ import { triggerDailyTaskCompletion } from '@/lib/dailyTasks';
 import { getBorderScale, getAvatarItemStyle, getItemSubGroup, getHairColor } from '@/lib/shopCatalog';
 import { useDemoMode } from '@/lib/demoMode';
 import DemoToggle from '@/components/DemoToggle';
-import { checkSessionMismatch } from '@/components/AuthSyncProvider';
+import { checkSessionMismatch, useAuthSync } from '@/components/AuthSyncProvider';
 
 const TOP_SUB_FILTERS = [
   'All',
@@ -69,6 +69,7 @@ type ShopItem = {
 
 export default function ShopPage() {
   const { data: session } = useSession();
+  const { isStale, pinnedUserId } = useAuthSync();
   const { isDemoMode } = useDemoMode();
   const [activeCategory, setActiveCategory] = useState('Background');
   const [searchQuery, setSearchQuery] = useState('');
@@ -183,14 +184,15 @@ export default function ShopPage() {
 
     const effectivePrice = isDemoMode ? 0 : item.price;
 
+    if (isStale) return;
+
     if (!isDemoMode && gears < effectivePrice) {
       showToast(`Not enough gears! You need ${(effectivePrice - gears).toLocaleString()} more gears.`, "error");
       return;
     }
 
     setLoadingItems(prev => new Set(prev).add(item.id));
-    const userId = (session?.user as any)?.id;
-    const res = await purchaseItem(item.id, userId);
+    const res = await purchaseItem(item.id, pinnedUserId || undefined);
     if (checkSessionMismatch(res)) return;
 
     if (res.success) {
