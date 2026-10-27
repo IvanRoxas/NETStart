@@ -456,6 +456,7 @@ export async function assignStudentToSection(userId: string, sectionId: string) 
     await logSystemAction(result.logPayload);
   }
 
+  // Revalidate admin dashboard, sections directory, and individual student dossier
   revalidatePath('/admin');
   revalidatePath('/admin/sections');
   revalidatePath(`/admin/users/${userId}`);
