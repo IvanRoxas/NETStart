@@ -4,14 +4,24 @@ import React, { useEffect, useState, useRef } from 'react';
 import { SessionContext } from 'next-auth/react';
 import Image from 'next/image';
 import QuillIcon from '@/components/icons/QuillIcon';
+import { useAuthSync } from '@/components/AuthSyncProvider';
 
 export default function AchievementPopupProvider({ children }: { children: React.ReactNode }) {
   const sessionContext = React.useContext(SessionContext);
   const session = sessionContext?.data;
+  const { isStale } = useAuthSync();
   const [queue, setQueue] = useState<any[]>([]);
   const [currentBadge, setCurrentBadge] = useState<any | null>(null);
   const [show, setShow] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    if (isStale) {
+      setShow(false);
+      setCurrentBadge(null);
+      setQueue([]);
+    }
+  }, [isStale]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -24,6 +34,7 @@ export default function AchievementPopupProvider({ children }: { children: React
     }
   }, []);
   const fetchUnreadAchievements = async () => {
+    if (isStale) return;
     try {
       const res = await fetch(`/api/notifications?t=${Date.now()}`);
       if (res.ok) {
@@ -57,7 +68,7 @@ export default function AchievementPopupProvider({ children }: { children: React
   };
 
   useEffect(() => {
-    if (session?.user) {
+    if (session?.user && !isStale) {
       fetchUnreadAchievements();
       
       const handleUpdate = () => fetchUnreadAchievements();
@@ -69,15 +80,15 @@ export default function AchievementPopupProvider({ children }: { children: React
         window.removeEventListener('sandbox_unlocked', handleUpdate);
       };
     }
-  }, [session, currentBadge]);
+  }, [session, currentBadge, isStale]);
 
   useEffect(() => {
-    if (!currentBadge && queue.length > 0) {
+    if (!currentBadge && queue.length > 0 && !isStale) {
       const nextBadge = queue[0];
       setCurrentBadge(nextBadge);
       setShow(true);
     }
-  }, [queue, currentBadge]);
+  }, [queue, currentBadge, isStale]);
 
   const dismissCurrent = async (badgeToDismiss: any) => {
     setShow(false);

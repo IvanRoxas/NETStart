@@ -52,6 +52,8 @@ export function checkSessionMismatch(result: any): result is SessionMismatchResu
   return false;
 }
 
+import { createPortal } from "react-dom";
+
 export default function AuthSyncProvider({
   children,
   realm = "student",
@@ -60,9 +62,14 @@ export default function AuthSyncProvider({
   const currentUserId = (session?.user as any)?.id || null;
 
   const [isStale, setIsStale] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const initialUserIdRef = useRef<string | null>(null);
   const hasInitializedRef = useRef(false);
   const channelRef = useRef<BroadcastChannel | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const channelName = `netstart_auth_sync_${realm}`;
   const storageKey = `netstart_auth_sync_${realm}`;
@@ -183,9 +190,37 @@ export default function AuthSyncProvider({
     };
   }, []);
 
+  // While stale, suppress notification and toast events in capture phase so no new toasts are shown
+  useEffect(() => {
+    if (!isStale || typeof window === "undefined") return;
+
+    const suppressEvent = (e: Event) => {
+      e.stopImmediatePropagation();
+    };
+
+    const eventsToSuppress = [
+      "daily_task_completed",
+      "notifications_updated",
+      "sandbox_unlocked",
+      "netstart:xp_gained",
+      "netstart:gears_gained",
+    ];
+
+    eventsToSuppress.forEach((evt) => {
+      window.addEventListener(evt, suppressEvent, true);
+    });
+
+    return () => {
+      eventsToSuppress.forEach((evt) => {
+        window.removeEventListener(evt, suppressEvent, true);
+      });
+    };
+  }, [isStale]);
+
   // Intercept fetch to:
-  // 1. Block outgoing writes if already marked stale
+  // 1. Block outgoing writes if already marked stale (returning 409 SESSION_USER_MISMATCH)
   // 2. Detect 409 SESSION_USER_MISMATCH from server responses (e.g. tabs that woke up from sleep)
+  // 3. Stop client polling while stale (notifications, unread-count, sandbox status, profile refresh)
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -193,16 +228,61 @@ export default function AuthSyncProvider({
     window.fetch = async (...args) => {
       const init = args[1];
       const method = (init?.method || "GET").toUpperCase();
+      const rawUrl = typeof args[0] === "string" 
+        ? args[0] 
+        : (args[0] && "url" in args[0] ? (args[0] as any).url : String(args[0]));
 
-      if (isStale && method !== "GET" && method !== "HEAD") {
-        console.warn("[AUTH_SYNC] Stale tab write blocked:", args[0]);
-        return new Response(
-          JSON.stringify({
-            error: "Session changed in another tab. Reload.",
-            code: "SESSION_USER_MISMATCH",
-          }),
-          { status: 409, headers: { "Content-Type": "application/json" } }
-        );
+      if (isStale) {
+        // Stop client polling while stale: notifications, unread-count, sandbox status, profile refresh
+        if (method === "GET" || method === "HEAD") {
+          const lowerUrl = rawUrl.toLowerCase();
+          if (
+            lowerUrl.includes("/api/notifications") ||
+            lowerUrl.includes("/api/sandbox/status") ||
+            lowerUrl.includes("/api/profile")
+          ) {
+            if (lowerUrl.includes("unread-count")) {
+              return new Response(JSON.stringify({ count: 0 }), {
+                status: 200,
+                headers: { "Content-Type": "application/json" },
+              });
+            }
+            if (lowerUrl.includes("/api/notifications")) {
+              return new Response(JSON.stringify({ notifications: [] }), {
+                status: 200,
+                headers: { "Content-Type": "application/json" },
+              });
+            }
+            if (lowerUrl.includes("/api/sandbox/status")) {
+              return new Response(JSON.stringify({ isUnlocked: false }), {
+                status: 200,
+                headers: { "Content-Type": "application/json" },
+              });
+            }
+            if (lowerUrl.includes("/api/profile")) {
+              return new Response(JSON.stringify({ user: null }), {
+                status: 200,
+                headers: { "Content-Type": "application/json" },
+              });
+            }
+            return new Response(JSON.stringify({}), {
+              status: 200,
+              headers: { "Content-Type": "application/json" },
+            });
+          }
+        }
+
+        // Stale tab write blocked (keep existing behavior intact)
+        if (method !== "GET" && method !== "HEAD") {
+          console.warn("[AUTH_SYNC] Stale tab write blocked:", args[0]);
+          return new Response(
+            JSON.stringify({
+              error: "Session changed in another tab. Reload.",
+              code: "SESSION_USER_MISMATCH",
+            }),
+            { status: 409, headers: { "Content-Type": "application/json" } }
+          );
+        }
       }
 
       const response = await originalFetch(...args);
@@ -232,14 +312,25 @@ export default function AuthSyncProvider({
     <AuthSyncContext.Provider value={{ isStale, currentUserId }}>
       {children}
 
-      {/* Blocking Modal Overlay on Session Mismatch */}
-      {isStale && (
+      {/* Blocking Modal Overlay on Session Mismatch: Portaled to document.body with max z-index */}
+      {isStale && mounted && typeof document !== "undefined" && createPortal(
         <div
           id="auth-session-mismatch-modal"
-          className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200"
-          style={{ pointerEvents: "auto" }}
+          className="fixed inset-0 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200"
+          style={{ zIndex: 2147483647, pointerEvents: "auto" }}
         >
-          <div className="bg-[#1e0a2d] border-2 border-[#ff912d] rounded-3xl p-7 sm:p-9 max-w-md w-full shadow-[0_0_50px_rgba(255,145,45,0.3)] space-y-6 text-center relative">
+          <style>{`
+            /* Ensure all underlying page content, toast, notification and popup layers are not interactive while stale */
+            body > *:not(#auth-session-mismatch-modal),
+            aside, [aria-live], [data-toast], .toast, [role="status"], [role="alert"] {
+              pointer-events: none !important;
+            }
+            #auth-session-mismatch-modal,
+            #auth-session-mismatch-modal * {
+              pointer-events: auto !important;
+            }
+          `}</style>
+          <div className="bg-[#1e0a2d] border-2 border-[#ff912d] rounded-3xl p-7 sm:p-9 max-w-md w-full shadow-[0_0_50px_rgba(255,145,45,0.3)] space-y-6 text-center relative pointer-events-auto">
             <div className="w-16 h-16 mx-auto rounded-2xl bg-[#ff912d]/15 border-2 border-[#ff912d] flex items-center justify-center text-[#ff912d]">
               <AlertTriangle size={36} />
             </div>
@@ -259,7 +350,7 @@ export default function AuthSyncProvider({
                 onClick={() => {
                   window.location.reload();
                 }}
-                className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-[#ff912d] to-amber-500 hover:from-[#ff912d]/90 hover:to-amber-500/90 text-black font-black font-display text-sm uppercase tracking-wider shadow-lg flex items-center justify-center gap-2 transition-all cursor-pointer hover:scale-[1.02] active:scale-95"
+                className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-[#ff912d] to-amber-500 hover:from-[#ff912d]/90 hover:to-amber-500/90 text-black font-black font-display text-sm uppercase tracking-wider shadow-lg flex items-center justify-center gap-2 transition-all cursor-pointer hover:scale-[1.02] active:scale-95 pointer-events-auto"
               >
                 <RefreshCw size={16} /> Reload
               </button>
@@ -269,7 +360,8 @@ export default function AuthSyncProvider({
               [DISPATCH: ACCOUNT PROTECTION GUARD ACTIVE]
             </p>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </AuthSyncContext.Provider>
   );

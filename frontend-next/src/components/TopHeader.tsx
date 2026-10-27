@@ -9,6 +9,7 @@ import NotificationDropdown from './NotificationDropdown';
 import VerifyModal from './VerifyModal';
 import MusicToggleButton from './MusicToggleButton';
 import DemoToggle from './DemoToggle';
+import { useAuthSync } from './AuthSyncProvider';
 
 interface TopHeaderProps {
   title: string;
@@ -21,6 +22,7 @@ export default function TopHeader({ title, showDemoToggle = false, children }: T
   const sessionContext = React.useContext(SessionContext);
   const session = sessionContext?.data;
   const user = session?.user as any;
+  const { isStale } = useAuthSync();
   
   const [aptitudeProfile, setAptitudeProfile] = useState<{
     hasTakenAptitudeTest?: boolean;
@@ -31,6 +33,7 @@ export default function TopHeader({ title, showDemoToggle = false, children }: T
   } | null>(null);
 
   useEffect(() => {
+    if (isStale) return;
     if (session?.user && (session.user as any).type !== 'admin') {
       fetch('/api/profile')
         .then(res => res.ok ? res.json() : null)
@@ -47,7 +50,7 @@ export default function TopHeader({ title, showDemoToggle = false, children }: T
         })
         .catch(() => {});
     }
-  }, [session?.user]);
+  }, [session?.user, isStale]);
 
   const hasTakenAptitudeTest = Boolean(aptitudeProfile?.hasTakenAptitudeTest ?? user?.hasTakenAptitudeTest);
   const logicScore = aptitudeProfile?.logicScore ?? user?.logicScore ?? 0;
@@ -79,6 +82,7 @@ export default function TopHeader({ title, showDemoToggle = false, children }: T
   }, []);
 
   const fetchNotifications = useCallback(async (showLoading = false) => {
+    if (isStale) return;
     if (showLoading) setNotifsLoading(true);
     try {
       const res = await fetch(`/api/notifications?t=${Date.now()}`);
@@ -95,9 +99,10 @@ export default function TopHeader({ title, showDemoToggle = false, children }: T
     } finally {
       setNotifsLoading(false);
     }
-  }, []);
+  }, [isStale]);
 
   const fetchUnreadCount = useCallback(async () => {
+    if (isStale) return;
     try {
       const res = await fetch('/api/notifications/unread-count');
       if (res.ok) {
@@ -120,10 +125,10 @@ export default function TopHeader({ title, showDemoToggle = false, children }: T
     } catch (err) {
       console.error('Failed to fetch unread count', err);
     }
-  }, []);
+  }, [isStale]);
 
   useEffect(() => {
-    if (session?.user) {
+    if (session?.user && !isStale) {
       fetchNotifications(true);
       fetchUnreadCount();
 
@@ -143,7 +148,7 @@ export default function TopHeader({ title, showDemoToggle = false, children }: T
         window.removeEventListener('notifications_updated', handleUpdate);
       };
     }
-  }, [session, fetchNotifications, fetchUnreadCount]);
+  }, [session, isStale, fetchNotifications, fetchUnreadCount]);
 
   const handleDismissRequest = async (notif: any) => {
     if (processingIds.includes(notif.id)) return;

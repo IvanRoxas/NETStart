@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { X, ChevronDown, Zap } from "lucide-react";
 import { DailyTaskNotificationData, getTodayActiveDailyTaskIds } from "@/lib/dailyTasks";
+import { useAuthSync } from "@/components/AuthSyncProvider";
 
 
 /**
@@ -28,6 +29,7 @@ function MinimalistStarIcon({ className = "w-4 h-4" }: { className?: string }) {
 }
 
 export default function DailyTaskNotificationProvider({ children }: { children: React.ReactNode }) {
+  const { isStale } = useAuthSync();
   const [queue, setQueue] = useState<DailyTaskNotificationData[]>([]);
   const [currentTask, setCurrentTask] = useState<DailyTaskNotificationData | null>(null);
   const [show, setShow] = useState(false);
@@ -39,6 +41,17 @@ export default function DailyTaskNotificationProvider({ children }: { children: 
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const remainingTimeRef = useRef<number>(5500); // 5.5s display duration
   const shownIdsRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (isStale) {
+      setShow(false);
+      setIsHovered(false);
+      setCurrentTask(null);
+      setQueue([]);
+      if (timerRef.current) clearTimeout(timerRef.current);
+      if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
+    }
+  }, [isStale]);
 
   // Initialize notification sound
   useEffect(() => {
@@ -64,6 +77,7 @@ export default function DailyTaskNotificationProvider({ children }: { children: 
   // Listen to window event 'daily_task_completed'
   useEffect(() => {
     const handleDailyTaskEvent = (event: Event) => {
+      if (isStale) return;
       const customEvent = event as CustomEvent<DailyTaskNotificationData>;
       if (!customEvent.detail) return;
       const detail = customEvent.detail;
@@ -81,7 +95,7 @@ export default function DailyTaskNotificationProvider({ children }: { children: 
 
     window.addEventListener("daily_task_completed", handleDailyTaskEvent);
     return () => window.removeEventListener("daily_task_completed", handleDailyTaskEvent);
-  }, []);
+  }, [isStale]);
 
   // Dismiss current notification
   const dismissCurrent = useCallback(
@@ -102,7 +116,7 @@ export default function DailyTaskNotificationProvider({ children }: { children: 
 
   // Process queue
   useEffect(() => {
-    if (!currentTask && queue.length > 0) {
+    if (!currentTask && queue.length > 0 && !isStale) {
       const nextTask = queue[0];
       setCurrentTask(nextTask);
       setShow(true);
@@ -110,7 +124,7 @@ export default function DailyTaskNotificationProvider({ children }: { children: 
       remainingTimeRef.current = 5500;
       playNotificationChime();
     }
-  }, [queue, currentTask, playNotificationChime]);
+  }, [queue, currentTask, playNotificationChime, isStale]);
 
   // Auto-dismiss timer management (pauses when hovered)
   useEffect(() => {

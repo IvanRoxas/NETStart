@@ -11,6 +11,7 @@ import LogoutButton from "@/components/LogoutButton";
 import { useNavigationGuard } from "@/context/NavigationGuardContext";
 import { getUserStorageItem, setUserStorageItem } from "@/lib/userStorage";
 import { useDemoMode } from "@/lib/demoMode";
+import { useAuthSync } from "@/components/AuthSyncProvider";
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -20,6 +21,7 @@ export default function Sidebar() {
   const userId = (session?.user as any)?.id;
   const canUseDemoMode = Boolean((session?.user as any)?.canUseDemoMode);
   const { isDemoMode } = useDemoMode();
+  const { isStale } = useAuthSync();
 
   const asideRef = useRef<HTMLElement>(null);
   const sandboxRef = useRef<HTMLAnchorElement>(null);
@@ -48,7 +50,14 @@ export default function Sidebar() {
   }, []);
 
   useEffect(() => {
-    if (!userId) return;
+    if (isStale) {
+      setToastMessage(null);
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    }
+  }, [isStale]);
+
+  useEffect(() => {
+    if (!userId || isStale) return;
 
     // 1. Instant check from user-scoped storage
     const localUnlocked = getUserStorageItem("sandbox_unlocked", userId) === "true";
@@ -60,6 +69,7 @@ export default function Sidebar() {
 
     // 2. Fetch server truth from database
     const fetchSandboxStatus = () => {
+      if (isStale) return;
       fetch(`/api/sandbox/status?t=${Date.now()}`)
         .then((res) => (res.ok ? res.json() : null))
         .then((data) => {
@@ -75,6 +85,7 @@ export default function Sidebar() {
 
     // 3. Listen to real-time events from mission completions
     const handleSandboxUnlocked = () => {
+      if (isStale) return;
       setIsSandboxUnlocked(true);
       setUserStorageItem("sandbox_unlocked", "true", userId);
     };
@@ -86,7 +97,7 @@ export default function Sidebar() {
       window.removeEventListener("sandbox_unlocked", handleSandboxUnlocked);
       window.removeEventListener("notifications_updated", fetchSandboxStatus);
     };
-  }, [userId]);
+  }, [userId, isStale]);
 
   // Dynamically calculate Sandbox item position to anchor external floating badge
   const updateSandboxPosition = useCallback(() => {
@@ -110,6 +121,7 @@ export default function Sidebar() {
   }, [updateSandboxPosition, isMinimized, isMounted, effectiveSandboxUnlocked]);
 
   const showLockedToast = (msg: string) => {
+    if (isStale) return;
     setToastMessage(msg);
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     toastTimerRef.current = setTimeout(() => {
