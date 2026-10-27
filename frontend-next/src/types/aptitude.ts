@@ -71,6 +71,11 @@ export interface AptitudeTestResult {
   missed: MissedQuestionItem[];
   recommendedLearningPath: string;
   aiInsight?: AptitudeAIInsight;
+  aiOverride?: {
+    applied: boolean;
+    planet?: string;
+    reason?: string;
+  };
   completedAt: string;
 }
 
@@ -88,6 +93,8 @@ export interface AptitudeAIContext {
     java?: string | number;
   };
   computedTrack?: "WEB" | "LOGIC" | "BALANCED";
+  defaultPathOrder?: string[];
+  defaultFirstPlanet?: string;
   strongestCategory: string;
   weakestCategory: string;
   missedConcepts: string[];

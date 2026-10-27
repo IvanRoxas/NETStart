@@ -324,6 +324,8 @@ export async function POST(req: Request) {
           java: javaCorrect,
         },
         computedTrack: deterministicOrbit.track,
+        defaultPathOrder: deterministicOrbit.pathOrder,
+        defaultFirstPlanet: deterministicOrbit.pathOrder[1],
         strongestCategory: `${strongestCategory.name} (${strongestCategory.percent}%)`,
         weakestCategory: `${weakestCategory.name} (${weakestCategory.percent}%)`,
         missedConcepts: missed.map((m) => m.concept),
@@ -350,6 +352,8 @@ export async function POST(req: Request) {
         totalScore: `${apt.totalCorrect ?? calcTotalCorrect}/${apt.totalQuestions ?? 18} (${apt.totalPercent ?? calcTotalPercent}%)`,
         categories: subs,
         computedTrack: deterministicOrbit.track,
+        defaultPathOrder: deterministicOrbit.pathOrder,
+        defaultFirstPlanet: deterministicOrbit.pathOrder[1],
         strongestCategory: apt.strongestCategory?.name
           ? `${apt.strongestCategory.name} (${apt.strongestCategory.percent}%)`
           : "Pattern Recognition",
@@ -373,23 +377,15 @@ export async function POST(req: Request) {
         {
           type: "OBJECT",
           properties: {
-            track: { type: "STRING" },
             summary: { type: "STRING" },
             advice: { type: "STRING" },
-            planets: {
-              type: "ARRAY",
-              items: {
-                type: "OBJECT",
-                properties: {
-                  planet: { type: "STRING" },
-                  affinity: { type: "NUMBER" },
-                  reason: { type: "STRING" },
-                },
-                required: ["planet", "affinity", "reason"],
-              },
+            recommendedFirstPlanet: {
+              type: "STRING",
+              enum: ["MARS", "VENUS", "MERCURY", "JUPITER", "SATURN", "EARTH"],
             },
+            overrideReason: { type: "STRING" },
           },
-          required: ["track", "summary", "advice", "planets"],
+          required: ["summary", "advice"],
         },
         () => getAptitudeFallback(aiContext),
         mockAptitudeResponse,
@@ -405,7 +401,7 @@ export async function POST(req: Request) {
     }
 
     // Enforce deterministic orbit and deterministic planet affinities (No AI Guessing)
-    const { isFallback, result, pathOrder } = processAIPathResponse(rawResponse, aiContext);
+    const { isFallback, result, pathOrder, aiOverride } = processAIPathResponse(rawResponse, aiContext);
     const finalFallbackStatus = isFallback || fallbackUsedInFetch;
 
     // Suffix emoji indicator: ✨ for Gemini, 🌟 for Fallback
@@ -415,10 +411,12 @@ export async function POST(req: Request) {
 
     const finalResult = {
       ...baseResult,
+      totalQuestions: baseResult?.totalQuestions ?? 18,
       aiInsight: {
         ...result,
         source: finalFallbackStatus ? "fallback" : "gemini",
       },
+      aiOverride,
     };
 
     // SINGLE ATOMIC DATABASE COMMIT (Eliminates Zombie Lockout Vulnerability)

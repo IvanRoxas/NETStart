@@ -92,6 +92,8 @@ export async function POST(req: Request) {
       totalScore: `${apt.totalCorrect ?? calcTotalCorrect}/${apt.totalQuestions ?? 18} (${apt.totalPercent ?? calcTotalPercent}%)`,
       categories: subs,
       computedTrack: deterministic.track,
+      defaultPathOrder: deterministic.pathOrder,
+      defaultFirstPlanet: deterministic.pathOrder[1],
       strongestCategory: apt.strongestCategory?.name
         ? `${apt.strongestCategory.name} (${apt.strongestCategory.percent ?? 0}%)`
         : "Pattern Recognition",
@@ -113,23 +115,15 @@ export async function POST(req: Request) {
         {
           type: "OBJECT",
           properties: {
-            track: { type: "STRING" },
             summary: { type: "STRING" },
             advice: { type: "STRING" },
-            planets: {
-              type: "ARRAY",
-              items: {
-                type: "OBJECT",
-                properties: {
-                  planet: { type: "STRING" },
-                  affinity: { type: "NUMBER" },
-                  reason: { type: "STRING" },
-                },
-                required: ["planet", "affinity", "reason"],
-              },
+            recommendedFirstPlanet: {
+              type: "STRING",
+              enum: ["MARS", "VENUS", "MERCURY", "JUPITER", "SATURN", "EARTH"],
             },
+            overrideReason: { type: "STRING" },
           },
-          required: ["track", "summary", "advice", "planets"],
+          required: ["summary", "advice"],
         },
         () => getAptitudeFallback(aiContext),
         mockAptitudeResponse,
@@ -143,7 +137,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, message: "Gemini error." });
     }
 
-    const { isFallback, result, pathOrder } = processAIPathResponse(rawResponse, aiContext);
+    const { isFallback, result, pathOrder, aiOverride } = processAIPathResponse(rawResponse, aiContext);
 
     if (isFallback || fallbackUsedInFetch) {
       return NextResponse.json({ success: false, message: "Still failing, fallback retained." });
@@ -170,6 +164,7 @@ export async function POST(req: Request) {
         ...result,
         source: "gemini",
       },
+      aiOverride,
     };
 
     await prisma.user.update({

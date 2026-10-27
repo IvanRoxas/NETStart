@@ -102,8 +102,8 @@ export function computeDeterministicOrbitAndAffinities(
   const jupiterAffinity = Math.min(100, Math.max(10, Math.round(javaPct * 0.60 + taskDecompPct * 0.25 + patternPct * 0.15)));
 
   const marsAffinity = webAffinity;
-  const venusAffinity = Math.min(100, Math.max(10, Math.round(webDevPct * 0.58 + patternPct * 0.27 + taskDecompPct * 0.15)));
-  const mercuryAffinity = Math.min(100, Math.max(10, Math.round(webDevPct * 0.60 + taskDecompPct * 0.25 + patternPct * 0.15)));
+  const venusAffinity = webAffinity;
+  const mercuryAffinity = webAffinity;
 
   // 2. Logic planets sorted strictly by deterministic score, tie-breaker: default order ["JUPITER", "SATURN", "EARTH"]
   const LOGIC_DEFAULT: Array<"JUPITER" | "SATURN" | "EARTH"> = ["JUPITER", "SATURN", "EARTH"];
@@ -127,8 +127,7 @@ export function computeDeterministicOrbitAndAffinities(
   const sortedLogicPlanets = logicPlanetsWithScores.map((p) => p.planet);
 
   // 3. Track Determination:
-  const logicAvgPct = Math.round((cppPct + pythonPct + javaPct) / 3);
-  const logicReadiness = Math.round(logicAvgPct * 0.60 + taskDecompPct * 0.25 + patternPct * 0.15);
+  const logicReadiness = Math.max(jupiterAffinity, saturnAffinity, earthAffinity);
   const webReadiness = webAffinity;
 
   let track: "WEB" | "LOGIC" | "BALANCED" = "BALANCED";
@@ -140,7 +139,7 @@ export function computeDeterministicOrbitAndAffinities(
     track = "LOGIC";
   }
 
-  // 4. Orbit Assembly:
+  // 4. Orbit Assembly (Deterministic Default):
   const WEB_ORDER = ["MARS", "VENUS", "MERCURY"];
   let pathOrder = ["MOON"];
 
@@ -182,8 +181,20 @@ export function processAIPathResponse(
 ): {
   isValid: boolean;
   isFallback: boolean;
-  result: AptitudeResult;
+  result: AptitudeResult & {
+    planets: Array<{
+      planet: "MARS" | "VENUS" | "MERCURY" | "JUPITER" | "SATURN" | "EARTH";
+      affinity: number;
+      reason: string;
+    }>;
+    track: "WEB" | "LOGIC" | "BALANCED";
+  };
   pathOrder: string[];
+  aiOverride: {
+    applied: boolean;
+    planet?: string;
+    reason?: string;
+  };
 } {
   const deterministic = computeDeterministicOrbitAndAffinities(aiContext.categories);
 
@@ -193,10 +204,6 @@ export function processAIPathResponse(
 
   try {
     parsed = aptitudeSchema.parse(rawResponse);
-    const uniquePlanets = new Set(parsed.planets.map((p) => p.planet));
-    if (uniquePlanets.size !== 6 || parsed.planets.length !== 6) {
-      throw new Error("Response must contain exactly 6 unique planets.");
-    }
   } catch (error) {
     isValid = false;
     isFallback = true;
@@ -214,10 +221,81 @@ export function processAIPathResponse(
     };
   });
 
+  // Bounded First-Planet Override Evaluation
+  const VALID_PLANETS = new Set(["MARS", "VENUS", "MERCURY", "JUPITER", "SATURN", "EARTH"]);
+  const WEB_PLANETS = new Set(["MARS", "VENUS", "MERCURY"]);
+
+  const currentFirstPlanet = deterministic.pathOrder[1]; // First planet after MOON
+  const rawCandidate =
+    typeof parsed.recommendedFirstPlanet === "string"
+      ? parsed.recommendedFirstPlanet.toUpperCase().trim()
+      : undefined;
+  const candidatePlanet = rawCandidate && VALID_PLANETS.has(rawCandidate) ? rawCandidate : undefined;
+  const candidateAffinity = candidatePlanet
+    ? deterministic.planets.find((p) => p.planet === candidatePlanet)?.affinity ?? 0
+    : 0;
+
+  let finalPathOrder = [...deterministic.pathOrder];
+  let aiOverride: { applied: boolean; planet?: string; reason?: string } = { applied: false };
+
+  if (
+    isValid &&
+    !isFallback &&
+    candidatePlanet &&
+    candidateAffinity >= 60 &&
+    candidatePlanet !== currentFirstPlanet
+  ) {
+    const cleanReason = parsed.overrideReason?.trim()
+      ? parsed.overrideReason.trim().split(/\s+/).slice(0, 15).join(" ")
+      : undefined;
+
+    if (WEB_PLANETS.has(candidatePlanet)) {
+      // If a web planet is chosen, move the whole web trio as a block (Mars/Venus/Mercury in fixed order)
+      if (!WEB_PLANETS.has(currentFirstPlanet)) {
+        const nonWebPlanets = deterministic.pathOrder.filter(
+          (p) => p !== "MOON" && !WEB_PLANETS.has(p)
+        );
+        finalPathOrder = ["MOON", "MARS", "VENUS", "MERCURY", ...nonWebPlanets];
+        aiOverride = {
+          applied: true,
+          planet: candidatePlanet,
+          reason: cleanReason,
+        };
+      }
+    } else {
+      // Logic planet chosen (JUPITER, SATURN, EARTH)
+      // Move only that planet to the first position after MOON; never reorder the rest
+      const otherPlanets = deterministic.pathOrder.filter(
+        (p) => p !== "MOON" && p !== candidatePlanet
+      );
+      finalPathOrder = ["MOON", candidatePlanet, ...otherPlanets];
+      aiOverride = {
+        applied: true,
+        planet: candidatePlanet,
+        reason: cleanReason,
+      };
+    }
+  }
+
+  const fullResult = {
+    ...parsed,
+    track: deterministic.track,
+    planets: deterministic.planets.map((dp) => {
+      const aiMatched = parsed.planets?.find((p) => p.planet === dp.planet);
+      return {
+        planet: dp.planet,
+        affinity: dp.affinity,
+        reason: aiMatched?.reason || dp.reason,
+      };
+    }),
+    aiOverride,
+  };
+
   return {
     isValid,
     isFallback,
-    result: parsed,
-    pathOrder: deterministic.pathOrder,
+    result: fullResult,
+    pathOrder: finalPathOrder,
+    aiOverride,
   };
 }
