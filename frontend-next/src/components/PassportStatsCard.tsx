@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import { toPng } from 'html-to-image';
 import { createPortal } from 'react-dom';
@@ -9,6 +9,52 @@ import HexagonStatsWeb from './HexagonStatsWeb';
 import AvatarDisplay, { AvatarLayers, DEFAULT_AVATAR_LAYERS } from './AvatarDisplay';
 import { getUserStorageItem, setUserStorageItem } from '@/lib/userStorage';
 import { triggerDailyTaskCompletion } from '@/lib/dailyTasks';
+import { normalizePathOrder, computeUnlockStatus } from '@/lib/unlockLogic';
+
+const PLANET_METADATA: Record<string, { name: string; track: string; src: string; badgeColor: string }> = {
+  moon: {
+    name: 'Moon',
+    track: 'Intro',
+    src: '/assets/planets/00_moon/environment/MainMoon.svg',
+    badgeColor: '#ff912d',
+  },
+  mars: {
+    name: 'Mars',
+    track: 'HTML',
+    src: '/assets/planets/celestial/Mars.svg',
+    badgeColor: '#E44D26',
+  },
+  venus: {
+    name: 'Venus',
+    track: 'CSS',
+    src: '/assets/planets/celestial/Venus.svg',
+    badgeColor: '#1572B6',
+  },
+  mercury: {
+    name: 'Mercury',
+    track: 'JavaScript',
+    src: '/assets/planets/celestial/Mercury.svg',
+    badgeColor: '#F7DF1E',
+  },
+  jupiter: {
+    name: 'Jupiter',
+    track: 'Java',
+    src: '/assets/planets/celestial/Jupiter.svg',
+    badgeColor: '#ED8B00',
+  },
+  saturn: {
+    name: 'Saturn',
+    track: 'C++',
+    src: '/assets/planets/celestial/Saturn.svg',
+    badgeColor: '#00599C',
+  },
+  earth: {
+    name: 'Earth',
+    track: 'Python',
+    src: '/assets/planets/celestial/Earth.svg',
+    badgeColor: '#4B8BBE',
+  },
+};
 
 interface PassportStatsCardProps {
   profile: any;
@@ -192,69 +238,78 @@ export default function PassportStatsCard({ profile, completedMissionIds = [], a
     ? new Date(profile.createdAt).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })
     : 'UNKNOWN';
 
-  // 6 Celestial programming planets in student progression order
-  const planets = [
-    {
-      id: 'mars',
-      name: 'Mars',
-      track: 'HTML',
-      src: '/assets/planets/celestial/Mars.svg',
-      completedCount: marsCompleted,
-      isCompleted: marsCompleted >= 3,
-      isUnlocked: true,
-      badgeColor: '#E44D26',
-    },
-    {
-      id: 'venus',
-      name: 'Venus',
-      track: 'CSS',
-      src: '/assets/planets/celestial/Venus.svg',
-      completedCount: venusCompleted,
-      isCompleted: venusCompleted >= 3,
-      isUnlocked: marsCompleted >= 3 || venusCompleted > 0,
-      badgeColor: '#1572B6',
-    },
-    {
-      id: 'mercury',
-      name: 'Mercury',
-      track: 'JavaScript',
-      src: '/assets/planets/celestial/Mercury.svg',
-      completedCount: mercuryCompleted,
-      isCompleted: mercuryCompleted >= 3,
-      isUnlocked: venusCompleted >= 3 || mercuryCompleted > 0,
-      badgeColor: '#F7DF1E',
-    },
-    {
-      id: 'jupiter',
-      name: 'Jupiter',
-      track: 'Java',
-      src: '/assets/planets/celestial/Jupiter.svg',
-      completedCount: jupiterCompleted,
-      isCompleted: jupiterCompleted >= 3,
-      isUnlocked: mercuryCompleted >= 3 || jupiterCompleted > 0,
-      badgeColor: '#ED8B00',
-    },
-    {
-      id: 'saturn',
-      name: 'Saturn',
-      track: 'C++',
-      src: '/assets/planets/celestial/Saturn.svg',
-      completedCount: saturnCompleted,
-      isCompleted: saturnCompleted >= 3,
-      isUnlocked: jupiterCompleted >= 3 || saturnCompleted > 0,
-      badgeColor: '#00599C',
-    },
-    {
-      id: 'earth',
-      name: 'Earth',
-      track: 'Python',
-      src: '/assets/planets/celestial/Earth.svg',
-      completedCount: earthCompleted,
-      isCompleted: earthCompleted >= 3,
-      isUnlocked: saturnCompleted >= 3 || earthCompleted > 0,
-      badgeColor: '#4B8BBE',
-    },
-  ];
+  // Journey progression derived from user profile's pathOrder (falling back to canonical default)
+  const normalizedPath = useMemo(() => {
+    return normalizePathOrder(profile?.pathOrder);
+  }, [profile?.pathOrder]);
+
+  // Map completed missions into normalized rows for computeUnlockStatus (supporting legacy and canonical IDs)
+  const normalizedMissionRows = useMemo(() => {
+    const seen = new Set<string>();
+    const rows: { missionId: string; status: string }[] = [];
+    (completedMissionIds || []).forEach(rawId => {
+      const id = (rawId || '').toLowerCase().trim();
+      let canonicalId = id;
+      if (id === '1' || id === 'level-1' || id === 'moon-1') canonicalId = 'moon-1';
+      else if (id === '2' || id === 'level-2' || id === 'moon-2') canonicalId = 'moon-2';
+      else if (id === '3' || id === 'level-3' || id === 'moon-3') canonicalId = 'moon-3';
+      else if (id === 'html-1' || id === 'mars-1' || id === 'html-1-mars') canonicalId = 'mars-1';
+      else if (id === 'html-2' || id === 'mars-2' || id === 'html-2-mars') canonicalId = 'mars-2';
+      else if (id === 'html-3' || id === 'mars-3' || id === 'html-3-mars') canonicalId = 'mars-3';
+      else if (id === 'css-1' || id === 'venus-1' || id === 'css-1-venus') canonicalId = 'venus-1';
+      else if (id === 'css-2' || id === 'venus-2' || id === 'css-2-venus') canonicalId = 'venus-2';
+      else if (id === 'css-3' || id === 'venus-3' || id === 'css-3-venus') canonicalId = 'venus-3';
+      else if (id === 'js-1' || id === 'javascript-1' || id === 'mercury-1' || id === 'js-1-mercury') canonicalId = 'mercury-1';
+      else if (id === 'js-2' || id === 'javascript-2' || id === 'mercury-2' || id === 'js-2-mercury') canonicalId = 'mercury-2';
+      else if (id === 'js-3' || id === 'javascript-3' || id === 'mercury-3' || id === 'js-3-mercury') canonicalId = 'mercury-3';
+      else if (id === 'jupiter-1' || id === 'java-1') canonicalId = 'jupiter-1';
+      else if (id === 'jupiter-2' || id === 'java-2') canonicalId = 'jupiter-2';
+      else if (id === 'jupiter-3' || id === 'java-3') canonicalId = 'jupiter-3';
+      else if (id === 'saturn-1' || id === 'cpp-1') canonicalId = 'saturn-1';
+      else if (id === 'saturn-2' || id === 'cpp-2') canonicalId = 'saturn-2';
+      else if (id === 'saturn-3' || id === 'cpp-3') canonicalId = 'saturn-3';
+      else if (id === 'earth-1' || id === 'python-1') canonicalId = 'earth-1';
+      else if (id === 'earth-2' || id === 'python-2') canonicalId = 'earth-2';
+      else if (id === 'earth-3' || id === 'python-3') canonicalId = 'earth-3';
+
+      if (!seen.has(canonicalId)) {
+        seen.add(canonicalId);
+        rows.push({ missionId: canonicalId, status: 'COMPLETED' });
+      }
+    });
+    return rows;
+  }, [completedMissionIds]);
+
+  const unlockInfo = useMemo(() => {
+    return computeUnlockStatus(normalizedPath, normalizedMissionRows);
+  }, [normalizedPath, normalizedMissionRows]);
+
+  const planets = useMemo(() => {
+    return normalizedPath.map((planetNameUpper, index) => {
+      const pKey = planetNameUpper.toLowerCase();
+      const meta = PLANET_METADATA[pKey] || {
+        name: planetNameUpper,
+        track: 'Code',
+        src: '/assets/planets/celestial/Mars.svg',
+        badgeColor: '#ff912d'
+      };
+      const status = unlockInfo.statuses[index];
+      const count = getPlanetCompletedCount(pKey);
+      const isCompleted = status === 'COMPLETED' || count >= 3;
+      const isUnlocked = isCompleted || status === 'CURRENT';
+
+      return {
+        id: pKey,
+        name: meta.name,
+        track: meta.track,
+        src: meta.src,
+        completedCount: count,
+        isCompleted,
+        isUnlocked,
+        badgeColor: meta.badgeColor,
+      };
+    });
+  }, [normalizedPath, unlockInfo, completedMissionIds]);
 
   const completedPlanetsCount = planets.filter(p => p.isCompleted).length;
   const totalCompletedMissions = marsCompleted + venusCompleted + mercuryCompleted + jupiterCompleted + saturnCompleted + earthCompleted;
