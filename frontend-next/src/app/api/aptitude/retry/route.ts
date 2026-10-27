@@ -13,6 +13,7 @@ import {
   extractSubcategoriesFromUserOrResult,
 } from "@/ai/pathUtils";
 import { AptitudeAIContext } from "@/types/aptitude";
+import { getSectionTotals } from "@/lib/aptitudeTotals";
 
 export const dynamic = "force-dynamic";
 
@@ -84,13 +85,18 @@ export async function POST(req: Request) {
       subs.cpp +
       subs.python +
       subs.java;
-    const calcTotalPercent = Math.round((calcTotalCorrect / 18) * 100);
+    const defaultTotals = getSectionTotals();
+    const userTotalQ = apt.totalQuestions ?? defaultTotals.total;
+    const calcTotalPercent = Math.round((calcTotalCorrect / userTotalQ) * 100);
 
     const aiContext: AptitudeAIContext = {
       totalCorrect: apt.totalCorrect ?? calcTotalCorrect,
       totalPercent: apt.totalPercent ?? calcTotalPercent,
-      totalScore: `${apt.totalCorrect ?? calcTotalCorrect}/${apt.totalQuestions ?? 18} (${apt.totalPercent ?? calcTotalPercent}%)`,
+      totalScore: `${apt.totalCorrect ?? calcTotalCorrect}/${userTotalQ} (${apt.totalPercent ?? calcTotalPercent}%)`,
+      totalQuestions: userTotalQ,
       categories: subs,
+      sectionTotals: subs.totals,
+      categoryPercents: subs.percents,
       computedTrack: deterministic.track,
       defaultPathOrder: deterministic.pathOrder,
       defaultFirstPlanet: deterministic.pathOrder[1],
@@ -157,16 +163,16 @@ export async function POST(req: Request) {
 
     const finalResult = {
       ...apt,
-      totalQuestions: apt.totalQuestions ?? 18,
+      totalQuestions: apt.totalQuestions ?? defaultTotals.total,
       totalCorrect: apt.totalCorrect ?? calcTotalCorrect,
       totalPercent: apt.totalPercent ?? calcTotalPercent,
       subcategories: apt.subcategories || {
-        pattern_recognition: { id: "pattern_recognition", name: "Pattern Recognition", correct: subs.patternRecognition, total: 3, percent: Math.round((subs.patternRecognition / 3) * 100) },
-        task_decomposition: { id: "task_decomposition", name: "Task Decomposition", correct: subs.taskDecomposition, total: 3, percent: Math.round((subs.taskDecomposition / 3) * 100) },
-        web_dev: { id: "web_dev", name: "Web Development", correct: subs.webDev, total: 3, percent: Math.round((subs.webDev / 3) * 100) },
-        cpp: { id: "cpp", name: "C++ Systems", correct: subs.cpp, total: 3, percent: Math.round((subs.cpp / 3) * 100) },
-        python: { id: "python", name: "Python Scripting", correct: subs.python, total: 3, percent: Math.round((subs.python / 3) * 100) },
-        java: { id: "java", name: "Java Enterprise", correct: subs.java, total: 3, percent: Math.round((subs.java / 3) * 100) },
+        pattern_recognition: { id: "pattern_recognition", name: "Pattern Recognition", correct: subs.patternRecognition, total: subs.totals.patternRecognition, percent: subs.percents.patternRecognition },
+        task_decomposition: { id: "task_decomposition", name: "Task Decomposition", correct: subs.taskDecomposition, total: subs.totals.taskDecomposition, percent: subs.percents.taskDecomposition },
+        web_dev: { id: "web_dev", name: "Web Development", correct: subs.webDev, total: subs.totals.webDev, percent: subs.percents.webDev },
+        cpp: { id: "cpp", name: "C++ Systems", correct: subs.cpp, total: subs.totals.cpp, percent: subs.percents.cpp },
+        python: { id: "python", name: "Python Scripting", correct: subs.python, total: subs.totals.python, percent: subs.percents.python },
+        java: { id: "java", name: "Java Enterprise", correct: subs.java, total: subs.totals.java, percent: subs.percents.java },
       },
       recommendedLearningPath: finalLearningPath,
       deterministicTrack,

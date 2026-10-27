@@ -1,6 +1,9 @@
 import { prisma } from "@/lib/auth";
 import questionsData from "@/server/data/aptitude_questions.server.json";
 import { AptitudeCategory, ClientAptitudeQuestion } from "@/types/aptitude";
+import { getSectionTotals, getLegacyCategoryTotals } from "./aptitudeTotals";
+
+export { getSectionTotals, getLegacyCategoryTotals };
 
 export function normalizeAptitudeCategory(cat: string): AptitudeCategory {
   const c = (cat || "").toLowerCase();
@@ -51,7 +54,7 @@ export async function ensureDefaultAptitudeQuestionsInDb() {
       });
     }
 
-    // Auto-deactivate legacy questions that are not part of the 18 canonical questions
+    // Auto-deactivate legacy questions that are not part of canonical questions
     await prisma.aptitudeQuestion.updateMany({
       where: {
         id: { notIn: canonicalIds },
@@ -64,7 +67,7 @@ export async function ensureDefaultAptitudeQuestionsInDb() {
   }
 }
 
-export const MIN_DB_QUESTIONS = 18;
+export const MIN_DB_QUESTIONS = getSectionTotals().total;
 
 export interface StudentQuestion {
   id: string;

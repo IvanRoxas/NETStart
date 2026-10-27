@@ -15,6 +15,7 @@ import {
   extractSubcategoriesFromUserOrResult,
 } from "@/ai/pathUtils";
 import { getStudentQuestionSet } from "@/lib/aptitudeQuestionsHelper";
+import { getSectionTotals, getLegacyCategoryTotals } from "@/lib/aptitudeTotals";
 import {
   AptitudeCategory,
   AptitudeTestResult,
@@ -78,7 +79,7 @@ export async function POST(req: Request) {
       }
     }
 
-    // Single Source of Truth: Canonical 18 questions
+    // Single Source of Truth: Canonical diagnostic questions from question bank
     const { questions: masterQuestions } = await getStudentQuestionSet();
 
     const hasSubmittedAnswers =
@@ -105,7 +106,7 @@ export async function POST(req: Request) {
     let totalPercent = 0;
     let deterministicOrbit: ReturnType<typeof computeDeterministicOrbitAndAffinities>;
 
-    // Case A: Fresh submission OR Fallback student re-answering all 18 questions
+    // Case A: Fresh submission OR Fallback student re-answering all diagnostic questions
     if (hasSubmittedAnswers) {
       const validChoices = new Set(["A", "B", "C", "D"]);
 
@@ -158,7 +159,9 @@ export async function POST(req: Request) {
         }
       });
 
-      const totalQuestions = masterQuestions.length || 18;
+      const sectionTotals = getSectionTotals();
+      const legacyTotals = getLegacyCategoryTotals();
+      const totalQuestions = masterQuestions.length || sectionTotals.total;
       totalPercent = Math.round((totalCorrect / totalQuestions) * 100);
 
       const prCorrect = subcategoryTotals.pattern_recognition.correct;
@@ -169,15 +172,15 @@ export async function POST(req: Request) {
       const javaCorrect = subcategoryTotals.java.correct;
 
       // Legacy 3 Categories (for backwards compatibility with existing UI components)
-      // pattern_recognition = Part 1 Pattern (3) + Part 2 Web (3) = 6 questions
-      // task_decomposition = Part 1 Task Decomposition (3) = 3 questions
-      // logical_reasoning = Part 2 C++ (3) + Python (3) + Java (3) = 9 questions
+      // pattern_recognition = Part 1 Pattern + Part 2 Web
+      // task_decomposition = Part 1 Task Decomposition
+      // logical_reasoning = Part 2 C++ + Python + Java
       const legacyPatternCorrect = prCorrect + webCorrect;
-      const legacyPatternTotal = 6;
+      const legacyPatternTotal = legacyTotals.pattern_recognition;
       const legacyTaskCorrect = tdCorrect;
-      const legacyTaskTotal = 3;
+      const legacyTaskTotal = legacyTotals.task_decomposition;
       const legacyLogicCorrect = cppCorrect + pyCorrect + javaCorrect;
-      const legacyLogicTotal = 9;
+      const legacyLogicTotal = legacyTotals.logical_reasoning;
 
       categoriesFormatted = {
         pattern_recognition: {
@@ -208,43 +211,43 @@ export async function POST(req: Request) {
           id: "pattern_recognition",
           name: "Pattern Recognition",
           correct: prCorrect,
-          total: 3,
-          percent: Math.round((prCorrect / 3) * 100),
+          total: sectionTotals.patternRecognition,
+          percent: Math.round((prCorrect / sectionTotals.patternRecognition) * 100),
         },
         task_decomposition: {
           id: "task_decomposition",
           name: "Task Decomposition & Logic",
           correct: tdCorrect,
-          total: 3,
-          percent: Math.round((tdCorrect / 3) * 100),
+          total: sectionTotals.taskDecomposition,
+          percent: Math.round((tdCorrect / sectionTotals.taskDecomposition) * 100),
         },
         web_dev: {
           id: "web_dev",
           name: "Web Development",
           correct: webCorrect,
-          total: 3,
-          percent: Math.round((webCorrect / 3) * 100),
+          total: sectionTotals.webDev,
+          percent: Math.round((webCorrect / sectionTotals.webDev) * 100),
         },
         cpp: {
           id: "cpp",
           name: "C++ Fundamentals",
           correct: cppCorrect,
-          total: 3,
-          percent: Math.round((cppCorrect / 3) * 100),
+          total: sectionTotals.cpp,
+          percent: Math.round((cppCorrect / sectionTotals.cpp) * 100),
         },
         python: {
           id: "python",
           name: "Python Fundamentals",
           correct: pyCorrect,
-          total: 3,
-          percent: Math.round((pyCorrect / 3) * 100),
+          total: sectionTotals.python,
+          percent: Math.round((pyCorrect / sectionTotals.python) * 100),
         },
         java: {
           id: "java",
           name: "Java Fundamentals",
           correct: javaCorrect,
-          total: 3,
-          percent: Math.round((javaCorrect / 3) * 100),
+          total: sectionTotals.java,
+          percent: Math.round((javaCorrect / sectionTotals.java) * 100),
         },
       };
 
@@ -315,6 +318,7 @@ export async function POST(req: Request) {
         totalCorrect,
         totalPercent,
         totalScore: `${totalCorrect}/${totalQuestions} (${totalPercent}%)`,
+        totalQuestions,
         categories: {
           patternRecognition: prCorrect,
           taskDecomposition: tdCorrect,
@@ -322,6 +326,22 @@ export async function POST(req: Request) {
           cpp: cppCorrect,
           python: pyCorrect,
           java: javaCorrect,
+        },
+        sectionTotals: {
+          patternRecognition: sectionTotals.patternRecognition,
+          taskDecomposition: sectionTotals.taskDecomposition,
+          webDev: sectionTotals.webDev,
+          cpp: sectionTotals.cpp,
+          python: sectionTotals.python,
+          java: sectionTotals.java,
+        },
+        categoryPercents: {
+          patternRecognition: subcategoriesFormatted.pattern_recognition.percent,
+          taskDecomposition: subcategoriesFormatted.task_decomposition.percent,
+          webDev: subcategoriesFormatted.web_dev.percent,
+          cpp: subcategoriesFormatted.cpp.percent,
+          python: subcategoriesFormatted.python.percent,
+          java: subcategoriesFormatted.java.percent,
         },
         computedTrack: deterministicOrbit.track,
         defaultPathOrder: deterministicOrbit.pathOrder,
@@ -344,13 +364,18 @@ export async function POST(req: Request) {
         subs.cpp +
         subs.python +
         subs.java;
-      const calcTotalPercent = Math.round((calcTotalCorrect / 18) * 100);
+      const defaultTotals = getSectionTotals();
+      const userTotalQ = apt.totalQuestions ?? defaultTotals.total;
+      const calcTotalPercent = Math.round((calcTotalCorrect / userTotalQ) * 100);
 
       aiContext = {
         totalCorrect: apt.totalCorrect ?? calcTotalCorrect,
         totalPercent: apt.totalPercent ?? calcTotalPercent,
-        totalScore: `${apt.totalCorrect ?? calcTotalCorrect}/${apt.totalQuestions ?? 18} (${apt.totalPercent ?? calcTotalPercent}%)`,
+        totalScore: `${apt.totalCorrect ?? calcTotalCorrect}/${userTotalQ} (${apt.totalPercent ?? calcTotalPercent}%)`,
+        totalQuestions: userTotalQ,
         categories: subs,
+        sectionTotals: subs.totals,
+        categoryPercents: subs.percents,
         computedTrack: deterministicOrbit.track,
         defaultPathOrder: deterministicOrbit.pathOrder,
         defaultFirstPlanet: deterministicOrbit.pathOrder[1],
@@ -419,7 +444,7 @@ export async function POST(req: Request) {
 
     const finalResult = {
       ...baseResult,
-      totalQuestions: baseResult?.totalQuestions ?? 18,
+      totalQuestions: baseResult?.totalQuestions ?? getSectionTotals().total,
       recommendedLearningPath: finalLearningPath,
       deterministicTrack,
       aiInsight: {

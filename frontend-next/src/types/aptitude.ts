@@ -84,6 +84,7 @@ export interface AptitudeAIContext {
   totalCorrect: number;
   totalPercent: number;
   totalScore: string;
+  totalQuestions?: number;
   categories: {
     patternRecognition: string | number;
     taskDecomposition: string | number;
@@ -92,6 +93,22 @@ export interface AptitudeAIContext {
     cpp?: string | number;
     python?: string | number;
     java?: string | number;
+  };
+  sectionTotals?: {
+    patternRecognition: number;
+    taskDecomposition: number;
+    webDev: number;
+    cpp: number;
+    python: number;
+    java: number;
+  };
+  categoryPercents?: {
+    patternRecognition: number;
+    taskDecomposition: number;
+    webDev: number;
+    cpp: number;
+    python: number;
+    java: number;
   };
   computedTrack?: "WEB" | "LOGIC" | "BALANCED";
   defaultPathOrder?: string[];

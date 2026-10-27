@@ -1,6 +1,6 @@
 {
   "test": "NETStart Aptitude Test",
-  "totalQuestions": 18,
+  "totalQuestions": 22,
   "categories": {
     "pattern_recognition": {
       "id": "pattern_recognition",
@@ -347,6 +347,74 @@
       "answer": "C",
       "concept": "Java Boolean Data Type",
       "explanation": "A boolean holds only true or false."
+    },
+    {
+      "id": "web-4",
+      "category": "pattern_recognition",
+      "subcategory": "web_dev",
+      "number": 19,
+      "title": "JavaScript Click Events",
+      "question": "Which HTML attribute runs JavaScript code when a user clicks a button?",
+      "options": {
+        "A": "onpress",
+        "B": "onhover",
+        "C": "onrun",
+        "D": "onclick"
+      },
+      "answer": "D",
+      "concept": "JavaScript Click Events (onclick)",
+      "explanation": "onclick runs when an element is clicked."
+    },
+    {
+      "id": "cpp-4",
+      "category": "logical_reasoning",
+      "subcategory": "cpp",
+      "number": 20,
+      "title": "C++ Address-of Operator",
+      "question": "In C++, which symbol gets the memory address of a variable?",
+      "options": {
+        "A": "*",
+        "B": "#",
+        "C": "@",
+        "D": "&"
+      },
+      "answer": "D",
+      "concept": "C++ Address-of Operator (&)",
+      "explanation": "The & (address-of) operator gives a variable's memory address."
+    },
+    {
+      "id": "py-4",
+      "category": "logical_reasoning",
+      "subcategory": "python",
+      "number": 21,
+      "title": "Python Dictionary Key Access",
+      "question": "Look at this Python dictionary: user = {\"name\": \"Alex\", \"age\": 17}. How do you get \"Alex\"?",
+      "options": {
+        "A": "user[0]",
+        "B": "user(\"name\")",
+        "C": "user.get[0]",
+        "D": "user[\"name\"]"
+      },
+      "answer": "D",
+      "concept": "Python Dictionary Key Access",
+      "explanation": "Dictionary values are read using their key in square brackets."
+    },
+    {
+      "id": "java-4",
+      "category": "logical_reasoning",
+      "subcategory": "java",
+      "number": 22,
+      "title": "Java Object Creation",
+      "question": "In Java, a class named Dog already exists. Which line creates a Dog object?",
+      "options": {
+        "A": "Dog d = Dog();",
+        "B": "Dog d = create Dog();",
+        "C": "new d = Dog;",
+        "D": "Dog d = new Dog();"
+      },
+      "answer": "D",
+      "concept": "Java Object Creation (new keyword)",
+      "explanation": "The new keyword creates an object. Dog d = new Dog(); stores it in d."
     }
   ]
 }
