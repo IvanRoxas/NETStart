@@ -11,6 +11,7 @@ import { triggerDailyTaskCompletion } from '@/lib/dailyTasks';
 import { getBorderScale, getAvatarItemStyle, getItemSubGroup, getHairColor } from '@/lib/shopCatalog';
 import { useDemoMode } from '@/lib/demoMode';
 import DemoToggle from '@/components/DemoToggle';
+import { checkSessionMismatch } from '@/components/AuthSyncProvider';
 
 const TOP_SUB_FILTERS = [
   'All',
@@ -188,7 +189,9 @@ export default function ShopPage() {
     }
 
     setLoadingItems(prev => new Set(prev).add(item.id));
-    const res = await purchaseItem(item.id);
+    const userId = (session?.user as any)?.id;
+    const res = await purchaseItem(item.id, userId);
+    if (checkSessionMismatch(res)) return;
 
     if (res.success) {
       if (!isDemoMode && effectivePrice > 0) {

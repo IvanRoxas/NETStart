@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useSession } from "next-auth/react";
 import { getTodayActiveDailyTaskIds } from "@/lib/dailyTasks";
 
 interface DailyTaskTrackerProps {
@@ -9,6 +10,8 @@ interface DailyTaskTrackerProps {
 
 export default function DailyTaskTracker({ taskIds }: DailyTaskTrackerProps) {
   const trackedRef = useRef(false);
+  const { data: session } = useSession();
+  const userId = (session?.user as any)?.id;
 
   useEffect(() => {
     if (trackedRef.current || !taskIds || taskIds.length === 0) return;
@@ -24,7 +27,10 @@ export default function DailyTaskTracker({ taskIds }: DailyTaskTrackerProps) {
 
       fetch("/api/daily-tasks/complete", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(userId ? { "x-expected-user-id": userId } : {}),
+        },
         body: JSON.stringify({ taskId }),
       })
         .then(async (res) => {

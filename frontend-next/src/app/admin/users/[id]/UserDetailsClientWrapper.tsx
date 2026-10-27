@@ -10,6 +10,8 @@ import AdminToast from '@/components/AdminToast';
 import ConfirmModal from '@/components/ConfirmModal';
 import { getXPDetails } from '@/lib/leveling';
 import TitleBadge from '@/components/TitleBadge';
+import { useSession } from 'next-auth/react';
+import { checkSessionMismatch } from '@/components/AuthSyncProvider';
 
 export default function UserDetailsClientWrapper({ 
   user: initialUser,
@@ -21,6 +23,8 @@ export default function UserDetailsClientWrapper({
   currentUserRole?: string;
 }) {
   const router = useRouter();
+  const { data: session } = useSession();
+  const currentAdminId = (session?.user as any)?.id;
   const [user, setUser] = useState(initialUser);
   const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
   
@@ -138,7 +142,8 @@ export default function UserDetailsClientWrapper({
     try {
       setIsAssigningSection(true);
       if (selectedSectionId) {
-        await assignStudentToSection(user.id, selectedSectionId);
+        const res = await assignStudentToSection(user.id, selectedSectionId, currentAdminId);
+        if (checkSessionMismatch(res)) return;
         const assignedSec = sections.find(s => s.id === selectedSectionId);
         setUser((prev: any) => ({
           ...prev,
@@ -153,7 +158,8 @@ export default function UserDetailsClientWrapper({
         }));
         setToast({ message: "Student assigned to section successfully.", type: 'success' });
       } else {
-        await removeStudentFromSection(user.id);
+        const res = await removeStudentFromSection(user.id, currentAdminId);
+        if (checkSessionMismatch(res)) return;
         setUser((prev: any) => ({
           ...prev,
           sectionId: null,

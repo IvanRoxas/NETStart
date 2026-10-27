@@ -587,7 +587,10 @@ export default function JupiterLevel1() {
 
           fetch('/api/missions/complete', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'Content-Type': 'application/json',
+              ...(userId ? { 'x-expected-user-id': userId } : {}),
+            },
             body: JSON.stringify({
               missionId: 'jupiter-1',
               level_id: 'jupiter_1',

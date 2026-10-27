@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 import { VT323 } from 'next/font/google';
 import TopHeader from '@/components/TopHeader';
 import { Lock, Trophy, CheckCircle, Sparkles, Star, Globe, Rocket } from 'lucide-react';
@@ -15,6 +16,7 @@ import { getUnlockedAchievements } from '@/app/actions/achievements';
 import { triggerDailyTaskCompletion } from '@/lib/dailyTasks';
 
 export default function AchievementsPage() {
+  const { data: session } = useSession();
   const [showcasedBadges, setShowcasedBadges] = useState<string[]>([]);
   const [unlockedCodes, setUnlockedCodes] = useState<Set<string>>(new Set());
   const [dbAchievements, setDbAchievements] = useState<any[]>([]);
@@ -89,7 +91,10 @@ export default function AchievementsPage() {
     try {
       await fetch('/api/profile', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(session?.user?.id ? { 'x-expected-user-id': session.user.id } : {}),
+        },
         body: JSON.stringify({ showcasedBadges: newBadges })
       });
     } catch (e) {

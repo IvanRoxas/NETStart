@@ -2,8 +2,8 @@
 
 import React, { useState } from 'react';
 import { Gift, Lock, CheckCircle2, Sparkles, X, Settings, Zap } from 'lucide-react';
-
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { XP_REWARDS } from '@/lib/xpEconomy';
 
 interface DailyCommissionClaimButtonProps {
@@ -22,6 +22,8 @@ export default function DailyCommissionClaimButton({
   initialIsClaimed = false,
 }: DailyCommissionClaimButtonProps) {
   const router = useRouter();
+  const { data: session } = useSession();
+  const userId = (session?.user as any)?.id;
   const [isClaimed, setIsClaimed] = useState(initialIsClaimed);
   const [isClaiming, setIsClaiming] = useState(false);
   const [showRewardModal, setShowRewardModal] = useState(false);
@@ -34,7 +36,10 @@ export default function DailyCommissionClaimButton({
     try {
       const res = await fetch('/api/daily-tasks/claim', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(userId ? { 'x-expected-user-id': userId } : {}),
+        },
       });
       if (res.ok) {
         setIsClaimed(true);

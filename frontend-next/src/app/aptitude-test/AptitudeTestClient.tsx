@@ -187,7 +187,8 @@ const SHOW_PLANET_AFFINITY = false;
 export default function AptitudeTestClient({ initialUser }: AptitudeTestClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { update } = useSession();
+  const { data: session, update } = useSession();
+  const expectedUserId = initialUser?.id || (session?.user as any)?.id;
   const shouldOpenModal = searchParams ? searchParams.get("openModal") === "true" : false;
 
   // View states: 'BRIEFING' | 'QUIZ' | 'COMPLETED' | 'CUTSCENE'
@@ -543,7 +544,10 @@ export default function AptitudeTestClient({ initialUser }: AptitudeTestClientPr
     try {
       const res = await fetch("/api/aptitude/grade", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(expectedUserId ? { "x-expected-user-id": expectedUserId } : {}),
+        },
         body: JSON.stringify({ answers: selectedAnswers }),
       });
 

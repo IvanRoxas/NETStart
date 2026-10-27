@@ -4,6 +4,7 @@ import { authOptions, prisma } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
 import { validatePassword } from '@/lib/password';
 import { logSystemAction } from '@/lib/logger';
+import { assertExpectedSessionUser } from '@/lib/sessionGuard';
 
 export async function PUT(req: Request) {
   try {
@@ -12,8 +13,10 @@ export async function PUT(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const userId = (session.user as any).id;
-    const { email, currentPassword, newPassword } = await req.json();
+    const mismatch = assertExpectedSessionUser(req, userId, "PUT /api/settings/security");
+    if (mismatch) return mismatch;
 
+    const { email, currentPassword, newPassword } = await req.json();
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
@@ -92,6 +95,8 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const userId = (session.user as any).id;
+    const mismatch = assertExpectedSessionUser(req, userId, "DELETE /api/settings/security");
+    if (mismatch) return mismatch;
 
     const user = await prisma.user.delete({
       where: { id: userId }

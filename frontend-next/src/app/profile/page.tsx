@@ -642,7 +642,10 @@ export default function ProfilePage() {
     try {
       await fetch('/api/profile', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(session?.user?.id ? { 'x-expected-user-id': session.user.id } : {}),
+        },
         body: JSON.stringify({ showcasedBadges: newBadges })
       });
     } catch (e) {
@@ -709,7 +712,10 @@ export default function ProfilePage() {
     try {
       const res = await fetch('/api/profile', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(session?.user?.id ? { 'x-expected-user-id': session.user.id } : {}),
+        },
         body: JSON.stringify({
           displayName: editDisplayName.trim(),
           bio: editBio.trim(),

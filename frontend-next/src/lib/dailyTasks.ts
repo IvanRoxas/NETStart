@@ -161,12 +161,15 @@ export function getTodayActiveDailyTaskIds(date: Date = new Date()): string[] {
  * Triggers completion for an active daily task from the client side.
  * Validates with the backend and broadcasts the notification toast if newly completed.
  */
-export async function triggerDailyTaskCompletion(taskId: string): Promise<boolean> {
+export async function triggerDailyTaskCompletion(taskId: string, expectedUserId?: string): Promise<boolean> {
   if (typeof window === "undefined") return false;
   try {
     const res = await fetch("/api/daily-tasks/complete", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...(expectedUserId ? { "x-expected-user-id": expectedUserId } : {}),
+      },
       body: JSON.stringify({ taskId }),
     });
     if (res.ok) {

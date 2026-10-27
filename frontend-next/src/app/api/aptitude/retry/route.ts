@@ -14,6 +14,7 @@ import {
 } from "@/ai/pathUtils";
 import { AptitudeAIContext } from "@/types/aptitude";
 import { getSectionTotals } from "@/lib/aptitudeTotals";
+import { assertExpectedSessionUser } from "@/lib/sessionGuard";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +26,8 @@ export async function POST(req: Request) {
     }
 
     const userId = session.user.id;
+    const mismatch = assertExpectedSessionUser(req, userId, "POST /api/aptitude/retry");
+    if (mismatch) return mismatch;
 
     const dbUser = await prisma.user.findUnique({
       where: { id: userId },

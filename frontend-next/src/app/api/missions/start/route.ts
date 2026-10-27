@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions, prisma } from "@/lib/auth";
+import { assertExpectedSessionUser } from "@/lib/sessionGuard";
 
 export async function POST(req: Request) {
   try {
@@ -10,6 +11,9 @@ export async function POST(req: Request) {
     }
 
     const userId = (session.user as any).id;
+    const mismatch = assertExpectedSessionUser(req, userId, "POST /api/missions/start");
+    if (mismatch) return mismatch;
+
     const body = await req.json();
     const { missionId } = body;
 

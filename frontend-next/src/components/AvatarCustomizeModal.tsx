@@ -254,7 +254,10 @@ export default function AvatarCustomizeModal({
 
       const res = await fetch('/api/avatar', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(userId ? { 'x-expected-user-id': userId } : {}),
+        },
         body: JSON.stringify({
           skin: selectedSkin,
           equippedItemIds: equippedIds,
@@ -271,7 +274,7 @@ export default function AvatarCustomizeModal({
         }
 
         // Trigger daily task for avatar customization
-        triggerDailyTaskCompletion('task-explore-1');
+        triggerDailyTaskCompletion('task-explore-1', userId);
 
         if (onAvatarUpdated) {
           onAvatarUpdated(currentLayers);

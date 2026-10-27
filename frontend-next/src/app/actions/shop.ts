@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 import { logSystemAction } from "@/lib/logger";
 import { cookies } from "next/headers";
 import { DEMO_MODE_COOKIE } from "@/lib/demoMode";
+import { assertExpectedActionUser } from "@/lib/sessionGuard";
 
 import { SHOP_CATALOG, getCatalogItemById } from "@/lib/shopCatalog";
 
@@ -119,7 +120,7 @@ export async function getUserInventory() {
   }
 }
 
-export async function purchaseItem(itemId: string) {
+export async function purchaseItem(itemId: string, expectedUserId?: string) {
   try {
     const session = await getServerSession(authOptions);
     if (!session || !(session.user as any)?.id) {
@@ -127,6 +128,8 @@ export async function purchaseItem(itemId: string) {
     }
 
     const userId = (session.user as any).id;
+    const mismatch = assertExpectedActionUser(userId, expectedUserId, "purchaseItem");
+    if (mismatch) return mismatch;
 
     // Check Demo Mode cookie
     const cookieStore = await cookies();

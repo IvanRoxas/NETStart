@@ -36,6 +36,22 @@ const tabId = typeof window !== "undefined"
       : `tab_${Math.random().toString(36).slice(2)}_${Date.now()}`)
   : "server_tab";
 
+import { SessionMismatchResult } from "@/lib/sessionGuard";
+
+export function triggerSessionMismatchOverlay() {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("netstart:session_user_mismatch"));
+  }
+}
+
+export function checkSessionMismatch(result: any): result is SessionMismatchResult {
+  if (result && (result.code === "SESSION_USER_MISMATCH" || result.error === "SESSION_USER_MISMATCH")) {
+    triggerSessionMismatchOverlay();
+    return true;
+  }
+  return false;
+}
+
 export default function AuthSyncProvider({
   children,
   realm = "student",
@@ -155,15 +171,30 @@ export default function AuthSyncProvider({
     };
   }, [realm]);
 
-  // Stop outgoing writes when stale
+  // Listen for SESSION_USER_MISMATCH events triggered by server actions or sleeping tab responses
   useEffect(() => {
-    if (!isStale || typeof window === "undefined") return;
+    const handleMismatchEvent = () => {
+      console.warn("[AUTH_SYNC] SESSION_USER_MISMATCH event received. Marking tab as stale.");
+      setIsStale(true);
+    };
+    window.addEventListener("netstart:session_user_mismatch", handleMismatchEvent);
+    return () => {
+      window.removeEventListener("netstart:session_user_mismatch", handleMismatchEvent);
+    };
+  }, []);
+
+  // Intercept fetch to:
+  // 1. Block outgoing writes if already marked stale
+  // 2. Detect 409 SESSION_USER_MISMATCH from server responses (e.g. tabs that woke up from sleep)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
 
     const originalFetch = window.fetch;
     window.fetch = async (...args) => {
       const init = args[1];
       const method = (init?.method || "GET").toUpperCase();
-      if (method !== "GET" && method !== "HEAD") {
+
+      if (isStale && method !== "GET" && method !== "HEAD") {
         console.warn("[AUTH_SYNC] Stale tab write blocked:", args[0]);
         return new Response(
           JSON.stringify({
@@ -173,7 +204,23 @@ export default function AuthSyncProvider({
           { status: 409, headers: { "Content-Type": "application/json" } }
         );
       }
-      return originalFetch(...args);
+
+      const response = await originalFetch(...args);
+
+      if (response.status === 409) {
+        try {
+          const clone = response.clone();
+          const body = await clone.json();
+          if (body?.code === "SESSION_USER_MISMATCH" || body?.error === "SESSION_USER_MISMATCH") {
+            console.warn("[AUTH_SYNC] Intercepted 409 SESSION_USER_MISMATCH on:", args[0]);
+            setIsStale(true);
+          }
+        } catch {
+          // Ignore non-json 409 responses
+        }
+      }
+
+      return response;
     };
 
     return () => {

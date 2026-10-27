@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions, prisma } from '@/lib/auth';
 import { SHOP_CATALOG } from '@/lib/shopCatalog';
+import { assertExpectedSessionUser } from '@/lib/sessionGuard';
 
 export const dynamic = 'force-dynamic';
 
@@ -259,6 +260,9 @@ export async function POST(req: Request) {
     if (!session || !userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    const mismatch = assertExpectedSessionUser(req, userId, "POST /api/avatar");
+    if (mismatch) return mismatch;
 
     const body = await req.json();
     const { skin, equippedItemIds } = body as {

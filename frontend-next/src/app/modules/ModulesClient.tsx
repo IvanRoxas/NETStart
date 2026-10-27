@@ -96,7 +96,12 @@ export default function ModulesClient({
     if (isFallback && !retryFiredRef.current) {
       retryFiredRef.current = true;
       // Trigger background silent retry
-      fetch('/api/aptitude/retry', { method: 'POST' }).catch(err => {
+      fetch('/api/aptitude/retry', {
+        method: 'POST',
+        headers: {
+          ...(userId ? { 'x-expected-user-id': userId } : {}),
+        },
+      }).catch(err => {
         console.warn('Silent fallback retry failed:', err);
       });
     }

@@ -3675,7 +3675,10 @@ export default function BlocklyMaze() {
       if (!isDemoModeActive()) {
         fetch('/api/missions/start', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...(userId ? { 'x-expected-user-id': userId } : {}),
+          },
           body: JSON.stringify({ missionId }),
         }).catch(() => { });
       }
@@ -5205,7 +5208,10 @@ export default function BlocklyMaze() {
     try {
       const res = await fetch('/api/missions/complete', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(userId ? { 'x-expected-user-id': userId } : {}),
+        },
         body: JSON.stringify({
           missionId,
           codeSnippet,

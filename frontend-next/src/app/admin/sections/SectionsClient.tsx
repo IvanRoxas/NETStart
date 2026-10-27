@@ -24,6 +24,7 @@ import { createSection, updateSection, archiveSection, getSectionRoster, getUnas
 import { removeStudentFromSection, toggleUserVerification, adminSetAptitudeStatus, toggleUserDemoModePrivilege, assignStudentToSection } from '@/app/admin/actions';
 import AdminToast from '@/components/AdminToast';
 import ConfirmModal from '@/components/ConfirmModal';
+import { checkSessionMismatch } from '@/components/AuthSyncProvider';
 
 interface TeacherInfo {
   id: string;
@@ -181,8 +182,10 @@ export default function SectionsClient({
         gradeLevel: createGrade,
         strand: createStrand,
         schoolYear: createSchoolYear,
-        teacherId: isSuperAdmin ? createTeacherId : currentUserId
+        teacherId: isSuperAdmin ? createTeacherId : currentUserId,
+        expectedAdminId: currentUserId
       });
+      if (checkSessionMismatch(res)) return;
 
       const assignedTeacher = availableTeachers.find(t => t.id === (isSuperAdmin ? createTeacherId : currentUserId));
 
@@ -236,8 +239,10 @@ export default function SectionsClient({
         gradeLevel: editGrade,
         strand: editStrand,
         schoolYear: editSchoolYear,
-        ...(isSuperAdmin ? { teacherId: editTeacherId } : {})
+        ...(isSuperAdmin ? { teacherId: editTeacherId } : {}),
+        expectedAdminId: currentUserId
       });
+      if (checkSessionMismatch(res)) return;
 
       setSections(prev => prev.map(s => s.id === editTargetSection.id ? { ...s, ...res.section } : s));
       if (rosterSection && rosterSection.id === editTargetSection.id) {
@@ -330,7 +335,8 @@ export default function SectionsClient({
     if (!rosterSection) return;
     try {
       setEnrollingId(candidate.id);
-      await assignStudentToSection(candidate.id, rosterSection.id);
+      const res = await assignStudentToSection(candidate.id, rosterSection.id, currentUserId);
+      if (checkSessionMismatch(res)) return;
       
       // Update local roster list
       setRosterStudents(prev => [...prev, {
@@ -376,7 +382,8 @@ export default function SectionsClient({
     if (!removeStudentTarget || !rosterSection) return;
     try {
       setIsRemovingStudent(true);
-      await removeStudentFromSection(removeStudentTarget.id);
+      const res = await removeStudentFromSection(removeStudentTarget.id, currentUserId);
+      if (checkSessionMismatch(res)) return;
 
       setRosterStudents(prev => prev.filter(s => s.id !== removeStudentTarget.id));
       setSections(prev => prev.map(sec => 
@@ -401,7 +408,8 @@ export default function SectionsClient({
     if (!archiveTarget) return;
     try {
       setIsArchiving(true);
-      await archiveSection(archiveTarget.id, archiveTarget.isArchived);
+      const res = await archiveSection(archiveTarget.id, archiveTarget.isArchived, currentUserId);
+      if (checkSessionMismatch(res)) return;
 
       setSections(prev => prev.map(sec => 
         sec.id === archiveTarget.id 

@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions, prisma } from "@/lib/auth";
 import { addXPAndCheckLevelUp } from "@/lib/xp";
 import { logSystemAction } from "@/lib/logger";
+import { assertExpectedSessionUser } from "@/lib/sessionGuard";
 import { generateStructuredResponse } from "@/ai/client";
 import { aptitudeSchema } from "@/ai/schemas/aptitudeSchema";
 import { getAptitudePrompt, getAptitudeFallback } from "@/ai/prompts/aptitude";
@@ -39,6 +40,9 @@ export async function POST(req: Request) {
     }
 
     const userId = session.user.id;
+    const mismatch = assertExpectedSessionUser(req, userId, "POST /api/aptitude/grade");
+    if (mismatch) return mismatch;
+
     const body = await req.json().catch(() => ({}));
     const rawAnswers = body.answers || body;
 

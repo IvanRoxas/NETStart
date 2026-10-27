@@ -99,7 +99,10 @@ export default function SettingsPage() {
 
       await fetch('/api/profile', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(session?.user?.id ? { 'x-expected-user-id': session.user.id } : {}),
+        },
         body: JSON.stringify(payload)
       });
       await update({ name: username });
@@ -127,7 +130,10 @@ export default function SettingsPage() {
     try {
       const res = await fetch('/api/settings/security', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(session?.user?.id ? { 'x-expected-user-id': session.user.id } : {}),
+        },
         body: JSON.stringify({
           email,
           currentPassword,
@@ -161,7 +167,12 @@ export default function SettingsPage() {
     setIsDeleteModalOpen(false);
     setDeleteLoading(true);
     try {
-      const res = await fetch('/api/settings/security', { method: 'DELETE' });
+      const res = await fetch('/api/settings/security', {
+        method: 'DELETE',
+        headers: {
+          ...(session?.user?.id ? { 'x-expected-user-id': session.user.id } : {}),
+        },
+      });
       if (res.ok) {
         setMessage({ text: 'Your account has been deleted.', type: 'success' });
 

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/auth";
 import { requireAdmin } from "@/app/admin/actions";
 import { logSystemAction } from "@/lib/logger";
 import { revalidatePath } from "next/cache";
+import { assertExpectedActionUser } from "@/lib/sessionGuard";
 
 export async function getSections() {
   const session = await requireAdmin();
@@ -67,9 +68,13 @@ export async function createSection(data: {
   strand: string;
   schoolYear: string;
   teacherId?: string;
+  expectedAdminId?: string;
 }) {
   const session = await requireAdmin();
   const adminId = (session.user as any).id;
+  const mismatch = assertExpectedActionUser(adminId, data.expectedAdminId, "createSection");
+  if (mismatch) return mismatch;
+
   const role = (session.user as any).role || "SUPER_ADMIN";
 
   const name = data.name.trim();
@@ -137,9 +142,12 @@ export async function createSection(data: {
   return { success: true, section };
 }
 
-export async function archiveSection(sectionId: string, currentStatus: boolean) {
+export async function archiveSection(sectionId: string, currentStatus: boolean, expectedAdminId?: string) {
   const session = await requireAdmin();
   const adminId = (session.user as any).id;
+  const mismatch = assertExpectedActionUser(adminId, expectedAdminId, "archiveSection");
+  if (mismatch) return mismatch;
+
   const role = (session.user as any).role || "SUPER_ADMIN";
 
   const existing = await prisma.section.findUnique({
@@ -176,9 +184,13 @@ export async function updateSection(sectionId: string, data: {
   strand?: string;
   schoolYear?: string;
   teacherId?: string;
+  expectedAdminId?: string;
 }) {
   const session = await requireAdmin();
   const adminId = (session.user as any).id;
+  const mismatch = assertExpectedActionUser(adminId, data.expectedAdminId, "updateSection");
+  if (mismatch) return mismatch;
+
   const role = (session.user as any).role || "SUPER_ADMIN";
 
   const existing = await prisma.section.findUnique({

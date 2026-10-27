@@ -5,6 +5,7 @@ import { XP_REWARDS } from "@/lib/xpEconomy";
 import { ensureSandboxUnlockedNotification } from "@/lib/sandboxNotification";
 import { resolveNextPlanet } from "@/lib/unlockLogic";
 import { getAchievementByTrigger } from "@/app/actions/achievements";
+import { assertExpectedSessionUser } from "@/lib/sessionGuard";
 
 const PLANET_METADATA: Record<string, {
   id: string;
@@ -108,6 +109,9 @@ export async function POST(req: Request) {
     }
 
     const userId = (session.user as any).id;
+    const mismatch = assertExpectedSessionUser(req, userId, "POST /api/missions/complete");
+    if (mismatch) return mismatch;
+
     const body = await req.json();
     const { missionId, submittedCode } = body;
 

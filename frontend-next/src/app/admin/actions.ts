@@ -8,6 +8,7 @@ import { revalidatePath } from "next/cache";
 import { LEVEL_THRESHOLDS } from "@/lib/leveling";
 
 import { logSystemAction } from "@/lib/logger";
+import { assertExpectedActionUser } from "@/lib/sessionGuard";
 
 export async function requireAdmin() {
   const session = await getServerSession(adminAuthOptions);
@@ -353,9 +354,12 @@ export async function adminSetAptitudeStatus(userId: string, targetStatus: boole
   return { success: true };
 }
 
-export async function assignStudentToSection(userId: string, sectionId: string) {
+export async function assignStudentToSection(userId: string, sectionId: string, expectedAdminId?: string) {
   const session = await requireAdmin();
   const adminId = (session.user as any).id;
+  const mismatch = assertExpectedActionUser(adminId, expectedAdminId, "assignStudentToSection");
+  if (mismatch) return mismatch;
+
   const role = (session.user as any).role || "SUPER_ADMIN";
 
   const result = await prisma.$transaction(async (tx) => {
@@ -489,10 +493,13 @@ export async function toggleUserDemoModePrivilege(userId: string, currentStatus:
   return { success: true, canUseDemoMode: updatedUser.canUseDemoMode };
 }
 
-export async function removeStudentFromSection(userId: string) {
+export async function removeStudentFromSection(userId: string, expectedAdminId?: string) {
   const session = await requireAdmin();
-  await assertCanAccessStudent(session, userId);
   const adminId = (session.user as any).id;
+  const mismatch = assertExpectedActionUser(adminId, expectedAdminId, "removeStudentFromSection");
+  if (mismatch) return mismatch;
+
+  await assertCanAccessStudent(session, userId);
   const role = (session.user as any).role || "SUPER_ADMIN";
 
   await prisma.user.update({

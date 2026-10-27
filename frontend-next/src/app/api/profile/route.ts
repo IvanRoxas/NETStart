@@ -4,6 +4,7 @@ import { authOptions, prisma } from '@/lib/auth';
 import { logSystemAction } from '@/lib/logger';
 import { addXPAndCheckLevelUp } from '@/lib/xp';
 import { getTitleDefinition, evaluateTitleUnlocks } from '@/lib/titlesData';
+import { assertExpectedSessionUser } from '@/lib/sessionGuard';
 
 export async function GET(req: Request) {
   try {
@@ -260,6 +261,9 @@ export async function PUT(req: Request) {
     if (!session || !userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    const mismatch = assertExpectedSessionUser(req, userId, "PUT /api/profile");
+    if (mismatch) return mismatch;
 
     const data = await req.json();
     const { name, displayName, status, bio, image, banner, border, showcasedBadges, activeTitle } = data;
