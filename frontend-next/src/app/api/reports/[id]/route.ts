@@ -10,6 +10,11 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     const body = await req.json();
     const { status } = body;
 
+    const VALID_STATUSES = new Set(['PENDING', 'IN_REVIEW', 'RESOLVED', 'DISMISSED']);
+    if (!status || !VALID_STATUSES.has(status)) {
+      return NextResponse.json({ error: "Invalid status. Allowed values: PENDING, IN_REVIEW, RESOLVED, DISMISSED" }, { status: 400 });
+    }
+
     const session = await getServerSession(adminAuthOptions);
     if (!session?.user || (session.user as any).type !== "admin") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
