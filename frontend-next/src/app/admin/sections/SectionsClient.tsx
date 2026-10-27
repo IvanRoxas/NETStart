@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   GraduationCap, 
   Plus, 
@@ -88,14 +88,29 @@ export default function SectionsClient({
   const [archiveFilter, setArchiveFilter] = useState<'ACTIVE' | 'ARCHIVED' | 'ALL'>('ACTIVE');
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
+  const isSuperAdmin = currentUserRole === 'SUPER_ADMIN';
+
   // Create Section Modal
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [createName, setCreateName] = useState('');
   const [createGrade, setCreateGrade] = useState<number>(11);
   const [createStrand, setCreateStrand] = useState('STEM');
   const [createSchoolYear, setCreateSchoolYear] = useState('2026-2027');
-  const [createTeacherId, setCreateTeacherId] = useState<string>(currentUserId);
+  const [createTeacherId, setCreateTeacherId] = useState<string>(() => {
+    return isSuperAdmin ? (availableTeachers[0]?.id || '') : currentUserId;
+  });
   const [isCreating, setIsCreating] = useState(false);
+
+  useEffect(() => {
+    if (isSuperAdmin && availableTeachers.length > 0) {
+      setCreateTeacherId(prev => {
+        if (!prev || !availableTeachers.some(t => t.id === prev)) {
+          return availableTeachers[0].id;
+        }
+        return prev;
+      });
+    }
+  }, [isSuperAdmin, availableTeachers]);
 
   // Edit Section Modal
   const [editTargetSection, setEditTargetSection] = useState<SectionItem | null>(null);
@@ -126,8 +141,6 @@ export default function SectionsClient({
   const [archiveTarget, setArchiveTarget] = useState<SectionItem | null>(null);
   const [isArchiving, setIsArchiving] = useState(false);
 
-  const isSuperAdmin = currentUserRole === 'SUPER_ADMIN';
-
   const filteredSections = sections.filter(sec => {
     const q = searchQuery.toLowerCase();
     const matchesSearch = sec.name.toLowerCase().includes(q) ||
@@ -153,6 +166,11 @@ export default function SectionsClient({
     e.preventDefault();
     if (!createName.trim()) {
       setToast({ message: "Please provide a section name.", type: 'error' });
+      return;
+    }
+
+    if (isSuperAdmin && (!createTeacherId || !availableTeachers.some(t => t.id === createTeacherId))) {
+      setToast({ message: "Please select an assigned teacher for this section.", type: 'error' });
       return;
     }
 
@@ -191,6 +209,7 @@ export default function SectionsClient({
       setToast({ message: `Section "${createName}" created successfully.`, type: 'success' });
       setIsCreateOpen(false);
       setCreateName('');
+      setCreateTeacherId(isSuperAdmin ? (availableTeachers[0]?.id || '') : currentUserId);
     } catch (err: any) {
       setToast({ message: err.message || "Failed to create section.", type: 'error' });
     } finally {
@@ -423,7 +442,10 @@ export default function SectionsClient({
         </div>
 
         <button
-          onClick={() => setIsCreateOpen(true)}
+          onClick={() => {
+            setCreateTeacherId(isSuperAdmin ? (availableTeachers[0]?.id || '') : currentUserId);
+            setIsCreateOpen(true);
+          }}
           className="flex items-center gap-2 px-4 py-2.5 bg-[#ff912d] hover:bg-[#ff912d]/90 text-white font-semibold text-sm rounded-xl transition-all shadow-lg shadow-[#ff912d]/20 cursor-pointer self-start sm:self-auto"
         >
           <Plus size={18} />
