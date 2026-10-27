@@ -4,6 +4,54 @@ import { requireSuperAdmin } from "@/app/admin/actions";
 import { prisma } from "@/lib/auth";
 import { logSystemAction } from "@/lib/logger";
 import { ensureDefaultAptitudeQuestionsInDb } from "@/lib/aptitudeQuestionsHelper";
+import questionsData from "@/server/data/aptitude_questions.server.json";
+
+export interface CanonicalQuestion {
+  id: string;
+  category: string;
+  subcategory: string;
+  number: number;
+  title: string;
+  question: string;
+  options: Record<string, string>;
+  answer: string;
+  concept: string;
+  explanation: string;
+}
+
+export interface CanonicalSubcategory {
+  id: string;
+  name: string;
+}
+
+export interface CanonicalQuestionsData {
+  test: string;
+  totalQuestions: number;
+  subcategories: Record<string, CanonicalSubcategory>;
+  questions: CanonicalQuestion[];
+}
+
+export async function getCanonicalAptitudeQuestions(): Promise<CanonicalQuestionsData> {
+  await requireSuperAdmin();
+
+  return {
+    test: questionsData.test,
+    totalQuestions: questionsData.totalQuestions,
+    subcategories: questionsData.subcategories as Record<string, CanonicalSubcategory>,
+    questions: questionsData.questions.map((q) => ({
+      id: q.id,
+      category: q.category,
+      subcategory: (q as any).subcategory || q.category,
+      number: q.number,
+      title: q.title,
+      question: q.question,
+      options: q.options,
+      answer: q.answer,
+      concept: q.concept,
+      explanation: q.explanation || "",
+    })),
+  };
+}
 
 export interface CreateQuestionInput {
   question: string;
