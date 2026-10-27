@@ -401,7 +401,15 @@ export async function POST(req: Request) {
     }
 
     // Enforce deterministic orbit and deterministic planet affinities (No AI Guessing)
-    const { isFallback, result, pathOrder, aiOverride } = processAIPathResponse(rawResponse, aiContext);
+    const {
+      isFallback,
+      result,
+      pathOrder,
+      aiOverride,
+      finalTrack,
+      recommendedLearningPath: finalLearningPath,
+      deterministicTrack,
+    } = processAIPathResponse(rawResponse, aiContext);
     const finalFallbackStatus = isFallback || fallbackUsedInFetch;
 
     // Suffix emoji indicator: ✨ for Gemini, 🌟 for Fallback
@@ -412,8 +420,11 @@ export async function POST(req: Request) {
     const finalResult = {
       ...baseResult,
       totalQuestions: baseResult?.totalQuestions ?? 18,
+      recommendedLearningPath: finalLearningPath,
+      deterministicTrack,
       aiInsight: {
         ...result,
+        track: finalTrack,
         source: finalFallbackStatus ? "fallback" : "gemini",
       },
       aiOverride,
@@ -451,10 +462,10 @@ export async function POST(req: Request) {
             baseResult?.categories?.task_decomposition?.percent ??
             dbUser?.taskDecompositionScore ??
             0,
-          recommendedLearningPath,
+          recommendedLearningPath: finalLearningPath,
           aptitudeResult: finalResult as any,
           pathOrder: normalizePathOrder(pathOrder),
-          track: result.track,
+          track: finalTrack,
           aiSummary: result.summary,
           planetReasons: result.planets.map((p) => ({
             planet: p.planet,

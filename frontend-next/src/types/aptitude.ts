@@ -70,6 +70,7 @@ export interface AptitudeTestResult {
   weakestCategory: CategorySummary;
   missed: MissedQuestionItem[];
   recommendedLearningPath: string;
+  deterministicTrack?: "WEB" | "LOGIC" | "BALANCED";
   aiInsight?: AptitudeAIInsight;
   aiOverride?: {
     applied: boolean;

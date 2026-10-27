@@ -175,6 +175,75 @@ export function computeDeterministicOrbitAndAffinities(
   };
 }
 
+export function deriveRecommendedLearningPath(params: {
+  firstPlanet: string;
+  deterministicTrack: "WEB" | "LOGIC" | "BALANCED";
+  aiOverrideApplied: boolean;
+  categories: AptitudeAIContext["categories"];
+  deterministicWebReadiness?: number;
+  deterministicLogicReadiness?: number;
+}): string {
+  const { firstPlanet, deterministicTrack, aiOverrideApplied, categories } = params;
+
+  const webDevNum = Number(categories.webDev) || 0;
+  const cppNum = Number(categories.cpp) || 0;
+  const pythonNum = Number(categories.python) || 0;
+  const javaNum = Number(categories.java) || 0;
+
+  const webDevPct = Math.round((webDevNum / 3) * 100);
+  const cppPct = Math.round((cppNum / 3) * 100);
+  const pythonPct = Math.round((pythonNum / 3) * 100);
+  const javaPct = Math.round((javaNum / 3) * 100);
+  const logicAvgPct = Math.round((cppPct + pythonPct + javaPct) / 3);
+
+  if (!aiOverrideApplied) {
+    if (deterministicTrack === "WEB") {
+      return webDevPct >= 80
+        ? "Frontend Engineering & Component Architecture (HTML / CSS / JavaScript)"
+        : "Foundational Web Development & UI Architecture (HTML / CSS / JavaScript)";
+    }
+    if (deterministicTrack === "LOGIC") {
+      return logicAvgPct >= 80
+        ? "Backend Engineering & Systems Architecture (Java / C++ / Python)"
+        : "Foundational Logic & Systems Architecture (Java / C++ / Python)";
+    }
+    // BALANCED
+    const webReadiness = params.deterministicWebReadiness ?? webDevPct;
+    const logicReadiness = params.deterministicLogicReadiness ?? logicAvgPct;
+    return webReadiness >= 80 && logicReadiness >= 80
+      ? "Fullstack Systems & Advanced Architecture (Full Planetary Sequence)"
+      : "Fullstack Web & Distributed Systems";
+  }
+
+  // Override was applied: derive from final first planet
+  const upperFirst = firstPlanet.toUpperCase().trim();
+  if (upperFirst === "MARS" || upperFirst === "VENUS" || upperFirst === "MERCURY") {
+    return webDevPct >= 80
+      ? "Frontend Engineering & Component Architecture (HTML / CSS / JavaScript)"
+      : "Foundational Web Development & UI Architecture (HTML / CSS / JavaScript)";
+  }
+
+  if (upperFirst === "JUPITER") {
+    return javaPct >= 80
+      ? "Backend Engineering & Systems Architecture (Java / C++ / Python)"
+      : "Foundational Logic & Systems Architecture (Java / C++ / Python)";
+  }
+
+  if (upperFirst === "SATURN") {
+    return cppPct >= 80
+      ? "Backend Engineering & Systems Architecture (Java / C++ / Python)"
+      : "Foundational Logic & Systems Architecture (Java / C++ / Python)";
+  }
+
+  if (upperFirst === "EARTH") {
+    return pythonPct >= 80
+      ? "Backend Engineering & Systems Architecture (Java / C++ / Python)"
+      : "Foundational Logic & Systems Architecture (Java / C++ / Python)";
+  }
+
+  return "Fullstack Web & Distributed Systems";
+}
+
 export function processAIPathResponse(
   rawResponse: any,
   aiContext: AptitudeAIContext
@@ -195,6 +264,9 @@ export function processAIPathResponse(
     planet?: string;
     reason?: string;
   };
+  finalTrack: "WEB" | "LOGIC" | "BALANCED";
+  recommendedLearningPath: string;
+  deterministicTrack: "WEB" | "LOGIC" | "BALANCED";
 } {
   const deterministic = computeDeterministicOrbitAndAffinities(aiContext.categories);
 
@@ -235,6 +307,18 @@ export function processAIPathResponse(
     ? deterministic.planets.find((p) => p.planet === candidatePlanet)?.affinity ?? 0
     : 0;
 
+  // Raw section score requirement: Logic planet candidate requires its own section score >= 2; Web planet requires webDev >= 2
+  let candidateSectionScore = 0;
+  if (candidatePlanet === "JUPITER") {
+    candidateSectionScore = Number(aiContext.categories.java) || 0;
+  } else if (candidatePlanet === "SATURN") {
+    candidateSectionScore = Number(aiContext.categories.cpp) || 0;
+  } else if (candidatePlanet === "EARTH") {
+    candidateSectionScore = Number(aiContext.categories.python) || 0;
+  } else if (candidatePlanet && WEB_PLANETS.has(candidatePlanet)) {
+    candidateSectionScore = Number(aiContext.categories.webDev) || 0;
+  }
+
   let finalPathOrder = [...deterministic.pathOrder];
   let aiOverride: { applied: boolean; planet?: string; reason?: string } = { applied: false };
 
@@ -243,6 +327,7 @@ export function processAIPathResponse(
     !isFallback &&
     candidatePlanet &&
     candidateAffinity >= 60 &&
+    candidateSectionScore >= 2 &&
     candidatePlanet !== currentFirstPlanet
   ) {
     const cleanReason = parsed.overrideReason?.trim()
@@ -277,9 +362,32 @@ export function processAIPathResponse(
     }
   }
 
+  const finalFirstPlanet = finalPathOrder[1]; // First planet after MOON
+
+  // Track and learning path consistency:
+  // User.track & aiInsight.track: WEB if first planet is MARS/VENUS/MERCURY, LOGIC if JUPITER/SATURN/EARTH.
+  // If no override applied, keep the deterministic track as-is (including BALANCED).
+  let finalTrack: "WEB" | "LOGIC" | "BALANCED" = deterministic.track;
+  if (aiOverride.applied) {
+    if (WEB_PLANETS.has(finalFirstPlanet)) {
+      finalTrack = "WEB";
+    } else {
+      finalTrack = "LOGIC";
+    }
+  }
+
+  const recommendedLearningPath = deriveRecommendedLearningPath({
+    firstPlanet: finalFirstPlanet,
+    deterministicTrack: deterministic.track,
+    aiOverrideApplied: aiOverride.applied,
+    categories: aiContext.categories,
+    deterministicWebReadiness: deterministic.webReadiness,
+    deterministicLogicReadiness: deterministic.logicReadiness,
+  });
+
   const fullResult = {
     ...parsed,
-    track: deterministic.track,
+    track: finalTrack,
     planets: deterministic.planets.map((dp) => {
       const aiMatched = parsed.planets?.find((p) => p.planet === dp.planet);
       return {
@@ -297,5 +405,8 @@ export function processAIPathResponse(
     result: fullResult,
     pathOrder: finalPathOrder,
     aiOverride,
+    finalTrack,
+    recommendedLearningPath,
+    deterministicTrack: deterministic.track,
   };
 }

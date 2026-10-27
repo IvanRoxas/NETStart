@@ -137,7 +137,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, message: "Gemini error." });
     }
 
-    const { isFallback, result, pathOrder, aiOverride } = processAIPathResponse(rawResponse, aiContext);
+    const {
+      isFallback,
+      result,
+      pathOrder,
+      aiOverride,
+      finalTrack,
+      recommendedLearningPath: finalLearningPath,
+      deterministicTrack,
+    } = processAIPathResponse(rawResponse, aiContext);
 
     if (isFallback || fallbackUsedInFetch) {
       return NextResponse.json({ success: false, message: "Still failing, fallback retained." });
@@ -160,8 +168,11 @@ export async function POST(req: Request) {
         python: { id: "python", name: "Python Scripting", correct: subs.python, total: 3, percent: Math.round((subs.python / 3) * 100) },
         java: { id: "java", name: "Java Enterprise", correct: subs.java, total: 3, percent: Math.round((subs.java / 3) * 100) },
       },
+      recommendedLearningPath: finalLearningPath,
+      deterministicTrack,
       aiInsight: {
         ...result,
+        track: finalTrack,
         source: "gemini",
       },
       aiOverride,
@@ -172,7 +183,8 @@ export async function POST(req: Request) {
       data: {
         aptitudeResult: finalResult as any,
         pathOrder: normalizePathOrder(pathOrder),
-        track: result.track,
+        track: finalTrack,
+        recommendedLearningPath: finalLearningPath,
         aiSummary: result.summary,
         planetReasons: result.planets.map((p) => ({
           planet: p.planet,

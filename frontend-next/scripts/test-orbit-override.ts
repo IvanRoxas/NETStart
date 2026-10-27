@@ -382,6 +382,258 @@ async function runTests() {
   }
 
   // ---------------------------------------------------------------------------
+  // TEST 6: Schema tolerance - Gemini returns null/NONE/invalid for override fields
+  // ---------------------------------------------------------------------------
+  console.log("TEST 6: Tolerant Schema - Gemini returns recommendedFirstPlanet null and overrideReason null");
+  try {
+    const aiContext: AptitudeAIContext = {
+      totalCorrect: 12,
+      totalPercent: 67,
+      totalScore: "12/18 (67%)",
+      categories: {
+        patternRecognition: 2,
+        taskDecomposition: 2,
+        webDev: 2,
+        cpp: 2,
+        python: 2,
+        java: 2,
+      },
+      computedTrack: "BALANCED",
+      defaultPathOrder: ["MOON", "MARS", "VENUS", "MERCURY", "JUPITER", "SATURN", "EARTH"],
+      defaultFirstPlanet: "MARS",
+      strongestCategory: "Balanced",
+      weakestCategory: "None",
+      missedConcepts: [],
+    };
+
+    // 6A: Gemini returns explicit null for recommendedFirstPlanet and overrideReason
+    const resNullOverride = processAIPathResponse(
+      {
+        summary: "Excellent problem solving baseline ✨",
+        advice: "Proceed with lunar calibrations.",
+        recommendedFirstPlanet: null,
+        overrideReason: null,
+      },
+      aiContext
+    );
+
+    assert(resNullOverride.isValid, "Response must remain valid when override fields are null");
+    assert(!resNullOverride.isFallback, "Response must NOT trigger fallback when override fields are null");
+    assert(!resNullOverride.aiOverride.applied, "Override must NOT be applied when recommendedFirstPlanet is null");
+    assert(resNullOverride.result.summary.includes("Excellent problem solving"), "Summary must be preserved");
+    assert(resNullOverride.result.advice === "Proceed with lunar calibrations.", "Advice must be preserved");
+    assert(
+      JSON.stringify(resNullOverride.pathOrder) === JSON.stringify(aiContext.defaultPathOrder),
+      "pathOrder must remain default"
+    );
+
+    // 6B: Gemini returns empty string or "NONE"
+    const resNone = processAIPathResponse(
+      {
+        summary: "Great analytical profile ✨",
+        advice: "Focus on loops.",
+        recommendedFirstPlanet: "NONE",
+        overrideReason: "",
+      },
+      aiContext
+    );
+    assert(resNone.isValid && !resNone.isFallback, "NONE / empty string must be valid without triggering fallback");
+    assert(!resNone.aiOverride.applied, "Override must NOT be applied for 'NONE'");
+    assert(resNone.result.summary.includes("Great analytical profile"), "Summary must be preserved for 'NONE'");
+
+    console.log("  PASS: Schema tolerance for null/NONE/empty override fields verified.\n");
+    passed++;
+  } catch (err: any) {
+    console.error("  FAIL: Schema tolerance test error:", err.message, "\n");
+    failed++;
+  }
+
+  // ---------------------------------------------------------------------------
+  // TEST 7: Raw Section Score Gate (score 1 rejected vs score 2 accepted)
+  // ---------------------------------------------------------------------------
+  console.log("TEST 7: Raw Section Score Gate (score 1 rejected vs score 2 accepted)");
+  try {
+    // Score profile producing candidate affinity exactly 60:
+    // Java = 1/3 (33%), TD = 3/3 (100%), PR = 3/3 (100%)
+    // jupiterAffinity = Math.round(33 * 0.60 + 100 * 0.25 + 100 * 0.15) = Math.round(19.8 + 25 + 15) = 60
+    // WebDev = 2/3 (67%) -> webAffinity = Math.round(67 * 0.60 + 100 * 0.25 + 100 * 0.15) = 80
+    // Track: Web affinity 80 > Logic affinity 60 -> track = "WEB", default first = "MARS"
+    const score1Categories = {
+      patternRecognition: 3,
+      taskDecomposition: 3,
+      webDev: 2,
+      cpp: 0,
+      python: 0,
+      java: 1, // Score 1!
+    };
+    const det1 = computeDeterministicOrbitAndAffinities(score1Categories);
+    const jupiterAffinity1 = det1.planets.find((p) => p.planet === "JUPITER")?.affinity;
+    assert(jupiterAffinity1 === 60, `Jupiter affinity must be exactly 60 (got ${jupiterAffinity1})`);
+    assert(det1.pathOrder[1] === "MARS", "Deterministic first planet must be MARS");
+
+    const context1: AptitudeAIContext = {
+      totalCorrect: 9,
+      totalPercent: 50,
+      totalScore: "9/18 (50%)",
+      categories: score1Categories,
+      computedTrack: det1.track,
+      defaultPathOrder: det1.pathOrder,
+      defaultFirstPlanet: det1.pathOrder[1],
+      strongestCategory: "Logic & Pattern",
+      weakestCategory: "Java",
+      missedConcepts: [],
+    };
+
+    // 7A: Candidate with affinity 60 but section score 1 -> MUST BE REJECTED
+    const resScore1 = processAIPathResponse(
+      {
+        summary: "Solid analytical foundation ✨",
+        advice: "Practice OOP syntax.",
+        recommendedFirstPlanet: "JUPITER",
+        overrideReason: "Has high potential in Java.",
+      },
+      context1
+    );
+    assert(!resScore1.aiOverride.applied, "Override must be REJECTED when section score is 1, even if affinity is 60");
+    assert(resScore1.pathOrder[1] === "MARS", "First planet must remain MARS");
+
+    // 7B: Candidate with section score 2 (affinity >= 60) -> MUST BE ACCEPTED
+    // Java = 2/3 (67%), TD = 2/3 (67%), PR = 2/3 (67%) -> jupiterAffinity = 67 >= 60
+    // WebDev = 3/3 (100%) -> webAffinity = 87
+    // Deterministic: track = BALANCED, tie-break webReadiness (87) >= logicReadiness (67) -> MARS first
+    const score2Categories = {
+      patternRecognition: 2,
+      taskDecomposition: 2,
+      webDev: 3,
+      cpp: 0,
+      python: 0,
+      java: 2, // Score 2!
+    };
+    const det2 = computeDeterministicOrbitAndAffinities(score2Categories);
+    const jupiterAffinity2 = det2.planets.find((p) => p.planet === "JUPITER")?.affinity;
+    assert(jupiterAffinity2 === 67, `Jupiter affinity must be 67 >= 60 (got ${jupiterAffinity2})`);
+    assert(det2.pathOrder[1] === "MARS", "Deterministic first planet must be MARS");
+
+    const context2: AptitudeAIContext = {
+      totalCorrect: 9,
+      totalPercent: 50,
+      totalScore: "9/18 (50%)",
+      categories: score2Categories,
+      computedTrack: det2.track,
+      defaultPathOrder: det2.pathOrder,
+      defaultFirstPlanet: det2.pathOrder[1],
+      strongestCategory: "Web",
+      weakestCategory: "C++",
+      missedConcepts: [],
+    };
+
+    const resScore2 = processAIPathResponse(
+      {
+        summary: "Competent Java understanding ✨",
+        advice: "Dive into Java classes.",
+        recommendedFirstPlanet: "JUPITER",
+        overrideReason: "Java 2/3 is strong enough for early start.",
+      },
+      context2
+    );
+    assert(resScore2.aiOverride.applied, "Override must be ACCEPTED when section score is 2 and affinity >= 60");
+    assert(resScore2.aiOverride.planet === "JUPITER", "Override planet must be JUPITER");
+    assert(resScore2.pathOrder[1] === "JUPITER", "First planet after MOON must be JUPITER");
+
+    console.log("  PASS: Raw section score gate (score 1 rejected vs score 2 accepted) verified.\n");
+    passed++;
+  } catch (err: any) {
+    console.error("  FAIL: Raw section score gate test error:", err.message, "\n");
+    failed++;
+  }
+
+  // ---------------------------------------------------------------------------
+  // TEST 8: Track and RecommendedLearningPath Consistency
+  // ---------------------------------------------------------------------------
+  console.log("TEST 8: Track & Learning Path Consistency (Applied Override vs No Override)");
+  try {
+    // 8A: Applied override case (Web default, JUPITER overridden to first)
+    // Student with Web 3 (100%), Java 3 (100%), PR 2, TD 2
+    const overrideCategories = {
+      patternRecognition: 2,
+      taskDecomposition: 2,
+      webDev: 3,
+      cpp: 0,
+      python: 0,
+      java: 3,
+    };
+    const detOverride = computeDeterministicOrbitAndAffinities(overrideCategories);
+    assert(detOverride.track === "BALANCED", "Original deterministic track should be BALANCED");
+    assert(detOverride.pathOrder[1] === "MARS", "Original deterministic first planet should be MARS");
+
+    const overrideContext: AptitudeAIContext = {
+      totalCorrect: 10,
+      totalPercent: 56,
+      totalScore: "10/18 (56%)",
+      categories: overrideCategories,
+      computedTrack: detOverride.track,
+      defaultPathOrder: detOverride.pathOrder,
+      defaultFirstPlanet: detOverride.pathOrder[1],
+      strongestCategory: "Java",
+      weakestCategory: "C++",
+      missedConcepts: [],
+    };
+
+    const resApplied = processAIPathResponse(
+      {
+        summary: "Strong Java capability ✨",
+        advice: "Start with Java OOP.",
+        recommendedFirstPlanet: "JUPITER",
+        overrideReason: "Java 3/3 indicates readiness.",
+      },
+      overrideContext
+    );
+
+    assert(resApplied.aiOverride.applied, "Override must be applied");
+    assert(resApplied.pathOrder[1] === "JUPITER", "First planet must be JUPITER");
+    assert(resApplied.finalTrack === "LOGIC", "finalTrack must be LOGIC when first planet is JUPITER");
+    assert(resApplied.result.track === "LOGIC", "result.track must be LOGIC when first planet is JUPITER");
+    assert(
+      resApplied.deterministicTrack === "BALANCED",
+      "deterministicTrack must retain original deterministic value (BALANCED)"
+    );
+    assert(
+      resApplied.recommendedLearningPath === "Backend Engineering & Systems Architecture (Java / C++ / Python)",
+      `recommendedLearningPath must match Java logic label (got ${resApplied.recommendedLearningPath})`
+    );
+
+    // 8B: No-override case keeps deterministic track and path
+    // Same student, but Gemini does not override (proposes MARS or null)
+    const resNoOverride = processAIPathResponse(
+      {
+        summary: "Balanced skillset ✨",
+        advice: "Follow standard track.",
+        recommendedFirstPlanet: null,
+      },
+      overrideContext
+    );
+
+    assert(!resNoOverride.aiOverride.applied, "Override must NOT be applied");
+    assert(resNoOverride.finalTrack === "BALANCED", "finalTrack must remain BALANCED when no override applied");
+    assert(resNoOverride.result.track === "BALANCED", "result.track must remain BALANCED when no override applied");
+    assert(
+      resNoOverride.deterministicTrack === "BALANCED",
+      "deterministicTrack must be BALANCED"
+    );
+    assert(
+      resNoOverride.recommendedLearningPath === "Fullstack Systems & Advanced Architecture (Full Planetary Sequence)" ||
+      resNoOverride.recommendedLearningPath === "Fullstack Web & Distributed Systems",
+      `recommendedLearningPath must remain deterministic BALANCED label (got ${resNoOverride.recommendedLearningPath})`
+    );
+
+    console.log("  PASS: Track & learning path consistency verified.\n");
+    passed++;
+  } catch (err: any) {
+    console.error("  FAIL: Track & learning path consistency test error:", err.message, "\n");
+    failed++;
+  }
+
+  // ---------------------------------------------------------------------------
   // SUMMARY
   // ---------------------------------------------------------------------------
   console.log("=================================================================");
