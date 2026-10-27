@@ -139,21 +139,25 @@ export default async function ModuleMissionsPage({ params }: { params: Promise<P
       }
     });
   } catch (err: any) {
-    dbUser = await prisma.user.findUnique({
-      where: userId ? { id: userId } : { email: userEmail },
-      select: {
-        id: true,
-        isBanned: true,
-        pathOrder: true,
+    if (err?.code === 'P2021' || err?.code === 'P2022') {
+      dbUser = await prisma.user.findUnique({
+        where: userId ? { id: userId } : { email: userEmail },
+        select: {
+          id: true,
+          isBanned: true,
+          pathOrder: true,
+        }
+      });
+      if (dbUser) {
+        try {
+          const raw: any = await prisma.$queryRaw`SELECT can_use_demo_mode FROM users WHERE user_id = ${dbUser.id} LIMIT 1`;
+          dbUser.canUseDemoMode = Boolean(raw?.[0]?.can_use_demo_mode);
+        } catch {
+          dbUser.canUseDemoMode = false;
+        }
       }
-    });
-    if (dbUser) {
-      try {
-        const raw: any = await prisma.$queryRaw`SELECT can_use_demo_mode FROM users WHERE user_id = ${dbUser.id} LIMIT 1`;
-        dbUser.canUseDemoMode = Boolean(raw?.[0]?.can_use_demo_mode);
-      } catch {
-        dbUser.canUseDemoMode = false;
-      }
+    } else {
+      throw err;
     }
   }
 

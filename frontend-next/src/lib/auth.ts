@@ -14,7 +14,15 @@ const globalForPrisma = global as unknown as { prisma: PrismaClient };
 export let prisma: PrismaClient;
 
 const createPrismaClient = () => {
-  const pool = new Pool({ connectionString, max: Number(process.env.DATABASE_POOL_MAX) || 10 });
+  const pool = new Pool({
+    connectionString,
+    max: Number(process.env.DATABASE_POOL_MAX) || 10,
+    idleTimeoutMillis: 10000,
+    keepAlive: true,
+  });
+  pool.on('error', (err) => {
+    console.warn('[pg pool] Unexpected error on idle client:', err?.message || err);
+  });
   const adapter = new PrismaPg(pool);
   return new PrismaClient({ adapter });
 };

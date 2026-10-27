@@ -42,40 +42,44 @@ export async function GET(req: Request) {
         }
       });
     } catch (err: any) {
-      console.warn("Extended user fields select failed, falling back to base fields:", err?.message);
-      user = await prisma.user.findFirst({
-        where: sessionUserId ? { id: sessionUserId } : { email: sessionEmail! },
-        select: {
-          id: true,
-          name: true,
-          displayName: true,
-          email: true,
-          image: true,
-          banner: true,
-          status: true,
-          bio: true,
-          createdAt: true,
-          showcasedBadges: true,
-          activeTitle: true,
-          xp: true,
-          hasTakenAptitudeTest: true,
-          logicScore: true,
-          patternRecognitionScore: true,
-          taskDecompositionScore: true,
-          recommendedLearningPath: true,
-        }
-      });
-      if (user) {
-        try {
-          const rawRes: any = await prisma.$queryRaw`SELECT border, can_use_demo_mode FROM users WHERE user_id = ${user.id} LIMIT 1`;
-          if (rawRes && rawRes[0]) {
-            if (rawRes[0].border !== undefined) user.border = rawRes[0].border;
-            (user as any).canUseDemoMode = Boolean(rawRes[0].can_use_demo_mode);
+      if (err?.code === 'P2021' || err?.code === 'P2022') {
+        console.warn("Extended user fields select failed, falling back to base fields:", err?.message);
+        user = await prisma.user.findFirst({
+          where: sessionUserId ? { id: sessionUserId } : { email: sessionEmail! },
+          select: {
+            id: true,
+            name: true,
+            displayName: true,
+            email: true,
+            image: true,
+            banner: true,
+            status: true,
+            bio: true,
+            createdAt: true,
+            showcasedBadges: true,
+            activeTitle: true,
+            xp: true,
+            hasTakenAptitudeTest: true,
+            logicScore: true,
+            patternRecognitionScore: true,
+            taskDecompositionScore: true,
+            recommendedLearningPath: true,
           }
-        } catch (_) {
-          user.border = null;
-          (user as any).canUseDemoMode = false;
+        });
+        if (user) {
+          try {
+            const rawRes: any = await prisma.$queryRaw`SELECT border, can_use_demo_mode FROM users WHERE user_id = ${user.id} LIMIT 1`;
+            if (rawRes && rawRes[0]) {
+              if (rawRes[0].border !== undefined) user.border = rawRes[0].border;
+              (user as any).canUseDemoMode = Boolean(rawRes[0].can_use_demo_mode);
+            }
+          } catch (_) {
+            user.border = null;
+            (user as any).canUseDemoMode = false;
+          }
         }
+      } else {
+        throw err;
       }
     }
 
@@ -372,7 +376,7 @@ export async function PUT(req: Request) {
         }
       });
     } catch (updateErr: any) {
-      if (updateErr?.message?.includes('border')) {
+      if ((updateErr?.code === 'P2021' || updateErr?.code === 'P2022') && updateErr?.message?.includes('border')) {
         await prisma.user.update({
           where: { id: userId },
           data: {
@@ -489,7 +493,7 @@ export async function PUT(req: Request) {
         }
       });
     } catch (finalErr: any) {
-      if (finalErr?.message?.includes('border')) {
+      if ((finalErr?.code === 'P2021' || finalErr?.code === 'P2022') && finalErr?.message?.includes('border')) {
         finalUser = await prisma.user.findUnique({
           where: { id: userId },
           select: {
