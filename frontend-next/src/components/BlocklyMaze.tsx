@@ -5,6 +5,7 @@ import * as Blockly from 'blockly';
 import 'blockly/blocks';
 import * as En from 'blockly/msg/en';
 import { javascriptGenerator } from 'blockly/javascript';
+import { patchBlocklyFocus } from '@/lib/patchBlocklyFocus';
 import '@/lib/customblocks';
 import { generatePlainEnglishPseudocode } from '@/lib/customblocks';
 import PlainEnglishCodeViewer from '@/components/PlainEnglishCodeViewer';
@@ -6857,6 +6858,7 @@ export default function BlocklyMaze() {
       registerEarthLevel2Blocks();
       registerEarthLevel3Blocks();
 
+      patchBlocklyFocus();
       const ws = Blockly.inject(blocklyDiv.current, {
         toolbox: getToolboxForMission(missionId, currentSection, 'welcome', earth2ActiveTabRef.current),
         collapse: true,
