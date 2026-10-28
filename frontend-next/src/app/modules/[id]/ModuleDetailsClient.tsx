@@ -123,7 +123,7 @@ export default function ModuleDetailsClient({
 }: ModuleDetailsClientProps) {
   const router = useRouter();
   const userId = sessionUser?.id;
-  const { isDemoMode: hookDemoMode, canUseDemoMode: livePermission } = useDemoMode(canUseDemoMode);
+  const { isDemoMode: hookDemoMode, canUseDemoMode: livePermission } = useDemoMode(canUseDemoMode, userId);
   const effectiveCanUseDemoMode = typeof livePermission === 'boolean' ? livePermission : canUseDemoMode;
   const isDemoMode = effectiveCanUseDemoMode && hookDemoMode;
   const [pendingMission, setPendingMission] = useState<Mission | null>(null);

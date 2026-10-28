@@ -199,7 +199,7 @@ export async function purchaseItem(itemId: string, expectedUserId?: string) {
       }
 
       // Check Demo Mode: cost is 0 ONLY during Demo Mode
-      const isDemoMode = Boolean(isDemoModeCookie && (user.canUseDemoMode || process.env.NODE_ENV !== 'production'));
+      const isDemoMode = Boolean(isDemoModeCookie && user.canUseDemoMode);
       const effectivePrice = isDemoMode ? 0 : item.price;
 
       // 3. Atomically check and deduct gears if price > 0

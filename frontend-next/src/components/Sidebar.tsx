@@ -20,7 +20,7 @@ export default function Sidebar() {
   const { data: session } = useSession();
   const userId = (session?.user as any)?.id;
   const sessionCanUse = Boolean((session?.user as any)?.canUseDemoMode);
-  const { isDemoMode, canUseDemoMode: livePermission } = useDemoMode(sessionCanUse);
+  const { isDemoMode, canUseDemoMode: livePermission } = useDemoMode(sessionCanUse, userId);
   const canUseDemoMode = typeof livePermission === 'boolean' ? livePermission : sessionCanUse;
   const { isStale } = useAuthSync();
 

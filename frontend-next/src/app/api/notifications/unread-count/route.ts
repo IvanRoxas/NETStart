@@ -10,7 +10,11 @@ export async function GET(request: Request) {
     }
 
     const user = await prisma.user.findUnique({
-      where: { email: session.user.email }
+      where: { email: session.user.email },
+      select: {
+        id: true,
+        canUseDemoMode: true,
+      },
     });
 
     if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
@@ -23,10 +27,15 @@ export async function GET(request: Request) {
       }
     });
 
-    return NextResponse.json({
+    const responsePayload: { count: number; canUseDemoMode?: boolean } = {
       count,
-      canUseDemoMode: Boolean((user as any)?.canUseDemoMode),
-    });
+    };
+
+    if (typeof user.canUseDemoMode === 'boolean') {
+      responsePayload.canUseDemoMode = user.canUseDemoMode;
+    }
+
+    return NextResponse.json(responsePayload);
   } catch (error) {
     console.error('Fetch unread count error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

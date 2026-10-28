@@ -15,7 +15,8 @@ interface DemoToggleProps {
 export default function DemoToggle({ className = "", compact = false, canUseDemoMode: canUseDemoModeProp }: DemoToggleProps) {
   const router = useRouter();
   const { data: session, status } = useSession();
-  const { isDemoMode, canUseDemoMode: livePermission, toggleDemoMode } = useDemoMode(canUseDemoModeProp);
+  const userId = (session?.user as any)?.id;
+  const { isDemoMode, canUseDemoMode: livePermission, toggleDemoMode } = useDemoMode(canUseDemoModeProp, userId);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const effectivePermission = typeof livePermission === 'boolean'

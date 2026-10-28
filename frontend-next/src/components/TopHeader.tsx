@@ -11,7 +11,13 @@ import VerifyModal from './VerifyModal';
 import MusicToggleButton from './MusicToggleButton';
 import DemoToggle from './DemoToggle';
 import { useAuthSync } from './AuthSyncProvider';
-import { getCanUseDemoMode, setCanUseDemoModePermission, revokeDemoMode } from '@/lib/demoMode';
+import {
+  getCanUseDemoMode,
+  setCanUseDemoModePermission,
+  revokeDemoMode,
+  clearDemoModeStorage,
+  decideDemoHeartbeat,
+} from '@/lib/demoMode';
 
 interface TopHeaderProps {
   title: string;
@@ -24,6 +30,7 @@ export default function TopHeader({ title, showDemoToggle = false, children }: T
   const sessionContext = React.useContext(SessionContext);
   const session = sessionContext?.data;
   const user = session?.user as any;
+  const currentUserId = user?.id || null;
   const { isStale } = useAuthSync();
   
   const [aptitudeProfile, setAptitudeProfile] = useState<{
@@ -70,21 +77,22 @@ export default function TopHeader({ title, showDemoToggle = false, children }: T
   
   // Demo Mode real-time sync & toast notifications
   const clientHeldDemoModeRef = useRef<boolean | null>(null);
+  const previousUserIdRef = useRef<string | null>(null);
   const [demoToast, setDemoToast] = useState<{ message: string; isGranted: boolean } | null>(null);
   const demoToastTimerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Clear demo permission keys and demo mode active flag on logout or whenever the logged-in user id changes
   useEffect(() => {
-    if (clientHeldDemoModeRef.current === null && session?.user) {
-      const userId = (session.user as any)?.id;
-      const stored = getCanUseDemoMode(userId);
-      const sessionVal = Boolean((session.user as any)?.canUseDemoMode);
-      const initialVal = stored !== null ? stored : sessionVal;
-      clientHeldDemoModeRef.current = initialVal;
-      if (stored === null) {
-        setCanUseDemoModePermission(initialVal, userId);
-      }
+    if (previousUserIdRef.current !== null && previousUserIdRef.current !== currentUserId) {
+      clearDemoModeStorage(previousUserIdRef.current);
+      clientHeldDemoModeRef.current = null;
     }
-  }, [session?.user]);
+    previousUserIdRef.current = currentUserId;
+
+    if (currentUserId && clientHeldDemoModeRef.current === null) {
+      clientHeldDemoModeRef.current = getCanUseDemoMode(currentUserId);
+    }
+  }, [currentUserId]);
 
   const showDemoToast = useCallback((message: string, isGranted: boolean) => {
     if (demoToastTimerRef.current) clearTimeout(demoToastTimerRef.current);
@@ -94,33 +102,56 @@ export default function TopHeader({ title, showDemoToggle = false, children }: T
     }, 4500);
   }, []);
 
-  const handleDemoModeSync = useCallback((serverCanUseDemoMode: unknown) => {
-    if (typeof serverCanUseDemoMode !== 'boolean') {
-      // Missing field (e.g. stale fake responses) means "no change", never "false"
-      return;
-    }
-
+  const handleDemoModeSync = useCallback((serverPayloadCanUse: unknown) => {
     const userId = (session?.user as any)?.id;
+    if (!userId) return;
+
     let currentHeld = clientHeldDemoModeRef.current;
     if (currentHeld === null) {
-      const stored = getCanUseDemoMode(userId);
-      currentHeld = stored !== null ? stored : Boolean((session?.user as any)?.canUseDemoMode);
+      currentHeld = getCanUseDemoMode(userId);
       clientHeldDemoModeRef.current = currentHeld;
     }
 
-    if (serverCanUseDemoMode !== currentHeld) {
-      clientHeldDemoModeRef.current = serverCanUseDemoMode;
-      setCanUseDemoModePermission(serverCanUseDemoMode, userId);
-      if (session?.user) {
-        (session.user as any).canUseDemoMode = serverCanUseDemoMode;
-      }
+    const decision = decideDemoHeartbeat(serverPayloadCanUse, currentHeld);
 
-      if (serverCanUseDemoMode) {
-        showDemoToast("Instructor enabled Classroom Demo Mode", true);
-      } else {
-        revokeDemoMode(userId);
-        showDemoToast("Classroom Demo Mode was turned off", false);
+    if (decision.action === 'none') {
+      return;
+    }
+
+    if (decision.action === 'adopt_silent') {
+      // First heartbeat for this user: adopted silently (no toast)
+      clientHeldDemoModeRef.current = decision.newHeld;
+      if (typeof decision.newHeld === 'boolean') {
+        setCanUseDemoModePermission(userId, decision.newHeld);
+        if (session?.user) {
+          (session.user as any).canUseDemoMode = decision.newHeld;
+        }
       }
+      return;
+    }
+
+    if (decision.action === 'grant') {
+      clientHeldDemoModeRef.current = true;
+      setCanUseDemoModePermission(userId, true);
+      if (session?.user) {
+        (session.user as any).canUseDemoMode = true;
+      }
+      if (decision.toast) {
+        showDemoToast(decision.toast, true);
+      }
+      return;
+    }
+
+    if (decision.action === 'revoke') {
+      clientHeldDemoModeRef.current = false;
+      revokeDemoMode(userId);
+      if (session?.user) {
+        (session.user as any).canUseDemoMode = false;
+      }
+      if (decision.toast) {
+        showDemoToast(decision.toast, false);
+      }
+      return;
     }
   }, [session, showDemoToast]);
 
@@ -151,9 +182,7 @@ export default function TopHeader({ title, showDemoToggle = false, children }: T
           ? rawList.filter((n: any) => n.type !== 'daily_task_completed' && n.notification_type !== 'daily_task_completed')
           : [];
         setNotifications(filtered);
-        if (typeof data.canUseDemoMode === 'boolean') {
-          handleDemoModeSync(data.canUseDemoMode);
-        }
+        handleDemoModeSync(data.canUseDemoMode);
       }
     } catch (err) {
       console.error('Failed to fetch notifications', err);
@@ -182,9 +211,7 @@ export default function TopHeader({ title, showDemoToggle = false, children }: T
           return data.count || 0;
         });
         isInitialLoad.current = false;
-        if (typeof data.canUseDemoMode === 'boolean') {
-          handleDemoModeSync(data.canUseDemoMode);
-        }
+        handleDemoModeSync(data.canUseDemoMode);
       }
     } catch (err) {
       console.error('Failed to fetch unread count', err);

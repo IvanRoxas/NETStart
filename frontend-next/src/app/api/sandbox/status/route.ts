@@ -13,7 +13,11 @@ export async function GET() {
     }
 
     const userId = (session.user as any).id;
-    const canUseDemoMode = Boolean((session.user as any)?.canUseDemoMode);
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { canUseDemoMode: true },
+    });
+    const canUseDemoMode = Boolean(user?.canUseDemoMode);
     const cookieStore = await cookies();
     const isDemoModeCookie = cookieStore.get(DEMO_MODE_COOKIE)?.value === 'true';
     const isDemoModeActive = canUseDemoMode && isDemoModeCookie;

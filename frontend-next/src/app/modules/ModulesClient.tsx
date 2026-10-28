@@ -108,7 +108,7 @@ export default function ModulesClient({
   }, [isFallback]);
 
   // Demo mode: temporarily unlocks all planets for debugging; pauses XP/progression side-effects
-  const { isDemoMode, canUseDemoMode: livePermission } = useDemoMode(canUseDemoMode);
+  const { isDemoMode, canUseDemoMode: livePermission } = useDemoMode(canUseDemoMode, userId);
   const effectiveCanUseDemoMode = typeof livePermission === 'boolean' ? livePermission : canUseDemoMode;
 
   const [isSidebarMinimized, setIsSidebarMinimized] = useState<boolean>(() => {

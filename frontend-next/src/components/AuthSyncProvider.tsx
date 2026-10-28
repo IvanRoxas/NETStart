@@ -40,6 +40,7 @@ const tabId = typeof window !== "undefined"
 
 import { SessionMismatchResult } from "@/lib/sessionGuard";
 import { buildExpectedUserHeader } from "@/lib/authSyncHeaders";
+import { clearDemoModeStorage } from "@/lib/demoMode";
 
 export function triggerSessionMismatchOverlay() {
   if (typeof window !== "undefined") {
@@ -126,11 +127,13 @@ export default function AuthSyncProvider({
 
     // Detect session change within this tab (e.g. window refocus refresh)
     if (initialUserIdRef.current && currentUserId !== initialUserIdRef.current) {
+      clearDemoModeStorage(initialUserIdRef.current);
       setIsStale(true);
     } else if (!initialUserIdRef.current && currentUserId) {
       initialUserIdRef.current = currentUserId;
       broadcastAuthChange("LOGIN", currentUserId);
     } else if (initialUserIdRef.current && !currentUserId) {
+      clearDemoModeStorage(initialUserIdRef.current);
       broadcastAuthChange("LOGOUT", null);
     }
   }, [currentUserId, status]);
