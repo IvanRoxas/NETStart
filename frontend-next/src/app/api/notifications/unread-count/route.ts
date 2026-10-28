@@ -23,7 +23,10 @@ export async function GET(request: Request) {
       }
     });
 
-    return NextResponse.json({ count });
+    return NextResponse.json({
+      count,
+      canUseDemoMode: Boolean((user as any)?.canUseDemoMode),
+    });
   } catch (error) {
     console.error('Fetch unread count error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

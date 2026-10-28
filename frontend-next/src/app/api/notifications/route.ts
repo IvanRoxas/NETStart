@@ -46,7 +46,10 @@ export async function GET(request: Request) {
       } : null
     }));
 
-    return NextResponse.json({ notifications: formattedNotifs });
+    return NextResponse.json({
+      notifications: formattedNotifs,
+      canUseDemoMode: Boolean((user as any)?.canUseDemoMode),
+    });
   } catch (error) {
     console.error('Fetch notifications error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

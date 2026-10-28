@@ -15,12 +15,14 @@ interface DemoToggleProps {
 export default function DemoToggle({ className = "", compact = false, canUseDemoMode: canUseDemoModeProp }: DemoToggleProps) {
   const router = useRouter();
   const { data: session, status } = useSession();
-  const { isDemoMode, toggleDemoMode } = useDemoMode();
+  const { isDemoMode, canUseDemoMode: livePermission, toggleDemoMode } = useDemoMode(canUseDemoModeProp);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  const effectivePermission = typeof canUseDemoModeProp === 'boolean'
-    ? canUseDemoModeProp
-    : Boolean((session?.user as any)?.canUseDemoMode);
+  const effectivePermission = typeof livePermission === 'boolean'
+    ? livePermission
+    : (typeof canUseDemoModeProp === 'boolean'
+        ? canUseDemoModeProp
+        : Boolean((session?.user as any)?.canUseDemoMode));
 
   useEffect(() => {
     if (status !== 'loading' && !effectivePermission && isDemoModeActive()) {
@@ -98,12 +100,8 @@ export default function DemoToggle({ className = "", compact = false, canUseDemo
               {isDemoMode ? <Unlock size={16} /> : <Info size={16} />}
             </div>
             <div className="flex flex-col">
-              <span className="font-display font-black text-xs uppercase tracking-wider text-amber-400">
-                {isDemoMode ? "Debug Demo Mode Active" : "Debug Demo Mode Normal"}
-              </span>
-              <span className="text-xs text-gray-200 font-medium">
-                {toastMessage}
-              </span>
+              <span className="text-xs font-bold font-display uppercase tracking-wider text-amber-400">Classroom Mode</span>
+              <span className="text-sm font-medium text-white">{toastMessage}</span>
             </div>
           </div>
         </div>

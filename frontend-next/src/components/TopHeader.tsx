@@ -1,15 +1,17 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { SessionContext, signIn } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { X, Brain, AlertTriangle, ChevronRight } from 'lucide-react';
+import { X, Brain, AlertTriangle, ChevronRight, Unlock, Lock } from 'lucide-react';
 import NotificationDropdown from './NotificationDropdown';
 import VerifyModal from './VerifyModal';
 import MusicToggleButton from './MusicToggleButton';
 import DemoToggle from './DemoToggle';
 import { useAuthSync } from './AuthSyncProvider';
+import { getCanUseDemoMode, setCanUseDemoModePermission, revokeDemoMode } from '@/lib/demoMode';
 
 interface TopHeaderProps {
   title: string;
@@ -66,6 +68,62 @@ export default function TopHeader({ title, showDemoToggle = false, children }: T
   const [processingIds, setProcessingIds] = useState<string[]>([]);
   const [isVerifyModalOpen, setIsVerifyModalOpen] = useState(false);
   
+  // Demo Mode real-time sync & toast notifications
+  const clientHeldDemoModeRef = useRef<boolean | null>(null);
+  const [demoToast, setDemoToast] = useState<{ message: string; isGranted: boolean } | null>(null);
+  const demoToastTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    if (clientHeldDemoModeRef.current === null && session?.user) {
+      const userId = (session.user as any)?.id;
+      const stored = getCanUseDemoMode(userId);
+      const sessionVal = Boolean((session.user as any)?.canUseDemoMode);
+      const initialVal = stored !== null ? stored : sessionVal;
+      clientHeldDemoModeRef.current = initialVal;
+      if (stored === null) {
+        setCanUseDemoModePermission(initialVal, userId);
+      }
+    }
+  }, [session?.user]);
+
+  const showDemoToast = useCallback((message: string, isGranted: boolean) => {
+    if (demoToastTimerRef.current) clearTimeout(demoToastTimerRef.current);
+    setDemoToast({ message, isGranted });
+    demoToastTimerRef.current = setTimeout(() => {
+      setDemoToast(null);
+    }, 4500);
+  }, []);
+
+  const handleDemoModeSync = useCallback((serverCanUseDemoMode: unknown) => {
+    if (typeof serverCanUseDemoMode !== 'boolean') {
+      // Missing field (e.g. stale fake responses) means "no change", never "false"
+      return;
+    }
+
+    const userId = (session?.user as any)?.id;
+    let currentHeld = clientHeldDemoModeRef.current;
+    if (currentHeld === null) {
+      const stored = getCanUseDemoMode(userId);
+      currentHeld = stored !== null ? stored : Boolean((session?.user as any)?.canUseDemoMode);
+      clientHeldDemoModeRef.current = currentHeld;
+    }
+
+    if (serverCanUseDemoMode !== currentHeld) {
+      clientHeldDemoModeRef.current = serverCanUseDemoMode;
+      setCanUseDemoModePermission(serverCanUseDemoMode, userId);
+      if (session?.user) {
+        (session.user as any).canUseDemoMode = serverCanUseDemoMode;
+      }
+
+      if (serverCanUseDemoMode) {
+        showDemoToast("Instructor enabled Classroom Demo Mode", true);
+      } else {
+        revokeDemoMode(userId);
+        showDemoToast("Classroom Demo Mode was turned off", false);
+      }
+    }
+  }, [session, showDemoToast]);
+
   const bellRef = useRef<HTMLButtonElement>(null);
   const isInitialLoad = useRef(true);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -93,13 +151,16 @@ export default function TopHeader({ title, showDemoToggle = false, children }: T
           ? rawList.filter((n: any) => n.type !== 'daily_task_completed' && n.notification_type !== 'daily_task_completed')
           : [];
         setNotifications(filtered);
+        if (typeof data.canUseDemoMode === 'boolean') {
+          handleDemoModeSync(data.canUseDemoMode);
+        }
       }
     } catch (err) {
       console.error('Failed to fetch notifications', err);
     } finally {
       setNotifsLoading(false);
     }
-  }, [isStale]);
+  }, [isStale, handleDemoModeSync]);
 
   const fetchUnreadCount = useCallback(async () => {
     if (isStale) return;
@@ -121,11 +182,14 @@ export default function TopHeader({ title, showDemoToggle = false, children }: T
           return data.count || 0;
         });
         isInitialLoad.current = false;
+        if (typeof data.canUseDemoMode === 'boolean') {
+          handleDemoModeSync(data.canUseDemoMode);
+        }
       }
     } catch (err) {
       console.error('Failed to fetch unread count', err);
     }
-  }, [isStale]);
+  }, [isStale, handleDemoModeSync]);
 
   useEffect(() => {
     if (session?.user && !isStale) {
@@ -373,7 +437,22 @@ export default function TopHeader({ title, showDemoToggle = false, children }: T
 
       <VerifyModal isOpen={isVerifyModalOpen} onClose={() => setIsVerifyModalOpen(false)} />
 
+      {/* Classroom Demo Mode Real-Time Toast Notification */}
+      {demoToast && typeof document !== "undefined" && createPortal(
+        <div className="fixed bottom-6 right-6 z-[9999] animate-in fade-in slide-in-from-bottom-3 duration-300 pointer-events-none">
+          <div className="flex items-center gap-3 bg-[#170928]/95 border border-amber-400/50 text-white px-5 py-3.5 rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.6),0_0_20px_rgba(245,158,11,0.25)] backdrop-blur-xl">
+            <div className={`p-2 rounded-xl ${demoToast.isGranted ? "bg-amber-500/20 text-amber-400 border border-amber-400/40" : "bg-white/10 text-gray-300"}`}>
+              {demoToast.isGranted ? <Unlock size={18} /> : <Lock size={18} />}
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[11px] font-bold font-display uppercase tracking-wider text-amber-400">Classroom Mode</span>
+              <span className="text-sm font-semibold text-white">{demoToast.message}</span>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
     </header>
   );
 }
-

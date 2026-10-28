@@ -123,8 +123,9 @@ export default function ModuleDetailsClient({
 }: ModuleDetailsClientProps) {
   const router = useRouter();
   const userId = sessionUser?.id;
-  const { isDemoMode: hookDemoMode } = useDemoMode();
-  const isDemoMode = canUseDemoMode && (hookDemoMode || initialDemoMode);
+  const { isDemoMode: hookDemoMode, canUseDemoMode: livePermission } = useDemoMode(canUseDemoMode);
+  const effectiveCanUseDemoMode = typeof livePermission === 'boolean' ? livePermission : canUseDemoMode;
+  const isDemoMode = effectiveCanUseDemoMode && hookDemoMode;
   const [pendingMission, setPendingMission] = useState<Mission | null>(null);
   const [existingSaveInfo, setExistingSaveInfo] = useState<{ title: string; sectionIndex: number; missionId: string } | null>(null);
   const [showOverrideModal, setShowOverrideModal] = useState(false);
@@ -645,9 +646,9 @@ export default function ModuleDetailsClient({
         </div>
 
         {/* Floating Demo Mode Toggle Button (bottom-left corner) */}
-        {canUseDemoMode && (
+        {effectiveCanUseDemoMode && (
           <div className="fixed bottom-6 left-24 z-50">
-            <DemoToggle canUseDemoMode={canUseDemoMode} />
+            <DemoToggle canUseDemoMode={effectiveCanUseDemoMode} />
           </div>
         )}
       </div>
@@ -941,13 +942,13 @@ export default function ModuleDetailsClient({
       )}
 
       {/* Floating Demo Mode Toggle Button (dynamically adjusts to sidebar expanded/collapsed state) */}
-      {canUseDemoMode && (
+      {effectiveCanUseDemoMode && (
         <div 
           className={`fixed bottom-6 z-50 transition-all duration-300 ease-in-out ${
             isSidebarMinimized ? 'left-24' : 'left-72'
           }`}
         >
-          <DemoToggle canUseDemoMode={canUseDemoMode} />
+          <DemoToggle canUseDemoMode={effectiveCanUseDemoMode} />
         </div>
       )}
 

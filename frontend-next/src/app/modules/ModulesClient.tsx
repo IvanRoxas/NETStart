@@ -108,7 +108,8 @@ export default function ModulesClient({
   }, [isFallback]);
 
   // Demo mode: temporarily unlocks all planets for debugging; pauses XP/progression side-effects
-  const { isDemoMode } = useDemoMode();
+  const { isDemoMode, canUseDemoMode: livePermission } = useDemoMode(canUseDemoMode);
+  const effectiveCanUseDemoMode = typeof livePermission === 'boolean' ? livePermission : canUseDemoMode;
 
   const [isSidebarMinimized, setIsSidebarMinimized] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
@@ -952,13 +953,13 @@ export default function ModulesClient({
       )}
 
       {/* Floating Demo Mode Toggle Button (dynamically adjusts to sidebar expanded/collapsed state) */}
-      {canUseDemoMode && (
+      {effectiveCanUseDemoMode && (
         <div 
           className={`fixed bottom-6 z-50 transition-all duration-300 ease-in-out ${
             isSidebarMinimized ? 'left-24' : 'left-72'
           }`}
         >
-          <DemoToggle canUseDemoMode={canUseDemoMode} />
+          <DemoToggle canUseDemoMode={effectiveCanUseDemoMode} />
         </div>
       )}
 

@@ -19,8 +19,9 @@ export default function Sidebar() {
   const { isInLevel, requestNavigation } = useNavigationGuard();
   const { data: session } = useSession();
   const userId = (session?.user as any)?.id;
-  const canUseDemoMode = Boolean((session?.user as any)?.canUseDemoMode);
-  const { isDemoMode } = useDemoMode();
+  const sessionCanUse = Boolean((session?.user as any)?.canUseDemoMode);
+  const { isDemoMode, canUseDemoMode: livePermission } = useDemoMode(sessionCanUse);
+  const canUseDemoMode = typeof livePermission === 'boolean' ? livePermission : sessionCanUse;
   const { isStale } = useAuthSync();
 
   const asideRef = useRef<HTMLElement>(null);
