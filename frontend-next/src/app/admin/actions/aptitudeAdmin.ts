@@ -202,7 +202,7 @@ export async function generateAptitudeQuestionsAI(
 ) {
   const session = await requireSuperAdmin();
 
-  const safeCount = Math.min(Math.max(1, Math.floor(count) || 5), 10);
+  const safeCount = Math.min(Math.max(1, Math.floor(count) || 5), 22);
   const apiKey = process.env.GEMINI_API_KEY;
 
   let difficultyDirective = "Target standard computer science undergraduate level diagnostic questions.";
