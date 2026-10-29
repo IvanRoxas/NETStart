@@ -27,7 +27,6 @@ import {
 } from './actions';
 import AdminToast from '@/components/AdminToast';
 import ConfirmModal from '@/components/ConfirmModal';
-import { useSession } from 'next-auth/react';
 import { checkSessionMismatch, useAuthSync } from '@/components/AuthSyncProvider';
 
 interface SectionInfo {

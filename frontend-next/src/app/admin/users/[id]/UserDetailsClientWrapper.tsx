@@ -10,7 +10,6 @@ import AdminToast from '@/components/AdminToast';
 import ConfirmModal from '@/components/ConfirmModal';
 import { getXPDetails } from '@/lib/leveling';
 import TitleBadge from '@/components/TitleBadge';
-import { useSession } from 'next-auth/react';
 import { checkSessionMismatch, useAuthSync } from '@/components/AuthSyncProvider';
 
 export default function UserDetailsClientWrapper({ 

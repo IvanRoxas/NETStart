@@ -16,7 +16,7 @@ import {
   UserCheck
 } from 'lucide-react';
 import TopHeader from '@/components/TopHeader';
-import { signOut, useSession } from 'next-auth/react';
+import { signOut, SessionContext } from 'next-auth/react';
 
 interface ClientLayoutProps {
   children: React.ReactNode;
@@ -26,7 +26,8 @@ interface ClientLayoutProps {
 
 export default function ClientLayout({ children, initialRole, initialDisplayName }: ClientLayoutProps) {
   const pathname = usePathname();
-  const { data: session } = useSession();
+  const sessionContext = React.useContext(SessionContext);
+  const session = sessionContext?.data;
   const role = (session?.user?.role as "SUPER_ADMIN" | "TEACHER" | undefined) || initialRole || "TEACHER";
   const isTeacher = role === "TEACHER";
   const displayName = session?.user?.displayName || session?.user?.name || initialDisplayName || (isTeacher ? "Teacher" : "Admin");
