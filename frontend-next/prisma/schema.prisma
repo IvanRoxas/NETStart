@@ -284,6 +284,17 @@ model AptitudeQuestion {
   @@map("aptitude_questions")
 }
 
+model AptitudeQuestionHistory {
+  id          String   @id @default(cuid())
+  actorId     String?  @map("actor_id")
+  description String   @default("Snapshot before AI generation")
+  snapshot    Json     // Array of question objects active at snapshot time
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([createdAt])
+  @@map("aptitude_question_history")
+}
+
 model Report {
   id          String   @id @default(cuid())
   userId      String   @map("user_id")
