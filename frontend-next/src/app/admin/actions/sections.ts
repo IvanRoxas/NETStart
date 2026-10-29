@@ -70,112 +70,167 @@ export async function createSection(data: {
   teacherId?: string;
   expectedAdminId?: string;
 }) {
-  const session = await requireAdmin();
-  const adminId = (session.user as any).id;
-  const mismatch = assertExpectedActionUser(adminId, data.expectedAdminId, "createSection");
-  if (mismatch) return mismatch;
+  try {
+    const session = await requireAdmin();
+    const adminId = (session.user as any).id;
+    const mismatch = assertExpectedActionUser(adminId, data.expectedAdminId, "createSection");
+    if (mismatch) return mismatch;
 
-  const role = (session.user as any).role || "SUPER_ADMIN";
+    const role = (session.user as any).role || "SUPER_ADMIN";
 
-  const name = data.name.trim();
-  const gradeLevel = Number(data.gradeLevel);
-  const strand = data.strand.trim().toUpperCase();
-  const schoolYear = data.schoolYear.trim();
+    const name = data.name ? data.name.trim() : "";
+    const gradeLevel = Number(data.gradeLevel);
+    const strand = data.strand ? data.strand.trim().toUpperCase() : "";
+    const schoolYear = data.schoolYear ? data.schoolYear.trim() : "";
 
-  if (!name || name.length < 2) {
-    throw new Error("Section name must be at least 2 characters.");
-  }
-  if (gradeLevel !== 11 && gradeLevel !== 12) {
-    throw new Error("Grade level must be 11 or 12.");
-  }
-  if (!strand) {
-    throw new Error("Strand is required (e.g. STEM, ICT, ABM, HUMSS, TVL).");
-  }
-  if (!schoolYear) {
-    throw new Error("School year is required (e.g. 2026-2027).");
-  }
-  const schoolYearRegex = /^\d{4}-\d{4}$/;
-  if (!schoolYearRegex.test(schoolYear)) {
-    throw new Error("School year must be in format YYYY-YYYY (e.g. 2026-2027).");
-  }
-
-  // Duplicate active section check
-  const duplicate = await prisma.section.findFirst({
-    where: {
-      name: { equals: name, mode: "insensitive" },
-      gradeLevel,
-      strand,
-      schoolYear,
-      isArchived: false
+    if (!name || name.length < 2) {
+      return { success: false, error: "Section name must be at least 2 characters." };
     }
-  });
-
-  if (duplicate) {
-    throw new Error(`A section named "${name}" already exists for Grade ${gradeLevel} ${strand} in SY ${schoolYear}.`);
-  }
-
-  // Determine assigned teacher
-  let assignedTeacherId = adminId;
-  if (role === "SUPER_ADMIN" && data.teacherId) {
-    assignedTeacherId = data.teacherId;
-  }
-
-  const section = await prisma.section.create({
-    data: {
-      name,
-      gradeLevel,
-      strand,
-      schoolYear,
-      teacherId: assignedTeacherId,
-      isArchived: false
+    if (gradeLevel !== 11 && gradeLevel !== 12) {
+      return { success: false, error: "Grade level must be 11 or 12." };
     }
-  });
+    if (!strand) {
+      return { success: false, error: "Strand is required (e.g. STEM, ICT, ABM, HUMSS, TVL)." };
+    }
+    if (!schoolYear) {
+      return { success: false, error: "School year is required (e.g. 2026-2027)." };
+    }
+    const schoolYearRegex = /^\d{4}-\d{4}$/;
+    if (!schoolYearRegex.test(schoolYear)) {
+      return { success: false, error: "School year must be in format YYYY-YYYY (e.g. 2026-2027)." };
+    }
 
-  await logSystemAction({
-    actorId: adminId,
-    actorRole: role,
-    action: "CREATED_SECTION",
-    details: { sectionId: section.id, name, gradeLevel, strand, schoolYear, teacherId: assignedTeacherId }
-  });
+    // Duplicate active section check (case-insensitive name check within grade, strand, and school year)
+    const duplicate = await prisma.section.findFirst({
+      where: {
+        name: { equals: name, mode: "insensitive" },
+        gradeLevel,
+        strand,
+        schoolYear,
+        isArchived: false
+      }
+    });
 
-  revalidatePath("/admin/sections");
-  return { success: true, section };
+    if (duplicate) {
+      return {
+        success: false,
+        error: `A section named "${name}" already exists for Grade ${gradeLevel} ${strand} in SY ${schoolYear}.`
+      };
+    }
+
+    // Also check if an active section with this exact name exists in the same school year
+    const nameDuplicateInYear = await prisma.section.findFirst({
+      where: {
+        name: { equals: name, mode: "insensitive" },
+        schoolYear,
+        isArchived: false
+      }
+    });
+    if (nameDuplicateInYear) {
+      return {
+        success: false,
+        error: `A section named "${name}" already exists in SY ${schoolYear} (Grade ${nameDuplicateInYear.gradeLevel} ${nameDuplicateInYear.strand}).`
+      };
+    }
+
+    // Determine assigned teacher
+    let assignedTeacherId = adminId;
+    if (role === "SUPER_ADMIN" && data.teacherId) {
+      assignedTeacherId = data.teacherId;
+    }
+
+    const section = await prisma.section.create({
+      data: {
+        name,
+        gradeLevel,
+        strand,
+        schoolYear,
+        teacherId: assignedTeacherId,
+        isArchived: false
+      }
+    });
+
+    await logSystemAction({
+      actorId: adminId,
+      actorRole: role,
+      action: "CREATED_SECTION",
+      details: { sectionId: section.id, name, gradeLevel, strand, schoolYear, teacherId: assignedTeacherId }
+    });
+
+    revalidatePath("/admin/sections");
+    return { success: true, section };
+  } catch (error: any) {
+    if (error?.code === "P2002") {
+      return { success: false, error: "A section with this name already exists." };
+    }
+    console.error("[createSection Error]", error);
+    return {
+      success: false,
+      error: error?.message || "Failed to create section. Please try again."
+    };
+  }
 }
 
 export async function archiveSection(sectionId: string, currentStatus: boolean, expectedAdminId?: string) {
-  const session = await requireAdmin();
-  const adminId = (session.user as any).id;
-  const mismatch = assertExpectedActionUser(adminId, expectedAdminId, "archiveSection");
-  if (mismatch) return mismatch;
+  try {
+    const session = await requireAdmin();
+    const adminId = (session.user as any).id;
+    const mismatch = assertExpectedActionUser(adminId, expectedAdminId, "archiveSection");
+    if (mismatch) return mismatch;
 
-  const role = (session.user as any).role || "SUPER_ADMIN";
+    const role = (session.user as any).role || "SUPER_ADMIN";
 
-  const existing = await prisma.section.findUnique({
-    where: { id: sectionId }
-  });
+    const existing = await prisma.section.findUnique({
+      where: { id: sectionId }
+    });
 
-  if (!existing) {
-    throw new Error("Section not found.");
+    if (!existing) {
+      return { success: false, error: "Section not found." };
+    }
+
+    if (role === "TEACHER" && existing.teacherId !== adminId) {
+      return { success: false, error: "Forbidden: You can only archive your own sections." };
+    }
+
+    // If restoring an archived section, verify it does not conflict with an active section
+    if (currentStatus) {
+      const activeDuplicate = await prisma.section.findFirst({
+        where: {
+          id: { not: sectionId },
+          name: { equals: existing.name, mode: "insensitive" },
+          schoolYear: existing.schoolYear,
+          isArchived: false
+        }
+      });
+      if (activeDuplicate) {
+        return {
+          success: false,
+          error: `Cannot restore: An active section named "${existing.name}" already exists in SY ${existing.schoolYear}.`
+        };
+      }
+    }
+
+    await prisma.section.update({
+      where: { id: sectionId },
+      data: { isArchived: !currentStatus }
+    });
+
+    await logSystemAction({
+      actorId: adminId,
+      actorRole: role,
+      action: currentStatus ? "UNARCHIVED_SECTION" : "ARCHIVED_SECTION",
+      details: { sectionId, name: existing.name }
+    });
+
+    revalidatePath("/admin/sections");
+    return { success: true };
+  } catch (error: any) {
+    console.error("[archiveSection Error]", error);
+    return {
+      success: false,
+      error: error?.message || "Failed to update archive status."
+    };
   }
-
-  if (role === "TEACHER" && existing.teacherId !== adminId) {
-    throw new Error("Forbidden: You can only archive your own sections.");
-  }
-
-  await prisma.section.update({
-    where: { id: sectionId },
-    data: { isArchived: !currentStatus }
-  });
-
-  await logSystemAction({
-    actorId: adminId,
-    actorRole: role,
-    action: currentStatus ? "UNARCHIVED_SECTION" : "ARCHIVED_SECTION",
-    details: { sectionId, name: existing.name }
-  });
-
-  revalidatePath("/admin/sections");
-  return { success: true };
 }
 
 export async function updateSection(sectionId: string, data: {
@@ -186,72 +241,97 @@ export async function updateSection(sectionId: string, data: {
   teacherId?: string;
   expectedAdminId?: string;
 }) {
-  const session = await requireAdmin();
-  const adminId = (session.user as any).id;
-  const mismatch = assertExpectedActionUser(adminId, data.expectedAdminId, "updateSection");
-  if (mismatch) return mismatch;
+  try {
+    const session = await requireAdmin();
+    const adminId = (session.user as any).id;
+    const mismatch = assertExpectedActionUser(adminId, data.expectedAdminId, "updateSection");
+    if (mismatch) return mismatch;
 
-  const role = (session.user as any).role || "SUPER_ADMIN";
+    const role = (session.user as any).role || "SUPER_ADMIN";
 
-  const existing = await prisma.section.findUnique({
-    where: { id: sectionId }
-  });
+    const existing = await prisma.section.findUnique({
+      where: { id: sectionId }
+    });
 
-  if (!existing) {
-    throw new Error("Section not found.");
-  }
-
-  if (role === "TEACHER" && existing.teacherId !== adminId) {
-    throw new Error("Forbidden: You can only edit your own sections.");
-  }
-
-  const name = data.name.trim();
-  if (!name || name.length < 2) {
-    throw new Error("Section name must be at least 2 characters.");
-  }
-
-  const updateData: any = { name };
-  if (data.gradeLevel !== undefined) {
-    const gl = Number(data.gradeLevel);
-    if (gl !== 11 && gl !== 12) throw new Error("Grade level must be 11 or 12.");
-    updateData.gradeLevel = gl;
-  }
-  if (data.strand) {
-    updateData.strand = data.strand.trim().toUpperCase();
-  }
-  if (data.schoolYear) {
-    updateData.schoolYear = data.schoolYear.trim();
-  }
-  if (role === "SUPER_ADMIN" && data.teacherId) {
-    updateData.teacherId = data.teacherId;
-  }
-
-  const updatedSection = await prisma.section.update({
-    where: { id: sectionId },
-    data: updateData,
-    include: {
-      teacher: {
-        select: {
-          id: true,
-          username: true,
-          displayName: true
-        }
-      },
-      _count: {
-        select: { students: true }
-      }
+    if (!existing) {
+      return { success: false, error: "Section not found." };
     }
-  });
 
-  await logSystemAction({
-    actorId: adminId,
-    actorRole: role,
-    action: "UPDATED_SECTION",
-    details: { sectionId, oldName: existing.name, newName: name }
-  });
+    if (role === "TEACHER" && existing.teacherId !== adminId) {
+      return { success: false, error: "Forbidden: You can only edit your own sections." };
+    }
 
-  revalidatePath("/admin/sections");
-  return { success: true, section: updatedSection };
+    const name = data.name ? data.name.trim() : "";
+    if (!name || name.length < 2) {
+      return { success: false, error: "Section name must be at least 2 characters." };
+    }
+
+    const gl = data.gradeLevel !== undefined ? Number(data.gradeLevel) : existing.gradeLevel;
+    if (gl !== 11 && gl !== 12) {
+      return { success: false, error: "Grade level must be 11 or 12." };
+    }
+
+    const strand = data.strand ? data.strand.trim().toUpperCase() : existing.strand;
+    const schoolYear = data.schoolYear ? data.schoolYear.trim() : existing.schoolYear;
+
+    // Check duplicate against other active sections in the same school year
+    const duplicate = await prisma.section.findFirst({
+      where: {
+        id: { not: sectionId },
+        name: { equals: name, mode: "insensitive" },
+        schoolYear,
+        isArchived: false
+      }
+    });
+
+    if (duplicate) {
+      return {
+        success: false,
+        error: `A section named "${name}" already exists in SY ${schoolYear} (Grade ${duplicate.gradeLevel} ${duplicate.strand}).`
+      };
+    }
+
+    const updateData: any = { name, gradeLevel: gl, strand, schoolYear };
+    if (role === "SUPER_ADMIN" && data.teacherId) {
+      updateData.teacherId = data.teacherId;
+    }
+
+    const updatedSection = await prisma.section.update({
+      where: { id: sectionId },
+      data: updateData,
+      include: {
+        teacher: {
+          select: {
+            id: true,
+            username: true,
+            displayName: true
+          }
+        },
+        _count: {
+          select: { students: true }
+        }
+      }
+    });
+
+    await logSystemAction({
+      actorId: adminId,
+      actorRole: role,
+      action: "UPDATED_SECTION",
+      details: { sectionId, oldName: existing.name, newName: name }
+    });
+
+    revalidatePath("/admin/sections");
+    return { success: true, section: updatedSection };
+  } catch (error: any) {
+    if (error?.code === "P2002") {
+      return { success: false, error: "A section with this name already exists." };
+    }
+    console.error("[updateSection Error]", error);
+    return {
+      success: false,
+      error: error?.message || "Failed to update section. Please try again."
+    };
+  }
 }
 
 export async function getSectionRoster(sectionId: string) {

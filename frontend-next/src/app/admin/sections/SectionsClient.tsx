@@ -71,6 +71,20 @@ interface StudentRosterItem {
   }[];
 }
 
+function formatErrorMessage(err: any, fallback: string): string {
+  const msg = typeof err === 'string' ? err : err?.message || '';
+  if (
+    !msg ||
+    msg.includes('Server Components render') ||
+    msg.includes('omitted in production builds') ||
+    msg.includes('digest property') ||
+    err?.digest
+  ) {
+    return fallback;
+  }
+  return msg;
+}
+
 export default function SectionsClient({
   initialSections,
   availableTeachers,
@@ -187,6 +201,11 @@ export default function SectionsClient({
       });
       if (checkSessionMismatch(res)) return;
 
+      if (!res || !res.success || !res.section) {
+        setToast({ message: (res as any)?.error || "Failed to create section.", type: 'error' });
+        return;
+      }
+
       const assignedTeacher = availableTeachers.find(t => t.id === (isSuperAdmin ? createTeacherId : currentUserId));
 
       setSections(prev => [
@@ -214,7 +233,10 @@ export default function SectionsClient({
       setCreateName('');
       setCreateTeacherId(isSuperAdmin ? (availableTeachers[0]?.id || '') : currentUserId);
     } catch (err: any) {
-      setToast({ message: err.message || "Failed to create section.", type: 'error' });
+      setToast({
+        message: formatErrorMessage(err, "Failed to create section. A section with this name may already exist."),
+        type: 'error'
+      });
     } finally {
       setIsCreating(false);
     }
@@ -244,6 +266,11 @@ export default function SectionsClient({
       });
       if (checkSessionMismatch(res)) return;
 
+      if (!res || !res.success || !res.section) {
+        setToast({ message: (res as any)?.error || "Failed to update section.", type: 'error' });
+        return;
+      }
+
       setSections(prev => prev.map(s => s.id === editTargetSection.id ? { ...s, ...res.section } : s));
       if (rosterSection && rosterSection.id === editTargetSection.id) {
         setRosterSection(prev => prev ? { ...prev, ...res.section } : null);
@@ -251,7 +278,10 @@ export default function SectionsClient({
       setToast({ message: `Section "${editName}" updated successfully.`, type: 'success' });
       setEditTargetSection(null);
     } catch (err: any) {
-      setToast({ message: err.message || "Failed to update section.", type: 'error' });
+      setToast({
+        message: formatErrorMessage(err, "Failed to update section. Please check the section details and try again."),
+        type: 'error'
+      });
     } finally {
       setIsEditing(false);
     }
@@ -263,7 +293,7 @@ export default function SectionsClient({
       setRosterStudents(prev => prev.map(s => s.id === student.id ? { ...s, isVerified: res.isVerified } : s));
       setToast({ message: `Student ${res.isVerified ? 'verified' : 'unverified'} successfully.`, type: 'success' });
     } catch (err: any) {
-      setToast({ message: err.message || "Failed to update verification status.", type: 'error' });
+      setToast({ message: formatErrorMessage(err, "Failed to update verification status."), type: 'error' });
     }
   };
 
@@ -274,7 +304,7 @@ export default function SectionsClient({
       setRosterStudents(prev => prev.map(s => s.id === student.id ? { ...s, hasTakenAptitudeTest: target } : s));
       setToast({ message: `Aptitude requirement ${target ? 'waived / marked completed' : 'reset / marked required'}.`, type: 'success' });
     } catch (err: any) {
-      setToast({ message: err.message || "Failed to update aptitude status.", type: 'error' });
+      setToast({ message: formatErrorMessage(err, "Failed to update aptitude status."), type: 'error' });
     }
   };
 
@@ -287,7 +317,7 @@ export default function SectionsClient({
         type: 'success' 
       });
     } catch (err: any) {
-      setToast({ message: err.message || "Failed to update demonstration mode.", type: 'error' });
+      setToast({ message: formatErrorMessage(err, "Failed to update demonstration mode."), type: 'error' });
     }
   };
 
@@ -298,7 +328,7 @@ export default function SectionsClient({
       const data = await getSectionRoster(section.id);
       setRosterStudents(((data as any)?.students || []) as StudentRosterItem[]);
     } catch (err: any) {
-      setToast({ message: err.message || "Failed to load section roster.", type: 'error' });
+      setToast({ message: formatErrorMessage(err, "Failed to load section roster."), type: 'error' });
     } finally {
       setIsLoadingRoster(false);
     }
@@ -312,7 +342,7 @@ export default function SectionsClient({
       const candidates = await getUnassignedStudents('');
       setUnassignedList(candidates);
     } catch (err: any) {
-      setToast({ message: err.message || "Failed to load unassigned students.", type: 'error' });
+      setToast({ message: formatErrorMessage(err, "Failed to load unassigned students."), type: 'error' });
     } finally {
       setIsLoadingUnassigned(false);
     }
@@ -372,7 +402,7 @@ export default function SectionsClient({
         type: 'success' 
       });
     } catch (err: any) {
-      setToast({ message: err.message || "Enrollment failed.", type: 'error' });
+      setToast({ message: formatErrorMessage(err, "Enrollment failed."), type: 'error' });
     } finally {
       setEnrollingId(null);
     }
@@ -398,7 +428,7 @@ export default function SectionsClient({
       });
       setRemoveStudentTarget(null);
     } catch (err: any) {
-      setToast({ message: err.message || "Failed to remove student from section.", type: 'error' });
+      setToast({ message: formatErrorMessage(err, "Failed to remove student from section."), type: 'error' });
     } finally {
       setIsRemovingStudent(false);
     }
@@ -410,6 +440,11 @@ export default function SectionsClient({
       setIsArchiving(true);
       const res = await archiveSection(archiveTarget.id, archiveTarget.isArchived, currentUserId);
       if (checkSessionMismatch(res)) return;
+
+      if (!res || !res.success) {
+        setToast({ message: res?.error || "Failed to update archive status.", type: 'error' });
+        return;
+      }
 
       setSections(prev => prev.map(sec => 
         sec.id === archiveTarget.id 
@@ -423,7 +458,7 @@ export default function SectionsClient({
       });
       setArchiveTarget(null);
     } catch (err: any) {
-      setToast({ message: err.message || "Failed to archive section.", type: 'error' });
+      setToast({ message: formatErrorMessage(err, "Failed to archive section."), type: 'error' });
     } finally {
       setIsArchiving(false);
     }
