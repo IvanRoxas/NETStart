@@ -11,6 +11,7 @@ import {
   Sparkles,
   RotateCcw,
   Sparkle,
+  Shuffle,
 } from 'lucide-react';
 import {
   getCanonicalAptitudeQuestions,
@@ -18,6 +19,8 @@ import {
   CanonicalQuestionsData,
   generateAptitudeQuestionsAI,
   revertAptitudeQuestionsAI,
+  getAptitudeSettingsAction,
+  setAptitudeShuffleAction,
 } from './actions/aptitudeAdmin';
 import ConfirmModal from '@/components/ConfirmModal';
 import AdminToast from '@/components/AdminToast';
@@ -96,6 +99,8 @@ export default function AptitudeManagement() {
   // Modal & Toast States
   const [showRevertModal, setShowRevertModal] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+  const [shuffleEnabled, setShuffleEnabled] = useState(true);
+  const [togglingShuffle, setTogglingShuffle] = useState(false);
 
   const loadQuestions = async () => {
     setLoading(true);
@@ -116,6 +121,29 @@ export default function AptitudeManagement() {
   useEffect(() => {
     loadQuestions();
   }, []);
+
+
+  const handleToggleShuffle = async () => {
+    setTogglingShuffle(true);
+    try {
+      const nextVal = !shuffleEnabled;
+      const res = await setAptitudeShuffleAction(nextVal);
+      setShuffleEnabled(res.shuffleAptitudeQuestions);
+      setToast({
+        message: res.shuffleAptitudeQuestions
+          ? 'Question Shuffling Enabled: Each student receives a unique randomized question order.'
+          : 'Question Shuffling Disabled: Questions restored to standard linear sequence.',
+        type: 'success',
+      });
+    } catch (err: any) {
+      setToast({
+        message: err?.message || 'Failed to update question shuffle setting.',
+        type: 'error',
+      });
+    } finally {
+      setTogglingShuffle(false);
+    }
+  };
 
   const handleGenerateAI = async () => {
     setGenerating(true);
@@ -225,6 +253,56 @@ export default function AptitudeManagement() {
           onClose={() => setToast(null)}
         />
       )}
+
+
+      {/* Anti-Cheating Question Order Randomization Toggle Card */}
+      <div className="bg-[#1e0a2d] border border-white/10 rounded-3xl p-6 sm:p-7 shadow-xl space-y-3 relative overflow-hidden">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5">
+            <div className={`p-3 rounded-2xl shrink-0 ${shuffleEnabled ? 'bg-indigo-500/15 text-indigo-400 border border-indigo-500/30' : 'bg-white/5 text-gray-400 border border-white/10'}`}>
+              <Shuffle size={24} className={shuffleEnabled ? "animate-pulse" : ""} />
+            </div>
+            <div className="space-y-1">
+              <div className="flex items-center gap-3 flex-wrap">
+                <h3 className="text-base sm:text-lg font-bold font-display text-white uppercase tracking-wider">
+                  Question Order Randomization
+                </h3>
+                <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider border ${
+                  shuffleEnabled
+                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                    : 'bg-white/5 text-gray-400 border-white/10'
+                }`}>
+                  {shuffleEnabled ? "SHUFFLED PER STUDENT" : "CANONICAL LINEAR"}
+                </span>
+              </div>
+              <p className="text-xs text-gray-400 max-w-2xl leading-relaxed">
+                When enabled, students taking the aptitude assessment receive questions in a distinct randomized sequence so no two adjacent students share the same question numbers, preventing answer copying during evaluations.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 shrink-0 self-end sm:self-center">
+            <button
+              onClick={handleToggleShuffle}
+              disabled={togglingShuffle}
+              className={`relative inline-flex h-8 w-16 shrink-0 cursor-pointer rounded-full border-2 transition-colors duration-200 ease-in-out focus:outline-none ${
+                shuffleEnabled ? 'bg-indigo-600 border-indigo-400' : 'bg-gray-700 border-gray-600'
+              } disabled:opacity-50`}
+              title={shuffleEnabled ? "Click to disable question shuffling" : "Click to enable question shuffling"}
+            >
+              <span className="sr-only">Toggle question shuffling</span>
+              <span
+                className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out mt-0.5 ${
+                  shuffleEnabled ? 'translate-x-8' : 'translate-x-1'
+                }`}
+              />
+            </button>
+            <span className="text-xs font-mono font-bold text-gray-300">
+              {shuffleEnabled ? "ON" : "OFF"}
+            </span>
+          </div>
+        </div>
+      </div>
 
       {/* AI Quiz Generation Engine Card */}
       <div className="bg-[#1e0a2d] border border-[#ff912d]/40 rounded-3xl p-6 sm:p-7 shadow-2xl space-y-5 relative overflow-hidden">
@@ -377,15 +455,15 @@ export default function AptitudeManagement() {
 
       {/* Control Bar: Title & Refresh Button */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-white font-bold text-base">
-          <Layers size={18} className="text-[#ff912d]" />
+        <div className="flex items-center gap-2 text-slate-900 font-bold text-base">
+          <Layers size={18} className="text-blue-600" />
           <span>Active Questions ({questions.length} across 6 Sections)</span>
         </div>
 
         <button
           onClick={loadQuestions}
           disabled={loading || generating || reverting}
-          className="px-3.5 py-1.5 bg-white/10 hover:bg-white/20 text-white font-semibold text-xs rounded-xl transition-all flex items-center gap-1.5 cursor-pointer border border-white/10 disabled:opacity-50"
+          className="px-3.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs rounded-xl transition-all flex items-center gap-1.5 cursor-pointer border border-slate-300 shadow-2xs disabled:opacity-50"
         >
           <RefreshCw size={13} className={loading ? "animate-spin" : ""} /> Refresh
         </button>

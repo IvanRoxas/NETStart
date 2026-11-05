@@ -413,7 +413,7 @@ export default function TopHeader({ title, showDemoToggle = false, children }: T
                         Diagnostic Pending
                       </h4>
                       <p className="text-gray-300 text-xs sm:text-sm">
-                        Complete your 18-question diagnostic to unlock your flight path and planetary missions.
+                        Complete your 22-question diagnostic to unlock your flight path and planetary missions.
                       </p>
                       <button
                         onClick={handleAptitudeClick}

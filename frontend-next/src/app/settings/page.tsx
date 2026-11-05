@@ -32,6 +32,7 @@ export default function SettingsPage() {
   // General settings state
   const [pushNotifs, setPushNotifs] = useState(true);
   const [sounds, setSounds] = useState(true);
+  const [levelBriefingModal, setLevelBriefingModal] = useState(true);
 
   // Notifications settings state
   const [systemAnnouncements, setSystemAnnouncements] = useState(true);
@@ -52,6 +53,7 @@ export default function SettingsPage() {
     if (typeof window !== 'undefined') {
       setPushNotifs(localStorage.getItem('setting_pushNotifs') !== 'false');
       setSounds(localStorage.getItem('setting_sounds') !== 'false');
+      setLevelBriefingModal(localStorage.getItem('setting_levelBriefingModal') !== 'false');
       setSystemAnnouncements(localStorage.getItem('setting_systemAnnouncements') !== 'false');
       setAcademicAlerts(localStorage.getItem('setting_academicAlerts') !== 'false');
     }
@@ -343,6 +345,11 @@ export default function SettingsPage() {
                   title="Sound Effects"
                   description="Play sounds for interactions and incoming messages."
                   control={<Toggle checked={sounds} onChange={(v) => handleToggle('sounds', v, setSounds)} />}
+                />
+                <SettingItem
+                  title="Level Briefing Modal"
+                  description="Automatically greet and guide you with mission objectives whenever you enter a coding level."
+                  control={<Toggle checked={levelBriefingModal} onChange={(v) => handleToggle('levelBriefingModal', v, setLevelBriefingModal)} />}
                 />
 
                 <h2 className="font-display text-2xl font-bold text-[#ff912d] mb-4 mt-8">Notifications</h2>

@@ -866,9 +866,9 @@ export default function SectionsClient({
                                   {student.missionProgresses.filter(m => m.status === 'COMPLETED').length} Done
                                 </span>
                               )}
-                              {student.missionProgresses?.some(m => m.failureCount >= 3) && (
-                                <span className="text-[10px] bg-red-500/20 text-red-300 border border-red-500/30 px-1.5 py-0.2 rounded font-bold" title="Student struggled on a mission (3+ retries / video fallback triggered)">
-                                  Needs Help (3+ Retries)
+                              {student.missionProgresses?.some(m => m.failureCount >= 2) && (
+                                <span className="text-[10px] bg-red-500/20 text-red-300 border border-red-500/30 px-1.5 py-0.2 rounded font-bold" title="Student struggled on a mission (2+ retries / video fallback triggered)">
+                                  Needs Help (2+ Retries)
                                 </span>
                               )}
                             </div>

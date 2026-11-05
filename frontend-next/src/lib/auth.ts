@@ -9,35 +9,30 @@ import "dotenv/config";
 import bcrypt from "bcryptjs";
 
 const connectionString = process.env.DATABASE_URL;
-const globalForPrisma = global as unknown as { prisma: PrismaClient };
+const globalForPrisma = global as unknown as { prisma: PrismaClient; pool: Pool };
 
 export let prisma: PrismaClient;
 
 const createPrismaClient = () => {
   const pool = new Pool({
     connectionString,
-    max: Number(process.env.DATABASE_POOL_MAX) || 10,
-    idleTimeoutMillis: 10000,
-    keepAlive: true,
+    max: Number(process.env.DATABASE_POOL_MAX) || 5,
+    idleTimeoutMillis: 5000,
+    connectionTimeoutMillis: 5000,
   });
   pool.on('error', (err) => {
     console.warn('[pg pool] Unexpected error on idle client:', err?.message || err);
   });
+  globalForPrisma.pool = pool;
   const adapter = new PrismaPg(pool);
   return new PrismaClient({ adapter });
 };
 
-const cachedPrisma = globalForPrisma.prisma;
-const isOutdated = Boolean(
-  cachedPrisma &&
-  (!(cachedPrisma as any)?._dmmf?.modelMap?.User?.fields?.some((f: any) => f.name === 'border') ||
-   !(cachedPrisma as any)?._dmmf?.modelMap?.SystemAdmin?.fields?.some((f: any) => f.name === 'isActive') ||
-   !(cachedPrisma as any)?._dmmf?.modelMap?.User?.fields?.some((f: any) => f.name === 'canUseDemoMode'))
-);
-
-if (!globalForPrisma.prisma || isOutdated) {
+if (!globalForPrisma.prisma) {
   prisma = createPrismaClient();
-  if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+  if (process.env.NODE_ENV !== "production") {
+    globalForPrisma.prisma = prisma;
+  }
 } else {
   prisma = globalForPrisma.prisma;
 }

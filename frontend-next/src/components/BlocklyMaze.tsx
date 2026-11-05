@@ -57,6 +57,7 @@ import {
   Droplets,
   Code2,
   Terminal,
+  Compass,
 } from 'lucide-react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
@@ -66,6 +67,7 @@ import { getUserStorageItem, setUserStorageItem, removeUserStorageItem } from '@
 import { XP_REWARDS } from '@/lib/leveling';
 import { isDemoModeActive } from '@/lib/demoMode';
 import LevelSolutionGuideModal from '@/components/LevelSolutionGuideModal';
+import LevelObjectiveModal from '@/components/LevelObjectiveModal';
 import { YouTubeFallbackModal, VIDEO_FALLBACK_FAIL_THRESHOLD } from '@/components/YouTubeFallbackModal';
 import {
   getSectionConveyorQueue,
@@ -1996,7 +1998,28 @@ export default function BlocklyMaze() {
     }
   };
 
-  const [currentSection, setCurrentSection] = useState<number>(0);
+  const [currentSection, setCurrentSection] = useState<number>(() => {
+    const p = searchParams.get('section');
+    return p !== null && !isNaN(parseInt(p, 10)) ? parseInt(p, 10) : 0;
+  });
+  const [showLevelBriefingModal, setShowLevelBriefingModal] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem('setting_levelBriefingModal') !== 'false';
+  });
+
+  // Automatically reopen the respective level objective briefing modal whenever transitioning to a new section
+  const prevSectionBriefingRef = useRef<number>(currentSection);
+  useEffect(() => {
+    if (prevSectionBriefingRef.current !== currentSection) {
+      prevSectionBriefingRef.current = currentSection;
+      const isBriefingEnabled = typeof window !== 'undefined'
+        ? localStorage.getItem('setting_levelBriefingModal') !== 'false'
+        : true;
+      if (isBriefingEnabled) {
+        setShowLevelBriefingModal(true);
+      }
+    }
+  }, [currentSection]);
   const activeSection = currentMissionSections[currentSection] || currentMissionSections[0];
 
   const displayTitle = missionTitleMap[missionId] || (isDaily
@@ -3317,7 +3340,17 @@ export default function BlocklyMaze() {
       const completedMissions: string[] = JSON.parse(getNetstartItem('netstart_completed_missions') || '[]');
       const isMissionDone = completedMissions.some((m: string) => m.toLowerCase() === missionId.toLowerCase());
 
-      if (isReplayParam) {
+      const sectionQuery = searchParams.get('section');
+      const explicitSection = sectionQuery !== null && !isNaN(parseInt(sectionQuery, 10)) ? parseInt(sectionQuery, 10) : null;
+
+      if (explicitSection !== null && explicitSection >= 0 && explicitSection < currentMissionSections.length) {
+        targetSec = explicitSection;
+        const priorCompleted = [];
+        for (let i = 0; i < targetSec; i++) {
+          priorCompleted.push(i);
+        }
+        setCompletedSections(priorCompleted);
+      } else if (isReplayParam) {
         // Explicit Replay: Always begin at Section 1 (index 0)
         targetSec = 0;
         setCompletedSections([]);
@@ -8015,6 +8048,12 @@ export default function BlocklyMaze() {
     setShowEndToast(false);
     setShowOverloadToast(false);
     setShowPopup(false);
+    const isBriefingEnabled = typeof window !== 'undefined'
+      ? localStorage.getItem('setting_levelBriefingModal') !== 'false'
+      : true;
+    if (isBriefingEnabled) {
+      setShowLevelBriefingModal(true);
+    }
     setJsCode('');
     setPlainEnglishCode('');
     if (isEarthLevel2) {
@@ -8245,6 +8284,12 @@ export default function BlocklyMaze() {
     setShowEndToast(false);
     setShowOverloadToast(false);
     setShowPopup(false);
+    const isBriefingEnabled = typeof window !== 'undefined'
+      ? localStorage.getItem('setting_levelBriefingModal') !== 'false'
+      : true;
+    if (isBriefingEnabled) {
+      setShowLevelBriefingModal(true);
+    }
     setJsCode('');
     setPlainEnglishCode('');
 
@@ -12206,6 +12251,16 @@ export default function BlocklyMaze() {
           {/* Background Music Mute / Unmute Toggle Button */}
           <MusicToggleButton variant="rounded" size="md" />
 
+          {/* Mission Objectives & Briefing Modal Button */}
+          <button
+            onClick={() => setShowLevelBriefingModal(true)}
+            className="p-2.5 rounded-xl border border-[#ff912d]/40 bg-[#ff912d]/15 hover:bg-[#ff912d]/30 text-[#ff912d] hover:text-white transition-all duration-300 shadow-lg active:scale-95 flex items-center justify-center cursor-pointer"
+            title="Mission Objectives & Briefing"
+            aria-label="Mission Objectives"
+          >
+            <Compass className="w-5 h-5" />
+          </button>
+
           {/* Solution Guide Lightbulb Button */}
           <div
             className="relative"
@@ -12289,7 +12344,7 @@ export default function BlocklyMaze() {
             <button
               onClick={() => setShowYouTubeModal(true)}
               className="p-2.5 rounded-xl border border-red-500/60 bg-gradient-to-r from-red-600/30 to-rose-600/30 hover:from-red-600/50 hover:to-rose-600/50 text-red-300 hover:text-white transition-all duration-300 cursor-pointer shadow-[0_0_15px_rgba(239,68,68,0.4)] animate-pulse flex items-center gap-1.5"
-              title={`Concept Tutorial Video (${failedAttempts} failed attempts) - Click to review`}
+              title="Concept Tutorial Video (2 failed attempts) - Click to review"
               aria-label="Concept Tutorial Video"
             >
               <Play size={16} className="fill-red-500 text-red-500" />
@@ -14061,7 +14116,7 @@ export default function BlocklyMaze() {
                       className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-red-600/30 hover:bg-red-600/50 border border-red-500/50 text-[11px] font-bold text-red-200 hover:text-white transition-all cursor-pointer shadow-sm animate-pulse"
                     >
                       <Play size={12} className="fill-red-400 text-red-400" />
-                      Watch Concept Tutorial Video ({failedAttempts} failed attempts)
+                      Watch Concept Tutorial Video ({VIDEO_FALLBACK_FAIL_THRESHOLD} failed attempts)
                     </button>
                   )}
                 </div>
@@ -14550,7 +14605,9 @@ export default function BlocklyMaze() {
                   {currentSection < currentMissionSections.length - 1 ? (
                     <button
                       onClick={() => {
+                        setShowPopup(false);
                         loadSection(currentSection + 1);
+                        setShowLevelBriefingModal(true);
                       }}
                       className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#ff912d] to-amber-500 hover:from-amber-500 hover:to-[#ff912d] text-black font-sans font-black py-3.5 px-5 rounded-xl shadow-lg shadow-[#ff912d]/20 active:scale-95 transition-all cursor-pointer text-xs uppercase tracking-wider"
                     >
@@ -14687,7 +14744,35 @@ export default function BlocklyMaze() {
         onClose={() => setMarkDialogue(prev => ({ ...prev, isOpen: false }))}
       />
 
-      {/* Solution Guide Modal */}
+      {/* Level Objectives & Briefing Modal */
+      <LevelObjectiveModal
+        isOpen={showLevelBriefingModal}
+        onClose={() => setShowLevelBriefingModal(false)}
+        missionId={missionId}
+        levelTitle={displayTitle}
+        sectionSubtag={activeSection?.subtag || activeSection?.name}
+        description={activeSection?.desc}
+        tip={activeSection?.tip}
+        objectives={activeSection?.objectives}
+        sectionIndex={currentSection}
+        planetName={
+          isEarthLevel1 || isEarthLevel2 || isEarthLevel3 || isEarthChallenge
+            ? 'earth'
+            : isMarsLevel1 || isMarsLevel2 || isMarsLevel3
+            ? 'mars'
+            : isVenusLevel1 || isVenusLevel2 || isVenusLevel3
+            ? 'venus'
+            : isMercuryLevel1 || isMercuryLevel2 || isMercuryLevel3
+            ? 'mercury'
+            : isJupiterLevel1 || isJupiterLevel2 || isJupiterLevel3
+            ? 'jupiter'
+            : isSaturnLevel1 || isSaturnLevel2 || isSaturnLevel3
+            ? 'saturn'
+            : 'moon'
+        }
+      />
+
+      /* Solution Guide Modal */}
       <LevelSolutionGuideModal
         isOpen={showSolutionModal}
         onClose={() => setShowSolutionModal(false)}
@@ -14701,7 +14786,7 @@ export default function BlocklyMaze() {
         isOpen={showYouTubeModal}
         onClose={() => setShowYouTubeModal(false)}
         missionId={missionId}
-        failureCount={Math.max(VIDEO_FALLBACK_FAIL_THRESHOLD, failedAttempts)}
+        failureCount={VIDEO_FALLBACK_FAIL_THRESHOLD}
         missionTitle={displayTitle}
       />
 

@@ -222,10 +222,11 @@ export default function DailyTaskNotificationProvider({ children }: { children: 
                   e.stopPropagation();
                   dismissCurrent(currentTask);
                 }}
-                className="text-white/40 hover:text-white bg-white/5 hover:bg-white/10 rounded-full w-6 h-6 flex items-center justify-center transition-colors shrink-0 cursor-pointer"
+                className="text-white/80 hover:text-white bg-white/10 hover:bg-white/20 active:scale-90 border border-white/20 rounded-full w-8 h-8 flex items-center justify-center transition-all shrink-0 cursor-pointer shadow-sm"
                 title="Dismiss"
+                aria-label="Dismiss notification"
               >
-                <X className="w-3.5 h-3.5" />
+                <X className="w-4 h-4 stroke-[2.5]" />
               </button>
             </div>
 

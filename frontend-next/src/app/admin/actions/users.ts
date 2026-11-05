@@ -12,7 +12,10 @@ export async function getUserDetails(id: string) {
 
   await assertCanAccessStudent(session, id);
 
-  const user = await prisma.user.findUnique({
+  let user: any = null;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      user = await prisma.user.findUnique({
     where: { id },
     include: {
       section: {
@@ -41,6 +44,13 @@ export async function getUserDetails(id: string) {
       friendshipsReceived: true,
     }
   });
+
+      break;
+    } catch (err: any) {
+      if (attempt === 2) throw err;
+      await new Promise(r => setTimeout(r, 250));
+    }
+  }
 
   if (!user) return null;
 

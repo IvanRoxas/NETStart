@@ -111,14 +111,15 @@ export default function ModulesClient({
   const { isDemoMode, canUseDemoMode: livePermission } = useDemoMode(canUseDemoMode, userId);
   const effectiveCanUseDemoMode = typeof livePermission === 'boolean' ? livePermission : canUseDemoMode;
 
-  const [isSidebarMinimized, setIsSidebarMinimized] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('sidebar_minimized') === 'true';
-    }
-    return false;
-  });
+  const [isSidebarMinimized, setIsSidebarMinimized] = useState<boolean>(false);
 
   useEffect(() => {
+    try {
+      if (localStorage.getItem('sidebar_minimized') === 'true') {
+        setIsSidebarMinimized(true);
+      }
+    } catch { }
+
     const handleSidebarChange = (e: any) => {
       if (e.detail?.isMinimized !== undefined) {
         setIsSidebarMinimized(e.detail.isMinimized);
@@ -157,114 +158,113 @@ export default function ModulesClient({
   }, [userId]);
 
   // Container logic for blurring unverified/untested users
-  const containerClass = `absolute inset-0 w-full h-full transition-all duration-500 overflow-x-hidden overflow-y-visible ${
-    (!isVerified || !hasTakenAptitudeTest) ? 'blur-sm pointer-events-none opacity-40' : ''
-  }`;
+  const containerClass = `absolute inset-0 w-full h-full transition-all duration-500 overflow-x-hidden overflow-y-visible ${(!isVerified || !hasTakenAptitudeTest) ? 'blur-sm pointer-events-none opacity-40' : ''
+    }`;
 
   // Winding learning path configuration for 7 Solar System Planets with balanced wide spacing
   const defaultPathNodes = [
-    { 
-      id: "moon", 
-      name: "The Moon", 
-      subtitle: "Syntax, Basics", 
+    {
+      id: "moon",
+      name: "The Moon",
+      subtitle: "Syntax, Basics",
       description: "Welcome to NETStart! Learn the ropes and pack your gear to kick off an educational solar system adventure.",
-      top: "14%", 
-      left: "26%", 
-      sizeClass: "w-40 h-40 sm:w-48 sm:h-48", 
-      src: "/assets/planets/00_moon/environment/MainMoon.svg", 
-      imgScale: 0.85, 
-      rotationSpeed: 30, 
-      reverse: true, 
+      top: "14%",
+      left: "26%",
+      sizeClass: "w-40 h-40 sm:w-48 sm:h-48",
+      src: "/assets/planets/00_moon/environment/MainMoon.svg",
+      imgScale: 0.85,
+      rotationSpeed: 30,
+      reverse: true,
       totalMissions: 3,
       languageBadge: { label: "Intro", color: "#ff912d" }
     },
-    { 
-      id: "mars", 
-      name: "Mars", 
-      subtitle: "Structure, Hyperlinks", 
+    {
+      id: "mars",
+      name: "Mars",
+      subtitle: "Structure, Hyperlinks",
       description: "The giant space signs have all gone completely blank! Team up with the locals to fix this planet.",
-      top: "26%", 
-      left: "74%", 
-      sizeClass: "w-56 h-56 sm:w-64 sm:h-64", 
-      src: "/assets/planets/celestial/Mars.svg", 
-      imgScale: 0.86, 
-      rotationSpeed: 20, 
-      reverse: false, 
+      top: "26%",
+      left: "74%",
+      sizeClass: "w-56 h-56 sm:w-64 sm:h-64",
+      src: "/assets/planets/celestial/Mars.svg",
+      imgScale: 0.86,
+      rotationSpeed: 20,
+      reverse: false,
       totalMissions: 3,
       languageBadge: { iconUrl: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/html5/html5-original.svg", label: "HTML5", color: "#E44D26" }
     },
-    { 
-      id: "venus", 
-      name: "Venus", 
-      subtitle: "Styling, Layout", 
+    {
+      id: "venus",
+      name: "Venus",
+      subtitle: "Styling, Layout",
       description: "Welcome to a world with no color. Help Professor Spectrum splash paints, borders, and pretty fonts across his laboratory.",
-      top: "38%", 
-      left: "25%", 
-      sizeClass: "w-56 h-56 sm:w-64 sm:h-64", 
-      src: "/assets/planets/celestial/Venus.svg", 
-      imgScale: 0.86, 
-      rotationSpeed: 25, 
-      reverse: true, 
+      top: "38%",
+      left: "25%",
+      sizeClass: "w-56 h-56 sm:w-64 sm:h-64",
+      src: "/assets/planets/celestial/Venus.svg",
+      imgScale: 0.86,
+      rotationSpeed: 25,
+      reverse: true,
       totalMissions: 3,
       languageBadge: { iconUrl: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/css3/css3-original.svg", label: "CSS", color: "#1572B6" }
     },
-    { 
-      id: "mercury", 
-      name: "Mercury", 
-      subtitle: "DOM, Events", 
+    {
+      id: "mercury",
+      name: "Mercury",
+      subtitle: "DOM, Events",
       description: "Emergency at the biggest space supply center! Jump into action to save Professor Dominic's wilting plants and quiet delivery bays.",
-      top: "50%", 
-      left: "75%", 
-      sizeClass: "w-48 h-48 sm:w-56 sm:h-56", 
-      src: "/assets/planets/celestial/Mercury.svg", 
-      imgScale: 0.86, 
-      rotationSpeed: 35, 
-      reverse: false, 
+      top: "50%",
+      left: "75%",
+      sizeClass: "w-48 h-48 sm:w-56 sm:h-56",
+      src: "/assets/planets/celestial/Mercury.svg",
+      imgScale: 0.86,
+      rotationSpeed: 35,
+      reverse: false,
       totalMissions: 3,
       languageBadge: { iconUrl: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/javascript/javascript-original.svg", label: "JavaScript", color: "#F7DF1E" }
     },
-    { 
-      id: "jupiter", 
-      name: "Jupiter", 
-      subtitle: "Exceptions, Classes", 
+    {
+      id: "jupiter",
+      name: "Jupiter",
+      subtitle: "Exceptions, Classes",
       description: "Access Denied! A giant space station has locked its heavy doors. Can you crack the code to slip past the grumpy security computer?",
-      top: "62%", 
-      left: "24%", 
-      sizeClass: "w-76 h-76 sm:w-92 sm:h-92", 
-      src: "/assets/planets/celestial/Jupiter.svg", 
-      imgScale: 0.90, 
-      rotationSpeed: 45, 
-      reverse: false, 
+      top: "62%",
+      left: "24%",
+      sizeClass: "w-76 h-76 sm:w-92 sm:h-92",
+      src: "/assets/planets/celestial/Jupiter.svg",
+      imgScale: 0.90,
+      rotationSpeed: 45,
+      reverse: false,
       totalMissions: 3,
       languageBadge: { iconUrl: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/java/java-original.svg", label: "Java", color: "#ED8B00", bgWhite: true }
     },
-    { 
-      id: "saturn", 
-      name: "Saturn", 
-      subtitle: "Loops, Pointers", 
+    {
+      id: "saturn",
+      name: "Saturn",
+      subtitle: "Loops, Pointers",
       description: "Look up... why aren't the giant hoops spinning? Visit the famous ringworld and help an exhausted engineer figure out why everything froze.",
-      top: "74%", 
-      left: "76%", 
-      sizeClass: "w-76 h-76 sm:w-92 sm:h-92", 
-      src: "/assets/planets/celestial/Saturn.svg", 
-      imgScale: 0.92, 
-      rotationSpeed: 22, 
-      reverse: true, 
+      top: "74%",
+      left: "76%",
+      sizeClass: "w-76 h-76 sm:w-92 sm:h-92",
+      src: "/assets/planets/celestial/Saturn.svg",
+      imgScale: 0.92,
+      rotationSpeed: 22,
+      reverse: true,
       totalMissions: 3,
       languageBadge: { iconUrl: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/cplusplus/cplusplus-original.svg", label: "C++", color: "#00599C" }
     },
-    { 
-      id: "earth", 
-      name: "Earth", 
-      subtitle: "Dictionaries, Lists", 
+    {
+      id: "earth",
+      name: "Earth",
+      subtitle: "Dictionaries, Lists",
       description: "The main computer on Earth is acting super silly by mixing up its words and numbers! Put on your detective hat to clean up this digital mess.",
-      top: "86%", 
-      left: "26%", 
-      sizeClass: "w-56 h-56 sm:w-64 sm:h-64", 
-      src: "/assets/planets/celestial/Earth.svg", 
-      imgScale: 0.86, 
-      rotationSpeed: 30, 
-      reverse: false, 
+      top: "86%",
+      left: "26%",
+      sizeClass: "w-56 h-56 sm:w-64 sm:h-64",
+      src: "/assets/planets/celestial/Earth.svg",
+      imgScale: 0.86,
+      rotationSpeed: 30,
+      reverse: false,
       totalMissions: 3,
       languageBadge: { iconUrl: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/python/python-original.svg", label: "Python", color: "#22c55e", iconBg: "rgba(34, 197, 94, 0.22)" }
     }
@@ -276,7 +276,7 @@ export default function ModulesClient({
     return order.map((planetId, index) => {
       const slot = defaultPathNodes[index];
       const data = defaultPathNodes.find(n => n.id.toLowerCase() === planetId.toLowerCase());
-      
+
       const reasonObj = Array.isArray(planetReasons)
         ? planetReasons.find((r: any) => r?.planet?.toLowerCase() === planetId.toLowerCase())
         : undefined;
@@ -306,7 +306,7 @@ export default function ModulesClient({
             list.push({ missionId: id, status: 'COMPLETED' });
           }
         });
-      } catch (e) {}
+      } catch (e) { }
     }
     return list;
   }, [allUserMissions, userId]);
@@ -415,7 +415,7 @@ export default function ModulesClient({
             setUserStorageItem('last_animated_planet_idx', toIdx.toString(), userId);
             setUserStorageItem('last_animated_planet', pathNodes[toIdx].id, userId);
           }
-        } catch (e) {}
+        } catch (e) { }
 
         // Trigger clean sliding toast notification upon arrival
         const targetNode = pathNodes[toIdx];
@@ -560,8 +560,8 @@ export default function ModulesClient({
 
     // Handle animation override
     if (animState.isAnimating) {
-       if (nodeIndex === animState.unlockedIndex) return 'LOCKED'; // the target of the flight
-       if (nodeIndex < animState.unlockedIndex) return 'COMPLETED';
+      if (nodeIndex === animState.unlockedIndex) return 'LOCKED'; // the target of the flight
+      if (nodeIndex < animState.unlockedIndex) return 'COMPLETED';
     }
 
     return unlockInfo.statuses[nodeIndex] as 'LOCKED' | 'COMPLETED' | 'CURRENT';
@@ -577,16 +577,15 @@ export default function ModulesClient({
     <div ref={containerRef} className="relative w-full h-[370vh] min-h-[370vh] pb-96 mb-20 px-4">
       {/* Reveal Overlay (Only shown when coming from cutscene) */}
       {revealOverlay && (
-        <div 
-          className={`fixed inset-0 bg-black z-[9999] pointer-events-none transition-opacity duration-[3000ms] ease-in-out ${
-            fadeOverlay ? 'opacity-0' : 'opacity-100'
-          }`}
+        <div
+          className={`fixed inset-0 bg-black z-[9999] pointer-events-none transition-opacity duration-[3000ms] ease-in-out ${fadeOverlay ? 'opacity-0' : 'opacity-100'
+            }`}
         />
       )}
-      
+
       {/* Top Floating Pill-Shaped Telemetry Bar */}
       <div className="sticky top-4 z-40 w-full max-w-[98%] sm:max-w-[96%] mx-auto my-3 bg-[#130927]/95 backdrop-blur-xl border border-[#ff912d]/40 rounded-full px-6 sm:px-8 py-3 shadow-[0_0_35px_rgba(0,0,0,0.7),0_0_20px_rgba(255,145,45,0.25)] flex flex-wrap items-center justify-between gap-4 transition-all">
-        
+
         {/* Left: Current Active Unlocked Node Info */}
         <div className="flex items-center gap-3.5">
           <div className="p-2.5 rounded-full bg-[#ff912d]/15 border border-[#ff912d]/40 text-[#ff912d] shadow-[0_0_12px_rgba(255,145,45,0.35)]">
@@ -604,7 +603,7 @@ export default function ModulesClient({
 
         {/* Center/Right: Telemetry Metrics Chips (EXP Threshold Bar, Gears, Missions) */}
         <div className="flex items-center gap-3 flex-wrap">
-          
+
           {/* Level & EXP Threshold Progress Bar Pill */}
           <div className="flex items-center gap-3.5 bg-black/60 border border-white/15 px-4 py-1.5 rounded-full shadow-inner">
             <div className="flex items-center gap-2.5 text-amber-400 font-mono font-extrabold text-sm sm:text-[15px] shrink-0 pl-1">
@@ -623,7 +622,7 @@ export default function ModulesClient({
                 </span>
               </div>
               <div className="w-full h-2.5 bg-black/80 rounded-full overflow-hidden border border-white/10 p-0.5">
-                <div 
+                <div
                   className="h-full bg-gradient-to-r from-amber-500 via-[#ff912d] to-amber-300 rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(255,145,45,0.7)]"
                   style={{ width: `${Math.min(100, Math.max(0, liveStats.progress))}%` }}
                 />
@@ -663,24 +662,22 @@ export default function ModulesClient({
       </div>
 
       {/* Sliding Planet Unlock Notification Toast */}
-      <div 
-        className={`fixed top-24 right-6 z-50 max-w-sm w-full transition-all duration-500 ease-out transform ${
-          unlockToast?.visible 
-            ? 'translate-y-0 opacity-100 scale-100 pointer-events-auto' 
+      <div
+        className={`fixed top-24 right-6 z-50 max-w-sm w-full transition-all duration-500 ease-out transform ${unlockToast?.visible
+            ? 'translate-y-0 opacity-100 scale-100 pointer-events-auto'
             : '-translate-y-10 opacity-0 scale-95 pointer-events-none'
-        }`}
+          }`}
       >
         <div className="bg-[#1a082c]/95 backdrop-blur-xl border border-[#ff912d]/50 rounded-2xl p-4 shadow-[0_10px_35px_rgba(0,0,0,0.6),0_0_25px_rgba(255,145,45,0.25)] flex items-center gap-3.5 relative overflow-hidden">
           {/* Ambient top glow accent line */}
           <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#ff912d] to-transparent opacity-80" />
-          
+
           {unlockToast?.icon ? (
-            <img 
-              src={unlockToast.icon} 
-              alt={unlockToast.title} 
-              className={`w-11 h-11 object-contain drop-shadow-[0_0_10px_rgba(255,145,45,0.5)] shrink-0 ${
-                (unlockToast.title.toLowerCase().includes('venus') || (unlockToast.icon && unlockToast.icon.includes('Venus'))) && !venusCompleted ? 'grayscale' : ''
-              }`}
+            <img
+              src={unlockToast.icon}
+              alt={unlockToast.title}
+              className={`w-11 h-11 object-contain drop-shadow-[0_0_10px_rgba(255,145,45,0.5)] shrink-0 ${(unlockToast.title.toLowerCase().includes('venus') || (unlockToast.icon && unlockToast.icon.includes('Venus'))) && !venusCompleted ? 'grayscale' : ''
+                }`}
             />
           ) : (
             <div className="w-10 h-10 rounded-full bg-[#ff912d]/20 border border-[#ff912d]/40 flex items-center justify-center shrink-0">
@@ -709,11 +706,11 @@ export default function ModulesClient({
 
       {/* Background Mission Orbit Canvas */}
       <div className={containerClass}>
-        
+
         {/* Ambient Space Starfield Background Image & Nebula Layer */}
-        <div 
-          className="absolute inset-0 z-0 pointer-events-none opacity-45 bg-cover bg-center" 
-          style={{ backgroundImage: "url('/assets/global/ui/Landing Page BG.png')" }} 
+        <div
+          className="absolute inset-0 z-0 pointer-events-none opacity-45 bg-cover bg-center"
+          style={{ backgroundImage: "url('/assets/global/ui/Landing Page BG.png')" }}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-[#180729]/60 via-transparent to-[#180729]/80 pointer-events-none z-0" />
 
@@ -867,21 +864,21 @@ export default function ModulesClient({
           const completedCount = unlockInfo.completedCounts[node.id.toLowerCase()] || 0;
           const status = getStatusForModule(node.id);
           const isCheckpointPlanet = !animState.isAnimating && node.id === pathNodes[animState.unlockedIndex]?.id;
-          
+
           return (
-            <PlanetNode 
+            <PlanetNode
               key={node.id}
-              id={node.id} 
-              name={node.name} 
+              id={node.id}
+              name={node.name}
               subtitle={node.subtitle}
               description={node.description}
-              top={node.top} 
-              left={node.left} 
-              sizeClass={node.sizeClass} 
-              src={node.src} 
-              imgScale={node.imgScale} 
-              rotationSpeed={node.rotationSpeed} 
-              reverse={node.reverse} 
+              top={node.top}
+              left={node.left}
+              sizeClass={node.sizeClass}
+              src={node.src}
+              imgScale={node.imgScale}
+              rotationSpeed={node.rotationSpeed}
+              reverse={node.reverse}
               status={status}
               completedCount={completedCount}
               totalCount={node.totalMissions}
@@ -924,7 +921,7 @@ export default function ModulesClient({
       {isVerified && !hasTakenAptitudeTest && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center z-50 p-4 sm:p-6">
           <div className="bg-[#1e0a2d]/95 backdrop-blur-xl border-2 border-[#ff912d]/60 p-8 sm:p-12 rounded-3xl max-w-xl sm:max-w-2xl w-full text-center shadow-[0_0_50px_rgba(255,145,45,0.35)] flex flex-col items-center gap-6 relative overflow-hidden">
-            
+
             <div className="w-20 h-20 bg-[#ff912d]/15 rounded-full flex items-center justify-center border-2 border-[#ff912d]/40 shadow-[0_0_25px_rgba(255,145,45,0.4)] animate-pulse">
               <Brain className="w-10 h-10 text-[#ff912d]" />
             </div>
@@ -954,10 +951,9 @@ export default function ModulesClient({
 
       {/* Floating Demo Mode Toggle Button (dynamically adjusts to sidebar expanded/collapsed state) */}
       {effectiveCanUseDemoMode && (
-        <div 
-          className={`fixed bottom-6 z-50 transition-all duration-300 ease-in-out ${
-            isSidebarMinimized ? 'left-24' : 'left-72'
-          }`}
+        <div
+          className={`fixed bottom-6 z-50 transition-all duration-300 ease-in-out ${isSidebarMinimized ? 'left-24' : 'left-72'
+            }`}
         >
           <DemoToggle canUseDemoMode={effectiveCanUseDemoMode} />
         </div>

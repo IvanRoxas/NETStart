@@ -72,42 +72,42 @@ export default async function GlobalLogsPage({ searchParams }: { searchParams: P
       <div className="bg-[#1e0a2d] border border-white/5 rounded-2xl p-6 shadow-xl flex flex-col gap-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/5">
           <div className="flex items-center gap-2.5">
-            <span className={`w-3 h-3 rounded-full ${geminiConfigured ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
-            <h3 className="text-base font-bold text-white">External API Telemetry & Quota Monitor</h3>
-            <span className="text-xs bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-full font-mono font-semibold">
+            <span className={`w-3 h-3 rounded-full ${geminiConfigured ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
+            <h3 className="text-base font-bold text-slate-900">External API Telemetry & Quota Monitor</h3>
+            <span className="text-xs bg-blue-100 text-blue-800 border border-blue-200 px-2.5 py-0.5 rounded-full font-mono font-bold">
               FR-11 / Sprint 3
             </span>
           </div>
-          <div className="flex items-center gap-2 text-xs text-gray-400">
-            <span>Model: <strong className="text-white font-mono">{geminiModel}</strong></span>
+          <div className="flex items-center gap-2 text-xs text-slate-600">
+            <span>Model: <strong className="text-slate-800 font-mono">{geminiModel}</strong></span>
             <span>•</span>
-            <span>Guard: <strong className="text-white font-mono">{timeoutSeconds}s timeout / {maxRetries} retries</strong></span>
+            <span>Guard: <strong className="text-slate-800 font-mono">{timeoutSeconds}s timeout / {maxRetries} retries</strong></span>
           </div>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-black/20 p-4 rounded-xl border border-white/5 flex flex-col">
-            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Total API Calls</span>
-            <div className="text-2xl font-black text-white">{totalAiRequests}</div>
-            <span className="text-[11px] text-gray-500 mt-1">Diagnostics & Code Interventions</span>
+          <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col shadow-2xs">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Total API Calls</span>
+            <div className="text-2xl font-black text-slate-900">{totalAiRequests}</div>
+            <span className="text-[11px] text-slate-500 mt-1">Diagnostics & Code Interventions</span>
           </div>
 
-          <div className="bg-black/20 p-4 rounded-xl border border-white/5 flex flex-col">
-            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Live Gemini AI</span>
-            <div className="text-2xl font-black text-purple-400">{totalLiveGeminiRequests}</div>
-            <span className="text-[11px] text-gray-500 mt-1">Direct LLM Context Generations</span>
+          <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col shadow-2xs">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Live Gemini AI</span>
+            <div className="text-2xl font-black text-blue-700">{totalLiveGeminiRequests}</div>
+            <span className="text-[11px] text-slate-500 mt-1">Direct LLM Context Generations</span>
           </div>
 
-          <div className="bg-black/20 p-4 rounded-xl border border-white/5 flex flex-col">
-            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">YouTube Fallbacks</span>
-            <div className="text-2xl font-black text-amber-400">{totalFallbackRequests}</div>
-            <span className="text-[11px] text-gray-500 mt-1">Automated Video Hint Failovers</span>
+          <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col shadow-2xs">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">YouTube Fallbacks</span>
+            <div className="text-2xl font-black text-amber-700">{totalFallbackRequests}</div>
+            <span className="text-[11px] text-slate-500 mt-1">Automated Video Hint Failovers</span>
           </div>
 
-          <div className="bg-black/20 p-4 rounded-xl border border-white/5 flex flex-col">
-            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Fallback Failover Rate</span>
-            <div className="text-2xl font-black text-emerald-400">{fallbackRate}%</div>
-            <span className="text-[11px] text-gray-500 mt-1">
+          <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col shadow-2xs">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Fallback Failover Rate</span>
+            <div className="text-2xl font-black text-emerald-700">{fallbackRate}%</div>
+            <span className="text-[11px] text-slate-500 mt-1">
               {geminiConfigured ? "API Health Nominal" : "Fallback Default"}
             </span>
           </div>
@@ -139,22 +139,22 @@ export default async function GlobalLogsPage({ searchParams }: { searchParams: P
                 
                 return (
                   <tr key={log.id} className="hover:bg-white/5 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
+                    <td className="px-6 py-4 whitespace-nowrap text-xs font-mono text-slate-600">
                       {new Date(log.createdAt).toLocaleString()}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white font-medium">
-                      {actorName} <span className="text-xs text-gray-500 ml-1">({log.actorRole})</span>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900 font-bold">
+                      {actorName} <span className="text-xs text-slate-500 font-normal ml-1">({log.actorRole})</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm font-medium text-white flex items-center gap-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+                      <span className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-blue-600"></span>
                         {formatActionName(log.action)}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400 truncate max-w-[200px]" title={targetName}>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 truncate max-w-[200px]" title={targetName}>
                       {targetName}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-300 w-full">
+                    <td className="px-6 py-4 text-sm text-slate-800 w-full font-medium">
                       {formatLogDetails(log.action, log.details)}
                     </td>
                   </tr>

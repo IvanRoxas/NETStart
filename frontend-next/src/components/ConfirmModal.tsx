@@ -85,19 +85,39 @@ export default function ConfirmModal({
 
   if (!isOpen || !mounted) return null;
 
-  const badgeStyles = {
-    danger: 'bg-rose-500/20 text-rose-400 border-rose-500/30',
-    warning: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-    primary: 'bg-[#ff912d]/20 text-[#ff912d] border-[#ff912d]/30',
-  }[variant];
+  const isTeacherTheme = typeof document !== 'undefined' && !!document.querySelector('.theme-teacher');
+  const isAdminTheme = typeof document !== 'undefined' && !!document.querySelector('.theme-admin');
+  const isLightFaculty = isTeacherTheme || isAdminTheme;
 
-  const confirmBtnStyles = variant === 'danger'
-    ? 'bg-rose-600 hover:bg-rose-500 shadow-rose-600/30 text-white'
-    : 'bg-[#ff912d] hover:bg-[#ff912d]/90 shadow-[#ff912d]/30 text-white';
+  const badgeStyles = isLightFaculty
+    ? {
+      danger: 'bg-red-50 text-red-600 border-red-200',
+      warning: 'bg-amber-50 text-amber-700 border-amber-200',
+      primary: isTeacherTheme
+        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+        : 'bg-blue-50 text-blue-700 border-blue-200',
+    }[variant]
+    : {
+      danger: 'bg-rose-500/20 text-rose-400 border-rose-500/30',
+      warning: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+      primary: 'bg-[#ff912d]/20 text-[#ff912d] border-[#ff912d]/30',
+    }[variant];
+
+  const confirmBtnStyles = isLightFaculty
+    ? {
+      danger: 'bg-red-600 hover:bg-red-700 text-white shadow-md shadow-red-600/20',
+      warning: 'bg-amber-600 hover:bg-amber-700 text-white shadow-md shadow-amber-600/20',
+      primary: isTeacherTheme
+        ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/20'
+        : 'bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-600/20',
+    }[variant]
+    : variant === 'danger'
+      ? 'bg-rose-600 hover:bg-rose-500 shadow-rose-600/30 text-white'
+      : 'bg-[#ff912d] hover:bg-[#ff912d]/90 shadow-[#ff912d]/30 text-white';
 
   return createPortal(
-    <div 
-      className="fixed inset-0 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-in fade-in duration-150"
+    <div
+      className="fixed inset-0 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-150"
       style={{ zIndex: 100000 }}
       onClick={onCancel}
     >
@@ -110,7 +130,10 @@ export default function ConfirmModal({
         aria-describedby="confirm-modal-desc"
         onKeyDown={handleDialogKeyDown}
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-md bg-[#19072c] border border-[#ff912d]/40 rounded-2xl p-6 shadow-2xl shadow-[#ff912d]/10 flex flex-col gap-5 outline-none animate-in zoom-in-95 duration-150"
+        className={`relative w-full max-w-md rounded-2xl p-6 shadow-2xl flex flex-col gap-5 outline-none animate-in zoom-in-95 duration-150 ${isLightFaculty
+            ? 'bg-white border border-slate-200 text-slate-900 shadow-slate-900/10'
+            : 'bg-[#19072c] border border-[#ff912d]/40 text-white shadow-2xl shadow-[#ff912d]/10'
+          }`}
       >
         <div className="flex items-start justify-between">
           <div className={`w-12 h-12 rounded-xl flex items-center justify-center border ${badgeStyles}`}>
@@ -126,7 +149,10 @@ export default function ConfirmModal({
             type="button"
             onClick={onCancel}
             disabled={loading}
-            className="text-white/40 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition-colors cursor-pointer disabled:opacity-50"
+            className={`p-1.5 rounded-lg transition-colors cursor-pointer disabled:opacity-50 ${isLightFaculty
+                ? 'text-slate-400 hover:text-slate-700 hover:bg-slate-100'
+                : 'text-white/40 hover:text-white hover:bg-white/10'
+              }`}
             aria-label="Close"
           >
             <X size={20} />
@@ -134,18 +160,24 @@ export default function ConfirmModal({
         </div>
 
         <div>
-          <h2 id="confirm-modal-title" className="text-xl font-bold text-white font-display tracking-wide">
+          <h2 id="confirm-modal-title" className={`text-xl font-bold font-display tracking-wide ${isLightFaculty ? 'text-slate-900' : 'text-white'
+            }`}>
             {title}
           </h2>
-          <p id="confirm-modal-desc" className="text-sm text-gray-300 leading-relaxed mt-2">
+          <p id="confirm-modal-desc" className={`text-sm leading-relaxed mt-2 ${isLightFaculty ? 'text-slate-600' : 'text-gray-300'
+            }`}>
             {message}
           </p>
         </div>
 
-        <div className="flex items-center justify-end gap-3 pt-2">
+        <div className={`flex items-center justify-end gap-3 pt-3 border-t ${isLightFaculty ? 'border-slate-100' : 'border-white/10'
+          }`}>
           <button
             type="button"
-            className="px-4 py-2.5 rounded-xl text-sm font-semibold text-gray-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-colors cursor-pointer disabled:opacity-50"
+            className={`px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors cursor-pointer disabled:opacity-50 ${isLightFaculty
+                ? 'text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 border border-slate-200'
+                : 'text-gray-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10'
+              }`}
             onClick={onCancel}
             disabled={loading}
           >

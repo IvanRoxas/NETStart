@@ -219,7 +219,7 @@ export default function TeachersClient({ initialTeachers }: { initialTeachers: T
                         <button
                           onClick={() => setResetTarget(t)}
                           title="Reset Password"
-                          className="p-2 bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white rounded-lg transition-colors cursor-pointer"
+                          className="p-2 bg-blue-50 hover:bg-blue-100 text-blue-700 hover:text-blue-900 border border-blue-200 rounded-lg transition-colors cursor-pointer shadow-2xs"
                         >
                           <Key size={16} />
                         </button>
@@ -227,10 +227,10 @@ export default function TeachersClient({ initialTeachers }: { initialTeachers: T
                           <button
                             onClick={() => setStatusTarget(t)}
                             title={t.isActive ? "Deactivate Account" : "Activate Account"}
-                            className={`p-2 rounded-lg transition-colors cursor-pointer ${
+                            className={`p-2 rounded-lg transition-colors cursor-pointer border shadow-2xs ${
                               t.isActive
-                                ? 'bg-red-500/10 hover:bg-red-500/20 text-red-400'
-                                : 'bg-green-500/10 hover:bg-green-500/20 text-green-400'
+                                ? 'bg-rose-50 hover:bg-rose-100 text-rose-700 hover:text-rose-900 border-rose-200'
+                                : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 hover:text-emerald-900 border-emerald-200'
                             }`}
                           >
                             <Power size={16} />
@@ -257,7 +257,7 @@ export default function TeachersClient({ initialTeachers }: { initialTeachers: T
               </h3>
               <button
                 onClick={() => setIsCreateOpen(false)}
-                className="text-gray-400 hover:text-white p-1 rounded-lg"
+                className="text-slate-400 hover:text-slate-700 hover:bg-slate-100 p-1 rounded-lg transition-colors"
               >
                 <X size={18} />
               </button>
@@ -310,7 +310,7 @@ export default function TeachersClient({ initialTeachers }: { initialTeachers: T
                 <button
                   type="button"
                   onClick={() => setIsCreateOpen(false)}
-                  className="px-4 py-2 text-sm font-semibold text-gray-400 hover:text-white transition-colors cursor-pointer"
+                  className="px-4 py-2 text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-xl transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -338,14 +338,14 @@ export default function TeachersClient({ initialTeachers }: { initialTeachers: T
               </h3>
               <button
                 onClick={() => setResetTarget(null)}
-                className="text-gray-400 hover:text-white p-1 rounded-lg"
+                className="text-slate-400 hover:text-slate-700 hover:bg-slate-100 p-1 rounded-lg transition-colors"
               >
                 <X size={18} />
               </button>
             </div>
 
-            <p className="text-sm text-gray-300 mb-4">
-              Enter a new password for <span className="font-bold text-white">@{resetTarget.username}</span> ({resetTarget.displayName}).
+            <p className="text-sm text-slate-600 mb-4">
+              Enter a new password for <span className="font-bold text-blue-700">@{resetTarget.username}</span> (<span className="text-slate-800 font-medium">{resetTarget.displayName}</span>).
             </p>
 
             <form onSubmit={handleResetPassword} className="flex flex-col gap-4">
@@ -367,7 +367,7 @@ export default function TeachersClient({ initialTeachers }: { initialTeachers: T
                 <button
                   type="button"
                   onClick={() => setResetTarget(null)}
-                  className="px-4 py-2 text-sm font-semibold text-gray-400 hover:text-white transition-colors cursor-pointer"
+                  className="px-4 py-2 text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-xl transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>

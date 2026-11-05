@@ -19,10 +19,18 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
     if (!userId) {
       throw new Error("Missing or invalid User ID");
     }
-    const [user, sections] = await Promise.all([
-      getUserDetails(userId),
-      getSections()
-    ]);
+    let user = null;
+    let sections: any[] = [];
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        user = await getUserDetails(userId);
+        sections = await getSections();
+        break;
+      } catch (err) {
+        if (attempt === 2) throw err;
+        await new Promise(r => setTimeout(r, 300));
+      }
+    }
 
     return (
       <UserDetailsClientWrapper 

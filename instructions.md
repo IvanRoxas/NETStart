@@ -1,18 +1,1 @@
-I would like you to pull the following features from this GitHub branch and integrate them into this current project. do keep in mind that in regards to features outside or unrelated/not connected these core 4, my project would take priority over the changes present in that pull. 
-
-- Cutscenes
-- Sandbox
-- Aptitude Test
-- Profile Statistics
-
-Based on this branch, integrate these 4 new features and update the system for these aspects accordingly. 
-
-
-Link: http://github.com/IvanRoxas/NETStart/tree/sandbox
-Here is the branch name: sandbox
-
-considering the api is in the env file, kindly report back to be about what env files are still missing since my friend has a separate copy of this project working on the core 4 features i described above. 
-
-make sure that when integrated, they blend in seamlessly to the functionalities of the current project and do not disrupt its flow of operations. THIS IS CRUCIAL. you are not allowed to overengineer or hallucinate because we will simply be covering these features.
-
-After integrating them. kindly do a full audit report on the system. Make sure that all functionalities still work as intended and the newly updated and added features work alongside the current project. Report back any concerns and suggested fixes you may find during this time.
+DO THE REST OF THE MODAL ANIMATIONS FOR THE REST OF THE OTHER LEVELS THAT DONT HAVE THESE HELPFUL MODAL GUIDES YET. MAKE SURE TO STAY FAITHFUL TO THE DESIGN OF THE WORKSPACE AND THE SIMULATION FOR THAT LEVEL. YOU ARE NOT RESTRICTED TO JUST 3 SLIDES IF YOU THINK THAT THE LEVEL HAS MORE MECHANICS THAT NEED TO BE ACCOUNTED FOR (BUT THE MAX IS 5 SLIDES). MAKE SURE THAT THE INSTRUCTIONS ARE EASY TO FOLLOW AND UNDERSTAND. THIS NEXT STEP IS IMPERATIVE: DO NOT FUCKING OVERENGINEER AND ADD UNNECESSARY TEXT BLOAT. I REPEAT. REMAIN FAITHFUL TO THE EFFECTS AND ASSETS USED BY THE LEVEL YOU ARE MAKING THE MODAL SLIDES FOR. IF I SEE EVEN AN OUNCE OF TEXT BLOAT I WILL FUCKING KILL YOU. REMEMBER THAT THE BLOCKLY COMPONENTS DONT NEED TO BE THAT SMALL. THE SIMULATION AND WORKSPACE FORMAT SHOULD ALWAYS BE FOLLOWED. ALWAYS REMAIN FAITHFUL TO THE DESIGN OF THE LEVEL. YOU ARE NOT ALLOWED TO DEVIATE. INGRANE ALL THESE INSTRUCTIONS AT ONCE.

@@ -16,3 +16,9 @@ env credentials.md
 *.download
 *.pdf
 APPENDIX_F_SYSTEM_USER_MANUAL.md
+
+# Agent scratch & local output
+.system_generated/
+**/.system_generated/
+screenshots/
+

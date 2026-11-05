@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { SessionContext } from 'next-auth/react';
 import Image from 'next/image';
+import { X } from 'lucide-react';
 import QuillIcon from '@/components/icons/QuillIcon';
 import { useAuthSync } from '@/components/AuthSyncProvider';
 
@@ -113,7 +114,7 @@ export default function AchievementPopupProvider({ children }: { children: React
       
       {/* Sliding Dismissable Popup for Achievements */}
       <div 
-        className={`fixed bottom-6 right-6 z-[999999] transition-all duration-500 ease-in-out transform ${
+        className={`fixed bottom-14 right-6 sm:bottom-16 sm:right-8 z-[999999] transition-all duration-500 ease-in-out transform ${
           show ? 'translate-x-0 opacity-100 scale-100' : 'translate-x-[120%] opacity-0 scale-95'
         }`}
       >
@@ -129,9 +130,11 @@ export default function AchievementPopupProvider({ children }: { children: React
               {/* Close Button */}
               <button 
                 onClick={() => dismissCurrent(currentBadge)}
-                className="absolute top-2 right-2 text-white/50 hover:text-white bg-black/20 hover:bg-black/40 rounded-full w-6 h-6 flex items-center justify-center transition-colors z-10"
+                className="absolute top-2.5 right-2.5 text-white/90 hover:text-white bg-black/50 hover:bg-red-500/80 active:scale-95 border border-white/20 hover:border-red-400 rounded-full w-8 h-8 flex items-center justify-center transition-all cursor-pointer z-30 shadow-md backdrop-blur-sm"
+                title="Dismiss"
+                aria-label="Dismiss achievement notification"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                <X size={16} strokeWidth={2.5} />
               </button>
 
               <div className={`w-16 h-16 shrink-0 bg-gradient-to-br from-indigo-500/20 to-purple-600/20 rounded-xl flex items-center justify-center border ${isSandbox ? 'border-[#ff912d]/60' : 'border-[#ffb703]/50'} relative shadow-inner z-10 p-2`}>
@@ -159,7 +162,7 @@ export default function AchievementPopupProvider({ children }: { children: React
                 )}
               </div>
 
-              <div className="flex-1 flex flex-col z-10 pr-4">
+              <div className="flex-1 flex flex-col z-10 pr-6">
                 <span className={`${isSandbox ? 'text-[#ff912d]' : 'text-[#ffb703]'} font-sans font-bold text-[10px] uppercase tracking-widest mb-1 flex items-center gap-1.5`}>
                   {isSandbox ? (
                     <>

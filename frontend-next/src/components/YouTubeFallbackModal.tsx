@@ -128,7 +128,7 @@ export function YouTubeFallbackModal({
               <div className="flex flex-wrap items-center gap-2 mb-1">
                 <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-red-500/20 text-red-300 border border-red-500/30 flex items-center gap-1">
                   <AlertTriangle className="w-3 h-3 text-red-400" />
-                  {failureCount} Failed Attempts
+                  {VIDEO_FALLBACK_FAIL_THRESHOLD} Failed Attempts
                 </span>
                 <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-purple-500/20 text-purple-300 border border-purple-500/30">
                   {videoData.planet}

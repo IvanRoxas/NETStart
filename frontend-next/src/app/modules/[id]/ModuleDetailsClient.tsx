@@ -132,15 +132,16 @@ export default function ModuleDetailsClient({
   const [hoveredCardId, setHoveredCardId] = useState<string | null>(null);
   const [savedMissionId, setSavedMissionId] = useState<string | null>(null);
   const [showStoryArchive, setShowStoryArchive] = useState(false);
-  
-  const [isSidebarMinimized, setIsSidebarMinimized] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('sidebar_minimized') === 'true';
-    }
-    return false;
-  });
+
+  const [isSidebarMinimized, setIsSidebarMinimized] = useState<boolean>(false);
 
   useEffect(() => {
+    try {
+      if (localStorage.getItem('sidebar_minimized') === 'true') {
+        setIsSidebarMinimized(true);
+      }
+    } catch { }
+
     const handleSidebarChange = (e: any) => {
       if (e.detail?.isMinimized !== undefined) {
         setIsSidebarMinimized(e.detail.isMinimized);
@@ -183,7 +184,7 @@ export default function ModuleDetailsClient({
           }
         });
         setUserStorageItem('completed_missions', JSON.stringify(cached), userId);
-      } catch (e) {}
+      } catch (e) { }
     }
 
     setSavedMissionId(activeId);
@@ -197,7 +198,7 @@ export default function ModuleDetailsClient({
         const cached: string[] = JSON.parse(getUserStorageItem('completed_missions', userId) || '[]');
         cached.forEach(id => combined.add(id.toLowerCase()));
       }
-    } catch (e) {}
+    } catch (e) { }
     return combined;
   }, [completedMissions, userId]);
 
@@ -623,7 +624,7 @@ export default function ModuleDetailsClient({
       <div className="min-h-screen w-full bg-[#1e0a2d] flex items-center justify-center relative overflow-hidden px-6">
         <div className="absolute inset-0 z-0 pointer-events-none" style={{ backgroundImage: "url('/assets/global/ui/Landing Page BG.png')", backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.3 }} />
         <div className="absolute inset-0 bg-black/60 z-0" />
-        
+
         <div className="bg-[#1e0a2d]/90 backdrop-blur-xl border border-[#ff912d]/30 p-10 rounded-3xl max-w-md w-full text-center shadow-2xl relative z-10 flex flex-col items-center gap-6">
           <div className="w-20 h-20 bg-[#ff912d]/10 rounded-full flex items-center justify-center border border-[#ff912d]/20 text-[#ff912d]">
             <Lock className="w-10 h-10" />
@@ -658,30 +659,30 @@ export default function ModuleDetailsClient({
   return (
     <div className="h-full w-full bg-[#130927] text-white flex flex-col relative overflow-y-auto overflow-x-hidden pb-12">
       {/* Background image elements */}
-      <div 
-        className="fixed inset-0 z-0 pointer-events-none" 
-        style={{ 
-          backgroundImage: "url('/assets/global/ui/Landing Page BG.png')", 
-          backgroundSize: 'cover', 
-          backgroundPosition: 'center', 
-          opacity: 0.15 
-        }} 
+      <div
+        className="fixed inset-0 z-0 pointer-events-none"
+        style={{
+          backgroundImage: "url('/assets/global/ui/Landing Page BG.png')",
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          opacity: 0.15
+        }}
       />
       <div className="fixed inset-0 bg-black/50 z-0" />
 
       {/* Main layout frame */}
       <div className="relative z-10 max-w-7xl w-full mx-auto px-6 py-12 flex-grow flex flex-col gap-10">
-        
+
         {/* Navigation / Header Area */}
         <div className="relative z-30 flex items-center justify-between mt-2 w-full">
           {/* Back Button (Yellow Circle on Left) */}
-          <Link 
+          <Link
             href="/modules"
             className="w-12 h-12 rounded-full bg-yellow-400 text-black hover:bg-yellow-500 transition-all flex items-center justify-center shadow-lg hover:scale-105 shrink-0 group z-10"
           >
             <ArrowLeft size={22} className="stroke-[2.5]" />
           </Link>
-          
+
           {/* Welcome Title Centered */}
           <h1 className="text-2xl md:text-4xl lg:text-5xl font-display font-black text-white uppercase tracking-wider text-center px-4 flex-1">
             Welcome to {meta.title}
@@ -689,10 +690,10 @@ export default function ModuleDetailsClient({
 
           {/* Right Header Actions: Music Toggle & Story Archive */}
           <div className="flex items-center gap-3 shrink-0 z-30">
-            <MusicToggleButton 
-              variant="circle" 
-              size="md" 
-              className="!w-12 !h-12 !p-0 bg-white/5 border-white/10 hover:bg-white/10" 
+            <MusicToggleButton
+              variant="circle"
+              size="md"
+              className="!w-12 !h-12 !p-0 bg-white/5 border-white/10 hover:bg-white/10"
             />
             <button
               type="button"
@@ -710,27 +711,27 @@ export default function ModuleDetailsClient({
         <div className={`flex flex-col ${isCompactRow ? 'md:flex-row' : 'lg:flex-row'} gap-6 mt-4 items-stretch w-full transition-all duration-500`}>
           {missions.map((mission, index) => {
             const isCompleted = allCompletedIds.has(mission.id.toLowerCase());
-            
+
             // Find the index of the first uncompleted mission
             const firstUncompletedIndex = missions.findIndex(m => !allCompletedIds.has(m.id.toLowerCase()));
-            
+
             // Is this level currently saved / active in progress? (Supports both first-time and replay in-progress sessions)
             const hasActiveProgress = Boolean(savedMissionId && matchMissionAliases(savedMissionId, mission.id));
 
             // If completed, or it is the first uncompleted mission, or has active progress, or demo mode is on: it is unlocked/colored.
             const isUnlocked = isDemoMode || hasActiveProgress || index <= (firstUncompletedIndex === -1 ? missions.length : firstUncompletedIndex);
-            
+
             // Current active card: matches the saved in-progress level, or falls back to first uncompleted level if no active save exists
-            const isCurrentActive = savedMissionId 
-              ? hasActiveProgress 
+            const isCurrentActive = savedMissionId
+              ? hasActiveProgress
               : (!isCompleted && index === firstUncompletedIndex);
 
             const imageUrl = getMissionPreviewImage(mission.id, moduleId, index, isCompleted);
             const isHovered = hoveredCardId === mission.id;
 
             return (
-              <div 
-                key={mission.id} 
+              <div
+                key={mission.id}
                 onMouseEnter={() => setHoveredCardId(mission.id)}
                 onMouseLeave={() => setHoveredCardId(null)}
                 onFocus={() => setHoveredCardId(mission.id)}
@@ -739,37 +740,33 @@ export default function ModuleDetailsClient({
                 className="relative group/card flex flex-col flex-1 z-10 transition-all duration-300 ease-out outline-none"
               >
                 {/* Shaded background depth layer */}
-                <div className={`absolute inset-0 bg-[#090311]/75 rounded-3xl z-0 transition-all duration-300 ${
-                  isHovered ? 'translate-x-2.5 translate-y-2.5' : 'translate-x-2 translate-y-2'
-                }`} />
+                <div className={`absolute inset-0 bg-[#090311]/75 rounded-3xl z-0 transition-all duration-300 ${isHovered ? 'translate-x-2.5 translate-y-2.5' : 'translate-x-2 translate-y-2'
+                  }`} />
 
                 {/* Actual Front Card */}
-                <div 
-                  className={`relative z-10 bg-[#1e0a2d]/45 backdrop-blur-md border rounded-3xl overflow-hidden flex flex-col h-full transition-all duration-300 shadow-xl ${
-                    hasActiveProgress 
-                      ? 'border-[#ff912d]/80 ring-2 ring-[#ff912d]/40 shadow-[0_0_25px_rgba(255,145,45,0.35)]' 
+                <div
+                  className={`relative z-10 bg-[#1e0a2d]/45 backdrop-blur-md border rounded-3xl overflow-hidden flex flex-col h-full transition-all duration-300 shadow-xl ${hasActiveProgress
+                      ? 'border-[#ff912d]/80 ring-2 ring-[#ff912d]/40 shadow-[0_0_25px_rgba(255,145,45,0.35)]'
                       : isUnlocked && !isCompleted && index === firstUncompletedIndex
-                      ? 'border-white/30 ring-1 ring-white/20 shadow-[0_0_15px_rgba(255,255,255,0.1)]'
-                      : 'border-white/10'
-                  } ${
-                    isUnlocked ? '' : 'pointer-events-none opacity-50'
-                  } ${isHovered ? 'shadow-[#ff912d]/15 shadow-xl -translate-x-0.5 -translate-y-0.5 ring-1 ring-[#ff912d]/30' : ''}`}
+                        ? 'border-white/30 ring-1 ring-white/20 shadow-[0_0_15px_rgba(255,255,255,0.1)]'
+                        : 'border-white/10'
+                    } ${isUnlocked ? '' : 'pointer-events-none opacity-50'
+                    } ${isHovered ? 'shadow-[#ff912d]/15 shadow-xl -translate-x-0.5 -translate-y-0.5 ring-1 ring-[#ff912d]/30' : ''}`}
                 >
                   {/* Visual progression details / Image Header */}
                   <div className="relative aspect-[2.6/1] sm:aspect-[2.8/1] w-full overflow-hidden bg-black/40 shrink-0">
-                    <img 
-                      src={imageUrl} 
-                      alt={mission.title} 
-                      className={`w-full h-full object-cover transition-transform duration-500 ${
-                        isHovered ? 'scale-105' : ''
-                      } ${isUnlocked ? '' : 'grayscale opacity-40'}`}
+                    <img
+                      src={imageUrl}
+                      alt={mission.title}
+                      className={`w-full h-full object-cover transition-transform duration-500 ${isHovered ? 'scale-105' : ''
+                        } ${isUnlocked ? '' : 'grayscale opacity-40'}`}
                     />
-                    
+
                     {/* Active mission subtle ambient gradient overlay */}
                     {hasActiveProgress && (
                       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-amber-500/20 pointer-events-none ring-1 ring-inset ring-amber-400/50" />
                     )}
-                    
+
                     {/* Status Overlay Badges */}
                     {hasActiveProgress ? (
                       <div className="absolute top-4 right-4 bg-amber-500 text-white px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border border-white/25 flex items-center gap-1.5 shadow-lg shadow-amber-500/30 animate-pulse">
@@ -788,7 +785,7 @@ export default function ModuleDetailsClient({
                         <Zap size={11} className="fill-white stroke-white" /> In Progress
                       </div>
                     )}
-                    
+
                     {/* Index badge at bottom-left of image */}
                     <div className="absolute bottom-4 left-4 bg-black/75 backdrop-blur-md text-white font-display font-black text-sm px-3 py-1 rounded-lg border border-white/15">
                       LEVEL {String(index + 1).padStart(2, '0')}
@@ -814,31 +811,28 @@ export default function ModuleDetailsClient({
                           {mission.subtitle}
                         </div>
                       )}
-                      <h3 className={`text-white text-base sm:text-lg font-display font-black tracking-tight leading-snug transition-colors ${
-                        isHovered ? 'underline' : ''
-                      }`}>
+                      <h3 className={`text-white text-base sm:text-lg font-display font-black tracking-tight leading-snug transition-colors ${isHovered ? 'underline' : ''
+                        }`}>
                         {mission.title}
                       </h3>
-                      
+
                       {/* Description synopsis block: dynamically expands so full synopsis is readable */}
-                      <p className={`text-white/95 text-xs sm:text-[13px] font-medium leading-relaxed transition-all duration-300 ${
-                        isHovered ? 'line-clamp-none' : 'line-clamp-2'
-                      }`}>
+                      <p className={`text-white/95 text-xs sm:text-[13px] font-medium leading-relaxed transition-all duration-300 ${isHovered ? 'line-clamp-none' : 'line-clamp-2'
+                        }`}>
                         {mission.desc}
                       </p>
                     </div>
-                    
+
                     {/* Action/Enter Lab link inside card */}
                     <div className="flex items-center justify-between pt-3 border-t border-white/15 shrink-0 mt-auto">
                       <button
                         onClick={() => handleStartMission(mission)}
-                        className={`font-sans font-black text-[11px] uppercase tracking-widest py-2.5 px-5 rounded-xl shadow-md transition-all duration-200 hover:scale-105 active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer text-center w-32 ${
-                          hasActiveProgress
+                        className={`font-sans font-black text-[11px] uppercase tracking-widest py-2.5 px-5 rounded-xl shadow-md transition-all duration-200 hover:scale-105 active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer text-center w-32 ${hasActiveProgress
                             ? 'bg-[#8c2e0b] hover:bg-[#a3360d] text-white border-2 border-[#ffd1a9]/90 shadow-[0_4px_14px_rgba(0,0,0,0.3),0_0_12px_rgba(234,88,12,0.35)]'
                             : isCompleted
-                            ? 'bg-emerald-600 hover:bg-emerald-500 text-white border-2 border-emerald-300/90 shadow-[0_4px_14px_rgba(0,0,0,0.3),0_0_12px_rgba(16,185,129,0.35)]'
-                            : 'bg-[#130927] hover:bg-[#1e0a2d] text-white border-2 border-white/30 hover:border-white/60 shadow-md'
-                        }`}
+                              ? 'bg-emerald-600 hover:bg-emerald-500 text-white border-2 border-emerald-300/90 shadow-[0_4px_14px_rgba(0,0,0,0.3),0_0_12px_rgba(16,185,129,0.35)]'
+                              : 'bg-[#130927] hover:bg-[#1e0a2d] text-white border-2 border-white/30 hover:border-white/60 shadow-md'
+                          }`}
                       >
                         {hasActiveProgress ? (
                           <>
@@ -871,16 +865,16 @@ export default function ModuleDetailsClient({
         {/* Bottom Progress Capsule with Planet/Moon Icon */}
         <div className="-mt-3 flex items-center justify-center">
           <div className="flex items-center gap-4 bg-[#1e0a2d]/90 border border-white/15 rounded-full px-7 py-3 backdrop-blur-xl shadow-2xl">
-            <img 
-              src={planetIcon} 
-              alt={meta.title} 
-              className="w-10 h-10 object-contain drop-shadow-[0_0_12px_rgba(255,145,45,0.5)] shrink-0" 
+            <img
+              src={planetIcon}
+              alt={meta.title}
+              className="w-10 h-10 object-contain drop-shadow-[0_0_12px_rgba(255,145,45,0.5)] shrink-0"
             />
             <span className="text-sm font-bold text-gray-400 uppercase tracking-widest">Progress</span>
-            
+
             {/* Visual Progress Bar Track */}
             <div className="w-28 sm:w-44 h-3 bg-black/70 rounded-full overflow-hidden border border-white/10 p-0.5">
-              <div 
+              <div
                 className="h-full bg-gradient-to-r from-amber-500 via-[#ff912d] to-yellow-400 rounded-full transition-all duration-500 shadow-[0_0_10px_rgba(255,145,45,0.7)]"
                 style={{ width: `${Math.min(100, Math.max(progressPct > 0 ? 10 : 0, progressPct))}%` }}
               />
@@ -943,10 +937,9 @@ export default function ModuleDetailsClient({
 
       {/* Floating Demo Mode Toggle Button (dynamically adjusts to sidebar expanded/collapsed state) */}
       {effectiveCanUseDemoMode && (
-        <div 
-          className={`fixed bottom-6 z-50 transition-all duration-300 ease-in-out ${
-            isSidebarMinimized ? 'left-24' : 'left-72'
-          }`}
+        <div
+          className={`fixed bottom-6 z-50 transition-all duration-300 ease-in-out ${isSidebarMinimized ? 'left-24' : 'left-72'
+            }`}
         >
           <DemoToggle canUseDemoMode={effectiveCanUseDemoMode} />
         </div>

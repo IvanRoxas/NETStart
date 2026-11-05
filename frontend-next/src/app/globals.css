@@ -9,14 +9,19 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-montserrat);
   --font-display: var(--font-poppins);
-  
+
   --animate-float-planet: floatPlanet 10s ease-in-out infinite alternate;
   --animate-slide-in: slideIn 0.8s cubic-bezier(0.645, 0.045, 0.355, 1) forwards;
   --animate-marquee: marquee 30s linear infinite;
-  
+
   @keyframes floatPlanet {
-    0% { transform: translateY(0px) rotate(0deg); }
-    100% { transform: translateY(-20px) rotate(3deg); }
+    0% {
+      transform: translateY(0px) rotate(0deg);
+    }
+
+    100% {
+      transform: translateY(-20px) rotate(3deg);
+    }
   }
 
   @keyframes slideIn {
@@ -24,6 +29,7 @@
       opacity: 0;
       transform: translateX(100px);
     }
+
     100% {
       opacity: 1;
       transform: translateX(0);
@@ -31,20 +37,35 @@
   }
 
   @keyframes marquee {
-    0% { transform: translateX(0%); }
-    100% { transform: translateX(-50%); }
+    0% {
+      transform: translateX(0%);
+    }
+
+    100% {
+      transform: translateX(-50%);
+    }
   }
 
   @keyframes conveyorBeltUp {
-    0% { background-position: 0 0; }
-    100% { background-position: 0 -20px; }
+    0% {
+      background-position: 0 0;
+    }
+
+    100% {
+      background-position: 0 -20px;
+    }
   }
 
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes drawerSlideIn {
@@ -52,6 +73,7 @@
     transform: translateX(100%);
     opacity: 0.85;
   }
+
   to {
     transform: translateX(0);
     opacity: 1;
@@ -81,19 +103,36 @@
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
 }
 
 @keyframes pulseGlow {
-  0%, 100% { transform: scale(1); opacity: 0.85; }
-  50% { transform: scale(1.08); opacity: 1; }
+
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.85;
+  }
+
+  50% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
 }
 
 @keyframes floatReward {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-8px); }
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
 }
 
 .animate-sunburst {
@@ -109,9 +148,12 @@
 }
 
 @keyframes bounceHorizontal {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateX(0);
   }
+
   50% {
     transform: translateX(-6px);
   }
@@ -139,14 +181,15 @@ body {
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
 
 /* Ensure all buttons and links have pointer cursor on hover */
-button, 
-a, 
+button,
+a,
 [role="button"] {
   cursor: pointer;
 }
@@ -159,13 +202,13 @@ a.disabled,
 
 /* Blockly Workspace & Flyout Scrollbar Customization */
 .blocklyMainWorkspaceScrollbar,
-.blocklyWorkspace > .blocklyScrollbarVertical,
-.blocklyWorkspace > .blocklyScrollbarHorizontal,
+.blocklyWorkspace>.blocklyScrollbarVertical,
+.blocklyWorkspace>.blocklyScrollbarHorizontal,
 .blocklyScrollbarVertical,
 .blocklyScrollbarHorizontal,
 .blocklyScrollbarBackground,
-svg > .blocklyScrollbarVertical,
-svg > .blocklyScrollbarHorizontal {
+svg>.blocklyScrollbarVertical,
+svg>.blocklyScrollbarHorizontal {
   display: none !important;
   opacity: 0 !important;
   visibility: hidden !important;
@@ -221,14 +264,17 @@ svg > .blocklyScrollbarHorizontal {
   width: 6px;
   height: 6px;
 }
+
 .custom-syntax-scroll::-webkit-scrollbar-track {
   background: rgba(0, 0, 0, 0.4);
   border-radius: 4px;
 }
+
 .custom-syntax-scroll::-webkit-scrollbar-thumb {
   background: rgba(255, 145, 45, 0.5);
   border-radius: 4px;
 }
+
 .custom-syntax-scroll::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 145, 45, 0.8);
 }
@@ -308,6 +354,7 @@ svg > .blocklyScrollbarHorizontal {
     filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.65));
     stroke: #ef4444;
   }
+
   to {
     filter: drop-shadow(0 0 20px rgba(239, 68, 68, 1));
     stroke: #ff7070;
@@ -324,15 +371,15 @@ svg > .blocklyScrollbarHorizontal {
 }
 
 /* Blockly Single-Selected Block Glow (When clicked / selected) */
-g.blocklySelected > path.blocklyPath,
-.blocklySelected > .blocklyPath {
+g.blocklySelected>path.blocklyPath,
+.blocklySelected>.blocklyPath {
   stroke: #facc15 !important;
   stroke-width: 3px !important;
   filter: drop-shadow(0 0 10px rgba(250, 204, 21, 0.95)) !important;
 }
 
 /* Ensure unselected blocks have default stroke behavior */
-g.blocklyDraggable:not(.blocklySelected):not(.blockly-block-error):not(.blockly-block-warning) > path.blocklyPath {
+g.blocklyDraggable:not(.blocklySelected):not(.blockly-block-error):not(.blockly-block-warning)>path.blocklyPath {
   stroke: none;
   filter: none;
 }
@@ -350,9 +397,9 @@ svg .blocklyDropdownIcon,
 .blocklyFieldDropdown polygon,
 .blocklyFieldDropdown svg path,
 .blocklyFieldDropdown svg polygon,
-.blocklyFieldDropdown > image,
-.blocklyFieldDropdown > path,
-.blocklyFieldDropdown > polygon {
+.blocklyFieldDropdown>image,
+.blocklyFieldDropdown>path,
+.blocklyFieldDropdown>polygon {
   fill: #000000 !important;
   stroke: #000000 !important;
   filter: brightness(0) saturate(100%) !important;
@@ -361,11 +408,27 @@ svg .blocklyDropdownIcon,
 }
 
 @keyframes rover-bump {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  20% { transform: translate(-3px, -2px) rotate(-4deg) scale(0.95); }
-  40% { transform: translate(3px, 2px) rotate(4deg) scale(0.95); }
-  60% { transform: translate(-2px, 1px) rotate(-2deg); }
-  80% { transform: translate(2px, -1px) rotate(2deg); }
+
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  20% {
+    transform: translate(-3px, -2px) rotate(-4deg) scale(0.95);
+  }
+
+  40% {
+    transform: translate(3px, 2px) rotate(4deg) scale(0.95);
+  }
+
+  60% {
+    transform: translate(-2px, 1px) rotate(-2deg);
+  }
+
+  80% {
+    transform: translate(2px, -1px) rotate(2deg);
+  }
 }
 
 .animate-rover-bump {
@@ -479,9 +542,9 @@ polygon.blocklyDropdownIcon,
 .blocklyFieldDropdown polygon,
 .blocklyFieldDropdown text.blocklyDropdownIcon,
 .blocklyFieldDropdown .blocklyDropdownIcon,
-.blocklyFieldDropdown > image,
-.blocklyFieldDropdown > path,
-.blocklyFieldDropdown > polygon {
+.blocklyFieldDropdown>image,
+.blocklyFieldDropdown>path,
+.blocklyFieldDropdown>polygon {
   fill: #000000 !important;
   stroke: #000000 !important;
   color: #000000 !important;
@@ -504,3 +567,529 @@ polygon.blocklyDropdownIcon,
   opacity: 1;
 }
 
+
+
+/* =========================================================================
+   TEACHER CONSOLE THEME (Readable Green & White Combination)
+   ========================================================================= */
+.theme-teacher {
+  background-color: #f0fdf4 !important;
+  /* Soft mint/emerald canvas */
+  color: #0f172a !important;
+}
+
+/* Transform dark space containers to crisp white cards with emerald borders & shadow */
+.theme-teacher .bg-\[\#1e0a2d\],
+.theme-teacher .bg-\[\#1a082c\],
+.theme-teacher .bg-\[\#180729\],
+.theme-teacher .bg-\[\#130927\],
+.theme-teacher .bg-\[\#11051c\],
+.theme-teacher .bg-main,
+.theme-teacher .bg-subs {
+  background-color: #ffffff !important;
+  border: 1px solid #a7f3d0 !important;
+  /* Emerald 200 */
+  color: #0f172a !important;
+  box-shadow: 0 4px 6px -1px rgba(6, 78, 59, 0.05), 0 2px 4px -2px rgba(6, 78, 59, 0.05) !important;
+}
+
+/* Headings and Titles - Deep Readable Forest Green */
+.theme-teacher h1,
+.theme-teacher h2,
+.theme-teacher h3,
+.theme-teacher h4 {
+  color: #064e3b !important;
+}
+
+/* Body & Secondary Text */
+.theme-teacher p,
+.theme-teacher span.text-gray-300,
+.theme-teacher span.text-gray-400,
+.theme-teacher .text-gray-300,
+.theme-teacher .text-gray-400 {
+  color: #334155 !important;
+}
+
+/* Table cells with legacy space classes */
+.theme-teacher table td .text-white,
+.theme-teacher table th .text-white {
+  color: #0f172a !important;
+}
+
+/* Force pure white text and icons on all solid emerald buttons, links, and badges */
+.theme-teacher .bg-\[\#ff912d\],
+.theme-teacher .bg-buttons,
+.theme-teacher .bg-emerald-600,
+.theme-teacher .bg-emerald-700,
+.theme-teacher [class*="bg-emerald-600"],
+.theme-teacher [class*="bg-emerald-700"],
+.theme-teacher a.bg-emerald-600,
+.theme-teacher a[class*="bg-emerald-600"],
+.theme-teacher span.bg-emerald-600,
+.theme-teacher span[class*="bg-emerald-600"],
+.theme-teacher .bg-\[\#ff912d\] *,
+.theme-teacher .bg-buttons *,
+.theme-teacher .bg-emerald-600 *,
+.theme-teacher .bg-emerald-700 *,
+.theme-teacher [class*="bg-emerald-600"] *,
+.theme-teacher [class*="bg-emerald-700"] *,
+.theme-teacher a.bg-emerald-600 *,
+.theme-teacher a[class*="bg-emerald-600"] *,
+.theme-teacher span.bg-emerald-600 *,
+.theme-teacher span[class*="bg-emerald-600"] * {
+  color: #ffffff !important;
+}
+
+/* Replace orange/amber buttons with solid emerald green AND ENSURE PURE WHITE TEXT */
+.theme-teacher .bg-\[\#ff912d\],
+.theme-teacher .bg-buttons,
+.theme-teacher .bg-emerald-600,
+.theme-teacher .bg-emerald-700 {
+  background-color: #059669 !important;
+  /* Emerald 600 */
+  color: #ffffff !important;
+  border-color: #047857 !important;
+}
+
+.theme-teacher .bg-\[\#ff912d\]:hover,
+.theme-teacher .bg-buttons:hover,
+.theme-teacher .bg-emerald-600:hover,
+.theme-teacher .bg-emerald-700:hover {
+  background-color: #047857 !important;
+  /* Emerald 700 */
+  color: #ffffff !important;
+}
+
+/* Force pure white text and icons on all solid emerald buttons, links, and badges */
+.theme-teacher .bg-\[\#ff912d\] *,
+.theme-teacher .bg-buttons *,
+.theme-teacher .bg-emerald-600 *,
+.theme-teacher .bg-emerald-700 *,
+.theme-teacher [class*="bg-emerald-600"] *,
+.theme-teacher [class*="bg-emerald-700"] * {
+  color: #ffffff !important;
+}
+
+/* Replace orange text & accents with emerald green */
+.theme-teacher .text-\[\#ff912d\] {
+  color: #059669 !important;
+}
+
+/* High-Contrast Readable "Pending" Status Badges */
+.theme-teacher [class*="text-amber-"],
+.theme-teacher [class*="text-yellow-"] {
+  color: #78350f !important;
+  /* Dark amber with 8:1 contrast */
+  font-weight: 700 !important;
+}
+
+.theme-teacher [class*="bg-amber-"],
+.theme-teacher [class*="bg-yellow-"] {
+  background-color: #fef3c7 !important;
+  /* Solid warm amber 100 */
+  border: 1px solid #f59e0b !important;
+  /* Amber 500 */
+  color: #78350f !important;
+  font-weight: 700 !important;
+}
+
+.theme-teacher [class*="bg-amber-"] *,
+.theme-teacher [class*="bg-yellow-"] * {
+  color: #78350f !important;
+}
+
+/* High-Contrast Readable "Verified" & "Completed" Badges */
+.theme-teacher [class*="text-emerald-"],
+.theme-teacher [class*="text-green-"] {
+  color: #065f46 !important;
+  /* Emerald 800 */
+  font-weight: 700 !important;
+}
+
+.theme-teacher [class*="bg-emerald-"]:not(.bg-emerald-600):not(.bg-emerald-700):not([class*="bg-emerald-600"]):not([class*="bg-emerald-700"]),
+.theme-teacher [class*="bg-green-"] {
+  background-color: #d1fae5 !important;
+  /* Emerald 100 */
+  border: 1px solid #10b981 !important;
+  /* Emerald 500 */
+  color: #065f46 !important;
+  font-weight: 700 !important;
+}
+
+.theme-teacher [class*="bg-emerald-"]:not(.bg-emerald-600):not(.bg-emerald-700):not([class*="bg-emerald-600"]):not([class*="bg-emerald-700"]) *,
+.theme-teacher [class*="bg-green-"] * {
+  color: #065f46 !important;
+}
+
+/* Badges & Chips */
+.theme-teacher .bg-\[\#ff912d\]\/10,
+.theme-teacher .bg-\[\#ff912d\]\/15,
+.theme-teacher .bg-\[\#ff912d\]\/20,
+.theme-teacher .bg-buttons\/20 {
+  background-color: #d1fae5 !important;
+  /* Emerald 100 */
+  color: #065f46 !important;
+  /* Emerald 800 */
+  border-color: #6ee7b7 !important;
+  /* Emerald 300 */
+}
+
+/* Borders */
+.theme-teacher .border-\[\#ff912d\],
+.theme-teacher .border-\[\#ff912d\]\/20,
+.theme-teacher .border-\[\#ff912d\]\/30,
+.theme-teacher .border-\[\#ff912d\]\/40,
+.theme-teacher .border-\[\#ff912d\]\/50 {
+  border-color: #a7f3d0 !important;
+}
+
+.theme-teacher .border-white\/5,
+.theme-teacher .border-white\/10,
+.theme-teacher .border-white\/15,
+.theme-teacher .border-white\/20 {
+  border-color: #cbd5e1 !important;
+}
+
+/* Input fields & Select dropdowns */
+.theme-teacher input,
+.theme-teacher select,
+.theme-teacher textarea {
+  background-color: #ffffff !important;
+  border-color: #a7f3d0 !important;
+  color: #0f172a !important;
+}
+
+.theme-teacher input:focus,
+.theme-teacher select:focus,
+.theme-teacher textarea:focus {
+  border-color: #059669 !important;
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.25) !important;
+}
+
+.theme-teacher select option {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+/* Tables - Highly Readable Emerald Header with Crisp Dark Emerald Text */
+.theme-teacher table {
+  background-color: #ffffff !important;
+  border: 1px solid #a7f3d0 !important;
+}
+
+.theme-teacher thead,
+.theme-teacher thead tr,
+.theme-teacher thead th,
+.theme-teacher th {
+  background-color: #d1fae5 !important;
+  /* Soft Emerald 100 */
+  color: #064e3b !important;
+  /* Deep Forest Green 900 */
+  border-bottom: 2px solid #10b981 !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+}
+
+.theme-teacher thead th *,
+.theme-teacher th * {
+  color: #064e3b !important;
+}
+
+.theme-teacher tbody tr {
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+
+.theme-teacher tbody tr:hover {
+  background-color: #ecfdf5 !important;
+  /* Emerald 50 hover */
+}
+
+.theme-teacher td {
+  color: #1e293b !important;
+}
+
+/* Modals & Sub-boxes (Metric Cards / Stat Panels) */
+.theme-teacher .bg-black\/20,
+.theme-teacher .bg-black\/25,
+.theme-teacher .bg-black\/30,
+.theme-teacher .bg-black\/40,
+.theme-teacher .bg-black\/60 {
+  background-color: #ecfdf5 !important;
+  /* Soft emerald container */
+  border: 1px solid #a7f3d0 !important;
+  color: #064e3b !important;
+}
+
+
+/* =========================================================================
+   ADMIN CONSOLE THEME (Readable Blue & White Combination)
+   ========================================================================= */
+.theme-admin {
+  background-color: #eff6ff !important;
+  /* Soft blue canvas */
+  color: #0f172a !important;
+}
+
+/* Transform dark space containers to crisp white cards with blue borders & shadow */
+.theme-admin .bg-\[\#1e0a2d\],
+.theme-admin .bg-\[\#1a082c\],
+.theme-admin .bg-\[\#180729\],
+.theme-admin .bg-\[\#130927\],
+.theme-admin .bg-\[\#11051c\],
+.theme-admin .bg-main,
+.theme-admin .bg-subs {
+  background-color: #ffffff !important;
+  border: 1px solid #bfdbfe !important;
+  /* Blue 200 */
+  color: #0f172a !important;
+  box-shadow: 0 4px 6px -1px rgba(30, 58, 138, 0.05), 0 2px 4px -2px rgba(30, 58, 138, 0.05) !important;
+}
+
+/* Headings and Titles - Deep Readable Blue */
+.theme-admin h1,
+.theme-admin h2,
+.theme-admin h3,
+.theme-admin h4 {
+  color: #1e3a8a !important;
+}
+
+/* Body & Secondary Text */
+.theme-admin p,
+.theme-admin span.text-gray-300,
+.theme-admin span.text-gray-400,
+.theme-admin .text-gray-300,
+.theme-admin .text-gray-400 {
+  color: #334155 !important;
+}
+
+/* Table cells with legacy space classes */
+.theme-admin table td .text-white,
+.theme-admin table th .text-white {
+  color: #0f172a !important;
+}
+
+/* Force pure white text and icons on all solid blue buttons, links, and badges */
+.theme-admin .bg-\[\#ff912d\],
+.theme-admin .bg-buttons,
+.theme-admin .bg-blue-600,
+.theme-admin .bg-blue-700,
+.theme-admin [class*="bg-blue-600"],
+.theme-admin [class*="bg-blue-700"],
+.theme-admin a.bg-blue-600,
+.theme-admin a[class*="bg-blue-600"],
+.theme-admin span.bg-blue-600,
+.theme-admin span[class*="bg-blue-600"],
+.theme-admin .bg-\[\#ff912d\] *,
+.theme-admin .bg-buttons *,
+.theme-admin .bg-blue-600 *,
+.theme-admin .bg-blue-700 *,
+.theme-admin [class*="bg-blue-600"] *,
+.theme-admin [class*="bg-blue-700"] *,
+.theme-admin a.bg-blue-600 *,
+.theme-admin a[class*="bg-blue-600"] *,
+.theme-admin span.bg-blue-600 *,
+.theme-admin span[class*="bg-blue-600"] * {
+  color: #ffffff !important;
+}
+
+/* Replace orange/amber buttons with solid royal blue AND ENSURE PURE WHITE TEXT */
+.theme-admin .bg-\[\#ff912d\],
+.theme-admin .bg-buttons,
+.theme-admin .bg-blue-600,
+.theme-admin .bg-blue-700 {
+  background-color: #2563eb !important;
+  /* Blue 600 */
+  color: #ffffff !important;
+  border-color: #1d4ed8 !important;
+}
+
+.theme-admin .bg-\[\#ff912d\]:hover,
+.theme-admin .bg-buttons:hover,
+.theme-admin .bg-blue-600:hover,
+.theme-admin .bg-blue-700:hover {
+  background-color: #1d4ed8 !important;
+  /* Blue 700 */
+  color: #ffffff !important;
+}
+
+/* Force pure white text and icons on all solid blue buttons, links, and badges */
+.theme-admin .bg-\[\#ff912d\] *,
+.theme-admin .bg-buttons *,
+.theme-admin .bg-blue-600 *,
+.theme-admin .bg-blue-700 *,
+.theme-admin [class*="bg-blue-600"] *,
+.theme-admin [class*="bg-blue-700"] * {
+  color: #ffffff !important;
+}
+
+/* Replace orange text & accents with blue */
+.theme-admin .text-\[\#ff912d\] {
+  color: #2563eb !important;
+}
+
+/* High-Contrast Readable "Pending" Status Badges */
+.theme-admin [class*="text-amber-"],
+.theme-admin [class*="text-yellow-"] {
+  color: #78350f !important;
+  /* Dark amber with 8:1 contrast */
+  font-weight: 700 !important;
+}
+
+.theme-admin [class*="bg-amber-"],
+.theme-admin [class*="bg-yellow-"] {
+  background-color: #fef3c7 !important;
+  /* Solid warm amber 100 */
+  border: 1px solid #f59e0b !important;
+  /* Amber 500 */
+  color: #78350f !important;
+  font-weight: 700 !important;
+}
+
+.theme-admin [class*="bg-amber-"] *,
+.theme-admin [class*="bg-yellow-"] * {
+  color: #78350f !important;
+}
+
+/* High-Contrast Readable "Verified" & "Completed" Badges */
+.theme-admin [class*="text-emerald-"],
+.theme-admin [class*="text-green-"] {
+  color: #065f46 !important;
+  /* Emerald 800 */
+  font-weight: 700 !important;
+}
+
+.theme-admin [class*="bg-emerald-"]:not(.bg-emerald-600):not(.bg-emerald-700):not([class*="bg-emerald-600"]):not([class*="bg-emerald-700"]),
+.theme-admin [class*="bg-green-"] {
+  background-color: #d1fae5 !important;
+  /* Emerald 100 */
+  border: 1px solid #10b981 !important;
+  /* Emerald 500 */
+  color: #065f46 !important;
+  font-weight: 700 !important;
+}
+
+.theme-admin [class*="bg-emerald-"]:not(.bg-emerald-600):not(.bg-emerald-700):not([class*="bg-emerald-600"]):not([class*="bg-emerald-700"]) *,
+.theme-admin [class*="bg-green-"] * {
+  color: #065f46 !important;
+}
+
+/* High-Contrast Readable "Active" Account Badges */
+.theme-admin [class*="text-blue-400"] {
+  color: #1e40af !important;
+  /* Blue 800 */
+  font-weight: 700 !important;
+}
+
+.theme-admin [class*="bg-blue-500/"] {
+  background-color: #dbeafe !important;
+  /* Blue 100 */
+  border: 1px solid #3b82f6 !important;
+  /* Blue 500 */
+  color: #1e40af !important;
+  font-weight: 700 !important;
+}
+
+.theme-admin [class*="bg-blue-500/"] * {
+  color: #1e40af !important;
+}
+
+/* Badges & Chips */
+.theme-admin .bg-\[\#ff912d\]\/10,
+.theme-admin .bg-\[\#ff912d\]\/15,
+.theme-admin .bg-\[\#ff912d\]\/20,
+.theme-admin .bg-buttons\/20 {
+  background-color: #dbeafe !important;
+  /* Blue 100 */
+  color: #1e40af !important;
+  /* Blue 800 */
+  border-color: #93c5fd !important;
+  /* Blue 300 */
+}
+
+/* Borders */
+.theme-admin .border-\[\#ff912d\],
+.theme-admin .border-\[\#ff912d\]\/20,
+.theme-admin .border-\[\#ff912d\]\/30,
+.theme-admin .border-\[\#ff912d\]\/40,
+.theme-admin .border-\[\#ff912d\]\/50 {
+  border-color: #bfdbfe !important;
+}
+
+.theme-admin .border-white\/5,
+.theme-admin .border-white\/10,
+.theme-admin .border-white\/15,
+.theme-admin .border-white\/20 {
+  border-color: #cbd5e1 !important;
+}
+
+/* Input fields & Select dropdowns */
+.theme-admin input,
+.theme-admin select,
+.theme-admin textarea {
+  background-color: #ffffff !important;
+  border-color: #bfdbfe !important;
+  color: #0f172a !important;
+}
+
+.theme-admin input:focus,
+.theme-admin select:focus,
+.theme-admin textarea:focus {
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25) !important;
+}
+
+.theme-admin select option {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+/* Tables - Highly Readable Blue Header with Crisp Dark Blue Text */
+.theme-admin table {
+  background-color: #ffffff !important;
+  border: 1px solid #bfdbfe !important;
+}
+
+.theme-admin thead,
+.theme-admin thead tr,
+.theme-admin thead th,
+.theme-admin th {
+  background-color: #dbeafe !important;
+  /* Soft Blue 100 */
+  color: #1e3a8a !important;
+  /* Deep Blue 900 */
+  border-bottom: 2px solid #3b82f6 !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+}
+
+.theme-admin thead th *,
+.theme-admin th * {
+  color: #1e3a8a !important;
+}
+
+.theme-admin tbody tr {
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+
+.theme-admin tbody tr:hover {
+  background-color: #eff6ff !important;
+  /* Blue 50 hover */
+}
+
+.theme-admin td {
+  color: #1e293b !important;
+}
+
+/* Modals & Sub-boxes (Metric Cards / Stat Panels) */
+.theme-admin .bg-black\/20,
+.theme-admin .bg-black\/25,
+.theme-admin .bg-black\/30,
+.theme-admin .bg-black\/40,
+.theme-admin .bg-black\/60 {
+  background-color: #eff6ff !important;
+  /* Soft blue container */
+  border: 1px solid #bfdbfe !important;
+  color: #1e3a8a !important;
+}

@@ -747,3 +747,31 @@ export async function revertAptitudeQuestionsAI(): Promise<{
     };
   }
 }
+
+
+export async function getAptitudeSettingsAction() {
+  await requireSuperAdmin();
+  const { getSystemSettings } = await import("@/lib/systemSettings");
+  const settings = await getSystemSettings();
+  return {
+    shuffleAptitudeQuestions: settings.shuffleAptitudeQuestions,
+  };
+}
+
+export async function setAptitudeShuffleAction(enabled: boolean) {
+  const session = await requireSuperAdmin();
+  const { updateSystemSettings } = await import("@/lib/systemSettings");
+  const updated = await updateSystemSettings({ shuffleAptitudeQuestions: enabled });
+
+  await logSystemAction({
+    actorId: (session.user as any).id,
+    actorRole: "SUPER_ADMIN",
+    action: "APTITUDE_SHUFFLE_TOGGLED",
+    details: { shuffleAptitudeQuestions: enabled },
+  });
+
+  return {
+    success: true,
+    shuffleAptitudeQuestions: updated.shuffleAptitudeQuestions,
+  };
+}

@@ -40,14 +40,12 @@ export default function Sidebar() {
 
   useEffect(() => {
     setIsMounted(true);
-    const storedState = localStorage.getItem("sidebar_minimized");
-    const isMin = storedState === "true";
-    if (isMin) {
-      setIsMinimized(true);
-    }
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(new CustomEvent("sidebar_change", { detail: { isMinimized: isMin } }));
-    }
+    try {
+      const stored = localStorage.getItem("sidebar_minimized") === "true";
+      if (stored) {
+        setIsMinimized(true);
+      }
+    } catch { }
   }, []);
 
   useEffect(() => {
@@ -79,7 +77,7 @@ export default function Sidebar() {
             setUserStorageItem("sandbox_unlocked", "true", userId);
           }
         })
-        .catch(() => {});
+        .catch(() => { });
     };
 
     fetchSandboxStatus();
@@ -140,14 +138,16 @@ export default function Sidebar() {
   };
 
   const toggleSidebar = () => {
-    setIsMinimized(prev => {
-      const nextState = !prev;
+    const nextState = !isMinimized;
+    setIsMinimized(nextState);
+    try {
       localStorage.setItem("sidebar_minimized", String(nextState));
-      if (typeof window !== "undefined") {
+    } catch { }
+    if (typeof window !== "undefined") {
+      setTimeout(() => {
         window.dispatchEvent(new CustomEvent("sidebar_change", { detail: { isMinimized: nextState } }));
-      }
-      return nextState;
-    });
+      }, 0);
+    }
   };
 
   // Prevent flicker on first render by not animating width if not mounted
@@ -159,7 +159,7 @@ export default function Sidebar() {
       path: "/dashboard",
       icon: (
         <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
         </svg>
       )
     },
@@ -168,7 +168,7 @@ export default function Sidebar() {
       path: "/profile",
       icon: (
         <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
         </svg>
       )
     },
@@ -177,10 +177,10 @@ export default function Sidebar() {
       path: "/modules",
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 flex-shrink-0">
-          <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/>
-          <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/>
-          <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/>
-          <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/>
+          <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" />
+          <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" />
+          <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0" />
+          <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" />
         </svg>
       )
     },
@@ -204,9 +204,9 @@ export default function Sidebar() {
       path: "/shop",
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 flex-shrink-0">
-          <circle cx="8" cy="21" r="1"/>
-          <circle cx="19" cy="21" r="1"/>
-          <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>
+          <circle cx="8" cy="21" r="1" />
+          <circle cx="19" cy="21" r="1" />
+          <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" />
         </svg>
       )
     },
@@ -216,7 +216,7 @@ export default function Sidebar() {
       category: "System",
       icon: (
         <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
         </svg>
       )
     },
@@ -225,27 +225,28 @@ export default function Sidebar() {
       path: "/settings",
       icon: (
         <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
         </svg>
       )
     }
   ];
 
   return (
-    <aside 
+    <aside
       ref={asideRef}
+      suppressHydrationWarning
       className={`border-r border-white/5 bg-[#150524]/60 backdrop-blur-xl flex-shrink-0 flex flex-col z-20 h-full transition-all duration-300 ease-in-out relative ${sidebarWidthClass}`}
     >
       {/* Toggle Button (Middle Semicircle) */}
-      <button 
+      <button
         onClick={toggleSidebar}
         className="absolute -right-4 top-1/2 -translate-y-1/2 w-4 h-16 bg-[#ff912d] text-white rounded-r-xl rounded-l-none flex items-center justify-center cursor-pointer shadow-lg z-50 hover:bg-orange-400 transition-colors border border-white/10 border-l-0"
         title={isMinimized ? "Expand Sidebar" : "Minimize Sidebar"}
       >
-        <svg 
-          className={`w-3 h-3 transition-transform duration-300 ${isMinimized ? 'rotate-180' : ''}`} 
-          fill="none" 
-          stroke="currentColor" 
+        <svg
+          className={`w-3 h-3 transition-transform duration-300 ${isMinimized ? 'rotate-180' : ''}`}
+          fill="none"
+          stroke="currentColor"
           viewBox="0 0 24 24"
         >
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M15 19l-7-7 7-7" />
@@ -255,11 +256,11 @@ export default function Sidebar() {
       {/* Brand */}
       <div className={`p-6 flex items-center gap-3 transition-all duration-300 h-24 ${isMinimized ? 'justify-center px-0' : 'px-8'}`}>
         <div className="w-10 h-10 flex-shrink-0 relative flex items-center justify-center">
-          <Image 
-            src="/assets/global/badges/NETStartIcon.png" 
-            alt="NETStart Logo" 
-            width={40} 
-            height={40} 
+          <Image
+            src="/assets/global/badges/NETStartIcon.png"
+            alt="NETStart Logo"
+            width={40}
+            height={40}
             className="object-contain"
           />
         </div>
@@ -271,7 +272,7 @@ export default function Sidebar() {
       </div>
 
       {/* Main Nav */}
-      <nav 
+      <nav
         onScroll={updateSandboxPosition}
         className="flex-1 px-4 py-4 flex flex-col gap-2 overflow-y-auto overflow-x-hidden"
       >
@@ -279,7 +280,7 @@ export default function Sidebar() {
           const isActive = pathname === link.path;
           const isSandboxLink = link.path === "/code-sandbox";
           const isLocked = isSandboxLink && !effectiveSandboxUnlocked;
-          
+
           return (
             <React.Fragment key={link.path}>
               {link.category && !isMinimized && (
@@ -292,10 +293,10 @@ export default function Sidebar() {
                   <div className="w-6 h-[1px] bg-white/10 rounded-full"></div>
                 </div>
               )}
-              
-              <Link 
+
+              <Link
                 ref={isSandboxLink ? sandboxRef : undefined}
-                href={link.path} 
+                href={link.path}
                 onClick={(e) => {
                   if (isLocked) {
                     e.preventDefault();
@@ -312,15 +313,13 @@ export default function Sidebar() {
                     requestNavigation(link.path);
                   }
                 }}
-                className={`flex items-center gap-4 py-3 rounded-xl font-medium transition-all duration-200 group relative overflow-hidden ${
-                  isMinimized ? 'px-0 justify-center w-12 h-12 mx-auto' : 'px-4 w-full'
-                } ${
-                  isLocked
+                className={`flex items-center gap-4 py-3 rounded-xl font-medium transition-all duration-200 group relative overflow-hidden ${isMinimized ? 'px-0 justify-center w-12 h-12 mx-auto' : 'px-4 w-full'
+                  } ${isLocked
                     ? 'opacity-60 cursor-not-allowed hover:bg-white/5 text-white/40 border border-transparent'
-                    : isActive 
-                    ? 'bg-orange-500/10 text-[#ff912d] font-semibold border border-orange-500/20' 
-                    : 'text-white/60 hover:text-white hover:bg-white/5 border border-transparent'
-                }`}
+                    : isActive
+                      ? 'bg-orange-500/10 text-[#ff912d] font-semibold border border-orange-500/20'
+                      : 'text-white/60 hover:text-white hover:bg-white/5 border border-transparent'
+                  }`}
                 title={isMinimized ? (isLocked ? "Sandbox (Locked: Complete Moon tutorial)" : link.name) : undefined}
               >
                 {isActive && !isMinimized && !isLocked && (
@@ -329,7 +328,7 @@ export default function Sidebar() {
                 {isActive && isMinimized && !isLocked && (
                   <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-[#ff912d] rounded-full"></div>
                 )}
-                
+
                 <div className={`relative ${isActive && !isLocked ? 'text-[#ff912d]' : ''}`}>
                   {link.icon}
                 </div>
@@ -414,7 +413,7 @@ export default function Sidebar() {
               </span>
             </div>
           </div>
-          <button 
+          <button
             type="button"
             onClick={() => setToastMessage(null)}
             className="text-white/40 hover:text-white rounded-full p-1.5 hover:bg-white/10 transition-colors cursor-pointer shrink-0 ml-2"

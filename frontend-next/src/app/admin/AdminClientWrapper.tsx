@@ -67,6 +67,18 @@ export default function AdminClientWrapper({
   const [demoPrivilegeTarget, setDemoPrivilegeTarget] = useState<any | null>(null);
   const [isUpdatingDemoPrivilege, setIsUpdatingDemoPrivilege] = useState(false);
 
+  // Verification Confirm Modal
+  const [verificationTarget, setVerificationTarget] = useState<any | null>(null);
+  const [isUpdatingVerification, setIsUpdatingVerification] = useState(false);
+
+  // Aptitude Status Confirm Modal
+  const [aptitudeTarget, setAptitudeTarget] = useState<any | null>(null);
+  const [isUpdatingAptitude, setIsUpdatingAptitude] = useState(false);
+
+  // Ban / Unban Confirm Modal
+  const [banTarget, setBanTarget] = useState<any | null>(null);
+  const [isUpdatingBan, setIsUpdatingBan] = useState(false);
+
   const isTeacher = currentUserRole === 'TEACHER';
 
   const filteredUsers = users.filter(u => {
@@ -93,46 +105,52 @@ export default function AdminClientWrapper({
   const totalPages = Math.max(1, Math.ceil(filteredUsers.length / pageSize));
   const paginatedUsers = filteredUsers.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
-  const handleToggleBan = async (userId: string, currentStatus: boolean) => {
+  const handleConfirmToggleBan = async () => {
+    if (!banTarget) return;
     try {
-      setLoadingAction(`ban-${userId}`);
-      await toggleUserBan(userId, currentStatus);
-      setUsers(users.map(u => u.id === userId ? { ...u, isBanned: !currentStatus } : u));
-      setToast({ message: `User successfully ${currentStatus ? 'unbanned' : 'banned'}.`, type: 'success' });
+      setIsUpdatingBan(true);
+      await toggleUserBan(banTarget.id, banTarget.isBanned);
+      setUsers(users.map(u => u.id === banTarget.id ? { ...u, isBanned: !banTarget.isBanned } : u));
+      setToast({ message: `User successfully ${banTarget.isBanned ? 'unbanned' : 'banned'}.`, type: 'success' });
     } catch (err: any) {
       console.error(err);
       setToast({ message: err.message || "Failed to toggle ban status.", type: 'error' });
     } finally {
-      setLoadingAction(null);
+      setIsUpdatingBan(false);
+      setBanTarget(null);
     }
   };
 
-  const handleToggleVerification = async (userId: string, currentStatus: boolean) => {
+  const handleConfirmToggleVerification = async () => {
+    if (!verificationTarget) return;
     try {
-      setLoadingAction(`verify-${userId}`);
-      const res = await toggleUserVerification(userId, !currentStatus);
-      setUsers(users.map(u => u.id === userId ? { ...u, isVerified: res.isVerified } : u));
+      setIsUpdatingVerification(true);
+      const res = await toggleUserVerification(verificationTarget.id, !verificationTarget.isVerified);
+      setUsers(users.map(u => u.id === verificationTarget.id ? { ...u, isVerified: res.isVerified } : u));
       setToast({ message: `Student successfully ${res.isVerified ? 'verified' : 'unverified'}.`, type: 'success' });
     } catch (err: any) {
       console.error(err);
       setToast({ message: err.message || "Failed to update verification status.", type: 'error' });
     } finally {
-      setLoadingAction(null);
+      setIsUpdatingVerification(false);
+      setVerificationTarget(null);
     }
   };
 
-  const handleToggleAptitude = async (userId: string, currentStatus: boolean) => {
+  const handleConfirmToggleAptitude = async () => {
+    if (!aptitudeTarget) return;
     try {
-      setLoadingAction(`aptitude-${userId}`);
-      const target = !currentStatus;
-      await adminSetAptitudeStatus(userId, target);
-      setUsers(users.map(u => u.id === userId ? { ...u, hasTakenAptitudeTest: target } : u));
+      setIsUpdatingAptitude(true);
+      const target = !aptitudeTarget.hasTakenAptitudeTest;
+      await adminSetAptitudeStatus(aptitudeTarget.id, target);
+      setUsers(users.map(u => u.id === aptitudeTarget.id ? { ...u, hasTakenAptitudeTest: target } : u));
       setToast({ message: `Aptitude requirement ${target ? 'waived / marked completed' : 'reset / marked required'}.`, type: 'success' });
     } catch (err: any) {
       console.error(err);
       setToast({ message: err.message || "Failed to update aptitude status.", type: 'error' });
     } finally {
-      setLoadingAction(null);
+      setIsUpdatingAptitude(false);
+      setAptitudeTarget(null);
     }
   };
 
@@ -327,16 +345,13 @@ export default function AdminClientWrapper({
                   <td className="px-6 py-4 whitespace-nowrap">
                     <button
                       type="button"
-                      onClick={() => handleToggleVerification(user.id, user.isVerified)}
-                      disabled={loadingAction === `verify-${user.id}`}
+                      onClick={() => setVerificationTarget(user)}
                       className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium cursor-pointer transition-all ${
                         user.isVerified ? 'bg-green-500/10 text-green-400 border border-green-500/20 hover:bg-green-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20'
                       }`}
-                      title={user.isVerified ? "Click to revoke verification" : "Click to verify student"}
+                      title={user.isVerified ? "Click to revoke verification (opens modal)" : "Click to verify student (opens modal)"}
                     >
-                      {loadingAction === `verify-${user.id}` ? (
-                        <RefreshCcw className="animate-spin" size={13} />
-                      ) : user.isVerified ? (
+                      {user.isVerified ? (
                         <CheckCircle size={14} />
                       ) : (
                         <ShieldAlert size={14} />
@@ -348,18 +363,13 @@ export default function AdminClientWrapper({
                     <div className="flex flex-col gap-1">
                       <button
                         type="button"
-                        onClick={() => handleToggleAptitude(user.id, user.hasTakenAptitudeTest)}
-                        disabled={loadingAction === `aptitude-${user.id}`}
+                        onClick={() => setAptitudeTarget(user)}
                         className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium cursor-pointer transition-all ${
                           user.hasTakenAptitudeTest ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/25' : 'bg-amber-500/15 text-amber-400 border border-amber-500/30 hover:bg-amber-500/25'
                         }`}
-                        title={user.hasTakenAptitudeTest ? "Click to require aptitude test (mark pending)" : "Click to waive aptitude test (mark completed)"}
+                        title={user.hasTakenAptitudeTest ? "Click to require aptitude test (opens modal)" : "Click to waive aptitude test (opens modal)"}
                       >
-                        {loadingAction === `aptitude-${user.id}` ? (
-                          <RefreshCcw className="animate-spin" size={13} />
-                        ) : (
-                          <Brain size={14} />
-                        )}
+                        <Brain size={14} />
                         {user.hasTakenAptitudeTest ? 'Completed' : 'Pending'}
                       </button>
                       {user.hasTakenAptitudeTest && user.recommendedLearningPath && (
@@ -370,12 +380,17 @@ export default function AdminClientWrapper({
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
-                      user.isBanned ? 'bg-gray-500/20 text-gray-400 border border-gray-500/30' : 'bg-[#ff912d]/10 text-[#ff912d] border border-[#ff912d]/20'
-                    }`}>
+                    <button
+                      type="button"
+                      onClick={() => setBanTarget(user)}
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium cursor-pointer transition-all ${
+                        user.isBanned ? 'bg-gray-500/20 text-gray-400 border border-gray-500/30 hover:bg-gray-500/30' : 'bg-blue-500/10 text-blue-600 border border-blue-500/20 hover:bg-blue-500/20'
+                      }`}
+                      title={user.isBanned ? "Click to unban account (opens modal)" : "Click to ban account (opens modal)"}
+                    >
                       {user.isBanned ? <Ban size={14} /> : <CheckCircle size={14} />}
                       {user.isBanned ? 'Banned' : 'Active'}
-                    </span>
+                    </button>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <button
@@ -403,48 +418,28 @@ export default function AdminClientWrapper({
                       <button
                         onClick={() => handleOpenAssign(user)}
                         title="Assign Section"
-                        className="p-2 rounded-lg bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 transition-colors cursor-pointer"
+                        className="p-2 rounded-lg bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200 transition-colors cursor-pointer"
                       >
                         <GraduationCap size={16} />
                       </button>
-                      <Link href={`/admin/users/${user.id}`} className="p-2 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-colors" title="View Profile">
+                      <Link 
+                        href={`/admin/users/${user.id}`} 
+                        className="p-2 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 transition-colors inline-flex items-center justify-center" 
+                        title="View Profile"
+                      >
                         <Eye size={16} />
                       </Link>
                       <button
-                        onClick={() => handleToggleBan(user.id, user.isBanned)}
-                        disabled={loadingAction === `ban-${user.id}`}
-                        className={`p-2 rounded-lg transition-colors cursor-pointer ${
-                          user.isBanned ? 'bg-gray-700/50 text-gray-300 hover:bg-gray-600' : 'bg-red-500/10 text-red-400 hover:bg-red-500/20'
-                        } disabled:opacity-50`}
+                        type="button"
+                        onClick={() => setBanTarget(user)}
+                        className={`p-2 rounded-lg transition-colors cursor-pointer border ${
+                          user.isBanned 
+                            ? 'bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-300' 
+                            : 'bg-red-50 text-red-600 hover:bg-red-100 border-red-200'
+                        }`}
                         title={user.isBanned ? "Unban User" : "Ban User"}
                       >
-                        {loadingAction === `ban-${user.id}` ? <RefreshCcw className="animate-spin" size={16} /> : <Ban size={16} />}
-                      </button>
-                      
-                      <button
-                        onClick={() => handleToggleVerification(user.id, user.isVerified)}
-                        disabled={loadingAction === `verify-${user.id}`}
-                        className={`p-2 rounded-lg transition-colors cursor-pointer disabled:opacity-50 ${
-                          user.isVerified 
-                            ? 'bg-green-500/10 text-green-400 hover:bg-red-500/20 hover:text-red-400' 
-                            : 'bg-red-500/10 text-red-400 hover:bg-green-500/20 hover:text-green-400'
-                        }`}
-                        title={user.isVerified ? "Revoke Verification" : "Verify Student"}
-                      >
-                        {loadingAction === `verify-${user.id}` ? <RefreshCcw className="animate-spin" size={16} /> : <CheckCircle size={16} />}
-                      </button>
-
-                      <button
-                        onClick={() => handleToggleAptitude(user.id, user.hasTakenAptitudeTest)}
-                        disabled={loadingAction === `aptitude-${user.id}`}
-                        className={`p-2 rounded-lg transition-colors cursor-pointer disabled:opacity-50 ${
-                          user.hasTakenAptitudeTest 
-                            ? 'bg-emerald-500/10 text-emerald-400 hover:bg-amber-500/20 hover:text-amber-400' 
-                            : 'bg-amber-500/10 text-amber-400 hover:bg-emerald-500/20 hover:text-emerald-400'
-                        }`}
-                        title={user.hasTakenAptitudeTest ? "Require Aptitude Test (Mark Pending)" : "Waive Aptitude Test (Mark Completed)"}
-                      >
-                        {loadingAction === `aptitude-${user.id}` ? <RefreshCcw className="animate-spin" size={16} /> : <Brain size={16} />}
+                        <Ban size={16} />
                       </button>
                     </div>
                   </td>
@@ -573,6 +568,60 @@ export default function AdminClientWrapper({
           loading={isUpdatingDemoPrivilege}
           onConfirm={handleConfirmToggleDemoPrivilege}
           onCancel={() => setDemoPrivilegeTarget(null)}
+        />
+      )}
+
+      {/* Verification Confirm Modal */}
+      {verificationTarget && (
+        <ConfirmModal
+          isOpen={!!verificationTarget}
+          title={verificationTarget.isVerified ? "Revoke Student Verification?" : "Verify Student Account?"}
+          message={
+            verificationTarget.isVerified
+              ? `Are you sure you want to revoke verification for ${verificationTarget.displayName || verificationTarget.email}? The student will lose verified status.`
+              : `Verify account for ${verificationTarget.displayName || verificationTarget.email}? This will confirm their student credentials on the platform.`
+          }
+          confirmLabel={verificationTarget.isVerified ? "Revoke Verification" : "Verify Student"}
+          variant={verificationTarget.isVerified ? "warning" : "primary"}
+          loading={isUpdatingVerification}
+          onConfirm={handleConfirmToggleVerification}
+          onCancel={() => setVerificationTarget(null)}
+        />
+      )}
+
+      {/* Aptitude Status Confirm Modal */}
+      {aptitudeTarget && (
+        <ConfirmModal
+          isOpen={!!aptitudeTarget}
+          title={aptitudeTarget.hasTakenAptitudeTest ? "Require Aptitude Test (Mark Pending)?" : "Waive Aptitude Test (Mark Completed)?"}
+          message={
+            aptitudeTarget.hasTakenAptitudeTest
+              ? `Are you sure you want to require ${aptitudeTarget.displayName || aptitudeTarget.email} to retake the Aptitude Test? Their diagnostic status will return to Pending.`
+              : `Waive the 22-question diagnostic test requirement for ${aptitudeTarget.displayName || aptitudeTarget.email}? Their status will be marked Completed, unlocking direct flight paths.`
+          }
+          confirmLabel={aptitudeTarget.hasTakenAptitudeTest ? "Mark as Pending" : "Mark as Completed"}
+          variant={aptitudeTarget.hasTakenAptitudeTest ? "warning" : "primary"}
+          loading={isUpdatingAptitude}
+          onConfirm={handleConfirmToggleAptitude}
+          onCancel={() => setAptitudeTarget(null)}
+        />
+      )}
+
+      {/* Ban / Unban Confirm Modal */}
+      {banTarget && (
+        <ConfirmModal
+          isOpen={!!banTarget}
+          title={banTarget.isBanned ? "Unban User Account?" : "Suspend / Ban User Account?"}
+          message={
+            banTarget.isBanned
+              ? `Are you sure you want to unban ${banTarget.displayName || banTarget.email}? They will regain full access to the NETStart platform.`
+              : `Are you sure you want to ban ${banTarget.displayName || banTarget.email}? They will immediately be locked out of the platform.`
+          }
+          confirmLabel={banTarget.isBanned ? "Unban Account" : "Ban Account"}
+          variant={banTarget.isBanned ? "primary" : "danger"}
+          loading={isUpdatingBan}
+          onConfirm={handleConfirmToggleBan}
+          onCancel={() => setBanTarget(null)}
         />
       )}
     </div>
