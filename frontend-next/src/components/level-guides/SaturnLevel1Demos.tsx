@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { Terminal, Sparkles, Check } from 'lucide-react';
+import { Terminal, Check } from 'lucide-react';
 
 /**
  * Large, Clear SVG Cursor Pointer (Strictly No Emojis)
@@ -145,178 +145,80 @@ function Saturn1CockpitScene({
 }
 
 /**
- * Slide 1: How to Win Saturn Level 1 (Full C++ I/O Telemetry Stream Pipeline)
+ * Slide 1: Program Entry & Stream Loop Foundation
+ * Dynamic Animation:
+ * - Left: "Repeat While Receiving Input" block is dragged from the Stream category and snapped between Start and End
+ * - Right: Terminal comes online and activates the telemetry stream channel
  */
 export function SaturnLevel1Step1Demo() {
   return (
     <div className="relative w-full h-full flex rounded-xl border border-white/10 bg-[#0e041a] overflow-hidden select-none font-sans">
       <style>{`
-        @keyframes s1s1Ready { 0%, 25% { opacity: 1; } 30%, 92% { opacity: 0; } 96%, 100% { opacity: 1; } }
-        @keyframes s1s1Running { 0%, 25% { opacity: 0; } 30%, 92% { opacity: 1; } 96%, 100% { opacity: 0; } }
-      `}</style>
-
-      {/* LEFT PANE: Actual Blockly Blocks */}
-      <div className="w-1/2 h-full flex flex-col border-r border-white/10 relative">
-        <div className="h-6 px-3 bg-[#170529] border-b border-white/10 flex items-center shrink-0">
-          <span className="text-[10px] font-bold text-slate-200">Workspace</span>
-        </div>
-
-        <div
-          className="flex-1 p-2.5 flex flex-row gap-2 relative overflow-hidden"
-          style={{
-            backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.12) 1px, transparent 1px)',
-            backgroundSize: '14px 14px',
-          }}
-        >
-          <Saturn1ToolboxSidebar activeCategory="program" />
-
-          {/* Actual Blockly Stack */}
-          <div className="flex flex-col w-[190px] sm:w-[205px] relative z-20">
-            <div className="h-6 bg-[#EF4444] text-white text-[9.5px] font-bold px-2 rounded-t flex items-center shadow border-t border-x border-red-400/40">
-              <span>Start Program</span>
-            </div>
-
-            <div className="h-6 bg-[#9333EA] text-white text-[8px] font-bold px-2 flex items-center justify-between shadow border-t border-black/20">
-              <span className="truncate">Create Text Storage (string textWord);</span>
-            </div>
-
-            <div className="h-6 bg-[#0284C7] text-white text-[8px] font-bold px-2 flex items-center justify-between shadow border-t border-black/20">
-              <span className="truncate">Create Number Storage (int sensorNum);</span>
-            </div>
-
-            <div className="h-6 bg-[#EAB308] text-slate-950 text-[8px] font-bold px-2 flex items-center justify-between shadow border-t border-black/20">
-              <span className="truncate">Create Choice Storage (bool userChoice);</span>
-            </div>
-
-            <div className="h-6 bg-[#0891B2] text-white text-[8.5px] font-bold px-2 flex items-center shadow border-t border-black/20">
-              <span>Repeat While Receiving Input</span>
-            </div>
-
-            <div className="h-6 bg-[#16A34A] text-white text-[8px] font-bold px-2 ml-3 flex items-center shadow border-l-2 border-emerald-300">
-              <span>Read Keyboard (cin &gt;&gt;);</span>
-            </div>
-
-            <div className="h-6 bg-[#EA580C] text-white text-[8px] font-bold px-2 ml-3 flex items-center shadow border-l-2 border-orange-300">
-              <span>Print Screen (cout &lt;&lt;);</span>
-            </div>
-
-            <div className="h-6 bg-[#EF4444] text-white text-[9.5px] font-bold px-2 rounded-b flex items-center shadow border-b border-x border-red-400/40 border-t border-black/20">
-              <span>End Program</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* RIGHT PANE: Authentic Cockpit & CRT Data Terminal Simulation */}
-      <div className="w-1/2 h-full flex flex-col bg-[#0b0314] relative">
-        <div className="h-6 px-3 bg-[#170529] border-b border-white/10 flex items-center justify-between shrink-0">
-          <span className="text-[10px] font-black tracking-wider uppercase font-mono text-purple-200">SIMULATION</span>
-          <div className="relative flex items-center h-4 font-mono text-[9px] font-bold tracking-wider">
-            <span className="text-[#00f5d4] drop-shadow-[0_0_6px_rgba(0,245,212,0.6)]" style={{ animation: 's1s1Ready 7s ease-in-out infinite' }}>READY</span>
-            <span className="absolute right-0 text-[#10b981] drop-shadow-[0_0_6px_rgba(16,185,129,0.8)] animate-pulse whitespace-nowrap" style={{ animation: 's1s1Running 7s ease-in-out infinite' }}>STREAMING I/O</span>
-          </div>
-        </div>
-
-        <div className="flex-1 min-h-0 relative">
-          <Saturn1CockpitScene isOnline={true} streamLine1="> cin >> ORBIT" streamLine2="> cout << ORBIT (Verified)" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/**
- * Slide 2: Allocating Typed Storage Buffers
- */
-export function SaturnLevel1Step2Demo() {
-  return (
-    <div className="relative w-full h-full flex rounded-xl border border-white/10 bg-[#0e041a] overflow-hidden select-none font-sans">
-      <style>{`
-        @keyframes s1s2Cursor {
-          0% { transform: translate(-45px, 35px); opacity: 0; }
-          15%, 25% { transform: translate(0px, 0px); opacity: 1; }
-          28%, 35% { transform: translate(0px, 0px) scale(0.85); opacity: 1; }
-          45%, 85% { transform: translate(20px, 20px); opacity: 0; }
-          95%, 100% { transform: translate(-45px, 35px); opacity: 0; }
+        @keyframes s1s1DragLoop {
+          0%, 14% {
+            transform: translate(-65px, 25px) scale(0.92);
+            opacity: 0;
+          }
+          20% {
+            opacity: 1;
+            transform: translate(-65px, 25px) scale(1.03);
+          }
+          34% {
+            transform: translate(0px, 0px) scale(1.02);
+            opacity: 1;
+          }
+          38%, 86% {
+            transform: translate(0px, 0px) scale(1);
+            opacity: 1;
+          }
+          94%, 100% {
+            transform: translate(-65px, 25px) scale(0.92);
+            opacity: 0;
+          }
         }
-        @keyframes s1s2Pulse {
-          0%, 26% { filter: brightness(1); outline: none; }
-          28%, 38% { filter: brightness(1.4); outline: 2px solid #9333EA; box-shadow: 0 0 16px rgba(147,51,234,0.9); }
-          45%, 85% { filter: brightness(1.1); outline: 1px solid #9333EA; }
-          95%, 100% { filter: brightness(1); outline: none; }
+        @keyframes s1s1CursorMotion {
+          0%, 10% { transform: translate(-80px, 40px); opacity: 0; }
+          16% { transform: translate(-50px, 30px); opacity: 1; }
+          20% { transform: translate(-50px, 30px) scale(0.85); opacity: 1; }
+          34% { transform: translate(15px, 6px); opacity: 1; }
+          38% { transform: translate(15px, 6px) scale(1); opacity: 1; }
+          42%, 48% { transform: translate(15px, 6px) scale(0.82); opacity: 1; }
+          54% { transform: translate(30px, 20px); opacity: 0; }
+          94%, 100% { transform: translate(-80px, 40px); opacity: 0; }
+        }
+        @keyframes s1s1SnapPulse {
+          0%, 35% { filter: brightness(1); }
+          38%, 46% { filter: brightness(1.35); outline: 2px solid #0891b2; box-shadow: 0 0 16px rgba(8,145,178,0.9); }
+          48%, 100% { filter: brightness(1); outline: none; }
+        }
+        @keyframes s1s1TraceSlot {
+          0%, 34% { opacity: 1; }
+          38%, 86% { opacity: 0; }
+          94%, 100% { opacity: 1; }
+        }
+        @keyframes s1s1StatusStandby {
+          0%, 36% { opacity: 1; }
+          40%, 90% { opacity: 0; }
+          95%, 100% { opacity: 1; }
+        }
+        @keyframes s1s1StatusLive {
+          0%, 36% { opacity: 0; }
+          40%, 90% { opacity: 1; }
+          95%, 100% { opacity: 0; }
+        }
+        @keyframes s1s1SceneStandby {
+          0%, 36% { opacity: 1; }
+          40%, 90% { opacity: 0; pointer-events: none; }
+          95%, 100% { opacity: 1; }
+        }
+        @keyframes s1s1SceneLive {
+          0%, 36% { opacity: 0; pointer-events: none; }
+          40%, 90% { opacity: 1; }
+          95%, 100% { opacity: 0; pointer-events: none; }
         }
       `}</style>
 
-      {/* LEFT PANE */}
-      <div className="w-1/2 h-full flex flex-col border-r border-white/10 relative">
-        <div className="h-6 px-3 bg-[#170529] border-b border-white/10 flex items-center shrink-0">
-          <span className="text-[10px] font-bold text-slate-200">Workspace</span>
-        </div>
-
-        <div
-          className="flex-1 p-2.5 flex flex-row gap-2 relative overflow-hidden"
-          style={{
-            backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.12) 1px, transparent 1px)',
-            backgroundSize: '14px 14px',
-          }}
-        >
-          <Saturn1ToolboxSidebar activeCategory="storage" />
-
-          <div className="flex flex-col w-[190px] sm:w-[205px] relative z-20">
-            <div
-              className="relative h-7 bg-[#9333EA] text-white text-[8.5px] font-bold px-2 rounded flex items-center justify-between shadow border border-purple-400/40 z-20"
-              style={{ animation: 's1s2Pulse 6s ease-in-out infinite' }}
-            >
-              <span className="truncate">Create Text Storage (string textWord);</span>
-
-              <div className="absolute right-4 -bottom-3 pointer-events-none z-30" style={{ animation: 's1s2Cursor 6s ease-in-out infinite' }}>
-                <CursorPointer />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* RIGHT PANE */}
-      <div className="w-1/2 h-full flex flex-col bg-[#0b0314] relative">
-        <div className="h-6 px-3 bg-[#170529] border-b border-white/10 flex items-center justify-between shrink-0">
-          <span className="text-[10px] font-black tracking-wider uppercase font-mono text-purple-200">SIMULATION</span>
-          <div className="relative flex items-center h-4 font-mono text-[9px] font-bold tracking-wider">
-            <span className="text-purple-300 drop-shadow-[0_0_6px_rgba(192,132,252,0.6)]">STORAGE ALLOCATED</span>
-          </div>
-        </div>
-
-        <div className="flex-1 min-h-0 relative">
-          <Saturn1CockpitScene isOnline={true} streamLine1="> Memory: string textWord allocated" streamLine2="> Storage Buffer Ready" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/**
- * Slide 3: Telemetry Stream Loop (while receiving input)
- */
-export function SaturnLevel1Step3Demo() {
-  return (
-    <div className="relative w-full h-full flex rounded-xl border border-white/10 bg-[#0e041a] overflow-hidden select-none font-sans">
-      <style>{`
-        @keyframes s1s3Cursor {
-          0% { transform: translate(-30px, 40px); opacity: 0; }
-          15%, 25% { transform: translate(0px, 0px); opacity: 1; }
-          28%, 35% { transform: translate(0px, 0px) scale(0.85); opacity: 1; }
-          45%, 85% { transform: translate(30px, 20px); opacity: 0; }
-          95%, 100% { transform: translate(-30px, 40px); opacity: 0; }
-        }
-        @keyframes s1s3Pulse {
-          0%, 26% { filter: brightness(1); outline: none; }
-          28%, 38% { filter: brightness(1.4); outline: 2px solid #0891B2; box-shadow: 0 0 16px rgba(8,145,178,0.9); }
-          45%, 85% { filter: brightness(1.1); outline: 1px solid #0891B2; }
-          95%, 100% { filter: brightness(1); outline: none; }
-        }
-      `}</style>
-
-      {/* LEFT PANE */}
+      {/* LEFT PANE: Workspace */}
       <div className="w-1/2 h-full flex flex-col border-r border-white/10 relative">
         <div className="h-6 px-3 bg-[#170529] border-b border-white/10 flex items-center shrink-0">
           <span className="text-[10px] font-bold text-slate-200">Workspace</span>
@@ -331,32 +233,80 @@ export function SaturnLevel1Step3Demo() {
         >
           <Saturn1ToolboxSidebar activeCategory="stream" />
 
-          <div className="flex flex-col w-[190px] sm:w-[205px] relative z-20">
-            <div
-              className="relative h-7 bg-[#0891B2] text-white text-[9px] font-bold px-2 rounded flex items-center justify-between shadow border border-cyan-400/40 z-20"
-              style={{ animation: 's1s3Pulse 6s ease-in-out infinite' }}
-            >
-              <span>Repeat While Receiving Input</span>
+          {/* Assembly Stack */}
+          <div className="flex flex-col w-[190px] sm:w-[200px] relative z-20 pt-1">
+            {/* Start Program */}
+            <div className="h-6.5 bg-[#EF4444] text-white text-[9.5px] font-bold px-2 rounded-t flex items-center shadow border-t border-x border-red-400/40">
+              <span>Start Program</span>
+            </div>
 
-              <div className="absolute right-4 -bottom-3 pointer-events-none z-30" style={{ animation: 's1s3Cursor 6s ease-in-out infinite' }}>
-                <CursorPointer />
+            {/* Loop Slot: Blank dashed outline before snap */}
+            <div className="relative w-full">
+              <div
+                className="h-14 rounded border border-dashed border-cyan-500/40 bg-cyan-950/10"
+                style={{ animation: 's1s1TraceSlot 7s ease-in-out infinite' }}
+              />
+
+              {/* Animated Dragged Loop Block */}
+              <div
+                className="absolute inset-0 h-14 bg-[#0891B2] text-white text-[8.5px] font-bold p-1.5 rounded flex flex-col justify-between shadow border border-cyan-400/40 z-30"
+                style={{
+                  animation: 's1s1DragLoop 7s cubic-bezier(0.2, 0.9, 0.4, 1) infinite, s1s1SnapPulse 7s ease-in-out infinite',
+                }}
+              >
+                <div className="flex items-center justify-between">
+                  <span>Repeat While Receiving Input</span>
+                </div>
+                {/* Loop interior slot indicator */}
+                <div className="h-5 ml-2.5 rounded bg-black/40 border border-cyan-300/30 flex items-center px-1.5 text-[7.5px] text-cyan-200">
+                  <span className="italic">drop I/O stream blocks here</span>
+                </div>
+
+                {/* Animated Cursor */}
+                <div
+                  className="absolute right-2 -bottom-2 pointer-events-none z-40"
+                  style={{ animation: 's1s1CursorMotion 7s cubic-bezier(0.2, 0.9, 0.4, 1) infinite' }}
+                >
+                  <CursorPointer />
+                </div>
               </div>
+            </div>
+
+            {/* End Program */}
+            <div className="h-6.5 bg-[#EF4444] text-white text-[9.5px] font-bold px-2 rounded-b flex items-center shadow border-b border-x border-red-400/40 border-t border-black/20">
+              <span>End Program</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* RIGHT PANE */}
+      {/* RIGHT PANE: Simulation */}
       <div className="w-1/2 h-full flex flex-col bg-[#0b0314] relative">
         <div className="h-6 px-3 bg-[#170529] border-b border-white/10 flex items-center justify-between shrink-0">
           <span className="text-[10px] font-black tracking-wider uppercase font-mono text-purple-200">SIMULATION</span>
-          <div className="relative flex items-center h-4 font-mono text-[9px] font-bold tracking-wider">
-            <span className="text-cyan-400 drop-shadow-[0_0_6px_rgba(6,182,212,0.6)]">STREAM ACTIVE</span>
+          <div className="relative flex items-center justify-end min-w-[120px] h-4 font-mono text-[9px] font-bold tracking-wider whitespace-nowrap">
+            <span
+              className="text-amber-400 drop-shadow-[0_0_6px_rgba(245,158,11,0.6)] whitespace-nowrap"
+              style={{ animation: 's1s1StatusStandby 7s ease-in-out infinite' }}
+            >
+              STANDBY
+            </span>
+            <span
+              className="absolute right-0 text-[#00f5d4] drop-shadow-[0_0_6px_rgba(0,245,212,0.8)] font-black whitespace-nowrap"
+              style={{ animation: 's1s1StatusLive 7s ease-in-out infinite' }}
+            >
+              STREAM ONLINE
+            </span>
           </div>
         </div>
 
         <div className="flex-1 min-h-0 relative">
-          <Saturn1CockpitScene isOnline={true} streamLine1="> Stream Loop Active" streamLine2="> Waiting for incoming packets..." />
+          <div className="absolute inset-0" style={{ animation: 's1s1SceneStandby 7s ease-in-out infinite' }}>
+            <Saturn1CockpitScene isOnline={false} streamLine1="> Awaiting stream loop structure..." streamLine2="> Telemetry channel offline" />
+          </div>
+          <div className="absolute inset-0" style={{ animation: 's1s1SceneLive 7s ease-in-out infinite' }}>
+            <Saturn1CockpitScene isOnline={true} streamLine1="> cin >> incoming stream loop ready" streamLine2="> Telemetry channel open" />
+          </div>
         </div>
       </div>
     </div>
@@ -364,20 +314,80 @@ export function SaturnLevel1Step3Demo() {
 }
 
 /**
- * Slide 4: Closing with 'End Program' for Safe Exit
+ * Slide 2: Allocating Typed Storage Buffers
+ * Dynamic Animation:
+ * - Left: "Create Text Storage (string textWord);" is dragged and snapped right beneath Start Program
+ * - Right: Memory buffer initializes and reserves RAM for incoming text stream
  */
-export function SaturnLevel1Step4Demo() {
+export function SaturnLevel1Step2Demo() {
   return (
     <div className="relative w-full h-full flex rounded-xl border border-white/10 bg-[#0e041a] overflow-hidden select-none font-sans">
       <style>{`
-        @keyframes s1s4Pulse {
-          0%, 25% { filter: brightness(1); }
-          30%, 85% { filter: brightness(1.3); outline: 2px solid #EF4444; }
-          90%, 100% { filter: brightness(1); }
+        @keyframes s1s2DragStorage {
+          0%, 14% {
+            transform: translate(-65px, 20px) scale(0.92);
+            opacity: 0;
+          }
+          20% {
+            opacity: 1;
+            transform: translate(-65px, 20px) scale(1.03);
+          }
+          34% {
+            transform: translate(0px, 0px) scale(1.02);
+            opacity: 1;
+          }
+          38%, 86% {
+            transform: translate(0px, 0px) scale(1);
+            opacity: 1;
+          }
+          94%, 100% {
+            transform: translate(-65px, 20px) scale(0.92);
+            opacity: 0;
+          }
+        }
+        @keyframes s1s2CursorMotion {
+          0%, 10% { transform: translate(-80px, 35px); opacity: 0; }
+          16% { transform: translate(-50px, 25px); opacity: 1; }
+          20% { transform: translate(-50px, 25px) scale(0.85); opacity: 1; }
+          34% { transform: translate(15px, 6px); opacity: 1; }
+          38% { transform: translate(15px, 6px) scale(1); opacity: 1; }
+          42%, 48% { transform: translate(15px, 6px) scale(0.82); opacity: 1; }
+          54% { transform: translate(30px, 20px); opacity: 0; }
+          94%, 100% { transform: translate(-80px, 35px); opacity: 0; }
+        }
+        @keyframes s1s2SnapPulse {
+          0%, 35% { filter: brightness(1); }
+          38%, 46% { filter: brightness(1.35); outline: 2px solid #9333ea; box-shadow: 0 0 16px rgba(147,51,234,0.9); }
+          48%, 100% { filter: brightness(1); outline: none; }
+        }
+        @keyframes s1s2TraceSlot {
+          0%, 34% { opacity: 1; }
+          38%, 86% { opacity: 0; }
+          94%, 100% { opacity: 1; }
+        }
+        @keyframes s1s2StatusStandby {
+          0%, 36% { opacity: 1; }
+          40%, 90% { opacity: 0; }
+          95%, 100% { opacity: 1; }
+        }
+        @keyframes s1s2StatusLive {
+          0%, 36% { opacity: 0; }
+          40%, 90% { opacity: 1; }
+          95%, 100% { opacity: 0; }
+        }
+        @keyframes s1s2SceneStandby {
+          0%, 36% { opacity: 1; }
+          40%, 90% { opacity: 0; pointer-events: none; }
+          95%, 100% { opacity: 1; }
+        }
+        @keyframes s1s2SceneLive {
+          0%, 36% { opacity: 0; pointer-events: none; }
+          40%, 90% { opacity: 1; }
+          95%, 100% { opacity: 0; pointer-events: none; }
         }
       `}</style>
 
-      {/* LEFT PANE */}
+      {/* LEFT PANE: Workspace */}
       <div className="w-1/2 h-full flex flex-col border-r border-white/10 relative">
         <div className="h-6 px-3 bg-[#170529] border-b border-white/10 flex items-center shrink-0">
           <span className="text-[10px] font-bold text-slate-200">Workspace</span>
@@ -390,33 +400,432 @@ export function SaturnLevel1Step4Demo() {
             backgroundSize: '14px 14px',
           }}
         >
-          <Saturn1ToolboxSidebar activeCategory="program" />
+          <Saturn1ToolboxSidebar activeCategory="storage" />
 
-          <div className="flex flex-col w-[190px] sm:w-[205px] relative z-20">
-            <div
-              className="h-7 bg-[#EF4444] text-white text-[9.5px] font-bold px-2 rounded flex items-center justify-between shadow border border-red-400/40"
-              style={{ animation: 's1s4Pulse 6s ease-in-out infinite' }}
-            >
+          {/* Assembly Stack */}
+          <div className="flex flex-col w-[190px] sm:w-[200px] relative z-20 pt-1">
+            {/* Start Program */}
+            <div className="h-6.5 bg-[#EF4444] text-white text-[9.5px] font-bold px-2 rounded-t flex items-center shadow border-t border-x border-red-400/40">
+              <span>Start Program</span>
+            </div>
+
+            {/* Storage Slot: Blank dashed outline before snap */}
+            <div className="relative w-full">
+              <div
+                className="h-6.5 rounded border border-dashed border-purple-500/40 bg-purple-950/10"
+                style={{ animation: 's1s2TraceSlot 7s ease-in-out infinite' }}
+              />
+
+              {/* Animated Dragged Storage Block */}
+              <div
+                className="absolute inset-0 h-6.5 bg-[#9333EA] text-white text-[8px] font-bold px-2 rounded flex items-center justify-between shadow border border-purple-400/40 z-30"
+                style={{
+                  animation: 's1s2DragStorage 7s cubic-bezier(0.2, 0.9, 0.4, 1) infinite, s1s2SnapPulse 7s ease-in-out infinite',
+                }}
+              >
+                <span className="truncate">Create Text Storage (string textWord);</span>
+
+                {/* Animated Cursor */}
+                <div
+                  className="absolute right-2 -bottom-2 pointer-events-none z-40"
+                  style={{ animation: 's1s2CursorMotion 7s cubic-bezier(0.2, 0.9, 0.4, 1) infinite' }}
+                >
+                  <CursorPointer />
+                </div>
+              </div>
+            </div>
+
+            {/* Repeat Loop */}
+            <div className="h-6.5 bg-[#0891B2] text-white text-[8.5px] font-bold px-2 flex items-center shadow border-t border-black/20">
+              <span>Repeat While Receiving Input</span>
+            </div>
+
+            {/* End Program */}
+            <div className="h-6.5 bg-[#EF4444] text-white text-[9.5px] font-bold px-2 rounded-b flex items-center shadow border-b border-x border-red-400/40 border-t border-black/20">
               <span>End Program</span>
-              <Check size={11} className="text-white" />
             </div>
           </div>
         </div>
       </div>
 
-      {/* RIGHT PANE: Clean Terminal Shutdown */}
+      {/* RIGHT PANE: Simulation */}
       <div className="w-1/2 h-full flex flex-col bg-[#0b0314] relative">
         <div className="h-6 px-3 bg-[#170529] border-b border-white/10 flex items-center justify-between shrink-0">
           <span className="text-[10px] font-black tracking-wider uppercase font-mono text-purple-200">SIMULATION</span>
-          <div className="relative flex items-center h-4 font-mono text-[9px] font-bold tracking-wider">
-            <span className="text-emerald-400 drop-shadow-[0_0_6px_rgba(52,211,153,0.8)] font-bold whitespace-nowrap">
-              PROGRAM TERMINATED (CODE 0)
+          <div className="relative flex items-center justify-end min-w-[125px] h-4 font-mono text-[9px] font-bold tracking-wider whitespace-nowrap">
+            <span
+              className="text-amber-400 drop-shadow-[0_0_6px_rgba(245,158,11,0.6)] whitespace-nowrap"
+              style={{ animation: 's1s2StatusStandby 7s ease-in-out infinite' }}
+            >
+              WAITING STORAGE
+            </span>
+            <span
+              className="absolute right-0 text-[#a855f7] drop-shadow-[0_0_6px_rgba(168,85,247,0.8)] font-black whitespace-nowrap"
+              style={{ animation: 's1s2StatusLive 7s ease-in-out infinite' }}
+            >
+              STORAGE READY
             </span>
           </div>
         </div>
 
         <div className="flex-1 min-h-0 relative">
-          <Saturn1CockpitScene isOnline={true} streamLine1="> 10/10 Packets Processed" streamLine2="> Telemetry Mission Complete" />
+          <div className="absolute inset-0" style={{ animation: 's1s2SceneStandby 7s ease-in-out infinite' }}>
+            <Saturn1CockpitScene isOnline={true} streamLine1="> Memory: No variable allocated" streamLine2="> Ingest buffer unavailable" />
+          </div>
+          <div className="absolute inset-0" style={{ animation: 's1s2SceneLive 7s ease-in-out infinite' }}>
+            <Saturn1CockpitScene isOnline={true} streamLine1="> Memory: string textWord allocated [0x7F]" streamLine2="> Telemetry buffer initialized for stream" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Slide 3: Reading Input Stream (cin >>)
+ * Dynamic Animation:
+ * - Left: "Read Keyboard (cin >>);" is dragged from the Read/Print category and snapped inside the stream loop
+ * - Right: Input channel unlocks and stream terminal ingests incoming packet
+ */
+export function SaturnLevel1Step3Demo() {
+  return (
+    <div className="relative w-full h-full flex rounded-xl border border-white/10 bg-[#0e041a] overflow-hidden select-none font-sans">
+      <style>{`
+        @keyframes s1s3DragCin {
+          0%, 14% {
+            transform: translate(-65px, 25px) scale(0.92);
+            opacity: 0;
+          }
+          20% {
+            opacity: 1;
+            transform: translate(-65px, 25px) scale(1.03);
+          }
+          34% {
+            transform: translate(0px, 0px) scale(1.02);
+            opacity: 1;
+          }
+          38%, 86% {
+            transform: translate(0px, 0px) scale(1);
+            opacity: 1;
+          }
+          94%, 100% {
+            transform: translate(-65px, 25px) scale(0.92);
+            opacity: 0;
+          }
+        }
+        @keyframes s1s3CursorMotion {
+          0%, 10% { transform: translate(-80px, 40px); opacity: 0; }
+          16% { transform: translate(-50px, 30px); opacity: 1; }
+          20% { transform: translate(-50px, 30px) scale(0.85); opacity: 1; }
+          34% { transform: translate(15px, 6px); opacity: 1; }
+          38% { transform: translate(15px, 6px) scale(1); opacity: 1; }
+          42%, 48% { transform: translate(15px, 6px) scale(0.82); opacity: 1; }
+          54% { transform: translate(30px, 20px); opacity: 0; }
+          94%, 100% { transform: translate(-80px, 40px); opacity: 0; }
+        }
+        @keyframes s1s3SnapPulse {
+          0%, 35% { filter: brightness(1); }
+          38%, 46% { filter: brightness(1.35); outline: 2px solid #16a34a; box-shadow: 0 0 16px rgba(22,163,74,0.9); }
+          48%, 100% { filter: brightness(1); outline: none; }
+        }
+        @keyframes s1s3TraceSlot {
+          0%, 34% { opacity: 1; }
+          38%, 86% { opacity: 0; }
+          94%, 100% { opacity: 1; }
+        }
+        @keyframes s1s3StatusStandby {
+          0%, 36% { opacity: 1; }
+          40%, 90% { opacity: 0; }
+          95%, 100% { opacity: 1; }
+        }
+        @keyframes s1s3StatusLive {
+          0%, 36% { opacity: 0; }
+          40%, 90% { opacity: 1; }
+          95%, 100% { opacity: 0; }
+        }
+        @keyframes s1s3SceneStandby {
+          0%, 36% { opacity: 1; }
+          40%, 90% { opacity: 0; pointer-events: none; }
+          95%, 100% { opacity: 1; }
+        }
+        @keyframes s1s3SceneLive {
+          0%, 36% { opacity: 0; pointer-events: none; }
+          40%, 90% { opacity: 1; }
+          95%, 100% { opacity: 0; pointer-events: none; }
+        }
+      `}</style>
+
+      {/* LEFT PANE: Workspace */}
+      <div className="w-1/2 h-full flex flex-col border-r border-white/10 relative">
+        <div className="h-6 px-3 bg-[#170529] border-b border-white/10 flex items-center shrink-0">
+          <span className="text-[10px] font-bold text-slate-200">Workspace</span>
+        </div>
+
+        <div
+          className="flex-1 p-2.5 flex flex-row gap-2 relative overflow-hidden"
+          style={{
+            backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.12) 1px, transparent 1px)',
+            backgroundSize: '14px 14px',
+          }}
+        >
+          <Saturn1ToolboxSidebar activeCategory="io" />
+
+          {/* Assembly Stack */}
+          <div className="flex flex-col w-[190px] sm:w-[200px] relative z-20 pt-1">
+            {/* Start Program */}
+            <div className="h-6.5 bg-[#EF4444] text-white text-[9.5px] font-bold px-2 rounded-t flex items-center shadow border-t border-x border-red-400/40">
+              <span>Start Program</span>
+            </div>
+
+            {/* Storage */}
+            <div className="h-6 bg-[#9333EA] text-white text-[8px] font-bold px-2 flex items-center justify-between shadow border-t border-black/20">
+              <span className="truncate">Create Text Storage (string textWord);</span>
+            </div>
+
+            {/* Repeat Loop Top */}
+            <div className="h-6 bg-[#0891B2] text-white text-[8.5px] font-bold px-2 flex items-center shadow border-t border-black/20">
+              <span>Repeat While Receiving Input</span>
+            </div>
+
+            {/* cin Slot inside loop: Blank dashed outline before snap */}
+            <div className="relative w-[178px] ml-3">
+              <div
+                className="h-6.5 rounded border border-dashed border-emerald-500/40 bg-emerald-950/10"
+                style={{ animation: 's1s3TraceSlot 7s ease-in-out infinite' }}
+              />
+
+              {/* Animated Dragged cin Block */}
+              <div
+                className="absolute inset-0 h-6.5 bg-[#16A34A] text-white text-[8.5px] font-bold px-2 rounded flex items-center justify-between shadow border-l-2 border-emerald-300 z-30"
+                style={{
+                  animation: 's1s3DragCin 7s cubic-bezier(0.2, 0.9, 0.4, 1) infinite, s1s3SnapPulse 7s ease-in-out infinite',
+                }}
+              >
+                <span>Read Keyboard (cin &gt;&gt;);</span>
+
+                {/* Animated Cursor */}
+                <div
+                  className="absolute right-2 -bottom-2 pointer-events-none z-40"
+                  style={{ animation: 's1s3CursorMotion 7s cubic-bezier(0.2, 0.9, 0.4, 1) infinite' }}
+                >
+                  <CursorPointer />
+                </div>
+              </div>
+            </div>
+
+            {/* End Program */}
+            <div className="h-6.5 bg-[#EF4444] text-white text-[9.5px] font-bold px-2 rounded-b flex items-center shadow border-b border-x border-red-400/40 border-t border-black/20">
+              <span>End Program</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* RIGHT PANE: Simulation */}
+      <div className="w-1/2 h-full flex flex-col bg-[#0b0314] relative">
+        <div className="h-6 px-3 bg-[#170529] border-b border-white/10 flex items-center justify-between shrink-0">
+          <span className="text-[10px] font-black tracking-wider uppercase font-mono text-purple-200">SIMULATION</span>
+          <div className="relative flex items-center justify-end min-w-[120px] h-4 font-mono text-[9px] font-bold tracking-wider whitespace-nowrap">
+            <span
+              className="text-amber-400 drop-shadow-[0_0_6px_rgba(245,158,11,0.6)] whitespace-nowrap"
+              style={{ animation: 's1s3StatusStandby 7s ease-in-out infinite' }}
+            >
+              NO INPUT
+            </span>
+            <span
+              className="absolute right-0 text-[#10b981] drop-shadow-[0_0_6px_rgba(16,185,129,0.8)] font-black whitespace-nowrap"
+              style={{ animation: 's1s3StatusLive 7s ease-in-out infinite' }}
+            >
+              CIN ACTIVE
+            </span>
+          </div>
+        </div>
+
+        <div className="flex-1 min-h-0 relative">
+          <div className="absolute inset-0" style={{ animation: 's1s3SceneStandby 7s ease-in-out infinite' }}>
+            <Saturn1CockpitScene isOnline={true} streamLine1="> Stream waiting for cin >>" streamLine2="> No input received" />
+          </div>
+          <div className="absolute inset-0" style={{ animation: 's1s3SceneLive 7s ease-in-out infinite' }}>
+            <Saturn1CockpitScene isOnline={true} streamLine1="> KEYBOARD BUS: cin >> [SENSOR_DATA]" streamLine2="> Packet ingested into textWord buffer" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Slide 4: Printing Output Stream (cout <<) & Safe Exit
+ * Dynamic Animation:
+ * - Left: "Print Screen (cout <<);" is dragged right beneath cin >> inside the stream loop
+ * - Right: Terminal echoes the verified telemetry stream and marks pipeline complete
+ */
+export function SaturnLevel1Step4Demo() {
+  return (
+    <div className="relative w-full h-full flex rounded-xl border border-white/10 bg-[#0e041a] overflow-hidden select-none font-sans">
+      <style>{`
+        @keyframes s1s4DragCout {
+          0%, 14% {
+            transform: translate(-65px, 20px) scale(0.92);
+            opacity: 0;
+          }
+          20% {
+            opacity: 1;
+            transform: translate(-65px, 20px) scale(1.03);
+          }
+          34% {
+            transform: translate(0px, 0px) scale(1.02);
+            opacity: 1;
+          }
+          38%, 86% {
+            transform: translate(0px, 0px) scale(1);
+            opacity: 1;
+          }
+          94%, 100% {
+            transform: translate(-65px, 20px) scale(0.92);
+            opacity: 0;
+          }
+        }
+        @keyframes s1s4CursorMotion {
+          0%, 10% { transform: translate(-80px, 35px); opacity: 0; }
+          16% { transform: translate(-50px, 25px); opacity: 1; }
+          20% { transform: translate(-50px, 25px) scale(0.85); opacity: 1; }
+          34% { transform: translate(15px, 6px); opacity: 1; }
+          38% { transform: translate(15px, 6px) scale(1); opacity: 1; }
+          42%, 48% { transform: translate(15px, 6px) scale(0.82); opacity: 1; }
+          54% { transform: translate(30px, 20px); opacity: 0; }
+          94%, 100% { transform: translate(-80px, 35px); opacity: 0; }
+        }
+        @keyframes s1s4SnapPulse {
+          0%, 35% { filter: brightness(1); }
+          38%, 46% { filter: brightness(1.35); outline: 2px solid #ea580c; box-shadow: 0 0 16px rgba(234,88,12,0.9); }
+          48%, 100% { filter: brightness(1); outline: none; }
+        }
+        @keyframes s1s4TraceSlot {
+          0%, 34% { opacity: 1; }
+          38%, 86% { opacity: 0; }
+          94%, 100% { opacity: 1; }
+        }
+        @keyframes s1s4StatusStandby {
+          0%, 36% { opacity: 1; }
+          40%, 90% { opacity: 0; }
+          95%, 100% { opacity: 1; }
+        }
+        @keyframes s1s4StatusLive {
+          0%, 36% { opacity: 0; }
+          40%, 90% { opacity: 1; }
+          95%, 100% { opacity: 0; }
+        }
+        @keyframes s1s4SceneStandby {
+          0%, 36% { opacity: 1; }
+          40%, 90% { opacity: 0; pointer-events: none; }
+          95%, 100% { opacity: 1; }
+        }
+        @keyframes s1s4SceneLive {
+          0%, 36% { opacity: 0; pointer-events: none; }
+          40%, 90% { opacity: 1; }
+          95%, 100% { opacity: 0; pointer-events: none; }
+        }
+      `}</style>
+
+      {/* LEFT PANE: Workspace */}
+      <div className="w-1/2 h-full flex flex-col border-r border-white/10 relative">
+        <div className="h-6 px-3 bg-[#170529] border-b border-white/10 flex items-center shrink-0">
+          <span className="text-[10px] font-bold text-slate-200">Workspace</span>
+        </div>
+
+        <div
+          className="flex-1 p-2.5 flex flex-row gap-2 relative overflow-hidden"
+          style={{
+            backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.12) 1px, transparent 1px)',
+            backgroundSize: '14px 14px',
+          }}
+        >
+          <Saturn1ToolboxSidebar activeCategory="io" />
+
+          {/* Assembly Stack */}
+          <div className="flex flex-col w-[190px] sm:w-[200px] relative z-20 pt-1">
+            {/* Start Program */}
+            <div className="h-6.5 bg-[#EF4444] text-white text-[9.5px] font-bold px-2 rounded-t flex items-center shadow border-t border-x border-red-400/40">
+              <span>Start Program</span>
+            </div>
+
+            {/* Storage */}
+            <div className="h-6 bg-[#9333EA] text-white text-[8px] font-bold px-2 flex items-center justify-between shadow border-t border-black/20">
+              <span className="truncate">Create Text Storage (string textWord);</span>
+            </div>
+
+            {/* Repeat Loop Top */}
+            <div className="h-6 bg-[#0891B2] text-white text-[8.5px] font-bold px-2 flex items-center shadow border-t border-black/20">
+              <span>Repeat While Receiving Input</span>
+            </div>
+
+            {/* cin inside loop */}
+            <div className="h-6 bg-[#16A34A] text-white text-[8px] font-bold px-2 ml-3 flex items-center shadow border-l-2 border-emerald-300">
+              <span>Read Keyboard (cin &gt;&gt;);</span>
+            </div>
+
+            {/* cout Slot inside loop: Blank dashed outline before snap */}
+            <div className="relative w-[178px] ml-3">
+              <div
+                className="h-6.5 rounded border border-dashed border-orange-500/40 bg-orange-950/10"
+                style={{ animation: 's1s4TraceSlot 7s ease-in-out infinite' }}
+              />
+
+              {/* Animated Dragged cout Block */}
+              <div
+                className="absolute inset-0 h-6.5 bg-[#EA580C] text-white text-[8px] font-bold px-2 rounded flex items-center justify-between shadow border-l-2 border-orange-300 z-30"
+                style={{
+                  animation: 's1s4DragCout 7s cubic-bezier(0.2, 0.9, 0.4, 1) infinite, s1s4SnapPulse 7s ease-in-out infinite',
+                }}
+              >
+                <span>Print Screen (cout &lt;&lt;);</span>
+
+                {/* Animated Cursor */}
+                <div
+                  className="absolute right-2 -bottom-2 pointer-events-none z-40"
+                  style={{ animation: 's1s4CursorMotion 7s cubic-bezier(0.2, 0.9, 0.4, 1) infinite' }}
+                >
+                  <CursorPointer />
+                </div>
+              </div>
+            </div>
+
+            {/* End Program */}
+            <div className="h-6.5 bg-[#EF4444] text-white text-[9.5px] font-bold px-2 rounded-b flex items-center shadow border-b border-x border-red-400/40 border-t border-black/20">
+              <span>End Program</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* RIGHT PANE: Simulation */}
+      <div className="w-1/2 h-full flex flex-col bg-[#0b0314] relative">
+        <div className="h-6 px-3 bg-[#170529] border-b border-white/10 flex items-center justify-between shrink-0">
+          <span className="text-[10px] font-black tracking-wider uppercase font-mono text-purple-200">SIMULATION</span>
+          <div className="relative flex items-center justify-end min-w-[125px] h-4 font-mono text-[9px] font-bold tracking-wider whitespace-nowrap">
+            <span
+              className="text-amber-400 drop-shadow-[0_0_6px_rgba(245,158,11,0.6)] whitespace-nowrap"
+              style={{ animation: 's1s4StatusStandby 7s ease-in-out infinite' }}
+            >
+              PROCESSING
+            </span>
+            <span
+              className="absolute right-0 text-[#10b981] drop-shadow-[0_0_6px_rgba(16,185,129,0.8)] font-black whitespace-nowrap"
+              style={{ animation: 's1s4StatusLive 7s ease-in-out infinite' }}
+            >
+              STREAM VERIFIED
+            </span>
+          </div>
+        </div>
+
+        <div className="flex-1 min-h-0 relative">
+          <div className="absolute inset-0" style={{ animation: 's1s4SceneStandby 7s ease-in-out infinite' }}>
+            <Saturn1CockpitScene isOnline={true} streamLine1="> cin >> textWord received" streamLine2="> Waiting for cout << to terminal" />
+          </div>
+          <div className="absolute inset-0" style={{ animation: 's1s4SceneLive 7s ease-in-out infinite' }}>
+            <Saturn1CockpitScene isOnline={true} streamLine1="> cin >> [SENSOR_DATA] OK" streamLine2="> cout << [SENSOR_DATA] (Verified)" />
+          </div>
         </div>
       </div>
     </div>

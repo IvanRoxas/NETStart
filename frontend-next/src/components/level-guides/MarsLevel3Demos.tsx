@@ -564,7 +564,7 @@ export function MarsLevel3Step2Demo() {
       <div className="w-1/2 h-full flex flex-col bg-[#0b0314] relative">
         <div className="h-6 px-3 bg-[#170529] border-b border-white/10 flex items-center justify-between shrink-0">
           <span className="text-[10px] font-black tracking-wider uppercase font-mono text-purple-200">SIMULATION</span>
-          <div className="relative flex items-center justify-end h-4 font-mono text-[9px] font-bold tracking-wider whitespace-nowrap">
+          <div className="relative flex items-center justify-end min-w-[115px] h-4 font-mono text-[9px] font-bold tracking-wider whitespace-nowrap">
             <span
               className="text-slate-400 drop-shadow-[0_0_6px_rgba(148,163,184,0.6)] whitespace-nowrap"
               style={{ animation: 'm3s2StatusOffline 6.5s ease-in-out infinite' }}

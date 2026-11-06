@@ -27,38 +27,34 @@ function Mercury2ToolboxSidebar({ activeCategory = "loops" }: { activeCategory?:
   return (
     <div className="flex flex-col gap-1.5 w-18 shrink-0 py-1.5 select-none font-mono">
       <div
-        className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs border-l-2 transition-all ${
-          activeCategory === 'loops'
+        className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs border-l-2 transition-all ${activeCategory === 'loops'
             ? 'text-purple-300 bg-purple-950/80 border-purple-400'
             : 'text-purple-400/60 bg-purple-950/30 border-purple-500/30'
-        }`}
+          }`}
       >
         Loops
       </div>
       <div
-        className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs border-l-2 transition-all ${
-          activeCategory === 'variables'
+        className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs border-l-2 transition-all ${activeCategory === 'variables'
             ? 'text-cyan-300 bg-cyan-950/80 border-cyan-400'
             : 'text-cyan-400/60 bg-cyan-950/30 border-cyan-500/30'
-        }`}
+          }`}
       >
         Variables
       </div>
       <div
-        className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs border-l-2 transition-all ${
-          activeCategory === 'logic'
+        className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs border-l-2 transition-all ${activeCategory === 'logic'
             ? 'text-blue-300 bg-blue-950/80 border-blue-400'
             : 'text-blue-400/60 bg-blue-950/30 border-blue-500/30'
-        }`}
+          }`}
       >
         Logic
       </div>
       <div
-        className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs border-l-2 transition-all ${
-          activeCategory === 'actions'
+        className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs border-l-2 transition-all ${activeCategory === 'actions'
             ? 'text-emerald-300 bg-emerald-950/80 border-emerald-400'
             : 'text-emerald-400/60 bg-emerald-950/30 border-emerald-500/30'
-        }`}
+          }`}
       >
         Actions
       </div>
@@ -88,33 +84,30 @@ function Mercury2ConveyorScene({
         {/* Header Chutes */}
         <div className="grid grid-cols-3 gap-1.5 border-b border-purple-500/20 pb-1.5">
           <div
-            className={`h-7 rounded flex items-center justify-center gap-1 transition-all duration-300 ${
-              isSorting && activeChute === 'equipment'
+            className={`h-7 rounded flex items-center justify-center gap-1 transition-all duration-300 ${isSorting && activeChute === 'equipment'
                 ? 'bg-cyan-900 border-2 border-cyan-300 shadow-[0_0_12px_#06b6d4]'
                 : 'bg-cyan-950/60 border border-cyan-400/30 opacity-70'
-            }`}
+              }`}
           >
             <Wrench size={10} className="text-cyan-300" />
             <span className="text-[7.5px] font-mono text-cyan-200 font-bold">EQUIP</span>
           </div>
 
           <div
-            className={`h-7 rounded flex items-center justify-center gap-1 transition-all duration-300 ${
-              isSorting && activeChute === 'organics'
+            className={`h-7 rounded flex items-center justify-center gap-1 transition-all duration-300 ${isSorting && activeChute === 'organics'
                 ? 'bg-emerald-900 border-2 border-emerald-300 shadow-[0_0_12px_#10b981]'
                 : 'bg-emerald-950/60 border border-emerald-400/30 opacity-70'
-            }`}
+              }`}
           >
             <Package size={10} className="text-emerald-300" />
             <span className="text-[7.5px] font-mono text-emerald-200 font-bold">ORGANIC</span>
           </div>
 
           <div
-            className={`h-7 rounded flex items-center justify-center gap-1 transition-all duration-300 ${
-              isSorting && activeChute === 'energy'
+            className={`h-7 rounded flex items-center justify-center gap-1 transition-all duration-300 ${isSorting && activeChute === 'energy'
                 ? 'bg-amber-900 border-2 border-amber-300 shadow-[0_0_12px_#f59e0b]'
                 : 'bg-amber-950/60 border border-amber-400/30 opacity-70'
-            }`}
+              }`}
           >
             <Zap size={10} className="text-amber-300" />
             <span className="text-[7.5px] font-mono text-amber-200 font-bold">ENERGY</span>
@@ -125,16 +118,14 @@ function Mercury2ConveyorScene({
         <div className="w-full h-12 rounded bg-black/70 border border-purple-400/30 flex items-center px-3 relative overflow-hidden">
           {/* Scanner Archway */}
           <div
-            className={`absolute left-[95px] top-0 bottom-0 w-8 border-x-2 transition-all duration-300 flex items-center justify-center z-10 ${
-              scannerActive || isSorting
+            className={`absolute left-[95px] top-0 bottom-0 w-8 border-x-2 transition-all duration-300 flex items-center justify-center z-10 ${scannerActive || isSorting
                 ? 'border-cyan-400 bg-cyan-500/20 shadow-[0_0_15px_rgba(6,182,212,0.6)]'
                 : 'border-slate-700 bg-slate-900/40'
-            }`}
+              }`}
           >
             <div
-              className={`w-0.5 h-full ${
-                scannerActive || isSorting ? 'bg-cyan-300 animate-pulse shadow-[0_0_8px_#38bdf8]' : 'bg-slate-700'
-              }`}
+              className={`w-0.5 h-full ${scannerActive || isSorting ? 'bg-cyan-300 animate-pulse shadow-[0_0_8px_#38bdf8]' : 'bg-slate-700'
+                }`}
             />
           </div>
 
