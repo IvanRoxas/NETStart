@@ -432,7 +432,7 @@ const MISSION_SLIDES: Record<string, CarouselSlide[]> = {
     {
       id: 1,
       title: "Step 1: Picture Perfect",
-      subtitle: "Match the clue and link the correct picture to brighten the colony billboard displays.",
+      subtitle: "Click the billboard screen to reveal its hint clue, then link the matching picture block.",
       imagePlaceholderText: "Promotional billboard image linking",
       icon: "",
       customVisual: <MarsLevel2Step1Demo />,
