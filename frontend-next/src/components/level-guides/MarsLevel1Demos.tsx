@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { Terminal, ShieldAlert, Sparkles, CheckCircle2 } from 'lucide-react';
+import { ShieldAlert } from 'lucide-react';
 
 /**
  * Large, Clear SVG Cursor Pointer (Strictly No Emojis)
@@ -27,7 +27,7 @@ function MarsToolboxSidebar({ activeCategory = "headings" }: { activeCategory?: 
   return (
     <div className="flex flex-col gap-1.5 w-18 shrink-0 py-1.5 select-none font-mono">
       <div
-        className={`text-[8.5px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs ${
+        className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs ${
           activeCategory === 'headings'
             ? 'text-red-300 bg-red-950/80 border-l-2 border-red-400'
             : 'text-slate-400 bg-slate-900/40 border-l border-slate-700'
@@ -36,7 +36,7 @@ function MarsToolboxSidebar({ activeCategory = "headings" }: { activeCategory?: 
         Headings
       </div>
       <div
-        className={`text-[8.5px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs ${
+        className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs ${
           activeCategory === 'text'
             ? 'text-sky-300 bg-sky-950/80 border-l-2 border-sky-400'
             : 'text-slate-400 bg-slate-900/40 border-l border-slate-700'
@@ -45,7 +45,7 @@ function MarsToolboxSidebar({ activeCategory = "headings" }: { activeCategory?: 
         Text
       </div>
       <div
-        className={`text-[8.5px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs ${
+        className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs ${
           activeCategory === 'structure'
             ? 'text-purple-300 bg-purple-950/80 border-l-2 border-purple-400'
             : 'text-slate-400 bg-slate-900/40 border-l border-slate-700'
@@ -72,7 +72,7 @@ function MarsBillboardStage({ children }: { children: React.ReactNode }) {
       <div className="relative z-10 w-full max-w-[270px] rounded-xl border-3 border-[#78350f] bg-[#0c0404] p-2.5 shadow-2xl flex flex-col items-center">
         {/* Top solar header bar */}
         <div className="w-full flex items-center justify-between border-b border-[#78350f]/60 pb-1 mb-2">
-          <span className="text-[8px] font-mono font-bold text-amber-400 tracking-wider">MARS HABITAT DOME 4</span>
+          <span className="text-[8.5px] font-mono font-bold text-amber-400 tracking-wider">MARS HABITAT DOME 4</span>
           <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_6px_#10b981]" />
         </div>
 
@@ -154,13 +154,12 @@ export function MarsLevel1Step1Demo() {
 
       {/* LEFT PANE: Workspace */}
       <div className="w-1/2 h-full flex flex-col border-r border-white/10 relative">
-        <div className="h-6 px-3 bg-[#170529] border-b border-white/10 flex items-center justify-between shrink-0">
+        <div className="h-6 px-3 bg-[#170529] border-b border-white/10 flex items-center shrink-0">
           <span className="text-[10px] font-bold text-slate-200">Workspace</span>
-          <span className="text-[8px] font-mono text-red-400 font-semibold">HTML BLOCKS</span>
         </div>
 
         <div
-          className="flex-1 p-2.5 flex flex-row gap-2 relative overflow-hidden"
+          className="flex-1 p-2.5 flex flex-row gap-2.5 relative overflow-hidden"
           style={{
             backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.12) 1px, transparent 1px)',
             backgroundSize: '14px 14px',
@@ -170,22 +169,20 @@ export function MarsLevel1Step1Demo() {
 
           {/* Assembly Stack */}
           <div className="flex-1 flex flex-col pt-1 relative z-20">
-            {/* Slot for Large Title: Dragged into place */}
+            {/* Slot for Large Title: Dragged into place with clean blank trace */}
             <div className="relative mb-1">
-              {/* Silhouette slot */}
-              <div className="h-7 w-[185px] rounded-t border border-dashed border-orange-500/40 bg-orange-950/20 flex items-center justify-center text-[7.5px] font-mono text-orange-300/60">
-                + Large Title Slot
-              </div>
+              {/* Silhouette trace slot (Blank with traces) */}
+              <div className="h-7 w-[195px] rounded-t border border-dashed border-orange-500/40 bg-orange-950/10" />
 
               {/* Animated Dragged Title Block */}
               <div
-                className="absolute inset-0 h-7 w-[185px] bg-[#E44D26] text-white text-[9px] font-bold px-2 rounded-t flex items-center justify-between shadow border-t border-x border-orange-400/40 z-30"
+                className="absolute inset-0 h-7 w-[195px] bg-[#E44D26] text-white text-[9.5px] font-bold px-2 rounded-t flex items-center justify-between shadow border-t border-x border-orange-400/40 z-30"
                 style={{
                   animation: 'm1s1DragTitle 6.5s cubic-bezier(0.2, 0.9, 0.4, 1) infinite, m1s1SnapPulse 6.5s ease-in-out infinite',
                 }}
               >
                 <span>Main Title:</span>
-                <span className="bg-black/50 px-1 py-0.5 rounded text-[8px] text-amber-300 font-mono truncate max-w-[100px]">
+                <span className="bg-black/50 px-1.5 py-0.5 rounded text-[8.5px] text-amber-300 font-mono truncate max-w-[105px]">
                   &quot;WELCOME TO MARS&quot;
                 </span>
 
@@ -200,16 +197,16 @@ export function MarsLevel1Step1Demo() {
             </div>
 
             {/* Static Pre-existing structure */}
-            <div className="h-7 w-[185px] bg-[#F97316] text-white text-[9px] font-bold px-2 flex items-center justify-between border-t border-black/20 shadow">
+            <div className="h-7 w-[195px] bg-[#F97316] text-white text-[9.5px] font-bold px-2 flex items-center justify-between border-t border-black/20 shadow">
               <span>Subtitle:</span>
-              <span className="bg-black/50 px-1 py-0.5 rounded text-[8px] text-orange-200 font-mono truncate max-w-[100px]">
+              <span className="bg-black/50 px-1.5 py-0.5 rounded text-[8.5px] text-orange-200 font-mono truncate max-w-[105px]">
                 &quot;Dome 4 - Open 24/7&quot;
               </span>
             </div>
 
-            <div className="h-7 w-[185px] bg-[#0284C7] text-white text-[9px] font-bold px-2 rounded-b flex items-center justify-between border-t border-black/20 shadow border-b border-x border-sky-400/20">
+            <div className="h-7 w-[195px] bg-[#0284C7] text-white text-[9px] font-bold px-2 rounded-b flex items-center justify-between border-t border-black/20 shadow border-b border-x border-sky-400/20">
               <span>Paragraph Text:</span>
-              <span className="bg-black/50 px-1 py-0.5 rounded text-[7.5px] text-sky-200 font-mono truncate max-w-[95px]">
+              <span className="bg-black/50 px-1.5 py-0.5 rounded text-[8px] text-sky-200 font-mono truncate max-w-[95px]">
                 &quot;Stay hydrated...&quot;
               </span>
             </div>
@@ -238,32 +235,34 @@ export function MarsLevel1Step1Demo() {
         </div>
 
         <MarsBillboardStage>
-          {/* DORMANT STATE (0% - 30%): Screen is blank */}
+          {/* DORMANT STATE (0% - 30%): Screen is blank with subtle grid traces */}
           <div
-            className="absolute inset-0 p-2 flex flex-col items-center justify-center gap-1.5"
+            className="absolute inset-0 p-2 flex flex-col items-center justify-center pointer-events-none"
             style={{ animation: 'm1s1ScreenDormant 6.5s ease-in-out infinite' }}
           >
-            <div className="py-1 px-2 rounded bg-amber-950/40 border border-amber-600/30 text-[7.5px] font-mono text-amber-300">
-              Screen Dormant: Missing Title Block
-            </div>
-            <div className="flex flex-col items-center justify-center text-slate-500 font-mono text-[8px] gap-1">
-              <Terminal size={16} className="text-slate-600" />
-              <span>AWAITING CONTENT</span>
+            <div className="w-full h-full rounded border border-dashed border-[#78350f]/30 bg-black/40 flex items-center justify-center opacity-40">
+              <div
+                className="w-full h-full opacity-20"
+                style={{
+                  backgroundImage: 'radial-gradient(circle, rgba(245,158,11,0.4) 1px, transparent 1px)',
+                  backgroundSize: '12px 12px',
+                }}
+              />
             </div>
           </div>
 
           {/* ACTIVE STATE (35% - 88%): Billboard is fully live and styled */}
           <div
-            className="flex flex-col items-center gap-1.5 transition-all"
+            className="flex flex-col items-center gap-1 transition-all"
             style={{ animation: 'm1s1ScreenActive 6.5s ease-in-out infinite' }}
           >
-            <h1 className="text-xs font-black text-amber-300 font-mono tracking-wider drop-shadow-[0_0_8px_#f59e0b]">
+            <h1 className="text-[12.5px] font-black text-amber-300 font-mono tracking-wider drop-shadow-[0_0_8px_#f59e0b]">
               WELCOME TO MARS
             </h1>
             <h3 className="text-[10px] font-bold text-orange-300 tracking-wide">
               Habitat Dome 4 - Open 24/7
             </h3>
-            <p className="text-[8.5px] text-slate-300 max-w-[200px] leading-relaxed">
+            <p className="text-[9px] text-slate-200 max-w-[205px] leading-relaxed">
               Visit our habitat dome and stay hydrated.
             </p>
           </div>
@@ -286,7 +285,7 @@ export function MarsLevel1Step2Demo() {
         /* Drag Paragraph Block */
         @keyframes m1s2DragText {
           0%, 12% {
-            transform: translate(-65px, 30px) scale(0.92);
+            transform: translate(-65px, 25px) scale(0.92);
             opacity: 0.6;
           }
           32%, 85% {
@@ -294,15 +293,15 @@ export function MarsLevel1Step2Demo() {
             opacity: 1;
           }
           94%, 100% {
-            transform: translate(-65px, 30px) scale(0.92);
+            transform: translate(-65px, 25px) scale(0.92);
             opacity: 0.6;
           }
         }
         @keyframes m1s2CursorDrag {
-          0%, 12% { transform: translate(-65px, 30px); opacity: 1; }
+          0%, 12% { transform: translate(-65px, 25px); opacity: 1; }
           32% { transform: translate(0px, 0px); opacity: 1; }
           38%, 85% { transform: translate(25px, 20px); opacity: 0; }
-          94%, 100% { transform: translate(-65px, 30px); opacity: 0; }
+          94%, 100% { transform: translate(-65px, 25px); opacity: 0; }
         }
         @keyframes m1s2SnapPulse {
           0%, 30% { filter: brightness(1); outline: none; }
@@ -336,13 +335,12 @@ export function MarsLevel1Step2Demo() {
 
       {/* LEFT PANE: Workspace */}
       <div className="w-1/2 h-full flex flex-col border-r border-white/10 relative">
-        <div className="h-6 px-3 bg-[#170529] border-b border-white/10 flex items-center justify-between shrink-0">
+        <div className="h-6 px-3 bg-[#170529] border-b border-white/10 flex items-center shrink-0">
           <span className="text-[10px] font-bold text-slate-200">Workspace</span>
-          <span className="text-[8px] font-mono text-sky-400 font-semibold">TEXT BLOCKS</span>
         </div>
 
         <div
-          className="flex-1 p-2.5 flex flex-row gap-2 relative overflow-hidden"
+          className="flex-1 p-2.5 flex flex-row gap-2.5 relative overflow-hidden"
           style={{
             backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.12) 1px, transparent 1px)',
             backgroundSize: '14px 14px',
@@ -353,37 +351,35 @@ export function MarsLevel1Step2Demo() {
           {/* Assembly Stack */}
           <div className="flex-1 flex flex-col pt-1 relative z-20">
             {/* html_h1 Main Title */}
-            <div className="h-7 w-[185px] bg-[#E44D26] text-white text-[9px] font-bold px-2 rounded-t flex items-center justify-between shadow border-t border-x border-orange-400/40">
+            <div className="h-7 w-[195px] bg-[#E44D26] text-white text-[9.5px] font-bold px-2 rounded-t flex items-center justify-between shadow border-t border-x border-orange-400/40">
               <span>Main Title:</span>
-              <span className="bg-black/50 px-1 py-0.5 rounded text-[8px] text-yellow-300 font-mono truncate max-w-[100px]">
+              <span className="bg-black/50 px-1.5 py-0.5 rounded text-[8.5px] text-yellow-300 font-mono truncate max-w-[105px]">
                 &quot;OLYMPUS PIZZA&quot;
               </span>
             </div>
 
             {/* html_h3 Subtitle */}
-            <div className="h-7 w-[185px] bg-[#F97316] text-white text-[9px] font-bold px-2 flex items-center justify-between border-t border-black/20 shadow">
+            <div className="h-7 w-[195px] bg-[#F97316] text-white text-[9.5px] font-bold px-2 flex items-center justify-between border-t border-black/20 shadow">
               <span>Subtitle:</span>
-              <span className="bg-black/50 px-1 py-0.5 rounded text-[8px] text-orange-200 font-mono truncate max-w-[100px]">
+              <span className="bg-black/50 px-1.5 py-0.5 rounded text-[8.5px] text-orange-200 font-mono truncate max-w-[105px]">
                 &quot;Hot slices fresh!&quot;
               </span>
             </div>
 
-            {/* Dragged Paragraph Text Block */}
-            <div className="relative w-[185px] mt-0.5">
-              {/* Silhouette slot */}
-              <div className="h-7 rounded-b border border-dashed border-sky-500/40 bg-sky-950/20 flex items-center justify-center text-[7.5px] font-mono text-sky-300/60">
-                + Paragraph Text Slot
-              </div>
+            {/* Dragged Paragraph Text Block with blank trace slot */}
+            <div className="relative w-[195px] mt-0.5">
+              {/* Silhouette trace slot (Blank with traces) */}
+              <div className="h-7 rounded-b border border-dashed border-sky-500/40 bg-sky-950/10" />
 
               {/* Animated Dragged Paragraph Block */}
               <div
-                className="absolute inset-0 h-7 bg-[#0284C7] text-white text-[8.5px] font-bold px-2 rounded-b flex items-center justify-between shadow border-b border-x border-sky-400/30 z-30"
+                className="absolute inset-0 h-7 bg-[#0284C7] text-white text-[9px] font-bold px-2 rounded-b flex items-center justify-between shadow border-b border-x border-sky-400/30 z-30"
                 style={{
                   animation: 'm1s2DragText 6.5s cubic-bezier(0.2, 0.9, 0.4, 1) infinite, m1s2SnapPulse 6.5s ease-in-out infinite',
                 }}
               >
                 <span>Paragraph Text:</span>
-                <span className="bg-black/50 px-1 py-0.5 rounded text-[7.5px] text-sky-200 font-mono truncate max-w-[95px]">
+                <span className="bg-black/50 px-1.5 py-0.5 rounded text-[8px] text-sky-200 font-mono truncate max-w-[95px]">
                   &quot;Fresh crust...&quot;
                 </span>
 
@@ -421,25 +417,23 @@ export function MarsLevel1Step2Demo() {
         </div>
 
         <MarsBillboardStage>
-          <div className="flex flex-col items-center gap-1.5 w-full">
-            <h1 className="text-xs font-black text-yellow-400 font-mono tracking-wider drop-shadow-[0_0_8px_#facc15]">
+          <div className="flex flex-col items-center gap-1 w-full">
+            <h1 className="text-[12.5px] font-black text-yellow-400 font-mono tracking-wider drop-shadow-[0_0_8px_#facc15]">
               OLYMPUS PIZZA
             </h1>
-            <div className="text-[9px] font-bold text-orange-300">
+            <div className="text-[10px] font-bold text-orange-300">
               Hot slices fresh from the oven!
             </div>
 
-            {/* BEFORE SNAP: Missing description placeholder */}
+            {/* BEFORE SNAP: Blank trace placeholder */}
             <div
-              className="relative w-full max-w-[190px] h-6 rounded border border-dashed border-sky-500/40 bg-sky-950/20 flex items-center justify-center text-[7.5px] font-mono text-sky-300/70"
+              className="relative w-full max-w-[190px] h-5 rounded border border-dashed border-sky-500/30 bg-sky-950/10"
               style={{ animation: 'm1s2TextMissing 6.5s ease-in-out infinite' }}
-            >
-              [ Add Body Text Block ]
-            </div>
+            />
 
             {/* AFTER SNAP: Description renders dynamically */}
             <div
-              className="w-full max-w-[200px] text-[8px] text-slate-200 leading-snug transition-all"
+              className="w-full max-w-[200px] text-[9px] text-slate-200 leading-snug transition-all"
               style={{ animation: 'm1s2TextRendered 6.5s ease-in-out infinite' }}
             >
               Fresh Martian crust baked with asteroid spice, delivered fast to Dome 4!
@@ -514,13 +508,12 @@ export function MarsLevel1Step3Demo() {
 
       {/* LEFT PANE: Workspace */}
       <div className="w-1/2 h-full flex flex-col border-r border-white/10 relative">
-        <div className="h-6 px-3 bg-[#170529] border-b border-white/10 flex items-center justify-between shrink-0">
+        <div className="h-6 px-3 bg-[#170529] border-b border-white/10 flex items-center shrink-0">
           <span className="text-[10px] font-bold text-slate-200">Workspace</span>
-          <span className="text-[8px] font-mono text-purple-400 font-semibold">STRUCTURE</span>
         </div>
 
         <div
-          className="flex-1 p-2.5 flex flex-row gap-2 relative overflow-hidden"
+          className="flex-1 p-2.5 flex flex-row gap-2.5 relative overflow-hidden"
           style={{
             backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.12) 1px, transparent 1px)',
             backgroundSize: '14px 14px',
@@ -530,22 +523,20 @@ export function MarsLevel1Step3Demo() {
 
           {/* Assembly Stack */}
           <div className="flex-1 flex flex-col pt-1 relative z-20">
-            {/* Dragged Container Box Header */}
-            <div className="relative w-[185px]">
-              {/* Silhouette slot */}
-              <div className="h-6.5 rounded-t border border-dashed border-purple-500/40 bg-purple-950/20 flex items-center justify-center text-[7.5px] font-mono text-purple-300/60">
-                + Container Box Slot
-              </div>
+            {/* Dragged Container Box Header with blank trace slot */}
+            <div className="relative w-[195px]">
+              {/* Silhouette trace slot (Blank with traces) */}
+              <div className="h-7 rounded-t border border-dashed border-purple-500/40 bg-purple-950/10" />
 
               {/* Animated Dragged Div Block */}
               <div
-                className="absolute inset-0 h-6.5 bg-[#8B5CF6] text-white text-[9px] font-bold px-2 rounded-t flex items-center justify-between shadow border-t border-x border-purple-400/40 z-30"
+                className="absolute inset-0 h-7 bg-[#8B5CF6] text-white text-[9.5px] font-bold px-2 rounded-t flex items-center justify-between shadow border-t border-x border-purple-400/40 z-30"
                 style={{
                   animation: 'm1s3DragDiv 6.5s cubic-bezier(0.2, 0.9, 0.4, 1) infinite, m1s3SnapPulse 6.5s ease-in-out infinite',
                 }}
               >
                 <span>Container Box</span>
-                <span className="bg-black/40 text-[7.5px] px-1 py-0.5 rounded text-purple-200 font-mono">&lt;div&gt;</span>
+                <span className="bg-black/40 text-[8px] px-1 py-0.5 rounded text-purple-200 font-mono">&lt;div&gt;</span>
 
                 {/* Animated Cursor */}
                 <div
@@ -558,22 +549,22 @@ export function MarsLevel1Step3Demo() {
             </div>
 
             {/* Nested Elements inside div */}
-            <div className="h-6 w-[177px] bg-[#E44D26] text-white text-[8.5px] font-bold px-2 ml-2 flex items-center justify-between border-t border-black/20 shadow">
+            <div className="h-6.5 w-[187px] bg-[#E44D26] text-white text-[9px] font-bold px-2 ml-2 flex items-center justify-between border-t border-black/20 shadow">
               <span>Main Title:</span>
-              <span className="bg-black/50 px-1 py-0.5 rounded text-[7.5px] text-amber-300 font-mono truncate max-w-[90px]">
+              <span className="bg-black/50 px-1 py-0.5 rounded text-[8px] text-amber-300 font-mono truncate max-w-[95px]">
                 &quot;DUST STORM&quot;
               </span>
             </div>
 
-            <div className="h-6 w-[177px] bg-[#0284C7] text-white text-[8.5px] font-bold px-2 ml-2 flex items-center justify-between border-t border-black/20 shadow">
+            <div className="h-6.5 w-[187px] bg-[#0284C7] text-white text-[9px] font-bold px-2 ml-2 flex items-center justify-between border-t border-black/20 shadow">
               <span>Paragraph:</span>
-              <span className="bg-black/50 px-1 py-0.5 rounded text-[7.5px] text-sky-200 font-mono truncate max-w-[90px]">
+              <span className="bg-black/50 px-1 py-0.5 rounded text-[8px] text-sky-200 font-mono truncate max-w-[95px]">
                 &quot;High winds...&quot;
               </span>
             </div>
 
             {/* Container Box Bottom */}
-            <div className="h-5 w-[185px] bg-[#8B5CF6] text-white text-[8px] font-bold px-2 rounded-b flex items-center border-t border-black/20 shadow border-b border-x border-purple-400/20">
+            <div className="h-5 w-[195px] bg-[#8B5CF6] text-white text-[8.5px] font-bold px-2 rounded-b flex items-center border-t border-black/20 shadow border-b border-x border-purple-400/20">
               <span>End Box</span>
             </div>
           </div>
@@ -606,13 +597,10 @@ export function MarsLevel1Step3Demo() {
             className="absolute inset-0 p-2 flex flex-col items-center justify-center gap-1.5"
             style={{ animation: 'm1s3UngroupedView 6.5s ease-in-out infinite' }}
           >
-            <div className="py-0.5 px-1.5 rounded bg-amber-950/40 border border-dashed border-amber-600/40 text-[7px] font-mono text-amber-300">
-              Ungrouped: Wrap inside &lt;div&gt; container
-            </div>
-            <h1 className="text-xs font-black text-red-400 font-mono tracking-wider">
+            <h1 className="text-[12.5px] font-black text-red-400 font-mono tracking-wider">
               DUST STORM ALERT
             </h1>
-            <p className="text-[8.5px] text-orange-200">
+            <p className="text-[9px] text-orange-200">
               High winds approaching Sector 7
             </p>
           </div>
@@ -622,21 +610,17 @@ export function MarsLevel1Step3Demo() {
             className="w-full p-2 rounded-lg border-2 border-amber-500/80 bg-amber-950/20 shadow-[0_0_15px_rgba(245,158,11,0.35)] flex flex-col items-center gap-1 transition-all"
             style={{ animation: 'm1s3GroupedFrame 6.5s ease-in-out infinite' }}
           >
-            <div className="flex items-center gap-1 text-[7px] font-mono text-amber-400 font-bold uppercase tracking-wider">
+            <div className="flex items-center gap-1 text-[8px] font-mono text-amber-400 font-bold uppercase tracking-wider">
               <ShieldAlert size={10} className="text-amber-400" />
               <span>COLONY ALERT CONTAINER</span>
             </div>
 
-            <h1 className="text-xs font-black text-red-400 font-mono tracking-wider drop-shadow-[0_0_8px_#ef4444]">
+            <h1 className="text-[12.5px] font-black text-red-400 font-mono tracking-wider drop-shadow-[0_0_8px_#ef4444]">
               DUST STORM ALERT
             </h1>
-            <p className="text-[8.5px] text-orange-200 font-medium text-center">
+            <p className="text-[9px] text-orange-200 font-medium text-center">
               High winds approaching Sector 7 - Seek shelter in Habitat Dome 4
             </p>
-
-            <div className="mt-0.5 px-2 py-0.5 rounded bg-black/50 border border-amber-500/30 text-[7px] font-mono text-emerald-300">
-              DIV WRAPPER ACTIVE
-            </div>
           </div>
         </MarsBillboardStage>
       </div>

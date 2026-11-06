@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { Radio, Send, Terminal, CheckCircle2, MessageSquare, Globe, Sparkles } from 'lucide-react';
+import { Radio, Send, Terminal, MessageSquare } from 'lucide-react';
 
 function CursorPointer({ className = "" }: { className?: string }) {
   return (
@@ -22,9 +22,9 @@ function CursorPointer({ className = "" }: { className?: string }) {
 
 function Mercury3ToolboxSidebar({ activeTab = "html" }: { activeTab?: "html" | "css" | "js" }) {
   return (
-    <div className="flex flex-col gap-1.5 w-16 shrink-0 py-1.5 select-none font-mono">
+    <div className="flex flex-col gap-1.5 w-18 shrink-0 py-1.5 select-none font-mono">
       <div
-        className={`text-[8.5px] font-bold uppercase tracking-wider px-1.5 py-1 rounded-r shadow-xs ${
+        className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs ${
           activeTab === 'html'
             ? 'text-orange-300 bg-orange-950/80 border-l-2 border-orange-400'
             : 'text-slate-400 bg-slate-900/40 border-l border-slate-700'
@@ -33,7 +33,7 @@ function Mercury3ToolboxSidebar({ activeTab = "html" }: { activeTab?: "html" | "
         HTML
       </div>
       <div
-        className={`text-[8.5px] font-bold uppercase tracking-wider px-1.5 py-1 rounded-r shadow-xs ${
+        className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs ${
           activeTab === 'css'
             ? 'text-blue-300 bg-blue-950/80 border-l-2 border-blue-400'
             : 'text-slate-400 bg-slate-900/40 border-l border-slate-700'
@@ -42,7 +42,7 @@ function Mercury3ToolboxSidebar({ activeTab = "html" }: { activeTab?: "html" | "
         CSS
       </div>
       <div
-        className={`text-[8.5px] font-bold uppercase tracking-wider px-1.5 py-1 rounded-r shadow-xs ${
+        className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs ${
           activeTab === 'js'
             ? 'text-yellow-300 bg-yellow-950/80 border-l-2 border-yellow-400'
             : 'text-slate-400 bg-slate-900/40 border-l border-slate-700'
@@ -57,7 +57,7 @@ function Mercury3ToolboxSidebar({ activeTab = "html" }: { activeTab?: "html" | "
 /**
  * Slide 1: The Missing Interface (AstroLink Transceiver Linkage)
  * Dynamic Animation:
- * - Left: Attach Stylesheet block is grabbed from toolbox and dragged into workspace slot
+ * - Left: Attach Stylesheet block is grabbed from toolbox and dragged into workspace blank trace slot
  * - Right: Simulation starts with dormant/unlinked transceiver; ONLY turns online after snap
  */
 export function MercuryLevel3Step1Demo() {
@@ -117,13 +117,12 @@ export function MercuryLevel3Step1Demo() {
 
       {/* LEFT PANE: Workspace */}
       <div className="w-1/2 h-full flex flex-col border-r border-white/10 relative">
-        <div className="h-6 px-3 bg-[#170529] border-b border-white/10 flex items-center justify-between shrink-0">
+        <div className="h-6 px-3 bg-[#170529] border-b border-white/10 flex items-center shrink-0">
           <span className="text-[10px] font-bold text-slate-200">Workspace</span>
-          <span className="text-[8px] font-mono text-orange-400 font-semibold">HTML TAB</span>
         </div>
 
         <div
-          className="flex-1 p-2.5 flex flex-row gap-2 relative overflow-hidden"
+          className="flex-1 p-2.5 flex flex-row gap-2.5 relative overflow-hidden"
           style={{
             backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.12) 1px, transparent 1px)',
             backgroundSize: '14px 14px',
@@ -133,22 +132,19 @@ export function MercuryLevel3Step1Demo() {
 
           {/* Blockly Assembly Area */}
           <div className="flex-1 flex flex-col pt-1 relative z-20">
-            {/* Slot for Attach Stylesheet: Not pre-placed, dragged into place */}
+            {/* Slot for Attach Stylesheet: Blank trace silhouette */}
             <div className="relative mb-1">
-              {/* Silhouette placeholder before snap */}
-              <div className="h-6.5 w-[180px] rounded border border-dashed border-rose-500/40 bg-rose-950/20 flex items-center justify-center text-[8px] font-mono text-rose-300/60">
-                + Attach Stylesheet Slot
-              </div>
+              <div className="h-7 w-[195px] rounded border border-dashed border-rose-500/40 bg-rose-950/10" />
 
               {/* Animated Dragged Block */}
               <div
-                className="absolute inset-0 h-6.5 w-[180px] bg-[#E11D48] text-white text-[9px] font-bold px-2 rounded flex items-center justify-between shadow border-t border-x border-rose-400/40 z-30"
+                className="absolute inset-0 h-7 w-[195px] bg-[#E11D48] text-white text-[9.5px] font-bold px-2 rounded flex items-center justify-between shadow border-t border-x border-rose-400/40 z-30"
                 style={{
                   animation: 'm3s1DragLink 6.5s cubic-bezier(0.2, 0.9, 0.4, 1) infinite, m3s1SnapPulse 6.5s ease-in-out infinite',
                 }}
               >
                 <span>Attach Stylesheet</span>
-                <span className="bg-black/40 text-[7.5px] px-1 py-0.5 rounded text-rose-200 font-mono">style.css</span>
+                <span className="bg-black/40 text-[8px] px-1 py-0.5 rounded text-rose-200 font-mono">style.css</span>
 
                 {/* Animated Hand/Cursor */}
                 <div
@@ -161,17 +157,17 @@ export function MercuryLevel3Step1Demo() {
             </div>
 
             {/* Static Pre-existing structure */}
-            <div className="h-6 w-[180px] bg-[#BE123C] text-white text-[9px] font-bold px-2 flex items-center justify-between border-t border-black/20 shadow">
+            <div className="h-7 w-[195px] bg-[#BE123C] text-white text-[9.5px] font-bold px-2 flex items-center justify-between border-t border-black/20 shadow">
               <span>Attach Logic Script</span>
-              <span className="bg-black/40 text-[7.5px] px-1 py-0.5 rounded text-rose-200 font-mono">logic.js</span>
+              <span className="bg-black/40 text-[8px] px-1 py-0.5 rounded text-rose-200 font-mono">logic.js</span>
             </div>
 
-            <div className="h-7 w-[180px] bg-[#C2410C] text-white text-[9.5px] font-bold px-2 rounded-t flex items-center justify-between shadow border-t border-x border-orange-400/40 mt-1">
+            <div className="h-7.5 w-[195px] bg-[#C2410C] text-white text-[9.5px] font-bold px-2 rounded-t flex items-center justify-between shadow border-t border-x border-orange-400/40 mt-1">
               <span>Main Screen Box</span>
             </div>
-            <div className="h-6 w-[172px] bg-[#F59E0B] text-slate-950 text-[9px] font-bold px-2 ml-2 rounded-b flex items-center justify-between border-t border-black/20 shadow">
+            <div className="h-6.5 w-[187px] bg-[#F59E0B] text-slate-950 text-[9px] font-bold px-2 ml-2 rounded-b flex items-center justify-between border-t border-black/20 shadow">
               <span>Main Title:</span>
-              <span className="bg-black/50 px-1 py-0.5 rounded text-[8px] text-white font-mono">AstroLink</span>
+              <span className="bg-black/50 px-1.5 py-0.5 rounded text-[8px] text-white font-mono">AstroLink</span>
             </div>
           </div>
         </div>
@@ -201,29 +197,28 @@ export function MercuryLevel3Step1Demo() {
         <div className="flex-1 min-h-0 relative flex flex-col items-center justify-center p-2.5 bg-[#03131d]">
           {/* Top AstroLink Transceiver HUD */}
           <div className="w-full max-w-[270px] flex items-center justify-between px-2 py-1 rounded bg-[#100720] border border-purple-800/40 mb-2">
-            <div className="flex items-center gap-1.5 font-mono text-[8px] text-purple-300 font-bold">
-              <Radio size={10} className="text-cyan-400" />
+            <div className="flex items-center gap-1.5 font-mono text-[8.5px] text-purple-300 font-bold">
+              <Radio size={11} className="text-cyan-400" />
               <span>ASTROLINK TRANSCEIVER</span>
             </div>
-            <span className="font-mono text-[7.5px] px-1.5 py-0.5 rounded bg-purple-950 border border-purple-700/50 text-purple-200">
+            <span className="font-mono text-[8px] px-1.5 py-0.5 rounded bg-purple-950 border border-purple-700/50 text-purple-200 font-bold">
               STANDBY
             </span>
           </div>
 
-          {/* DORMANT STATE (Before block snap: 0% - 30%) */}
+          {/* DORMANT STATE (Before block snap: 0% - 30%): Clean dormant frame */}
           <div
-            className="absolute w-full max-w-[270px] h-[130px] rounded-xl border border-dashed border-red-500/50 bg-[#091522]/90 p-3 flex flex-col justify-between shadow-lg"
+            className="absolute w-full max-w-[270px] h-[130px] rounded-xl border border-dashed border-red-500/40 bg-[#091522]/90 p-3 flex flex-col justify-between shadow-lg pointer-events-none"
             style={{ animation: 'm3s1SimDormant 6.5s ease-in-out infinite' }}
           >
-            <div className="w-full py-1 px-2 rounded bg-red-950/40 border border-red-500/30 text-[8px] font-mono text-red-300 text-center">
-              Hardware unlinked: Snap Attach Stylesheet to initialize
-            </div>
-            <div className="flex-1 flex flex-col items-center justify-center text-slate-500 font-mono text-[9px] gap-1">
-              <Terminal size={18} className="text-slate-600" />
-              <span>AWAITING LINK CONNECTION</span>
-            </div>
-            <div className="text-[7.5px] font-mono text-slate-500 text-center">
-              Status: 0% Ready
+            <div className="w-full h-full rounded border border-dashed border-cyan-500/20 bg-black/40 flex items-center justify-center opacity-40">
+              <div
+                className="w-full h-full opacity-20"
+                style={{
+                  backgroundImage: 'radial-gradient(circle, rgba(6,182,212,0.4) 1px, transparent 1px)',
+                  backgroundSize: '12px 12px',
+                }}
+              />
             </div>
           </div>
 
@@ -233,19 +228,19 @@ export function MercuryLevel3Step1Demo() {
             style={{ animation: 'm3s1SimActive 6.5s ease-in-out infinite' }}
           >
             <div className="flex items-center justify-between border-b border-cyan-500/30 pb-1">
-              <span className="text-[8.5px] font-mono text-cyan-300 font-bold">ASTROLINK COMMS RELAY</span>
-              <span className="text-[7.5px] font-mono text-emerald-400 font-bold">CONNECTED</span>
+              <span className="text-[9px] font-mono text-cyan-300 font-bold">ASTROLINK COMMS RELAY</span>
+              <span className="text-[8px] font-mono text-emerald-400 font-bold">CONNECTED</span>
             </div>
 
             <div className="flex flex-col gap-1.5 p-1.5 rounded bg-black/60 border border-cyan-500/30">
-              <span className="text-[9px] font-bold text-slate-200">Terminal Online</span>
-              <div className="h-5 px-2 rounded bg-slate-900 border border-slate-700 flex items-center text-[8px] text-cyan-300 font-mono">
+              <span className="text-[9.5px] font-bold text-slate-100">Terminal Online</span>
+              <div className="h-5 px-2 rounded bg-slate-900 border border-slate-700 flex items-center text-[8.5px] text-cyan-300 font-mono">
                 System linked successfully
               </div>
             </div>
 
-            <div className="w-full flex items-center justify-between text-[7.5px] font-mono">
-              <span className="text-slate-400">READY FOR FORM BLOCKS</span>
+            <div className="w-full flex items-center justify-between text-[8px] font-mono">
+              <span className="text-slate-400">INTERFACE LINKED</span>
               <span className="text-emerald-400 font-bold">100% HEALTH</span>
             </div>
           </div>
@@ -258,7 +253,7 @@ export function MercuryLevel3Step1Demo() {
 /**
  * Slide 2: Build HTML Form Structure
  * Dynamic Animation:
- * - Left: Send Button block is dragged into Main Screen Box from HTML tab
+ * - Left: Send Button block is dragged into Main Screen Box blank trace slot
  * - Right: Transmit button in Simulation only renders AFTER block snaps in!
  */
 export function MercuryLevel3Step2Demo() {
@@ -318,13 +313,12 @@ export function MercuryLevel3Step2Demo() {
 
       {/* LEFT PANE: Workspace */}
       <div className="w-1/2 h-full flex flex-col border-r border-white/10 relative">
-        <div className="h-6 px-3 bg-[#170529] border-b border-white/10 flex items-center justify-between shrink-0">
+        <div className="h-6 px-3 bg-[#170529] border-b border-white/10 flex items-center shrink-0">
           <span className="text-[10px] font-bold text-slate-200">Workspace</span>
-          <span className="text-[8px] font-mono text-orange-400 font-semibold">HTML TAB</span>
         </div>
 
         <div
-          className="flex-1 p-2.5 flex flex-row gap-2 relative overflow-hidden"
+          className="flex-1 p-2.5 flex flex-row gap-2.5 relative overflow-hidden"
           style={{
             backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.12) 1px, transparent 1px)',
             backgroundSize: '14px 14px',
@@ -335,38 +329,35 @@ export function MercuryLevel3Step2Demo() {
           {/* Blockly Assembly Stack */}
           <div className="flex-1 flex flex-col pt-0.5 relative z-20">
             {/* Main Screen Box */}
-            <div className="h-7 w-[185px] bg-[#C2410C] text-white text-[9.5px] font-bold px-2 rounded-t flex items-center justify-between shadow border-t border-x border-orange-400/40">
+            <div className="h-7.5 w-[195px] bg-[#C2410C] text-white text-[9.5px] font-bold px-2 rounded-t flex items-center justify-between shadow border-t border-x border-orange-400/40">
               <span>Main Screen Box</span>
             </div>
 
             {/* Nested Title Block */}
-            <div className="h-6 w-[177px] bg-[#F59E0B] text-slate-950 text-[9px] font-bold px-2 ml-2 flex items-center justify-between border-t border-black/20 shadow">
+            <div className="h-6.5 w-[187px] bg-[#F59E0B] text-slate-950 text-[9px] font-bold px-2 ml-2 flex items-center justify-between border-t border-black/20 shadow">
               <span>Main Title:</span>
-              <span className="bg-black/50 px-1 py-0.5 rounded text-[8px] text-white font-mono">AstroLink</span>
+              <span className="bg-black/50 px-1.5 py-0.5 rounded text-[8px] text-white font-mono">AstroLink</span>
             </div>
 
             {/* Nested Text Input Block */}
-            <div className="h-6 w-[177px] bg-[#10B981] text-white text-[9px] font-bold px-2 ml-2 flex items-center justify-between border-t border-black/20 shadow">
+            <div className="h-6.5 w-[187px] bg-[#10B981] text-white text-[9px] font-bold px-2 ml-2 flex items-center justify-between border-t border-black/20 shadow">
               <span>Text Input Area</span>
               <span className="bg-black/40 px-1 py-0.5 rounded text-[7.5px] text-emerald-200 font-mono">Signal check...</span>
             </div>
 
-            {/* Send Button: Dragged and Snapped into place */}
-            <div className="relative ml-2 w-[177px] mt-0.5">
-              {/* Silhouette placeholder before snap */}
-              <div className="h-6 rounded-b border border-dashed border-emerald-500/40 bg-emerald-950/20 flex items-center justify-center text-[8px] font-mono text-emerald-300/60">
-                + Send Button Slot
-              </div>
+            {/* Send Button: Dragged and Snapped into blank trace slot */}
+            <div className="relative ml-2 w-[187px] mt-0.5">
+              <div className="h-6.5 rounded-b border border-dashed border-emerald-500/40 bg-emerald-950/10" />
 
               {/* Animated Dragged Send Button Block */}
               <div
-                className="absolute inset-0 h-6 bg-[#059669] text-white text-[9px] font-bold px-2 rounded-b flex items-center justify-between shadow border-b border-x border-emerald-400/30 z-30"
+                className="absolute inset-0 h-6.5 bg-[#059669] text-white text-[9.5px] font-bold px-2 rounded-b flex items-center justify-between shadow border-b border-x border-emerald-400/30 z-30"
                 style={{
                   animation: 'm3s2DragSend 6.5s cubic-bezier(0.2, 0.9, 0.4, 1) infinite, m3s2SnapPulse 6.5s ease-in-out infinite',
                 }}
               >
                 <span>Send Button:</span>
-                <span className="bg-black/50 px-1 py-0.5 rounded text-[8px] text-emerald-200 font-mono">Transmit</span>
+                <span className="bg-black/50 px-1.5 py-0.5 rounded text-[8px] text-emerald-200 font-mono">Transmit</span>
 
                 {/* Animated Cursor */}
                 <div
@@ -403,7 +394,7 @@ export function MercuryLevel3Step2Demo() {
 
         {/* Viewport Content */}
         <div className="flex-1 min-h-0 relative flex flex-col items-center justify-center p-2.5 bg-[#03131d]">
-          <div className="w-full max-w-[270px] h-[140px] rounded-xl border border-cyan-500/40 bg-[#061e2e] p-2.5 flex flex-col justify-between shadow-xl">
+          <div className="w-full max-w-[270px] h-[135px] rounded-xl border border-cyan-500/40 bg-[#061e2e] p-2.5 flex flex-col justify-between shadow-xl">
             <div className="flex items-center justify-between border-b border-cyan-500/30 pb-1">
               <span className="text-[8.5px] font-mono text-cyan-300 font-bold">ASTROLINK FORM TERMINAL</span>
               <Radio size={11} className="text-cyan-400" />
@@ -411,22 +402,20 @@ export function MercuryLevel3Step2Demo() {
 
             {/* Terminal Elements */}
             <div className="flex flex-col gap-1.5 p-2 rounded bg-black/60 border border-cyan-500/30">
-              <div className="text-[9px] font-bold text-center text-slate-200">AstroLink Comms</div>
-              <div className="h-5 px-2 rounded bg-slate-900 border border-slate-700 flex items-center text-[8px] text-slate-400">
+              <div className="text-[9.5px] font-bold text-center text-slate-100">AstroLink Comms</div>
+              <div className="h-5 px-2 rounded bg-slate-900 border border-slate-700 flex items-center text-[8px] text-slate-300 font-mono">
                 Signal check...
               </div>
 
-              {/* BEFORE SNAP: Missing Button Placeholder */}
+              {/* BEFORE SNAP: Blank trace placeholder */}
               <div
-                className="relative h-5 rounded border border-dashed border-red-500/40 bg-red-950/20 flex items-center justify-center text-[7.5px] font-mono text-red-300"
+                className="relative h-5 rounded border border-dashed border-emerald-500/30 bg-emerald-950/10"
                 style={{ animation: 'm3s2BtnMissing 6.5s ease-in-out infinite' }}
-              >
-                Missing Send Button
-              </div>
+              />
 
               {/* AFTER SNAP: Transmit Button Renders Dynamically */}
               <div
-                className="absolute inset-x-2 bottom-2 h-5 rounded bg-emerald-600 text-[8.5px] font-bold text-white flex items-center justify-center gap-1 shadow-[0_0_12px_rgba(16,185,129,0.5)] transition-all"
+                className="absolute inset-x-2.5 bottom-2 h-5 rounded bg-emerald-600 text-[8.5px] font-bold text-white flex items-center justify-center gap-1 shadow-[0_0_12px_rgba(16,185,129,0.5)] transition-all"
                 style={{ animation: 'm3s2BtnRendered 6.5s ease-in-out infinite' }}
               >
                 <Send size={9} />
@@ -434,9 +423,9 @@ export function MercuryLevel3Step2Demo() {
               </div>
             </div>
 
-            <div className="w-full flex items-center justify-between text-[7.5px] font-mono">
+            <div className="w-full flex items-center justify-between text-[8px] font-mono">
               <span className="text-slate-400">INPUT + ACTION READY</span>
-              <span className="text-cyan-300">HTML VALID</span>
+              <span className="text-cyan-300 font-bold">HTML VALID</span>
             </div>
           </div>
         </div>
@@ -508,13 +497,12 @@ export function MercuryLevel3Step3Demo() {
 
       {/* LEFT PANE: Workspace */}
       <div className="w-1/2 h-full flex flex-col border-r border-white/10 relative">
-        <div className="h-6 px-3 bg-[#170529] border-b border-white/10 flex items-center justify-between shrink-0">
+        <div className="h-6 px-3 bg-[#170529] border-b border-white/10 flex items-center shrink-0">
           <span className="text-[10px] font-bold text-slate-200">Workspace</span>
-          <span className="text-[8px] font-mono text-blue-400 font-semibold">CSS TAB</span>
         </div>
 
         <div
-          className="flex-1 p-2.5 flex flex-row gap-2 relative overflow-hidden"
+          className="flex-1 p-2.5 flex flex-row gap-2.5 relative overflow-hidden"
           style={{
             backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.12) 1px, transparent 1px)',
             backgroundSize: '14px 14px',
@@ -525,27 +513,24 @@ export function MercuryLevel3Step3Demo() {
           {/* Blockly CSS Assembly */}
           <div className="flex-1 flex flex-col pt-0.5 relative z-20">
             {/* css_selector_wrapper: Link Styles to: Main Screen Box */}
-            <div className="h-7 w-[185px] bg-[#2563EB] text-white text-[9px] font-bold px-2 rounded-t flex items-center justify-between shadow border-t border-x border-blue-400/40">
+            <div className="h-7.5 w-[195px] bg-[#2563EB] text-white text-[9.5px] font-bold px-2 rounded-t flex items-center justify-between shadow border-t border-x border-blue-400/40">
               <span>Link Styles to:</span>
-              <span className="bg-black/50 px-1 py-0.5 rounded text-[8px] text-cyan-200 font-mono">Main Screen Box ▾</span>
+              <span className="bg-black/50 px-1.5 py-0.5 rounded text-[8px] text-cyan-200 font-mono">Main Screen Box ▾</span>
             </div>
 
-            {/* Dragged Block: Arrange Direction: Vertical (Stacked) */}
-            <div className="relative ml-2 w-[177px] mt-0.5">
-              {/* Silhouette slot */}
-              <div className="h-6 rounded border border-dashed border-purple-500/40 bg-purple-950/20 flex items-center justify-center text-[7.5px] font-mono text-purple-300/60">
-                + Arrange Direction Slot
-              </div>
+            {/* Dragged Block with blank trace slot */}
+            <div className="relative ml-2 w-[187px] mt-0.5">
+              <div className="h-6.5 rounded border border-dashed border-purple-500/40 bg-purple-950/10" />
 
               {/* Animated Dragged Flex Block */}
               <div
-                className="absolute inset-0 h-6 bg-[#7C3AED] text-white text-[8.5px] font-bold px-2 rounded flex items-center justify-between shadow border-t border-x border-purple-400/30 z-30"
+                className="absolute inset-0 h-6.5 bg-[#7C3AED] text-white text-[9px] font-bold px-2 rounded flex items-center justify-between shadow border-t border-x border-purple-400/30 z-30"
                 style={{
                   animation: 'm3s3DragFlex 6.5s cubic-bezier(0.2, 0.9, 0.4, 1) infinite, m3s3SnapPulse 6.5s ease-in-out infinite',
                 }}
               >
                 <span>Arrange Direction:</span>
-                <span className="bg-black/50 px-1 py-0.5 rounded text-[7.5px] text-purple-200 font-mono">Vertical ▾</span>
+                <span className="bg-black/50 px-1.5 py-0.5 rounded text-[8px] text-purple-200 font-mono">Vertical ▾</span>
 
                 {/* Animated Cursor */}
                 <div
@@ -558,14 +543,14 @@ export function MercuryLevel3Step3Demo() {
             </div>
 
             {/* Static CSS Children */}
-            <div className="h-6 w-[177px] bg-[#8B5CF6] text-white text-[8.5px] font-bold px-2 ml-2 flex items-center justify-between border-t border-black/20 shadow mt-0.5">
+            <div className="h-6.5 w-[187px] bg-[#8B5CF6] text-white text-[9px] font-bold px-2 ml-2 flex items-center justify-between border-t border-black/20 shadow mt-0.5">
               <span>Align Items:</span>
-              <span className="bg-black/50 px-1 py-0.5 rounded text-[7.5px] text-violet-200 font-mono">Center ▾</span>
+              <span className="bg-black/50 px-1.5 py-0.5 rounded text-[8px] text-violet-200 font-mono">Center ▾</span>
             </div>
 
-            <div className="h-6 w-[177px] bg-[#EC4899] text-white text-[8.5px] font-bold px-2 ml-2 rounded-b flex items-center justify-between border-t border-black/20 shadow border-b border-x border-pink-400/20">
+            <div className="h-6.5 w-[187px] bg-[#EC4899] text-white text-[9px] font-bold px-2 ml-2 rounded-b flex items-center justify-between border-t border-black/20 shadow border-b border-x border-pink-400/20">
               <span>Color:</span>
-              <span className="bg-black/50 px-1 py-0.5 rounded text-[7.5px] text-pink-200 font-mono">Pastel Orange ▾</span>
+              <span className="bg-black/50 px-1.5 py-0.5 rounded text-[7.5px] text-pink-200 font-mono">Pastel Orange ▾</span>
             </div>
           </div>
         </div>
@@ -595,44 +580,40 @@ export function MercuryLevel3Step3Demo() {
         <div className="flex-1 min-h-0 relative flex flex-col items-center justify-center p-2.5 bg-[#03131d]">
           {/* BEFORE SNAP: RAW UNSTYLED VIEW (0% - 30%) */}
           <div
-            className="absolute w-full max-w-[270px] h-[135px] rounded-lg border border-red-500/40 bg-[#070b12] p-2 flex flex-col justify-between shadow"
+            className="absolute w-full max-w-[270px] h-[130px] rounded-lg border border-red-500/40 bg-[#070b12] p-2 flex flex-col justify-between shadow"
             style={{ animation: 'm3s3RawLayout 6.5s ease-in-out infinite' }}
           >
-            <div className="py-0.5 px-1.5 rounded bg-red-950/40 border border-red-500/30 text-[7px] font-mono text-red-300 text-center">
-              Unstyled Browser Flow: Elements unaligned
-            </div>
-
             {/* Clumsy left-aligned unstyled HTML elements */}
             <div className="flex flex-col items-start gap-1 p-1 bg-white/5 rounded border border-white/10 font-sans">
-              <span className="text-[8px] text-slate-300">AstroLink Comms</span>
+              <span className="text-[8.5px] text-slate-300 font-bold">AstroLink Comms</span>
               <input
                 readOnly
                 value="Signal check..."
-                className="h-4 w-32 px-1 text-[7.5px] bg-slate-800 border border-slate-600 text-slate-400 rounded-none"
+                className="h-4.5 w-32 px-1 text-[7.5px] bg-slate-800 border border-slate-600 text-slate-400 rounded-none"
               />
-              <button className="h-4 px-2 text-[7.5px] bg-slate-700 text-slate-300 border border-slate-500 rounded-none">
+              <button className="h-4.5 px-2 text-[7.5px] bg-slate-700 text-slate-300 border border-slate-500 rounded-none">
                 Transmit
               </button>
             </div>
 
-            <div className="text-[7px] font-mono text-slate-400 text-right">
-              display: block (default)
+            <div className="text-[7.5px] font-mono text-slate-400 text-right">
+              display: block (default flow)
             </div>
           </div>
 
           {/* AFTER SNAP: STYLED & CENTERED TERMINAL (35% - 88%) */}
           <div
-            className="w-full max-w-[270px] h-[135px] rounded-xl border-2 border-purple-500/70 bg-[#150E2D] p-2.5 flex flex-col justify-between shadow-[0_0_20px_rgba(168,85,247,0.35)] transition-all"
+            className="w-full max-w-[270px] h-[130px] rounded-xl border-2 border-purple-500/70 bg-[#150E2D] p-2.5 flex flex-col justify-between shadow-[0_0_20px_rgba(168,85,247,0.35)] transition-all"
             style={{ animation: 'm3s3StyledLayout 6.5s ease-in-out infinite' }}
           >
             <div className="flex items-center justify-between border-b border-purple-600/40 pb-1">
               <span className="text-[8.5px] font-mono text-purple-200 font-bold">TERMINAL LAYOUT</span>
-              <span className="text-[7.5px] font-mono text-cyan-300">flex-col + center</span>
+              <span className="text-[7.5px] font-mono text-cyan-300 font-bold">flex-col + center</span>
             </div>
 
             {/* Beautiful centered flexbox card with pastel orange button */}
             <div className="flex flex-col items-center justify-center gap-1.5 py-1 px-2 rounded-lg bg-black/40 border border-purple-600/30">
-              <span className="text-[9px] font-bold text-white tracking-wide">AstroLink Comms</span>
+              <span className="text-[9.5px] font-bold text-white tracking-wide">AstroLink Comms</span>
               <div className="h-4.5 w-full max-w-[190px] px-2 rounded-md bg-[#0D051C] border border-purple-500/40 flex items-center text-[7.5px] text-purple-200 font-mono">
                 Signal check...
               </div>
@@ -642,7 +623,7 @@ export function MercuryLevel3Step3Demo() {
               </div>
             </div>
 
-            <div className="w-full flex items-center justify-between text-[7.5px] font-mono">
+            <div className="w-full flex items-center justify-between text-[8px] font-mono">
               <span className="text-purple-300">PERFECT CENTERING</span>
               <span className="text-emerald-400 font-bold">PASTEL ORANGE</span>
             </div>
@@ -656,7 +637,7 @@ export function MercuryLevel3Step3Demo() {
 /**
  * Slide 4: Transmit with JavaScript
  * Dynamic Animation:
- * - Left: When Send Button is Clicked + Beam Signal block is dragged from JS toolbox into workspace
+ * - Left: When Send Button is Clicked + Beam Signal block is dragged from JS toolbox into workspace blank trace slot
  * - Right: Simulation Transmit button is clicked by cursor -> Beams signal to Mars -> Mars online + incoming packet received!
  */
 export function MercuryLevel3Step4Demo() {
@@ -748,13 +729,12 @@ export function MercuryLevel3Step4Demo() {
 
       {/* LEFT PANE: Workspace */}
       <div className="w-1/2 h-full flex flex-col border-r border-white/10 relative">
-        <div className="h-6 px-3 bg-[#170529] border-b border-white/10 flex items-center justify-between shrink-0">
+        <div className="h-6 px-3 bg-[#170529] border-b border-white/10 flex items-center shrink-0">
           <span className="text-[10px] font-bold text-slate-200">Workspace</span>
-          <span className="text-[8px] font-mono text-yellow-400 font-semibold">JS LOGIC</span>
         </div>
 
         <div
-          className="flex-1 p-2.5 flex flex-row gap-2 relative overflow-hidden"
+          className="flex-1 p-2.5 flex flex-row gap-2.5 relative overflow-hidden"
           style={{
             backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.12) 1px, transparent 1px)',
             backgroundSize: '14px 14px',
@@ -764,12 +744,9 @@ export function MercuryLevel3Step4Demo() {
 
           {/* Blockly JS Assembly Stack */}
           <div className="flex-1 flex flex-col pt-1 relative z-20">
-            {/* Slot for Event Listener: Dragged into place */}
-            <div className="relative w-[185px]">
-              {/* Silhouette slot */}
-              <div className="h-19 rounded border border-dashed border-orange-500/40 bg-orange-950/20 flex items-center justify-center text-[7.5px] font-mono text-orange-300/60 p-2 text-center">
-                + When Send Button Clicked Slot
-              </div>
+            {/* Slot for Event Listener: Blank trace slot */}
+            <div className="relative w-[195px]">
+              <div className="h-19 rounded border border-dashed border-orange-500/40 bg-orange-950/10" />
 
               {/* Animated Dragged Event Listener Block */}
               <div
@@ -779,20 +756,20 @@ export function MercuryLevel3Step4Demo() {
                 }}
               >
                 {/* js_add_event_listener Header */}
-                <div className="h-7 bg-[#F97316] text-white text-[8.5px] font-bold px-2 rounded-t flex items-center justify-between shadow border-t border-x border-orange-400/40">
+                <div className="h-7 bg-[#F97316] text-white text-[9px] font-bold px-2 rounded-t flex items-center justify-between shadow border-t border-x border-orange-400/40">
                   <span>When</span>
                   <span className="bg-black/50 px-1 py-0.5 rounded text-[8px] text-yellow-300 font-mono">Send Button ▾</span>
                   <span>is Clicked do:</span>
                 </div>
 
                 {/* js_beam_signal nested inside */}
-                <div className="h-6.5 bg-[#6366F1] text-white text-[8px] font-bold px-2 ml-2.5 flex items-center justify-between border-t border-black/20 shadow">
+                <div className="h-6.5 bg-[#6366F1] text-white text-[8.5px] font-bold px-2 ml-2 flex items-center justify-between border-t border-black/20 shadow">
                   <span>Beam Signal to Planet:</span>
                   <span className="bg-black/50 px-1 py-0.5 rounded text-[7.5px] text-cyan-200 font-mono">Mars ▾</span>
                 </div>
 
                 {/* Message payload */}
-                <div className="h-6 bg-[#6366F1] text-white text-[8px] font-bold px-2 ml-2.5 rounded-b flex items-center justify-between border-t border-black/20 shadow border-b border-x border-indigo-400/20">
+                <div className="h-6 bg-[#6366F1] text-white text-[8.5px] font-bold px-2 ml-2 rounded-b flex items-center justify-between border-t border-black/20 shadow border-b border-x border-indigo-400/20">
                   <span>with Message:</span>
                   <span className="bg-[#14B8A6] px-1 py-0.5 rounded text-[7.5px] text-white font-mono">Typed Text</span>
                 </div>
@@ -831,8 +808,8 @@ export function MercuryLevel3Step4Demo() {
         </div>
 
         {/* Viewport Content */}
-        <div className="flex-1 min-h-0 relative flex flex-col items-center justify-between p-2 bg-[#03131d]">
-          {/* Planetary Destination Status Badges (Matches real Mercury 3 Simulation HUD) */}
+        <div className="flex-1 min-h-0 relative flex flex-col items-center justify-between p-2.5 bg-[#03131d]">
+          {/* Planetary Destination Status Badges */}
           <div className="w-full flex items-center gap-1 shrink-0">
             <div
               className="flex-1 py-1 px-1.5 rounded border text-[8px] font-mono font-bold flex items-center justify-center gap-1 transition-all"
@@ -858,8 +835,8 @@ export function MercuryLevel3Step4Demo() {
           {/* Interactive Terminal Window */}
           <div className="w-full max-w-[270px] h-[95px] rounded-lg border border-purple-500/40 bg-[#150E2D] p-2 flex flex-col justify-between shadow relative overflow-hidden">
             <div className="flex items-center justify-between">
-              <span className="text-[8px] font-mono text-purple-300 font-bold">AstroLink Terminal</span>
-              <span className="text-[7px] font-mono text-cyan-300">Target: Mars</span>
+              <span className="text-[8px] font-mono text-purple-200 font-bold">AstroLink Terminal</span>
+              <span className="text-[7.5px] font-mono text-cyan-300 font-bold">Target: Mars</span>
             </div>
 
             {/* Glowing Signal Beam Line on transmit */}
@@ -896,7 +873,7 @@ export function MercuryLevel3Step4Demo() {
             </div>
           </div>
 
-          {/* COMMS RELAY FEED (Direct match to MercuryLevel3Simulation.tsx) */}
+          {/* COMMS RELAY FEED */}
           <div className="w-full rounded border border-purple-700/40 bg-[#16092E]/95 px-2 py-1 flex items-center justify-between shadow">
             <div className="flex items-center gap-1.5 min-w-0">
               <MessageSquare size={10} className="text-purple-300 shrink-0" />
@@ -908,7 +885,7 @@ export function MercuryLevel3Step4Demo() {
                 Mars: &quot;Woohoo! We hear you loud and clear out here!&quot;
               </div>
             </div>
-            <span className="text-[7px] font-mono px-1 rounded bg-purple-950 text-purple-300 shrink-0">
+            <span className="text-[7px] font-mono px-1 rounded bg-purple-950 text-purple-300 shrink-0 font-bold">
               PACKET IN
             </span>
           </div>
