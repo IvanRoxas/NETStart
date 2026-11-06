@@ -26,32 +26,28 @@ function CursorPointer({ className = "" }: { className?: string }) {
 function Mars3ToolboxSidebar({ activeCategory = "form" }: { activeCategory?: "form" | "options" | "input" | "button" }) {
   return (
     <div className="flex flex-col gap-1.5 w-20 shrink-0 py-1.5 select-none font-mono">
-      <div className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs border-l-2 transition-all ${
-        activeCategory === "form"
+      <div className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs border-l-2 transition-all ${activeCategory === "form"
           ? "text-red-300 bg-red-950/80 border-red-400"
           : "text-red-400/60 bg-red-950/30 border-red-500/30"
-      }`}>
+        }`}>
         Form
       </div>
-      <div className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs border-l-2 transition-all ${
-        activeCategory === "options"
+      <div className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs border-l-2 transition-all ${activeCategory === "options"
           ? "text-cyan-300 bg-cyan-950/80 border-cyan-400"
           : "text-cyan-400/60 bg-cyan-950/30 border-cyan-500/30"
-      }`}>
+        }`}>
         Options
       </div>
-      <div className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs border-l-2 transition-all ${
-        activeCategory === "input"
+      <div className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs border-l-2 transition-all ${activeCategory === "input"
           ? "text-amber-300 bg-amber-950/80 border-amber-400"
           : "text-amber-400/60 bg-amber-950/30 border-amber-500/30"
-      }`}>
+        }`}>
         Input
       </div>
-      <div className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs border-l-2 transition-all ${
-        activeCategory === "button"
+      <div className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs border-l-2 transition-all ${activeCategory === "button"
           ? "text-emerald-300 bg-emerald-950/80 border-emerald-400"
           : "text-emerald-400/60 bg-emerald-950/30 border-emerald-500/30"
-      }`}>
+        }`}>
         Button
       </div>
     </div>
@@ -88,9 +84,8 @@ function MarsTransmissionSpaceScene({
       <div className="relative z-10 w-full px-4 pt-3 flex justify-between items-start">
         {/* Venus (Top Left) */}
         <div
-          className={`flex flex-col items-center gap-1 transition-all duration-300 ${
-            targetPlanet === 'Venus' ? 'scale-110 drop-shadow-[0_0_15px_#ec4899]' : 'opacity-40'
-          }`}
+          className={`flex flex-col items-center gap-1 transition-all duration-300 ${targetPlanet === 'Venus' ? 'scale-110 drop-shadow-[0_0_15px_#ec4899]' : 'opacity-40'
+            }`}
         >
           <img
             src="/assets/planets/celestial/Venus.svg"
@@ -104,9 +99,8 @@ function MarsTransmissionSpaceScene({
 
         {/* Mercury (Top Right) */}
         <div
-          className={`flex flex-col items-center gap-1 transition-all duration-300 ${
-            targetPlanet === 'Mercury' ? 'scale-110 drop-shadow-[0_0_15px_#38bdf8]' : 'opacity-40'
-          }`}
+          className={`flex flex-col items-center gap-1 transition-all duration-300 ${targetPlanet === 'Mercury' ? 'scale-110 drop-shadow-[0_0_15px_#38bdf8]' : 'opacity-40'
+            }`}
         >
           <img
             src="/assets/planets/celestial/Mercury.svg"
