@@ -416,7 +416,7 @@ export function SaturnLevel2Step1Demo() {
       <div className="w-1/2 h-full flex flex-col bg-[#0b0314] relative">
         <div className="h-6 px-3 bg-[#170529] border-b border-white/10 flex items-center justify-between shrink-0">
           <span className="text-[10px] font-black tracking-wider uppercase font-mono text-purple-200">SIMULATION</span>
-          <div className="relative flex items-center justify-end min-w-[125px] h-4 font-mono text-[9px] font-bold tracking-wider whitespace-nowrap">
+          <div className="relative flex items-center justify-end min-w-[130px] shrink-0 h-4 font-mono text-[9px] font-bold tracking-wider whitespace-nowrap">
             <span
               className="text-amber-400 drop-shadow-[0_0_6px_rgba(245,158,11,0.6)] whitespace-nowrap"
               style={{ animation: 's2s1StatusStandby 7s ease-in-out infinite' }}
@@ -590,7 +590,7 @@ export function SaturnLevel2Step2Demo() {
       <div className="w-1/2 h-full flex flex-col bg-[#0b0314] relative">
         <div className="h-6 px-3 bg-[#170529] border-b border-white/10 flex items-center justify-between shrink-0">
           <span className="text-[10px] font-black tracking-wider uppercase font-mono text-purple-200">SIMULATION</span>
-          <div className="relative flex items-center justify-end min-w-[125px] h-4 font-mono text-[9px] font-bold tracking-wider whitespace-nowrap">
+          <div className="relative flex items-center justify-end min-w-[130px] shrink-0 h-4 font-mono text-[9px] font-bold tracking-wider whitespace-nowrap">
             <span
               className="text-amber-400 drop-shadow-[0_0_6px_rgba(245,158,11,0.6)] whitespace-nowrap"
               style={{ animation: 's2s2StatusStandby 7s ease-in-out infinite' }}
@@ -763,7 +763,7 @@ export function SaturnLevel2Step3Demo() {
       <div className="w-1/2 h-full flex flex-col bg-[#0b0314] relative">
         <div className="h-6 px-3 bg-[#170529] border-b border-white/10 flex items-center justify-between shrink-0">
           <span className="text-[10px] font-black tracking-wider uppercase font-mono text-purple-200">SIMULATION</span>
-          <div className="relative flex items-center justify-end min-w-[130px] h-4 font-mono text-[9px] font-bold tracking-wider whitespace-nowrap">
+          <div className="relative flex items-center justify-end min-w-[130px] shrink-0 h-4 font-mono text-[9px] font-bold tracking-wider whitespace-nowrap">
             <span
               className="text-red-400 drop-shadow-[0_0_6px_rgba(248,113,113,0.6)] whitespace-nowrap"
               style={{ animation: 's2s3StatusStandby 7s ease-in-out infinite' }}
@@ -938,7 +938,7 @@ export function SaturnLevel2Step4Demo() {
       <div className="w-1/2 h-full flex flex-col bg-[#0b0314] relative">
         <div className="h-6 px-3 bg-[#170529] border-b border-white/10 flex items-center justify-between shrink-0">
           <span className="text-[10px] font-black tracking-wider uppercase font-mono text-purple-200">SIMULATION</span>
-          <div className="relative flex items-center justify-end min-w-[130px] h-4 font-mono text-[9px] font-bold tracking-wider whitespace-nowrap">
+          <div className="relative flex items-center justify-end min-w-[130px] shrink-0 h-4 font-mono text-[9px] font-bold tracking-wider whitespace-nowrap">
             <span
               className="text-amber-400 drop-shadow-[0_0_6px_rgba(245,158,11,0.6)] whitespace-nowrap"
               style={{ animation: 's2s4StatusStandby 7s ease-in-out infinite' }}
