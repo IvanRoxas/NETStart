@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { Zap, Cpu, Check } from 'lucide-react';
+import { Zap, Cpu, Shield, AlertTriangle } from 'lucide-react';
 
 function CursorPointer({ className = "" }: { className?: string }) {
   return (
@@ -56,67 +56,185 @@ function Saturn3ToolboxSidebar({ activeCategory = "subsystems" }: { activeCatego
 }
 
 /**
- * Authentic Core Energy Rack & Heap Stage
+ * 1-to-1 Authentic Reproduction of ProcessingBayCanvas.tsx (Saturn Level 3)
+ * Features:
+ * - Upper clerestory observation window overlooking deep space & Saturn ring curve
+ * - Overhead telemetry HUD header with RAM PRESSURE gauge bar & warning siren
+ * - Left: Heap Bay with 4 energy core sockets (C1, C2, C3, C4) & glowing batteries
+ * - Center: Overhead crane rail & robotic crane arm
+ * - Right: Mainframe Subsystem Bay (Sensors, Debris, Shields)
  */
-function HeapEnergyRackStage({
+function Saturn3ProcessingBayScene({
   coresAvailable = 4,
-  coresBorrowed = 0,
-  activeSubsystem = "None",
-  isExecuting = false,
-  statusMessage = "Heap memory ready for allocation",
+  coresInMainframe = 0,
+  activeArmSubsystem = "None",
+  isTaskExecuting = false,
+  cranePosition = "heap", // 'heap' | 'center' | 'mainframe'
+  statusText = "Awaiting instructions...",
 }: {
   coresAvailable?: number;
-  coresBorrowed?: number;
-  activeSubsystem?: string;
-  isExecuting?: boolean;
-  statusMessage?: string;
+  coresInMainframe?: number;
+  activeArmSubsystem?: string;
+  isTaskExecuting?: boolean;
+  cranePosition?: "heap" | "center" | "mainframe";
+  statusText?: string;
 }) {
+  const ramPressure = coresInMainframe * 25;
+
   return (
-    <div className="w-full max-w-[260px] h-[160px] rounded-xl border border-cyan-500/40 bg-[#0a1e22] p-2.5 flex flex-col justify-between shadow-2xl relative overflow-hidden font-mono select-none">
-      {/* Header */}
-      <div className="flex items-center justify-between border-b border-cyan-500/30 pb-1 shrink-0">
-        <span className="text-[8.5px] text-cyan-300 font-bold">HEAP ENERGY RACK</span>
-        <span className={`text-[8.5px] font-bold ${coresAvailable === 4 ? 'text-emerald-400' : 'text-amber-400'}`}>
-          AVAILABLE: {coresAvailable}/4 CORES
-        </span>
-      </div>
-
-      {/* 4 Energy Cores Display */}
-      <div className="flex items-center justify-around py-1">
-        {[1, 2, 3, 4].map((core) => {
-          const isBorrowed = core > coresAvailable;
-          return (
-            <div
-              key={core}
-              className={`w-10 h-10 rounded-lg flex flex-col items-center justify-center transition-all duration-300 ${
-                isBorrowed
-                  ? "bg-purple-950/40 border border-dashed border-purple-500/40 opacity-40"
-                  : "bg-black/60 border-2 border-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.4)]"
-              }`}
-            >
-              <Zap size={14} className={isBorrowed ? "text-purple-400/40" : "text-emerald-300"} />
-              <span className={`text-[6.5px] font-bold ${isBorrowed ? 'text-slate-500' : 'text-white'}`}>
-                C{core}
-              </span>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Subsystem Allocation Monitor */}
-      <div className="flex items-center justify-between px-2 py-1 rounded bg-black/50 border border-cyan-500/30 text-[8px]">
-        <div className="flex items-center gap-1">
-          <Cpu size={10} className={isExecuting ? "text-cyan-400 animate-pulse" : "text-slate-400"} />
-          <span className="text-cyan-300 font-bold">Active: {activeSubsystem}</span>
+    <div className="relative w-full h-full bg-[#0c121e] overflow-hidden select-none font-mono flex flex-col justify-between border-2 border-[#1b273b]">
+      {/* 1. Overhead Telemetry HUD Header */}
+      <div className="w-full h-6 px-2.5 flex items-center justify-between border-b border-[#1c2a40] bg-[#090f1a]/95 z-20 shrink-0 text-[8px] tracking-wider uppercase backdrop-blur-md">
+        <div className="flex items-center gap-1.5 shrink-0">
+          <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_6px_#22d3ee]" />
+          <span className="text-gray-300 font-bold">CORE PROCESSING BAY</span>
         </div>
-        <span className={coresBorrowed > 0 ? "text-amber-300 font-bold" : "text-emerald-400 font-bold"}>
-          {coresBorrowed > 0 ? `${coresBorrowed} Cores Borrowed` : "Heap Free"}
-        </span>
+
+        {/* Live RAM Pressure Gauge Bar */}
+        <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-1 text-[7.5px]">
+            <span className="text-gray-400 font-bold">RAM:</span>
+            <span className={`font-extrabold ${ramPressure > 50 ? 'text-amber-400' : 'text-cyan-300'}`}>
+              {ramPressure}%
+            </span>
+          </div>
+
+          <div className="w-16 h-1.5 rounded-full bg-black/80 border border-gray-700/80 relative overflow-hidden flex items-center shadow-inner">
+            <div
+              style={{ width: `${ramPressure}%` }}
+              className="h-full bg-gradient-to-r from-cyan-400 to-emerald-400 shadow-[0_0_6px_#10b981] transition-all duration-500"
+            />
+          </div>
+
+          {/* Warning Siren Indicator */}
+          <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_6px_#10b981]" />
+        </div>
       </div>
 
-      <span className="text-[7.5px] text-center text-cyan-200/80 truncate">
-        {statusMessage}
-      </span>
+      {/* 2. Background Observation Window & Bulkhead Wall */}
+      <div className="relative flex-1 w-full min-h-0 flex flex-col justify-between overflow-hidden">
+        {/* Clerestory Observation Window (Top 45%) */}
+        <div className="relative w-full h-[62px] border-b-2 border-[#202e44] bg-[#070d1c] overflow-hidden shrink-0">
+          {/* Deep Space void & stars */}
+          <div className="absolute inset-0 bg-gradient-to-tr from-[#050a18] via-[#0a1228] to-[#120d26]" />
+          <div className="absolute top-1 right-8 w-28 h-12 rounded-full bg-purple-600/20 blur-xl pointer-events-none" />
+          <div className="absolute bottom-1 left-8 w-32 h-10 rounded-full bg-cyan-500/15 blur-xl pointer-events-none" />
+
+          {/* Curved Saturn Ring Rim */}
+          <svg className="absolute inset-0 w-full h-full opacity-60" viewBox="0 0 800 135" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="s3SaturnRingGrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.6" />
+                <stop offset="40%" stopColor="#c084fc" stopOpacity="0.7" />
+                <stop offset="100%" stopColor="#38bdf8" stopOpacity="0.4" />
+              </linearGradient>
+            </defs>
+            <path d="M -50 150 Q 400 55 850 150" fill="none" stroke="url(#s3SaturnRingGrad)" strokeWidth="6" />
+            <path d="M -50 145 Q 400 60 850 145" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" />
+          </svg>
+
+          {/* Window Dividing Strut */}
+          <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-1.5 bg-[#141e2e] border-x border-black/60 shadow" />
+        </div>
+
+        {/* Overhead Crane Rail across center */}
+        <div className="relative w-full h-3 bg-[#162133] border-y border-[#2a3c5a] flex items-center px-2 z-15 shadow-sm">
+          <div className="w-full h-0.5 bg-black/60 border-t border-cyan-400/30" />
+          {/* Robotic Crane Arm Trolley */}
+          <div
+            className={`absolute top-0 bottom-0 w-7 rounded bg-cyan-500/80 border border-white/60 shadow-[0_0_8px_#38bdf8] flex items-center justify-center transition-all duration-700 ${
+              cranePosition === "heap"
+                ? "left-[20%]"
+                : cranePosition === "mainframe"
+                ? "left-[72%]"
+                : "left-[46%]"
+            }`}
+          >
+            <div className="w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_4px_#fff]" />
+          </div>
+        </div>
+
+        {/* 3. Machine Floor Deck: Heap Bay (Left) vs Mainframe Bay (Right) */}
+        <div className="relative flex-1 w-full flex items-center justify-between px-3 py-1 bg-gradient-to-b from-[#0f1726] to-[#070b14] z-10">
+          {/* HEAP BAY (Left) */}
+          <div className="w-[42%] h-full rounded-lg border border-cyan-500/40 bg-[#0a1624]/90 p-1.5 flex flex-col justify-between shadow-lg">
+            <div className="flex items-center justify-between border-b border-cyan-500/25 pb-0.5">
+              <span className="text-[7.5px] font-bold text-cyan-300">HEAP BAY</span>
+              <span className="text-[7px] font-bold text-emerald-400">{coresAvailable}/4 CORES</span>
+            </div>
+
+            {/* 4 Core Sockets */}
+            <div className="grid grid-cols-4 gap-1 py-1">
+              {[1, 2, 3, 4].map((core) => {
+                const isLoaded = core <= coresAvailable;
+                return (
+                  <div
+                    key={core}
+                    className={`h-7 rounded flex flex-col items-center justify-center border transition-all duration-300 ${
+                      isLoaded
+                        ? "bg-black/60 border-emerald-400 shadow-[0_0_6px_rgba(16,185,129,0.5)]"
+                        : "bg-purple-950/20 border-dashed border-purple-500/30 opacity-30"
+                    }`}
+                  >
+                    <Zap size={10} className={isLoaded ? "text-emerald-300" : "text-slate-600"} />
+                    <span className={`text-[5.5px] font-bold ${isLoaded ? 'text-white' : 'text-slate-500'}`}>
+                      C{core}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+
+            <span className="text-[6.5px] text-slate-400 truncate text-center">
+              Dynamic Core Pool (new / delete)
+            </span>
+          </div>
+
+          {/* MAINFRAME BAY (Right) */}
+          <div className="w-[54%] h-full rounded-lg border border-purple-500/40 bg-[#140b22]/90 p-1.5 flex flex-col justify-between shadow-lg">
+            <div className="flex items-center justify-between border-b border-purple-500/25 pb-0.5">
+              <span className="text-[7.5px] font-bold text-purple-300">MAINFRAME CORES</span>
+              <span className="text-[7px] font-bold text-cyan-300">ARM: {activeArmSubsystem}</span>
+            </div>
+
+            {/* 3 Subsystem Sockets (Sensors, Debris, Shields) */}
+            <div className="grid grid-cols-3 gap-1 py-1">
+              {/* Sensors Socket */}
+              <div
+                className={`h-7 rounded border p-0.5 flex flex-col items-center justify-center transition-all ${
+                  coresInMainframe > 0
+                    ? "bg-cyan-950/80 border-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.6)]"
+                    : "bg-black/40 border-slate-700/60 opacity-60"
+                }`}
+              >
+                <Cpu size={9} className={isTaskExecuting ? "text-cyan-300 animate-pulse" : "text-cyan-400"} />
+                <span className="text-[6px] text-cyan-200 font-bold">Sensors</span>
+                <span className="text-[5px] text-slate-300 font-mono">
+                  {coresInMainframe > 0 ? "2 CORES" : "IDLE"}
+                </span>
+              </div>
+
+              {/* Debris Socket */}
+              <div className="h-7 rounded border border-slate-700/60 bg-black/40 opacity-60 flex flex-col items-center justify-center">
+                <Zap size={9} className="text-purple-400" />
+                <span className="text-[6px] text-purple-200 font-bold">Debris</span>
+                <span className="text-[5px] text-slate-400 font-mono">IDLE</span>
+              </div>
+
+              {/* Shields Socket */}
+              <div className="h-7 rounded border border-slate-700/60 bg-black/40 opacity-60 flex flex-col items-center justify-center">
+                <Shield size={9} className="text-emerald-400" />
+                <span className="text-[6px] text-emerald-200 font-bold">Shields</span>
+                <span className="text-[5px] text-slate-400 font-mono">IDLE</span>
+              </div>
+            </div>
+
+            <span className="text-[6.5px] text-purple-200/80 truncate text-center">
+              {statusText}
+            </span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -124,8 +242,8 @@ function HeapEnergyRackStage({
 /**
  * Slide 1: The Arm Pointer Lifecycle (Start to Pointer Setup)
  * Dynamic Animation:
- * - Left: "Ready Arm for [Sensors ▾]" is dragged from Subsystems toolbox and snapped under Start
- * - Right: Robotic arm aligns to Sensors pointer channel
+ * - Left: "Ready Arm for [Sensors ▾]" is dragged and snapped under Start!
+ * - Right: Robotic crane arm moves over to the Sensors subsystem channel
  */
 export function SaturnLevel3Step1Demo() {
   return (
@@ -217,16 +335,16 @@ export function SaturnLevel3Step1Demo() {
               <span>Start</span>
             </div>
 
-            {/* Arm Pointer Slot: Blank dashed outline before snap */}
+            {/* Arm Pointer Slot: Blank dashed outline under Start */}
             <div className="relative w-full">
               <div
-                className="h-6.5 rounded border border-dashed border-indigo-500/40 bg-indigo-950/10"
+                className="h-6.5 border border-dashed border-indigo-500/40 bg-indigo-950/10"
                 style={{ animation: 's3s1TraceSlot 7s ease-in-out infinite' }}
               />
 
               {/* Animated Dragged Arm Pointer Block */}
               <div
-                className="absolute inset-0 h-6.5 bg-[#6366F1] text-white text-[8.5px] font-bold px-2 rounded flex items-center justify-between shadow border border-indigo-400/40 z-30"
+                className="absolute inset-0 h-6.5 bg-[#6366F1] text-white text-[8.5px] font-bold px-2 flex items-center justify-between shadow border-t border-black/20 z-30"
                 style={{
                   animation: 's3s1DragArm 7s cubic-bezier(0.2, 0.9, 0.4, 1) infinite, s3s1SnapPulse 7s ease-in-out infinite',
                 }}
@@ -252,7 +370,7 @@ export function SaturnLevel3Step1Demo() {
         </div>
       </div>
 
-      {/* RIGHT PANE: Simulation */}
+      {/* RIGHT PANE: Authentic Processing Bay Simulation */}
       <div className="w-1/2 h-full flex flex-col bg-[#0b0314] relative">
         <div className="h-6 px-3 bg-[#170529] border-b border-white/10 flex items-center justify-between shrink-0">
           <span className="text-[10px] font-black tracking-wider uppercase font-mono text-purple-200">SIMULATION</span>
@@ -272,12 +390,12 @@ export function SaturnLevel3Step1Demo() {
           </div>
         </div>
 
-        <div className="flex-1 min-h-0 relative flex flex-col items-center justify-center p-3 bg-[#061012]">
-          <div className="absolute inset-0 flex items-center justify-center p-3" style={{ animation: 's3s1SceneStandby 7s ease-in-out infinite' }}>
-            <HeapEnergyRackStage coresAvailable={4} coresBorrowed={0} activeSubsystem="None" isExecuting={false} statusMessage="Awaiting pointer initialization..." />
+        <div className="flex-1 min-h-0 relative">
+          <div className="absolute inset-0" style={{ animation: 's3s1SceneStandby 7s ease-in-out infinite' }}>
+            <Saturn3ProcessingBayScene coresAvailable={4} coresInMainframe={0} activeArmSubsystem="None" cranePosition="heap" statusText="Awaiting pointer initialization..." />
           </div>
-          <div className="absolute inset-0 flex items-center justify-center p-3" style={{ animation: 's3s1SceneLive 7s ease-in-out infinite' }}>
-            <HeapEnergyRackStage coresAvailable={4} coresBorrowed={0} activeSubsystem="Sensors" isExecuting={false} statusMessage="Arm aligned to sensorPtr -> Ready to grab cores" />
+          <div className="absolute inset-0" style={{ animation: 's3s1SceneLive 7s ease-in-out infinite' }}>
+            <Saturn3ProcessingBayScene coresAvailable={4} coresInMainframe={0} activeArmSubsystem="Sensors" cranePosition="center" statusText="sensorPtr initialized for Sensors" />
           </div>
         </div>
       </div>
@@ -288,8 +406,8 @@ export function SaturnLevel3Step1Demo() {
 /**
  * Slide 2: Allocating Cores with 'new'
  * Dynamic Animation:
- * - Left: "Grab [2] Cores for [Sensors ▾]" is dragged from Memory toolbox and snapped under Ready Arm
- * - Right: 2 cores are borrowed from the Heap Rack and allocated to the Sensors task
+ * - Left: "Grab [2] Cores for [Sensors ▾]" is dragged and snapped under Ready Arm
+ * - Right: Robotic crane arm transfers 2 cores from Heap Bay to Mainframe
  */
 export function SaturnLevel3Step2Demo() {
   return (
@@ -390,13 +508,13 @@ export function SaturnLevel3Step2Demo() {
             {/* Grab Cores Slot: Blank dashed outline before snap */}
             <div className="relative w-full">
               <div
-                className="h-6.5 rounded border border-dashed border-emerald-500/40 bg-emerald-950/10"
+                className="h-6.5 border border-dashed border-emerald-500/40 bg-emerald-950/10"
                 style={{ animation: 's3s2TraceSlot 7s ease-in-out infinite' }}
               />
 
               {/* Animated Dragged Grab Block */}
               <div
-                className="absolute inset-0 h-6.5 bg-[#10B981] text-white text-[8.5px] font-bold px-2 rounded flex items-center justify-between shadow border border-emerald-400/40 z-30"
+                className="absolute inset-0 h-6.5 bg-[#10B981] text-white text-[8.5px] font-bold px-2 flex items-center justify-between shadow border-t border-black/20 z-30"
                 style={{
                   animation: 's3s2DragGrab 7s cubic-bezier(0.2, 0.9, 0.4, 1) infinite, s3s2SnapPulse 7s ease-in-out infinite',
                 }}
@@ -424,7 +542,7 @@ export function SaturnLevel3Step2Demo() {
         </div>
       </div>
 
-      {/* RIGHT PANE: Simulation */}
+      {/* RIGHT PANE: Authentic Simulation Stage */}
       <div className="w-1/2 h-full flex flex-col bg-[#0b0314] relative">
         <div className="h-6 px-3 bg-[#170529] border-b border-white/10 flex items-center justify-between shrink-0">
           <span className="text-[10px] font-black tracking-wider uppercase font-mono text-purple-200">SIMULATION</span>
@@ -444,12 +562,12 @@ export function SaturnLevel3Step2Demo() {
           </div>
         </div>
 
-        <div className="flex-1 min-h-0 relative flex flex-col items-center justify-center p-3 bg-[#061012]">
-          <div className="absolute inset-0 flex items-center justify-center p-3" style={{ animation: 's3s2SceneStandby 7s ease-in-out infinite' }}>
-            <HeapEnergyRackStage coresAvailable={4} coresBorrowed={0} activeSubsystem="Sensors" isExecuting={false} statusMessage="Sensors awaiting core allocation..." />
+        <div className="flex-1 min-h-0 relative">
+          <div className="absolute inset-0" style={{ animation: 's3s2SceneStandby 7s ease-in-out infinite' }}>
+            <Saturn3ProcessingBayScene coresAvailable={4} coresInMainframe={0} activeArmSubsystem="Sensors" cranePosition="heap" statusText="Sensors awaiting core allocation..." />
           </div>
-          <div className="absolute inset-0 flex items-center justify-center p-3" style={{ animation: 's3s2SceneLive 7s ease-in-out infinite' }}>
-            <HeapEnergyRackStage coresAvailable={2} coresBorrowed={2} activeSubsystem="Sensors" isExecuting={false} statusMessage="new Core(2): 2 cores borrowed from heap rack" />
+          <div className="absolute inset-0" style={{ animation: 's3s2SceneLive 7s ease-in-out infinite' }}>
+            <Saturn3ProcessingBayScene coresAvailable={2} coresInMainframe={2} activeArmSubsystem="Sensors" cranePosition="mainframe" statusText="new Core(2) -> Cores loaded into Sensors" />
           </div>
         </div>
       </div>
@@ -460,8 +578,8 @@ export function SaturnLevel3Step2Demo() {
 /**
  * Slide 3: Executing the Subsystem Task
  * Dynamic Animation:
- * - Left: "Run Subsystem: [Sensors ▾]" is dragged from Subsystems toolbox and snapped under Grab Cores
- * - Right: Sensors subsystem executes; planetary radar scans area
+ * - Left: "Run Subsystem: [Sensors ▾]" is dragged and snapped under Grab Cores
+ * - Right: Sensors radar spins and emits telemetry pulse waves
  */
 export function SaturnLevel3Step3Demo() {
   return (
@@ -568,13 +686,13 @@ export function SaturnLevel3Step3Demo() {
             {/* Run Subsystem Slot: Blank dashed outline before snap */}
             <div className="relative w-full">
               <div
-                className="h-6.5 rounded border border-dashed border-purple-500/40 bg-purple-950/10"
+                className="h-6.5 border border-dashed border-purple-500/40 bg-purple-950/10"
                 style={{ animation: 's3s3TraceSlot 7s ease-in-out infinite' }}
               />
 
               {/* Animated Dragged Run Block */}
               <div
-                className="absolute inset-0 h-6.5 bg-[#8B5CF6] text-white text-[8.5px] font-bold px-2 rounded flex items-center justify-between shadow border border-purple-400/40 z-30"
+                className="absolute inset-0 h-6.5 bg-[#8B5CF6] text-white text-[8.5px] font-bold px-2 flex items-center justify-between shadow border-t border-black/20 z-30"
                 style={{
                   animation: 's3s3DragRun 7s cubic-bezier(0.2, 0.9, 0.4, 1) infinite, s3s3SnapPulse 7s ease-in-out infinite',
                 }}
@@ -600,7 +718,7 @@ export function SaturnLevel3Step3Demo() {
         </div>
       </div>
 
-      {/* RIGHT PANE: Simulation */}
+      {/* RIGHT PANE: Authentic Simulation Stage */}
       <div className="w-1/2 h-full flex flex-col bg-[#0b0314] relative">
         <div className="h-6 px-3 bg-[#170529] border-b border-white/10 flex items-center justify-between shrink-0">
           <span className="text-[10px] font-black tracking-wider uppercase font-mono text-purple-200">SIMULATION</span>
@@ -620,12 +738,12 @@ export function SaturnLevel3Step3Demo() {
           </div>
         </div>
 
-        <div className="flex-1 min-h-0 relative flex flex-col items-center justify-center p-3 bg-[#061012]">
-          <div className="absolute inset-0 flex items-center justify-center p-3" style={{ animation: 's3s3SceneStandby 7s ease-in-out infinite' }}>
-            <HeapEnergyRackStage coresAvailable={2} coresBorrowed={2} activeSubsystem="Sensors" isExecuting={false} statusMessage="Cores loaded -> Awaiting run command" />
+        <div className="flex-1 min-h-0 relative">
+          <div className="absolute inset-0" style={{ animation: 's3s3SceneStandby 7s ease-in-out infinite' }}>
+            <Saturn3ProcessingBayScene coresAvailable={2} coresInMainframe={2} activeArmSubsystem="Sensors" cranePosition="mainframe" isTaskExecuting={false} statusText="Cores loaded -> Awaiting run command" />
           </div>
-          <div className="absolute inset-0 flex items-center justify-center p-3" style={{ animation: 's3s3SceneLive 7s ease-in-out infinite' }}>
-            <HeapEnergyRackStage coresAvailable={2} coresBorrowed={2} activeSubsystem="Sensors" isExecuting={true} statusMessage="runSensors() active: Radar telemetry scanning" />
+          <div className="absolute inset-0" style={{ animation: 's3s3SceneLive 7s ease-in-out infinite' }}>
+            <Saturn3ProcessingBayScene coresAvailable={2} coresInMainframe={2} activeArmSubsystem="Sensors" cranePosition="mainframe" isTaskExecuting={true} statusText="runSensors() active: Telemetry scanning" />
           </div>
         </div>
       </div>
@@ -637,7 +755,7 @@ export function SaturnLevel3Step3Demo() {
  * Slide 4: Freeing Memory with 'delete' (Zero Memory Leaks)
  * Dynamic Animation:
  * - Left: "Return Cores for [Sensors ▾]" is dragged and snapped under Run Subsystem
- * - Right: Cores return to Heap Rack; 4/4 cores restored, zero memory leaks!
+ * - Right: Cores return to Heap Bay; all 4 cores restored, zero memory leaks!
  */
 export function SaturnLevel3Step4Demo() {
   return (
@@ -747,13 +865,13 @@ export function SaturnLevel3Step4Demo() {
             {/* Return Cores Slot: Blank dashed outline before snap */}
             <div className="relative w-full">
               <div
-                className="h-6.5 rounded border border-dashed border-orange-500/40 bg-orange-950/10"
+                className="h-6.5 border border-dashed border-orange-500/40 bg-orange-950/10"
                 style={{ animation: 's3s4TraceSlot 7s ease-in-out infinite' }}
               />
 
               {/* Animated Dragged Return Cores Block */}
               <div
-                className="absolute inset-0 h-6.5 bg-[#F97316] text-white text-[8.5px] font-bold px-2 rounded flex items-center justify-between shadow border border-orange-400/40 z-30"
+                className="absolute inset-0 h-6.5 bg-[#F97316] text-white text-[8.5px] font-bold px-2 flex items-center justify-between shadow border-t border-black/20 z-30"
                 style={{
                   animation: 's3s4DragReturn 7s cubic-bezier(0.2, 0.9, 0.4, 1) infinite, s3s4SnapPulse 7s ease-in-out infinite',
                 }}
@@ -779,7 +897,7 @@ export function SaturnLevel3Step4Demo() {
         </div>
       </div>
 
-      {/* RIGHT PANE: Simulation */}
+      {/* RIGHT PANE: Authentic Simulation Stage */}
       <div className="w-1/2 h-full flex flex-col bg-[#0b0314] relative">
         <div className="h-6 px-3 bg-[#170529] border-b border-white/10 flex items-center justify-between shrink-0">
           <span className="text-[10px] font-black tracking-wider uppercase font-mono text-purple-200">SIMULATION</span>
@@ -799,12 +917,12 @@ export function SaturnLevel3Step4Demo() {
           </div>
         </div>
 
-        <div className="flex-1 min-h-0 relative flex flex-col items-center justify-center p-3 bg-[#061012]">
-          <div className="absolute inset-0 flex items-center justify-center p-3" style={{ animation: 's3s4SceneStandby 7s ease-in-out infinite' }}>
-            <HeapEnergyRackStage coresAvailable={2} coresBorrowed={2} activeSubsystem="Sensors" isExecuting={false} statusMessage="Sensors task done -> Cores still locked in heap" />
+        <div className="flex-1 min-h-0 relative">
+          <div className="absolute inset-0" style={{ animation: 's3s4SceneStandby 7s ease-in-out infinite' }}>
+            <Saturn3ProcessingBayScene coresAvailable={2} coresInMainframe={2} activeArmSubsystem="Sensors" cranePosition="mainframe" statusText="Sensors done -> Cores held in memory" />
           </div>
-          <div className="absolute inset-0 flex items-center justify-center p-3" style={{ animation: 's3s4SceneLive 7s ease-in-out infinite' }}>
-            <HeapEnergyRackStage coresAvailable={4} coresBorrowed={0} activeSubsystem="None" isExecuting={false} statusMessage="delete sensorPtr -> All 4 cores recycled safely" />
+          <div className="absolute inset-0" style={{ animation: 's3s4SceneLive 7s ease-in-out infinite' }}>
+            <Saturn3ProcessingBayScene coresAvailable={4} coresInMainframe={0} activeArmSubsystem="None" cranePosition="heap" statusText="delete sensorPtr -> 4/4 cores recycled" />
           </div>
         </div>
       </div>

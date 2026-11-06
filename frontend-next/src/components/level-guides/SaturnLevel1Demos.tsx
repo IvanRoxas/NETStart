@@ -63,8 +63,8 @@ function Saturn1ToolboxSidebar({ activeCategory = "program" }: { activeCategory?
  */
 function Saturn1CockpitScene({
   isOnline = true,
-  streamLine1 = "> cin >> ORBIT",
-  streamLine2 = "> cout << ORBIT (Verified)",
+  streamLine1 = "In (data):  > ORBIT",
+  streamLine2 = "Out: Telemetry verified.",
 }: {
   isOnline?: boolean;
   streamLine1?: string;
@@ -106,7 +106,7 @@ function Saturn1CockpitScene({
         <div className="absolute bottom-0 inset-x-0 h-4 bg-gradient-to-t from-sky-400/20 to-transparent pointer-events-none z-10" />
       </div>
 
-      {/* 2. Physical CRT Monitor (Bottom Half) */}
+      {/* 2. Physical CRT Monitor (Bottom Half) matching SaturnLevel1Simulation */}
       <div className="flex-1 w-full p-2 flex flex-col justify-between min-h-0 bg-[#07050e]">
         <div
           className={`relative w-full h-full rounded-xl border-2 p-2 flex flex-col justify-between overflow-hidden shadow-2xl transition-all duration-300 ${
@@ -115,15 +115,30 @@ function Saturn1CockpitScene({
               : "border-slate-800 bg-[#090710] opacity-80"
           }`}
         >
-          {/* Header */}
+          {/* Corner Screws */}
+          <div className="absolute top-1 left-1.5 w-1 h-1 rounded-full bg-slate-600 border border-slate-500" />
+          <div className="absolute top-1 right-1.5 w-1 h-1 rounded-full bg-slate-600 border border-slate-500" />
+          <div className="absolute bottom-1 left-1.5 w-1 h-1 rounded-full bg-slate-600 border border-slate-500" />
+          <div className="absolute bottom-1 right-1.5 w-1 h-1 rounded-full bg-slate-600 border border-slate-500" />
+
+          {/* Header with Title and Boxed Badges */}
           <div className="flex items-center justify-between border-b border-purple-900/50 pb-1 text-[8.5px] shrink-0">
             <div className="flex items-center gap-1.5 font-bold text-purple-200">
               <Terminal size={11} className="text-purple-400" />
               <span>DATA TERMINAL</span>
+              <span className="text-[7px] text-purple-400/80 uppercase">
+                [{isOnline ? "ONLINE" : "STANDBY"}]
+              </span>
             </div>
-            <span className="text-[7.5px] font-bold text-cyan-300 px-1.5 py-0.2 rounded bg-cyan-950/80 border border-cyan-400/40">
-              {isOnline ? "ONLINE" : "STANDBY"}
-            </span>
+
+            <div className="flex items-center gap-1.5 text-[7px]">
+              <span className="px-1 py-0.2 rounded bg-purple-950/80 border border-purple-500/40 text-purple-300">
+                TIME: 45s
+              </span>
+              <span className="px-1 py-0.2 rounded bg-cyan-950/80 border border-cyan-400/40 text-cyan-300">
+                SCORE: 1,000
+              </span>
+            </div>
           </div>
 
           {/* CRT Log Lines */}

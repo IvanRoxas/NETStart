@@ -28,24 +28,24 @@ function Mars3ToolboxSidebar({ activeCategory = "form" }: { activeCategory?: "fo
     <div className="flex flex-col gap-1.5 w-18 shrink-0 py-1.5 select-none font-mono">
       <div
         className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs border-l-2 transition-all ${activeCategory === "form"
-            ? "text-purple-300 bg-purple-950/80 border-purple-400"
-            : "text-purple-400/60 bg-purple-950/30 border-purple-500/30"
+          ? "text-purple-300 bg-purple-950/80 border-purple-400"
+          : "text-purple-400/60 bg-purple-950/30 border-purple-500/30"
           }`}
       >
         Form
       </div>
       <div
         className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs border-l-2 transition-all ${activeCategory === "options"
-            ? "text-amber-300 bg-amber-950/80 border-amber-400"
-            : "text-amber-400/60 bg-amber-950/30 border-amber-500/30"
+          ? "text-amber-300 bg-amber-950/80 border-amber-400"
+          : "text-amber-400/60 bg-amber-950/30 border-amber-500/30"
           }`}
       >
         Options
       </div>
       <div
         className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs border-l-2 transition-all ${activeCategory === "input"
-            ? "text-sky-300 bg-sky-950/80 border-sky-400"
-            : "text-sky-400/60 bg-sky-950/30 border-sky-500/30"
+          ? "text-sky-300 bg-sky-950/80 border-sky-400"
+          : "text-sky-400/60 bg-sky-950/30 border-sky-500/30"
           }`}
       >
         Input
@@ -92,8 +92,8 @@ function MarsTransmissionSpaceScene({
         {/* Venus (Top Left) */}
         <div
           className={`relative flex flex-col items-center gap-1 transition-all duration-300 ${targetPlanet === 'Venus' && (isTargetLocked || isTransmitting)
-              ? 'scale-110'
-              : 'opacity-50'
+            ? 'scale-110'
+            : 'opacity-50'
             }`}
         >
           {/* Target Reticle Ring when targeted */}
@@ -105,8 +105,8 @@ function MarsTransmissionSpaceScene({
             src="/assets/planets/celestial/Venus.svg"
             alt="Venus"
             className={`w-11 h-11 object-contain transition-all duration-300 ${targetPlanet === 'Venus' && (isTargetLocked || isTransmitting)
-                ? 'drop-shadow-[0_0_14px_#ec4899]'
-                : ''
+              ? 'drop-shadow-[0_0_14px_#ec4899]'
+              : ''
               }`}
           />
           <span className="text-[8px] font-mono font-bold text-pink-300 tracking-wider">
@@ -117,8 +117,8 @@ function MarsTransmissionSpaceScene({
         {/* Mercury (Top Right) */}
         <div
           className={`relative flex flex-col items-center gap-1 transition-all duration-300 ${targetPlanet === 'Mercury' && (isTargetLocked || isTransmitting)
-              ? 'scale-110'
-              : 'opacity-50'
+            ? 'scale-110'
+            : 'opacity-50'
             }`}
         >
           {(isTargetLocked || isTransmitting) && targetPlanet === 'Mercury' && (
@@ -129,8 +129,8 @@ function MarsTransmissionSpaceScene({
             src="/assets/planets/celestial/Mercury.svg"
             alt="Mercury"
             className={`w-9 h-9 object-contain transition-all duration-300 ${targetPlanet === 'Mercury' && (isTargetLocked || isTransmitting)
-                ? 'drop-shadow-[0_0_14px_#38bdf8]'
-                : ''
+              ? 'drop-shadow-[0_0_14px_#38bdf8]'
+              : ''
               }`}
           />
           <span className="text-[8px] font-mono font-bold text-sky-300 tracking-wider">
@@ -186,10 +186,10 @@ function MarsTransmissionSpaceScene({
           {/* Glowing Antenna Tip */}
           <div
             className={`w-2.5 h-2.5 rounded-full mb-0.5 transition-all duration-300 ${isTransmitting
-                ? 'bg-cyan-300 animate-ping shadow-[0_0_12px_#38bdf8]'
-                : isTowerOnline
-                  ? 'bg-amber-400 animate-pulse shadow-[0_0_8px_#f59e0b]'
-                  : 'bg-slate-600'
+              ? 'bg-cyan-300 animate-ping shadow-[0_0_12px_#38bdf8]'
+              : isTowerOnline
+                ? 'bg-amber-400 animate-pulse shadow-[0_0_8px_#f59e0b]'
+                : 'bg-slate-600'
               }`}
           />
           {/* Antenna Mast */}
@@ -207,8 +207,8 @@ function MarsTransmissionSpaceScene({
         <div className="w-full h-8 bg-gradient-to-t from-[#1b0606] to-[#4c0519] border-t border-red-500/40 flex items-center justify-center relative">
           <div
             className={`absolute -top-2.5 w-14 h-6 rounded-t-full border-t-2 border-x transition-all duration-300 flex items-center justify-center ${isTowerOnline
-                ? 'bg-sky-950/70 border-cyan-400/60 shadow-[0_0_10px_rgba(6,182,212,0.4)]'
-                : 'bg-slate-900/60 border-slate-700/60'
+              ? 'bg-sky-950/70 border-cyan-400/60 shadow-[0_0_10px_rgba(6,182,212,0.4)]'
+              : 'bg-slate-900/60 border-slate-700/60'
               }`}
           />
         </div>
