@@ -55,26 +55,21 @@ function Saturn2ToolboxSidebar({ activeCategory = "events" }: { activeCategory?:
 }
 
 /**
- * 1-to-1 Authentic Reproduction of SaturnLevel2Simulation.tsx Canvas Stage
- * Features:
- * - Starfield background & ring nebula
- * - Spaceship Section 3.svg in upright stance facing upward at bottom-left
- * - 4 concentric curved SVG orbit rings with labels on the right
- * - Floating debris (Ice, Rock)
- * - Volumetric tractor beam connecting ship nose to debris
- * - Glowing spherical cyan deflector shield bubble against asteroid hazards
+ * 1-to-1 Authentic Simulation Stage from SaturnLevel2Simulation.tsx
  */
 function Saturn2SimulationScene({
   isTractorBeamActive = false,
   targetOrbit = 1,
   isShieldActive = false,
   isAsteroidApproaching = false,
+  showCheatSheet = false,
   statusLabel = "RINGS READY",
 }: {
   isTractorBeamActive?: boolean;
   targetOrbit?: 1 | 2 | 3 | 4;
   isShieldActive?: boolean;
   isAsteroidApproaching?: boolean;
+  showCheatSheet?: boolean;
   statusLabel?: string;
 }) {
   return (
@@ -103,24 +98,24 @@ function Saturn2SimulationScene({
         <svg className="w-full h-full" viewBox="0 0 1000 600" preserveAspectRatio="none">
           <defs>
             <linearGradient id="s2MelterGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.8" />
+              <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.9" />
               <stop offset="50%" stopColor="#06b6d4" stopOpacity="1" />
-              <stop offset="100%" stopColor="#0284c7" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#0284c7" stopOpacity="0.9" />
             </linearGradient>
             <linearGradient id="s2CrusherGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.8" />
+              <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.9" />
               <stop offset="50%" stopColor="#d97706" stopOpacity="1" />
-              <stop offset="100%" stopColor="#b45309" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#b45309" stopOpacity="0.9" />
             </linearGradient>
             <linearGradient id="s2MagnetGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#94a3b8" stopOpacity="0.8" />
+              <stop offset="0%" stopColor="#94a3b8" stopOpacity="0.9" />
               <stop offset="50%" stopColor="#64748b" stopOpacity="1" />
-              <stop offset="100%" stopColor="#475569" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#475569" stopOpacity="0.9" />
             </linearGradient>
             <linearGradient id="s2Orbit4Grad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#c084fc" stopOpacity="0.8" />
+              <stop offset="0%" stopColor="#c084fc" stopOpacity="0.9" />
               <stop offset="50%" stopColor="#a855f7" stopOpacity="1" />
-              <stop offset="100%" stopColor="#7e22ce" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#7e22ce" stopOpacity="0.9" />
             </linearGradient>
 
             <path id="s2Orbit1Arc" d="M 525 650 A 760 760 0 0 1 525 -50" fill="none" />
@@ -195,13 +190,10 @@ function Saturn2SimulationScene({
           {/* 4. Tractor Beam Conduit when actively routing */}
           {isTractorBeamActive && (
             <g className="animate-in fade-in duration-200">
-              {/* Volumetric glow beam from rocket nose (22%, 70%) to debris (48%, 32%) */}
               <line x1="22%" y1="70%" x2="48%" y2="32%" stroke="#38bdf8" strokeWidth="10" strokeOpacity="0.25" />
               <line x1="22%" y1="70%" x2="48%" y2="32%" stroke="#ffffff" strokeWidth="2.5" strokeOpacity="0.9" />
-              {/* Emitter flare at rocket nose */}
               <circle cx="22%" cy="70%" r="6" fill="#38bdf8" filter="drop-shadow(0 0 8px #38bdf8)" />
               <circle cx="22%" cy="70%" r="3" fill="#ffffff" />
-              {/* Stasis capture halo around debris */}
               <circle cx="48%" cy="32%" r="16" fill="#38bdf8" fillOpacity="0.15" stroke="#38bdf8" strokeWidth="1.5" />
             </g>
           )}
@@ -226,7 +218,7 @@ function Saturn2SimulationScene({
           </span>
         </div>
 
-        {/* Hazard Asteroid (Slide 4) */}
+        {/* Hazard Asteroid */}
         {isAsteroidApproaching && (
           <div
             className={`absolute transition-all duration-700 flex flex-col items-center ${
@@ -245,7 +237,20 @@ function Saturn2SimulationScene({
         )}
       </div>
 
-      {/* 6. The Player Starship Entity (Lower-Left Quadrant) matching Spaceship Section 3.svg */}
+      {/* 6. Designated Orbit Placement Reference (Slide 4) */}
+      {showCheatSheet && (
+        <div className="absolute top-2 left-2 z-30 p-1.5 rounded-lg bg-black/85 border border-purple-500/40 shadow-xl flex flex-col gap-1 text-[7px]">
+          <span className="font-bold text-purple-300 tracking-wider">DESIGNATED RINGS</span>
+          <div className="grid grid-cols-2 gap-1 text-[6.5px]">
+            <span className="text-cyan-300 bg-cyan-950/80 px-1 py-0.2 rounded border border-cyan-500/40">Orbit 1: Ice</span>
+            <span className="text-amber-300 bg-amber-950/80 px-1 py-0.2 rounded border border-amber-500/40">Orbit 2: Rocks</span>
+            <span className="text-slate-300 bg-slate-900/80 px-1 py-0.2 rounded border border-slate-500/40">Orbit 3: Minerals</span>
+            <span className="text-purple-300 bg-purple-950/80 px-1 py-0.2 rounded border border-purple-500/40">Orbit 4: Crystals</span>
+          </div>
+        </div>
+      )}
+
+      {/* 7. The Player Starship Entity matching Spaceship Section 3.svg */}
       <div className="absolute left-[22%] -translate-x-1/2 bottom-3 z-25 flex flex-col items-center pointer-events-none">
         <div className="relative w-16 h-16 sm:w-18 sm:h-18 flex items-center justify-center">
           <img
@@ -271,7 +276,7 @@ function Saturn2SimulationScene({
         </div>
       </div>
 
-      {/* 7. Bottom Status Readout Bar */}
+      {/* 8. Bottom Status Readout Bar */}
       <div className="absolute bottom-1 right-2 z-30 px-2 py-0.5 rounded bg-black/75 border border-purple-500/30 text-[7.5px] text-cyan-300">
         {statusLabel}
       </div>
@@ -280,10 +285,8 @@ function Saturn2SimulationScene({
 }
 
 /**
- * Slide 1: Jumpstarting the Rings (Function Prototype & Program Foundation)
- * Dynamic Animation:
- * - Left: "Declare Function: Route to Orbit" is dragged and snapped under Start!
- * - Right: Ring Router boots online, revealing the 4 concentric orbit arcs
+ * Slide 1: Jumpstarting the Router (Start & Function Declarations)
+ * Teaches: The program entry point and declaring the functions before main
  */
 export function SaturnLevel2Step1Demo() {
   return (
@@ -409,7 +412,7 @@ export function SaturnLevel2Step1Demo() {
         </div>
       </div>
 
-      {/* RIGHT PANE: Authentic 1-to-1 Simulation Stage */}
+      {/* RIGHT PANE: Authentic Simulation Stage */}
       <div className="w-1/2 h-full flex flex-col bg-[#0b0314] relative">
         <div className="h-6 px-3 bg-[#170529] border-b border-white/10 flex items-center justify-between shrink-0">
           <span className="text-[10px] font-black tracking-wider uppercase font-mono text-purple-200">SIMULATION</span>
@@ -434,7 +437,7 @@ export function SaturnLevel2Step1Demo() {
             <Saturn2SimulationScene isTractorBeamActive={false} statusLabel="Awaiting prototypes..." />
           </div>
           <div className="absolute inset-0" style={{ animation: 's2s1SceneLive 7s ease-in-out infinite' }}>
-            <Saturn2SimulationScene isTractorBeamActive={false} statusLabel="routeToOrbit() prototype loaded" />
+            <Saturn2SimulationScene isTractorBeamActive={false} statusLabel="routeToOrbit() ready" />
           </div>
         </div>
       </div>
@@ -443,23 +446,21 @@ export function SaturnLevel2Step1Demo() {
 }
 
 /**
- * Slide 2: Case Situation Handlers (Switch-Case Matching)
- * Dynamic Animation:
- * - Left: "Case [Ice Debris ▾]:" is dragged and snapped under Declare Function
- * - Right: Debris field scanner detects ice debris approaching starship trajectory
+ * Slide 2: Pairing Cases with Actions (The Core Routing Mechanic)
+ * Teaches: Dragging Route to Orbit into the mouth of Case [Ice Debris ▾], and how the tractor beam executes
  */
 export function SaturnLevel2Step2Demo() {
   return (
     <div className="relative w-full h-full flex rounded-xl border border-white/10 bg-[#0e041a] overflow-hidden select-none font-sans">
       <style>{`
-        @keyframes s2s2DragCase {
+        @keyframes s2s2DragAction {
           0%, 14% {
-            transform: translate(-65px, 20px) scale(0.92);
+            transform: translate(-65px, 25px) scale(0.92);
             opacity: 0;
           }
           20% {
             opacity: 1;
-            transform: translate(-65px, 20px) scale(1.03);
+            transform: translate(-65px, 25px) scale(1.03);
           }
           34% {
             transform: translate(0px, 0px) scale(1.02);
@@ -470,7 +471,7 @@ export function SaturnLevel2Step2Demo() {
             opacity: 1;
           }
           94%, 100% {
-            transform: translate(-65px, 20px) scale(0.92);
+            transform: translate(-65px, 25px) scale(0.92);
             opacity: 0;
           }
         }
@@ -486,7 +487,7 @@ export function SaturnLevel2Step2Demo() {
         }
         @keyframes s2s2SnapPulse {
           0%, 35% { filter: brightness(1); }
-          38%, 46% { filter: brightness(1.35); outline: 2px solid #3b82f6; box-shadow: 0 0 16px rgba(59,130,246,0.9); }
+          38%, 46% { filter: brightness(1.35); outline: 2px solid #ec4899; box-shadow: 0 0 16px rgba(236,72,153,0.9); }
           48%, 100% { filter: brightness(1); outline: none; }
         }
         @keyframes s2s2TraceSlot {
@@ -529,12 +530,12 @@ export function SaturnLevel2Step2Demo() {
             backgroundSize: '14px 14px',
           }}
         >
-          <Saturn2ToolboxSidebar activeCategory="cases" />
+          <Saturn2ToolboxSidebar activeCategory="actions" />
 
           {/* Assembly Stack */}
           <div className="flex flex-col w-[190px] sm:w-[200px] relative z-20 pt-1">
             {/* Start Program */}
-            <div className="h-6.5 bg-[#EF4444] text-white text-[9.5px] font-bold px-2 rounded-t flex items-center shadow border-t border-x border-red-400/40">
+            <div className="h-6 bg-[#EF4444] text-white text-[9px] font-bold px-2 rounded-t flex items-center shadow border-t border-x border-red-400/40">
               <span>Start</span>
             </div>
 
@@ -543,28 +544,29 @@ export function SaturnLevel2Step2Demo() {
               <span className="truncate">Declare Function: Route to Orbit</span>
             </div>
 
-            {/* Case Slot: Blank dashed outline before snap */}
-            <div className="relative w-full">
+            {/* Case Block Header */}
+            <div className="h-6 bg-[#3B82F6] text-white text-[8.5px] font-bold px-2 flex items-center justify-between shadow border-t border-black/20">
+              <span>Case</span>
+              <span className="bg-black/50 px-1 py-0.5 rounded text-[8px] text-cyan-200 font-mono">Ice Debris ▾</span>
+              <span>:</span>
+            </div>
+
+            {/* Action Slot inside Case Mouth: Blank dashed trace before snap */}
+            <div className="relative w-[178px] ml-3">
               <div
-                className="h-12 border border-dashed border-blue-500/40 bg-blue-950/10"
+                className="h-6 border border-dashed border-pink-500/40 bg-pink-950/10"
                 style={{ animation: 's2s2TraceSlot 7s ease-in-out infinite' }}
               />
 
-              {/* Animated Dragged Case Block */}
+              {/* Animated Dragged Route Action Block */}
               <div
-                className="absolute inset-0 h-12 bg-[#3B82F6] text-white text-[9px] font-bold p-1 rounded flex flex-col justify-between shadow border border-blue-400/40 z-30"
+                className="absolute inset-0 h-6 bg-[#EC4899] text-white text-[8px] font-bold px-2 rounded flex items-center justify-between shadow border-l-2 border-pink-300 z-30"
                 style={{
-                  animation: 's2s2DragCase 7s cubic-bezier(0.2, 0.9, 0.4, 1) infinite, s2s2SnapPulse 7s ease-in-out infinite',
+                  animation: 's2s2DragAction 7s cubic-bezier(0.2, 0.9, 0.4, 1) infinite, s2s2SnapPulse 7s ease-in-out infinite',
                 }}
               >
-                <div className="flex items-center justify-between">
-                  <span>Case</span>
-                  <span className="bg-black/50 px-1.5 py-0.5 rounded text-[8px] text-cyan-200 font-mono">Ice Debris ▾</span>
-                  <span>:</span>
-                </div>
-                <div className="h-4 ml-2.5 rounded bg-black/40 border border-blue-300/30 flex items-center px-1 text-[7px] text-blue-200">
-                  <span className="italic">drop action block here</span>
-                </div>
+                <span>Route to</span>
+                <span className="bg-black/50 px-1 py-0.5 rounded text-white font-mono">Orbit 1 ▾</span>
 
                 {/* Animated Cursor */}
                 <div
@@ -577,14 +579,14 @@ export function SaturnLevel2Step2Demo() {
             </div>
 
             {/* End Program */}
-            <div className="h-6.5 bg-[#EF4444] text-white text-[9.5px] font-bold px-2 rounded-b flex items-center shadow border-b border-x border-red-400/40 border-t border-black/20">
+            <div className="h-6 bg-[#EF4444] text-white text-[9px] font-bold px-2 rounded-b flex items-center shadow border-b border-x border-red-400/40 border-t border-black/20">
               <span>End</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* RIGHT PANE: Authentic Simulation Stage */}
+      {/* RIGHT PANE: Simulation */}
       <div className="w-1/2 h-full flex flex-col bg-[#0b0314] relative">
         <div className="h-6 px-3 bg-[#170529] border-b border-white/10 flex items-center justify-between shrink-0">
           <span className="text-[10px] font-black tracking-wider uppercase font-mono text-purple-200">SIMULATION</span>
@@ -596,20 +598,20 @@ export function SaturnLevel2Step2Demo() {
               SCANNING
             </span>
             <span
-              className="absolute right-0 text-[#60a5fa] drop-shadow-[0_0_6px_rgba(96,165,250,0.8)] font-black whitespace-nowrap"
+              className="absolute right-0 text-[#00f5d4] drop-shadow-[0_0_6px_rgba(0,245,212,0.8)] font-black whitespace-nowrap"
               style={{ animation: 's2s2StatusLive 7s ease-in-out infinite' }}
             >
-              CASE MATCHED
+              TRACTOR BEAM ACTIVE
             </span>
           </div>
         </div>
 
         <div className="flex-1 min-h-0 relative">
           <div className="absolute inset-0" style={{ animation: 's2s2SceneStandby 7s ease-in-out infinite' }}>
-            <Saturn2SimulationScene isTractorBeamActive={false} statusLabel="Scanning orbital field..." />
+            <Saturn2SimulationScene isTractorBeamActive={false} statusLabel="Ice detected: Awaiting action" />
           </div>
           <div className="absolute inset-0" style={{ animation: 's2s2SceneLive 7s ease-in-out infinite' }}>
-            <Saturn2SimulationScene isTractorBeamActive={false} statusLabel="Target matched: case ICE" />
+            <Saturn2SimulationScene isTractorBeamActive={true} targetOrbit={1} statusLabel="routeToOrbit(1) -> Ring 1" />
           </div>
         </div>
       </div>
@@ -618,16 +620,14 @@ export function SaturnLevel2Step2Demo() {
 }
 
 /**
- * Slide 3: Connecting Route Action to Orbit Ring
- * Dynamic Animation:
- * - Left: "Route to [Orbit 1 ▾]" is dragged and snapped inside the Case block mouth
- * - Right: Tractor beam fires from the ship nose and guides the Ice chunk to Orbit 1
+ * Slide 3: Handling Hazards (Why you need Activate Shield instead of Route)
+ * Teaches: Big Asteroids will destroy rings and crash into the ship! Must use Activate Shield inside the Asteroid case
  */
 export function SaturnLevel2Step3Demo() {
   return (
     <div className="relative w-full h-full flex rounded-xl border border-white/10 bg-[#0e041a] overflow-hidden select-none font-sans">
       <style>{`
-        @keyframes s2s3DragRoute {
+        @keyframes s2s3DragShield {
           0%, 14% {
             transform: translate(-65px, 20px) scale(0.92);
             opacity: 0;
@@ -709,38 +709,37 @@ export function SaturnLevel2Step3Demo() {
           {/* Assembly Stack */}
           <div className="flex flex-col w-[190px] sm:w-[200px] relative z-20 pt-1">
             {/* Start Program */}
-            <div className="h-6.5 bg-[#EF4444] text-white text-[9.5px] font-bold px-2 rounded-t flex items-center shadow border-t border-x border-red-400/40">
+            <div className="h-6 bg-[#EF4444] text-white text-[9px] font-bold px-2 rounded-t flex items-center shadow border-t border-x border-red-400/40">
               <span>Start</span>
             </div>
 
             {/* Declare Function */}
             <div className="h-6 bg-[#8B5CF6] text-white text-[8px] font-bold px-2 flex items-center shadow border-t border-black/20">
-              <span className="truncate">Declare Function: Route to Orbit</span>
+              <span className="truncate">Declare Function: Activate Shield</span>
             </div>
 
-            {/* Case Header */}
-            <div className="h-6.5 bg-[#3B82F6] text-white text-[9px] font-bold px-2 flex items-center justify-between shadow border-t border-black/20">
+            {/* Case Big Asteroid */}
+            <div className="h-6 bg-[#3B82F6] text-white text-[8.5px] font-bold px-2 flex items-center justify-between shadow border-t border-black/20">
               <span>Case</span>
-              <span className="bg-black/50 px-1.5 py-0.5 rounded text-[8px] text-cyan-200 font-mono">Ice Debris ▾</span>
+              <span className="bg-black/50 px-1 py-0.5 rounded text-[8px] text-red-300 font-mono">Big Asteroid ▾</span>
               <span>:</span>
             </div>
 
-            {/* Route Action Slot inside Case: Blank dashed outline before snap */}
+            {/* Shield Action Slot inside Case: Blank dashed outline before snap */}
             <div className="relative w-[178px] ml-3">
               <div
-                className="h-6.5 border border-dashed border-pink-500/40 bg-pink-950/10"
+                className="h-6 border border-dashed border-pink-500/40 bg-pink-950/10"
                 style={{ animation: 's2s3TraceSlot 7s ease-in-out infinite' }}
               />
 
-              {/* Animated Dragged Route Block */}
+              {/* Animated Dragged Shield Block */}
               <div
-                className="absolute inset-0 h-6.5 bg-[#EC4899] text-white text-[8.5px] font-bold px-2 rounded flex items-center justify-between shadow border-l-2 border-pink-300 z-30"
+                className="absolute inset-0 h-6 bg-[#EC4899] text-white text-[8px] font-bold px-2 rounded flex items-center justify-between shadow border-l-2 border-pink-300 z-30"
                 style={{
-                  animation: 's2s3DragRoute 7s cubic-bezier(0.2, 0.9, 0.4, 1) infinite, s2s3SnapPulse 7s ease-in-out infinite',
+                  animation: 's2s3DragShield 7s cubic-bezier(0.2, 0.9, 0.4, 1) infinite, s2s3SnapPulse 7s ease-in-out infinite',
                 }}
               >
-                <span>Route to</span>
-                <span className="bg-black/50 px-1.5 py-0.5 rounded text-white font-mono">Orbit 1 ▾</span>
+                <span>Activate Shield</span>
 
                 {/* Animated Cursor */}
                 <div
@@ -753,39 +752,39 @@ export function SaturnLevel2Step3Demo() {
             </div>
 
             {/* End Program */}
-            <div className="h-6.5 bg-[#EF4444] text-white text-[9.5px] font-bold px-2 rounded-b flex items-center shadow border-b border-x border-red-400/40 border-t border-black/20">
+            <div className="h-6 bg-[#EF4444] text-white text-[9px] font-bold px-2 rounded-b flex items-center shadow border-b border-x border-red-400/40 border-t border-black/20">
               <span>End</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* RIGHT PANE: Authentic Simulation Stage */}
+      {/* RIGHT PANE: Simulation */}
       <div className="w-1/2 h-full flex flex-col bg-[#0b0314] relative">
         <div className="h-6 px-3 bg-[#170529] border-b border-white/10 flex items-center justify-between shrink-0">
           <span className="text-[10px] font-black tracking-wider uppercase font-mono text-purple-200">SIMULATION</span>
-          <div className="relative flex items-center justify-end min-w-[125px] h-4 font-mono text-[9px] font-bold tracking-wider whitespace-nowrap">
+          <div className="relative flex items-center justify-end min-w-[130px] h-4 font-mono text-[9px] font-bold tracking-wider whitespace-nowrap">
             <span
-              className="text-amber-400 drop-shadow-[0_0_6px_rgba(245,158,11,0.6)] whitespace-nowrap"
+              className="text-red-400 drop-shadow-[0_0_6px_rgba(248,113,113,0.6)] whitespace-nowrap"
               style={{ animation: 's2s3StatusStandby 7s ease-in-out infinite' }}
             >
-              ROUTING...
+              COLLISION HAZARD
             </span>
             <span
-              className="absolute right-0 text-[#00f5d4] drop-shadow-[0_0_6px_rgba(0,245,212,0.8)] font-black whitespace-nowrap"
+              className="absolute right-0 text-[#38bdf8] drop-shadow-[0_0_6px_rgba(56,189,248,0.8)] font-black whitespace-nowrap"
               style={{ animation: 's2s3StatusLive 7s ease-in-out infinite' }}
             >
-              ORBIT 1 STABLE
+              SHIELD DEFLECTED
             </span>
           </div>
         </div>
 
         <div className="flex-1 min-h-0 relative">
           <div className="absolute inset-0" style={{ animation: 's2s3SceneStandby 7s ease-in-out infinite' }}>
-            <Saturn2SimulationScene isTractorBeamActive={false} targetOrbit={1} statusLabel="Target locked: Ice Debris" />
+            <Saturn2SimulationScene isTractorBeamActive={false} isAsteroidApproaching={true} isShieldActive={false} statusLabel="Asteroid impact imminent!" />
           </div>
           <div className="absolute inset-0" style={{ animation: 's2s3SceneLive 7s ease-in-out infinite' }}>
-            <Saturn2SimulationScene isTractorBeamActive={true} targetOrbit={1} statusLabel="routeToOrbit(1) -> Beam Active" />
+            <Saturn2SimulationScene isTractorBeamActive={false} isAsteroidApproaching={true} isShieldActive={true} statusLabel="activateShield() -> Asteroid deflected" />
           </div>
         </div>
       </div>
@@ -794,16 +793,14 @@ export function SaturnLevel2Step3Demo() {
 }
 
 /**
- * Slide 4: Defensive Case: Shielding Asteroid Hazards
- * Dynamic Animation:
- * - Left: "Activate Shield" is dragged and snapped inside the Big Asteroid case
- * - Right: Massive asteroid approaches; on snap, the glowing cyan Energy Shield bubble deflects it safely
+ * Slide 4: Assembling the Full Pipeline & Ring Reference
+ * Teaches: Stacking all cases together and sealing with End to complete the 60-second flight
  */
 export function SaturnLevel2Step4Demo() {
   return (
     <div className="relative w-full h-full flex rounded-xl border border-white/10 bg-[#0e041a] overflow-hidden select-none font-sans">
       <style>{`
-        @keyframes s2s4DragShield {
+        @keyframes s2s4DragEnd {
           0%, 14% {
             transform: translate(-65px, 20px) scale(0.92);
             opacity: 0;
@@ -837,7 +834,7 @@ export function SaturnLevel2Step4Demo() {
         }
         @keyframes s2s4SnapPulse {
           0%, 35% { filter: brightness(1); }
-          38%, 46% { filter: brightness(1.35); outline: 2px solid #ec4899; box-shadow: 0 0 16px rgba(236,72,153,0.9); }
+          38%, 46% { filter: brightness(1.35); outline: 2px solid #ef4444; box-shadow: 0 0 16px rgba(239,68,68,0.9); }
           48%, 100% { filter: brightness(1); outline: none; }
         }
         @keyframes s2s4TraceSlot {
@@ -874,48 +871,55 @@ export function SaturnLevel2Step4Demo() {
         </div>
 
         <div
-          className="flex-1 p-2.5 flex flex-row gap-2 relative overflow-hidden"
+          className="flex-1 p-2 flex flex-row gap-2 relative overflow-hidden"
           style={{
             backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.12) 1px, transparent 1px)',
             backgroundSize: '14px 14px',
           }}
         >
-          <Saturn2ToolboxSidebar activeCategory="actions" />
+          <Saturn2ToolboxSidebar activeCategory="events" />
 
-          {/* Assembly Stack */}
-          <div className="flex flex-col w-[190px] sm:w-[200px] relative z-20 pt-1">
+          {/* Full Pipeline Stack */}
+          <div className="flex flex-col w-[190px] sm:w-[200px] relative z-20 pt-0.5">
             {/* Start Program */}
-            <div className="h-6.5 bg-[#EF4444] text-white text-[9.5px] font-bold px-2 rounded-t flex items-center shadow border-t border-x border-red-400/40">
+            <div className="h-5.5 bg-[#EF4444] text-white text-[8.5px] font-bold px-2 rounded-t flex items-center shadow border-t border-x border-red-400/40">
               <span>Start</span>
             </div>
 
-            {/* Declare Function */}
-            <div className="h-6 bg-[#8B5CF6] text-white text-[8px] font-bold px-2 flex items-center shadow border-t border-black/20">
+            {/* Prototypes */}
+            <div className="h-5 bg-[#8B5CF6] text-white text-[7.5px] font-bold px-2 flex items-center shadow border-t border-black/20">
+              <span className="truncate">Declare Function: Route to Orbit</span>
+            </div>
+            <div className="h-5 bg-[#8B5CF6] text-white text-[7.5px] font-bold px-2 flex items-center shadow border-t border-black/20">
               <span className="truncate">Declare Function: Activate Shield</span>
             </div>
 
-            {/* Case Big Asteroid */}
-            <div className="h-6.5 bg-[#3B82F6] text-white text-[9px] font-bold px-2 flex items-center justify-between shadow border-t border-black/20">
-              <span>Case</span>
-              <span className="bg-black/50 px-1.5 py-0.5 rounded text-[8px] text-red-300 font-mono">Big Asteroid ▾</span>
-              <span>:</span>
+            {/* Debris Cases */}
+            <div className="h-5 bg-[#3B82F6] text-white text-[7.5px] font-bold px-2 flex items-center justify-between shadow border-t border-black/20">
+              <span>Case Ice: Route to Orbit 1</span>
+            </div>
+            <div className="h-5 bg-[#3B82F6] text-white text-[7.5px] font-bold px-2 flex items-center justify-between shadow border-t border-black/20">
+              <span>Case Rock: Route to Orbit 2</span>
+            </div>
+            <div className="h-5 bg-[#3B82F6] text-white text-[7.5px] font-bold px-2 flex items-center justify-between shadow border-t border-black/20">
+              <span>Case Big Asteroid: Activate Shield</span>
             </div>
 
-            {/* Shield Action Slot inside Case: Blank dashed outline before snap */}
-            <div className="relative w-[178px] ml-3">
+            {/* End Slot: Blank dashed outline before snap */}
+            <div className="relative w-full">
               <div
-                className="h-6.5 border border-dashed border-pink-500/40 bg-pink-950/10"
+                className="h-5.5 border border-dashed border-red-500/40 bg-red-950/10 rounded-b"
                 style={{ animation: 's2s4TraceSlot 7s ease-in-out infinite' }}
               />
 
-              {/* Animated Dragged Shield Block */}
+              {/* Animated Dragged End Block */}
               <div
-                className="absolute inset-0 h-6.5 bg-[#EC4899] text-white text-[8.5px] font-bold px-2 rounded flex items-center justify-between shadow border-l-2 border-pink-300 z-30"
+                className="absolute inset-0 h-5.5 bg-[#EF4444] text-white text-[8.5px] font-bold px-2 rounded-b flex items-center justify-between shadow border-b border-x border-red-400/40 border-t border-black/20 z-30"
                 style={{
-                  animation: 's2s4DragShield 7s cubic-bezier(0.2, 0.9, 0.4, 1) infinite, s2s4SnapPulse 7s ease-in-out infinite',
+                  animation: 's2s4DragEnd 7s cubic-bezier(0.2, 0.9, 0.4, 1) infinite, s2s4SnapPulse 7s ease-in-out infinite',
                 }}
               >
-                <span>Activate Shield</span>
+                <span>End</span>
 
                 {/* Animated Cursor */}
                 <div
@@ -926,41 +930,36 @@ export function SaturnLevel2Step4Demo() {
                 </div>
               </div>
             </div>
-
-            {/* End Program */}
-            <div className="h-6.5 bg-[#EF4444] text-white text-[9.5px] font-bold px-2 rounded-b flex items-center shadow border-b border-x border-red-400/40 border-t border-black/20">
-              <span>End</span>
-            </div>
           </div>
         </div>
       </div>
 
-      {/* RIGHT PANE: Authentic Simulation Stage */}
+      {/* RIGHT PANE: Simulation */}
       <div className="w-1/2 h-full flex flex-col bg-[#0b0314] relative">
         <div className="h-6 px-3 bg-[#170529] border-b border-white/10 flex items-center justify-between shrink-0">
           <span className="text-[10px] font-black tracking-wider uppercase font-mono text-purple-200">SIMULATION</span>
           <div className="relative flex items-center justify-end min-w-[130px] h-4 font-mono text-[9px] font-bold tracking-wider whitespace-nowrap">
             <span
-              className="text-red-400 drop-shadow-[0_0_6px_rgba(248,113,113,0.6)] whitespace-nowrap"
+              className="text-amber-400 drop-shadow-[0_0_6px_rgba(245,158,11,0.6)] whitespace-nowrap"
               style={{ animation: 's2s4StatusStandby 7s ease-in-out infinite' }}
             >
-              HAZARD ALERT
+              ASSEMBLING
             </span>
             <span
-              className="absolute right-0 text-[#38bdf8] drop-shadow-[0_0_6px_rgba(56,189,248,0.8)] font-black whitespace-nowrap"
+              className="absolute right-0 text-[#10b981] drop-shadow-[0_0_6px_rgba(16,185,129,0.8)] font-black whitespace-nowrap"
               style={{ animation: 's2s4StatusLive 7s ease-in-out infinite' }}
             >
-              SHIELD DEFLECTED
+              RINGS STABILIZED
             </span>
           </div>
         </div>
 
         <div className="flex-1 min-h-0 relative">
           <div className="absolute inset-0" style={{ animation: 's2s4SceneStandby 7s ease-in-out infinite' }}>
-            <Saturn2SimulationScene isTractorBeamActive={false} isAsteroidApproaching={true} isShieldActive={false} statusLabel="Asteroid Hazard detected!" />
+            <Saturn2SimulationScene isTractorBeamActive={false} showCheatSheet={true} statusLabel="Connect all cases & End" />
           </div>
           <div className="absolute inset-0" style={{ animation: 's2s4SceneLive 7s ease-in-out infinite' }}>
-            <Saturn2SimulationScene isTractorBeamActive={false} isAsteroidApproaching={true} isShieldActive={true} statusLabel="activateShield() -> Asteroid deflected" />
+            <Saturn2SimulationScene isTractorBeamActive={true} targetOrbit={1} showCheatSheet={true} statusLabel="Full switch active: Rings safe!" />
           </div>
         </div>
       </div>
