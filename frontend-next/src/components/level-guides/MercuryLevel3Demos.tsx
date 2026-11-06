@@ -174,15 +174,15 @@ export function MercuryLevel3Step1Demo() {
       <div className="w-1/2 h-full flex flex-col bg-[#0b0314] relative">
         <div className="h-6 px-3 bg-[#170529] border-b border-white/10 flex items-center justify-between shrink-0">
           <span className="text-[10px] font-black tracking-wider uppercase font-mono text-purple-200">SIMULATION</span>
-          <div className="relative flex items-center h-4 font-mono text-[9px] font-bold tracking-wider">
+          <div className="relative flex items-center justify-end h-4 font-mono text-[9px] font-bold tracking-wider whitespace-nowrap">
             <span
-              className="text-amber-400 drop-shadow-[0_0_6px_rgba(245,158,11,0.6)]"
+              className="text-amber-400 drop-shadow-[0_0_6px_rgba(245,158,11,0.6)] whitespace-nowrap"
               style={{ animation: 'm3s1StatusReady 6.5s ease-in-out infinite' }}
             >
               UNLINKED
             </span>
             <span
-              className="absolute right-0 text-[#10b981] drop-shadow-[0_0_6px_rgba(16,185,129,0.8)] font-black"
+              className="absolute right-0 text-[#10b981] drop-shadow-[0_0_6px_rgba(16,185,129,0.8)] font-black whitespace-nowrap"
               style={{ animation: 'm3s1StatusOnline 6.5s ease-in-out infinite' }}
             >
               RELAY ONLINE
@@ -373,15 +373,15 @@ export function MercuryLevel3Step2Demo() {
       <div className="w-1/2 h-full flex flex-col bg-[#0b0314] relative">
         <div className="h-6 px-3 bg-[#170529] border-b border-white/10 flex items-center justify-between shrink-0">
           <span className="text-[10px] font-black tracking-wider uppercase font-mono text-purple-200">SIMULATION</span>
-          <div className="relative flex items-center h-4 font-mono text-[9px] font-bold tracking-wider">
+          <div className="relative flex items-center justify-end h-4 font-mono text-[9px] font-bold tracking-wider whitespace-nowrap">
             <span
-              className="text-amber-400 drop-shadow-[0_0_6px_rgba(245,158,11,0.6)]"
+              className="text-amber-400 drop-shadow-[0_0_6px_rgba(245,158,11,0.6)] whitespace-nowrap"
               style={{ animation: 'm3s2StatusBuilding 6.5s ease-in-out infinite' }}
             >
               ASSEMBLING
             </span>
             <span
-              className="absolute right-0 text-[#10b981] drop-shadow-[0_0_6px_rgba(16,185,129,0.8)] font-black"
+              className="absolute right-0 text-[#10b981] drop-shadow-[0_0_6px_rgba(16,185,129,0.8)] font-black whitespace-nowrap"
               style={{ animation: 'm3s2StatusComplete 6.5s ease-in-out infinite' }}
             >
               STRUCTURE BUILT
@@ -557,15 +557,15 @@ export function MercuryLevel3Step3Demo() {
       <div className="w-1/2 h-full flex flex-col bg-[#0b0314] relative">
         <div className="h-6 px-3 bg-[#170529] border-b border-white/10 flex items-center justify-between shrink-0">
           <span className="text-[10px] font-black tracking-wider uppercase font-mono text-purple-200">SIMULATION</span>
-          <div className="relative flex items-center h-4 font-mono text-[9px] font-bold tracking-wider">
+          <div className="relative flex items-center justify-end h-4 font-mono text-[9px] font-bold tracking-wider whitespace-nowrap">
             <span
-              className="text-amber-400 drop-shadow-[0_0_6px_rgba(245,158,11,0.6)]"
+              className="text-amber-400 drop-shadow-[0_0_6px_rgba(245,158,11,0.6)] whitespace-nowrap"
               style={{ animation: 'm3s3StatusRaw 6.5s ease-in-out infinite' }}
             >
               RAW UNSTYLED
             </span>
             <span
-              className="absolute right-0 text-[#06b6d4] drop-shadow-[0_0_6px_rgba(6,182,212,0.8)] font-black"
+              className="absolute right-0 text-[#06b6d4] drop-shadow-[0_0_6px_rgba(6,182,212,0.8)] font-black whitespace-nowrap"
               style={{ animation: 'm3s3StatusStyled 6.5s ease-in-out infinite' }}
             >
               FLEXBOX STYLED
@@ -788,15 +788,15 @@ export function MercuryLevel3Step4Demo() {
       <div className="w-1/2 h-full flex flex-col bg-[#0b0314] relative">
         <div className="h-6 px-3 bg-[#170529] border-b border-white/10 flex items-center justify-between shrink-0">
           <span className="text-[10px] font-black tracking-wider uppercase font-mono text-purple-200">SIMULATION</span>
-          <div className="relative flex items-center h-4 font-mono text-[9px] font-bold tracking-wider">
+          <div className="relative flex items-center justify-end h-4 font-mono text-[9px] font-bold tracking-wider whitespace-nowrap">
             <span
-              className="text-[#00f5d4] drop-shadow-[0_0_6px_rgba(0,245,212,0.6)]"
+              className="text-[#00f5d4] drop-shadow-[0_0_6px_rgba(0,245,212,0.6)] whitespace-nowrap"
               style={{ animation: 'm3s4NodeCounter 6.5s ease-in-out infinite' }}
             >
               0 / 4 ONLINE
             </span>
             <span
-              className="absolute right-0 text-[#10b981] drop-shadow-[0_0_6px_rgba(16,185,129,0.8)] font-black"
+              className="absolute right-0 text-[#10b981] drop-shadow-[0_0_6px_rgba(16,185,129,0.8)] font-black whitespace-nowrap"
               style={{ animation: 'm3s4NodeCounterOnline 6.5s ease-in-out infinite' }}
             >
               1 / 4 ONLINE

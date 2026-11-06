@@ -218,15 +218,15 @@ export function MarsLevel1Step1Demo() {
       <div className="w-1/2 h-full flex flex-col bg-[#0b0314] relative">
         <div className="h-6 px-3 bg-[#170529] border-b border-white/10 flex items-center justify-between shrink-0">
           <span className="text-[10px] font-black tracking-wider uppercase font-mono text-purple-200">SIMULATION</span>
-          <div className="relative flex items-center h-4 font-mono text-[9px] font-bold tracking-wider">
+          <div className="relative flex items-center justify-end h-4 font-mono text-[9px] font-bold tracking-wider whitespace-nowrap">
             <span
-              className="text-amber-400 drop-shadow-[0_0_6px_rgba(245,158,11,0.6)]"
+              className="text-amber-400 drop-shadow-[0_0_6px_rgba(245,158,11,0.6)] whitespace-nowrap"
               style={{ animation: 'm1s1StatusStandby 6.5s ease-in-out infinite' }}
             >
               BLANK BILLBOARD
             </span>
             <span
-              className="absolute right-0 text-[#00f5d4] drop-shadow-[0_0_6px_rgba(0,245,212,0.8)] font-black"
+              className="absolute right-0 text-[#00f5d4] drop-shadow-[0_0_6px_rgba(0,245,212,0.8)] font-black whitespace-nowrap"
               style={{ animation: 'm1s1StatusLive 6.5s ease-in-out infinite' }}
             >
               BILLBOARD LIVE
@@ -400,15 +400,15 @@ export function MarsLevel1Step2Demo() {
       <div className="w-1/2 h-full flex flex-col bg-[#0b0314] relative">
         <div className="h-6 px-3 bg-[#170529] border-b border-white/10 flex items-center justify-between shrink-0">
           <span className="text-[10px] font-black tracking-wider uppercase font-mono text-purple-200">SIMULATION</span>
-          <div className="relative flex items-center h-4 font-mono text-[9px] font-bold tracking-wider">
+          <div className="relative flex items-center justify-end h-4 font-mono text-[9px] font-bold tracking-wider whitespace-nowrap">
             <span
-              className="text-amber-400 drop-shadow-[0_0_6px_rgba(245,158,11,0.6)]"
+              className="text-amber-400 drop-shadow-[0_0_6px_rgba(245,158,11,0.6)] whitespace-nowrap"
               style={{ animation: 'm1s2StatusIncomplete 6.5s ease-in-out infinite' }}
             >
               TITLE ONLY
             </span>
             <span
-              className="absolute right-0 text-[#00f5d4] drop-shadow-[0_0_6px_rgba(0,245,212,0.8)] font-black"
+              className="absolute right-0 text-[#00f5d4] drop-shadow-[0_0_6px_rgba(0,245,212,0.8)] font-black whitespace-nowrap"
               style={{ animation: 'm1s2StatusComplete 6.5s ease-in-out infinite' }}
             >
               MESSAGE COMPLETE
@@ -575,15 +575,15 @@ export function MarsLevel1Step3Demo() {
       <div className="w-1/2 h-full flex flex-col bg-[#0b0314] relative">
         <div className="h-6 px-3 bg-[#170529] border-b border-white/10 flex items-center justify-between shrink-0">
           <span className="text-[10px] font-black tracking-wider uppercase font-mono text-purple-200">SIMULATION</span>
-          <div className="relative flex items-center h-4 font-mono text-[9px] font-bold tracking-wider">
+          <div className="relative flex items-center justify-end h-4 font-mono text-[9px] font-bold tracking-wider whitespace-nowrap">
             <span
-              className="text-amber-400 drop-shadow-[0_0_6px_rgba(245,158,11,0.6)]"
+              className="text-amber-400 drop-shadow-[0_0_6px_rgba(245,158,11,0.6)] whitespace-nowrap"
               style={{ animation: 'm1s3StatusUngrouped 6.5s ease-in-out infinite' }}
             >
               UNGROUPED
             </span>
             <span
-              className="absolute right-0 text-[#00f5d4] drop-shadow-[0_0_6px_rgba(0,245,212,0.8)] font-black"
+              className="absolute right-0 text-[#00f5d4] drop-shadow-[0_0_6px_rgba(0,245,212,0.8)] font-black whitespace-nowrap"
               style={{ animation: 'm1s3StatusGrouped 6.5s ease-in-out infinite' }}
             >
               DIV CONTAINER BOX

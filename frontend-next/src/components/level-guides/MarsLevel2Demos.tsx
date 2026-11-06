@@ -271,15 +271,15 @@ export function MarsLevel2Step1Demo() {
       <div className="w-1/2 h-full flex flex-col bg-[#0b0314] relative">
         <div className="h-6 px-3 bg-[#170529] border-b border-white/10 flex items-center justify-between shrink-0">
           <span className="text-[10px] font-black tracking-wider uppercase font-mono text-purple-200">SIMULATION</span>
-          <div className="relative flex items-center h-4 font-mono text-[9px] font-bold tracking-wider">
+          <div className="relative flex items-center justify-end h-4 font-mono text-[9px] font-bold tracking-wider whitespace-nowrap">
             <span
-              className="text-amber-400 drop-shadow-[0_0_6px_rgba(245,158,11,0.6)]"
+              className="text-amber-400 drop-shadow-[0_0_6px_rgba(245,158,11,0.6)] whitespace-nowrap"
               style={{ animation: 'm2s1StatusHint 7.5s ease-in-out infinite' }}
             >
               CLICK TO VIEW HINT
             </span>
             <span
-              className="absolute right-0 text-[#10b981] drop-shadow-[0_0_6px_rgba(16,185,129,0.8)] font-black"
+              className="absolute right-0 text-[#10b981] drop-shadow-[0_0_6px_rgba(16,185,129,0.8)] font-black whitespace-nowrap"
               style={{ animation: 'm2s1StatusVerified 7.5s ease-in-out infinite' }}
             >
               DOG MATCHED
@@ -485,15 +485,15 @@ export function MarsLevel2Step2Demo() {
       <div className="w-1/2 h-full flex flex-col bg-[#0b0314] relative">
         <div className="h-6 px-3 bg-[#170529] border-b border-white/10 flex items-center justify-between shrink-0">
           <span className="text-[10px] font-black tracking-wider uppercase font-mono text-purple-200">SIMULATION</span>
-          <div className="relative flex items-center h-4 font-mono text-[9px] font-bold tracking-wider">
+          <div className="relative flex items-center justify-end h-4 font-mono text-[9px] font-bold tracking-wider whitespace-nowrap">
             <span
-              className="text-amber-400 drop-shadow-[0_0_6px_rgba(245,158,11,0.6)]"
+              className="text-amber-400 drop-shadow-[0_0_6px_rgba(245,158,11,0.6)] whitespace-nowrap"
               style={{ animation: 'm2s2StatusAwaiting 6.5s ease-in-out infinite' }}
             >
               AWAITING CONTAINER
             </span>
             <span
-              className="absolute right-0 text-[#00f5d4] drop-shadow-[0_0_6px_rgba(0,245,212,0.8)] font-black"
+              className="absolute right-0 text-[#00f5d4] drop-shadow-[0_0_6px_rgba(0,245,212,0.8)] font-black whitespace-nowrap"
               style={{ animation: 'm2s2StatusMounted 6.5s ease-in-out infinite' }}
             >
               FRAME MOUNTED
@@ -644,15 +644,15 @@ export function MarsLevel2Step3Demo() {
       <div className="w-1/2 h-full flex flex-col bg-[#0b0314] relative">
         <div className="h-6 px-3 bg-[#170529] border-b border-white/10 flex items-center justify-between shrink-0">
           <span className="text-[10px] font-black tracking-wider uppercase font-mono text-purple-200">SIMULATION</span>
-          <div className="relative flex items-center h-4 font-mono text-[9px] font-bold tracking-wider">
+          <div className="relative flex items-center justify-end h-4 font-mono text-[9px] font-bold tracking-wider whitespace-nowrap">
             <span
-              className="text-amber-400 drop-shadow-[0_0_6px_rgba(245,158,11,0.6)]"
+              className="text-amber-400 drop-shadow-[0_0_6px_rgba(245,158,11,0.6)] whitespace-nowrap"
               style={{ animation: 'm2s3StatusEmpty 6.5s ease-in-out infinite' }}
             >
               EMPTY SCREEN
             </span>
             <span
-              className="absolute right-0 text-[#00f5d4] drop-shadow-[0_0_6px_rgba(0,245,212,0.8)] font-black"
+              className="absolute right-0 text-[#00f5d4] drop-shadow-[0_0_6px_rgba(0,245,212,0.8)] font-black whitespace-nowrap"
               style={{ animation: 'm2s3StatusLoaded 6.5s ease-in-out infinite' }}
             >
               IMAGE LOADED
@@ -824,15 +824,15 @@ export function MarsLevel2Step4Demo() {
       <div className="w-1/2 h-full flex flex-col bg-[#0b0314] relative">
         <div className="h-6 px-3 bg-[#170529] border-b border-white/10 flex items-center justify-between shrink-0">
           <span className="text-[10px] font-black tracking-wider uppercase font-mono text-purple-200">SIMULATION</span>
-          <div className="relative flex items-center h-4 font-mono text-[9px] font-bold tracking-wider">
+          <div className="relative flex items-center justify-end h-4 font-mono text-[9px] font-bold tracking-wider whitespace-nowrap">
             <span
-              className="text-amber-400 drop-shadow-[0_0_6px_rgba(245,158,11,0.6)]"
+              className="text-amber-400 drop-shadow-[0_0_6px_rgba(245,158,11,0.6)] whitespace-nowrap"
               style={{ animation: 'm2s4StatusNoCap 6.5s ease-in-out infinite' }}
             >
               IMAGE ONLY
             </span>
             <span
-              className="absolute right-0 text-[#10b981] drop-shadow-[0_0_6px_rgba(16,185,129,0.8)] font-black"
+              className="absolute right-0 text-[#10b981] drop-shadow-[0_0_6px_rgba(16,185,129,0.8)] font-black whitespace-nowrap"
               style={{ animation: 'm2s4StatusComplete 6.5s ease-in-out infinite' }}
             >
               CAPTION ATTACHED
