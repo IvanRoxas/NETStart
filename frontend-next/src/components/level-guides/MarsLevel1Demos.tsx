@@ -27,29 +27,26 @@ function MarsToolboxSidebar({ activeCategory = "headings" }: { activeCategory?: 
   return (
     <div className="flex flex-col gap-1.5 w-18 shrink-0 py-1.5 select-none font-mono">
       <div
-        className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs ${
-          activeCategory === 'headings'
+        className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs ${activeCategory === 'headings'
             ? 'text-red-300 bg-red-950/80 border-l-2 border-red-400'
             : 'text-slate-400 bg-slate-900/40 border-l border-slate-700'
-        }`}
+          }`}
       >
         Headings
       </div>
       <div
-        className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs ${
-          activeCategory === 'text'
+        className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs ${activeCategory === 'text'
             ? 'text-sky-300 bg-sky-950/80 border-l-2 border-sky-400'
             : 'text-slate-400 bg-slate-900/40 border-l border-slate-700'
-        }`}
+          }`}
       >
         Text
       </div>
       <div
-        className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs ${
-          activeCategory === 'structure'
+        className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs ${activeCategory === 'structure'
             ? 'text-purple-300 bg-purple-950/80 border-l-2 border-purple-400'
             : 'text-slate-400 bg-slate-900/40 border-l border-slate-700'
-        }`}
+          }`}
       >
         Structure
       </div>

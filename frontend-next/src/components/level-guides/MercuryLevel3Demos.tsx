@@ -25,24 +25,24 @@ function Mercury3ToolboxSidebar({ activeTab = "html" }: { activeTab?: "html" | "
     <div className="flex flex-col gap-1.5 w-18 shrink-0 py-1.5 select-none font-mono">
       <div
         className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs ${activeTab === 'html'
-            ? 'text-orange-300 bg-orange-950/80 border-l-2 border-orange-400'
-            : 'text-slate-400 bg-slate-900/40 border-l border-slate-700'
+          ? 'text-orange-300 bg-orange-950/80 border-l-2 border-orange-400'
+          : 'text-slate-400 bg-slate-900/40 border-l border-slate-700'
           }`}
       >
         HTML
       </div>
       <div
         className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs ${activeTab === 'css'
-            ? 'text-blue-300 bg-blue-950/80 border-l-2 border-blue-400'
-            : 'text-slate-400 bg-slate-900/40 border-l border-slate-700'
+          ? 'text-blue-300 bg-blue-950/80 border-l-2 border-blue-400'
+          : 'text-slate-400 bg-slate-900/40 border-l border-slate-700'
           }`}
       >
         CSS
       </div>
       <div
         className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs ${activeTab === 'js'
-            ? 'text-yellow-300 bg-yellow-950/80 border-l-2 border-yellow-400'
-            : 'text-slate-400 bg-slate-900/40 border-l border-slate-700'
+          ? 'text-yellow-300 bg-yellow-950/80 border-l-2 border-yellow-400'
+          : 'text-slate-400 bg-slate-900/40 border-l border-slate-700'
           }`}
       >
         JS Logic

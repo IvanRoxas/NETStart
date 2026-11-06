@@ -28,24 +28,24 @@ function Mars2ToolboxSidebar({ activeCategory = "billboards" }: { activeCategory
     <div className="flex flex-col gap-1.5 w-18 shrink-0 py-1.5 select-none font-mono">
       <div
         className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs border-l-2 transition-all ${activeCategory === "billboards"
-            ? "text-purple-300 bg-purple-950/80 border-purple-400"
-            : "text-purple-400/60 bg-purple-950/30 border-purple-500/30"
+          ? "text-purple-300 bg-purple-950/80 border-purple-400"
+          : "text-purple-400/60 bg-purple-950/30 border-purple-500/30"
           }`}
       >
         Boards
       </div>
       <div
         className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs border-l-2 transition-all ${activeCategory === "images"
-            ? "text-sky-300 bg-sky-950/80 border-sky-400"
-            : "text-sky-400/60 bg-sky-950/30 border-sky-500/30"
+          ? "text-sky-300 bg-sky-950/80 border-sky-400"
+          : "text-sky-400/60 bg-sky-950/30 border-sky-500/30"
           }`}
       >
         Images
       </div>
       <div
         className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs border-l-2 transition-all ${activeCategory === "captions"
-            ? "text-emerald-300 bg-emerald-950/80 border-emerald-400"
-            : "text-emerald-400/60 bg-emerald-950/30 border-emerald-500/30"
+          ? "text-emerald-300 bg-emerald-950/80 border-emerald-400"
+          : "text-emerald-400/60 bg-emerald-950/30 border-emerald-500/30"
           }`}
       >
         Captions
