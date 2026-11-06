@@ -27,20 +27,18 @@ function Jupiter1ToolboxSidebar({ activeCategory = "variables" }: { activeCatego
   return (
     <div className="flex flex-col gap-1.5 w-18 shrink-0 py-1.5 select-none font-mono">
       <div
-        className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs border-l-2 transition-all ${
-          activeCategory === "variables"
+        className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs border-l-2 transition-all ${activeCategory === "variables"
             ? "text-purple-300 bg-purple-950/80 border-purple-400"
             : "text-purple-400/60 bg-purple-950/30 border-purple-500/30"
-        }`}
+          }`}
       >
         Variables
       </div>
       <div
-        className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs border-l-2 transition-all ${
-          activeCategory === "actions"
+        className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs border-l-2 transition-all ${activeCategory === "actions"
             ? "text-rose-300 bg-rose-950/80 border-rose-400"
             : "text-rose-400/60 bg-rose-950/30 border-rose-500/30"
-        }`}
+          }`}
       >
         Actions
       </div>
@@ -69,11 +67,10 @@ function Jupiter1AirlockScene({
         <div className="w-full h-1.5 bg-[#1b0a2e] border-b border-purple-500/30" />
         <div className="w-10 h-3.5 bg-gradient-to-b from-black/60 to-transparent rounded-b-xl border-b border-x border-white/20 flex items-center justify-center shadow">
           <span
-            className={`w-3.5 h-1.5 rounded-full transition-all duration-300 ${
-              isUnlocked
+            className={`w-3.5 h-1.5 rounded-full transition-all duration-300 ${isUnlocked
                 ? "bg-emerald-400 shadow-[0_0_12px_#22c55e]"
                 : "bg-red-500 shadow-[0_0_12px_#ef4444] animate-pulse"
-            }`}
+              }`}
           />
         </div>
       </div>
@@ -99,11 +96,10 @@ function Jupiter1AirlockScene({
           <div className="px-2 pt-1 grid grid-cols-3 gap-1 z-20">
             {/* String Lock */}
             <div
-              className={`rounded p-1 border flex flex-col items-center text-center transition-all ${
-                stringLockFilled
+              className={`rounded p-1 border flex flex-col items-center text-center transition-all ${stringLockFilled
                   ? "bg-blue-950/60 border-blue-400 text-blue-200"
                   : "bg-black/50 border-white/10 text-gray-500"
-              }`}
+                }`}
             >
               <span className="text-[6.5px] font-bold">STRING</span>
               <span className="text-[7.5px] font-black truncate max-w-[65px]">
@@ -113,11 +109,10 @@ function Jupiter1AirlockScene({
 
             {/* PIN (int) Lock */}
             <div
-              className={`rounded p-1 border flex flex-col items-center text-center transition-all ${
-                pinLockFilled
+              className={`rounded p-1 border flex flex-col items-center text-center transition-all ${pinLockFilled
                   ? "bg-emerald-950/60 border-emerald-400 text-emerald-200"
                   : "bg-black/50 border-white/10 text-gray-500"
-              }`}
+                }`}
             >
               <span className="text-[6.5px] font-bold">PIN (INT)</span>
               <span className="text-[7.5px] font-black">
@@ -127,11 +122,10 @@ function Jupiter1AirlockScene({
 
             {/* Boolean Lock */}
             <div
-              className={`rounded p-1 border flex flex-col items-center text-center transition-all ${
-                boolLockFilled
+              className={`rounded p-1 border flex flex-col items-center text-center transition-all ${boolLockFilled
                   ? "bg-amber-950/60 border-amber-400 text-amber-200"
                   : "bg-black/50 border-white/10 text-gray-500"
-              }`}
+                }`}
             >
               <span className="text-[6.5px] font-bold">BOOLEAN</span>
               <span className="text-[7.5px] font-black">
@@ -154,9 +148,8 @@ function Jupiter1AirlockScene({
 
             {/* Sliding Left & Right Heavy Steel Door Wings */}
             <div
-              className={`absolute top-0 bottom-0 left-0 w-1/2 bg-[#250d3d] border-r-2 border-purple-500/50 flex flex-col justify-between py-1 px-1.5 transition-transform duration-700 ease-in-out shadow-lg ${
-                isUnlocked ? "-translate-x-full" : "translate-x-0"
-              }`}
+              className={`absolute top-0 bottom-0 left-0 w-1/2 bg-[#250d3d] border-r-2 border-purple-500/50 flex flex-col justify-between py-1 px-1.5 transition-transform duration-700 ease-in-out shadow-lg ${isUnlocked ? "-translate-x-full" : "translate-x-0"
+                }`}
             >
               <div className="w-full h-0.5 bg-white/20 rounded" />
               <div className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
@@ -164,9 +157,8 @@ function Jupiter1AirlockScene({
             </div>
 
             <div
-              className={`absolute top-0 bottom-0 right-0 w-1/2 bg-[#250d3d] border-l-2 border-purple-500/50 flex flex-col justify-between py-1 px-1.5 transition-transform duration-700 ease-in-out shadow-lg ${
-                isUnlocked ? "translate-x-full" : "translate-x-0"
-              }`}
+              className={`absolute top-0 bottom-0 right-0 w-1/2 bg-[#250d3d] border-l-2 border-purple-500/50 flex flex-col justify-between py-1 px-1.5 transition-transform duration-700 ease-in-out shadow-lg ${isUnlocked ? "translate-x-full" : "translate-x-0"
+                }`}
             >
               <div className="w-full h-0.5 bg-white/20 rounded ml-auto" />
               <div className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse ml-auto" />
