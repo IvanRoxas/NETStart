@@ -26,32 +26,28 @@ function CursorPointer({ className = "" }: { className?: string }) {
 function Saturn1ToolboxSidebar({ activeCategory = "program" }: { activeCategory?: "program" | "storage" | "stream" | "io" }) {
   return (
     <div className="flex flex-col gap-1.5 w-20 shrink-0 py-1.5 select-none font-mono">
-      <div className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs border-l-2 transition-all ${
-        activeCategory === "program"
+      <div className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs border-l-2 transition-all ${activeCategory === "program"
           ? "text-red-300 bg-red-950/80 border-red-400"
           : "text-red-400/60 bg-red-950/30 border-red-500/30"
-      }`}>
+        }`}>
         Program
       </div>
-      <div className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs border-l-2 transition-all ${
-        activeCategory === "storage"
+      <div className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs border-l-2 transition-all ${activeCategory === "storage"
           ? "text-purple-300 bg-purple-950/80 border-purple-400"
           : "text-purple-400/60 bg-purple-950/30 border-purple-500/30"
-      }`}>
+        }`}>
         Storage
       </div>
-      <div className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs border-l-2 transition-all ${
-        activeCategory === "stream"
+      <div className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs border-l-2 transition-all ${activeCategory === "stream"
           ? "text-cyan-300 bg-cyan-950/80 border-cyan-400"
           : "text-cyan-400/60 bg-cyan-950/30 border-cyan-500/30"
-      }`}>
+        }`}>
         Stream
       </div>
-      <div className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs border-l-2 transition-all ${
-        activeCategory === "io"
+      <div className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs border-l-2 transition-all ${activeCategory === "io"
           ? "text-emerald-300 bg-emerald-950/80 border-emerald-400"
           : "text-emerald-400/60 bg-emerald-950/30 border-emerald-500/30"
-      }`}>
+        }`}>
         Read/Print
       </div>
     </div>
@@ -109,11 +105,10 @@ function Saturn1CockpitScene({
       {/* 2. Physical CRT Monitor (Bottom Half) matching SaturnLevel1Simulation */}
       <div className="flex-1 w-full p-2 flex flex-col justify-between min-h-0 bg-[#07050e]">
         <div
-          className={`relative w-full h-full rounded-xl border-2 p-2 flex flex-col justify-between overflow-hidden shadow-2xl transition-all duration-300 ${
-            isOnline
+          className={`relative w-full h-full rounded-xl border-2 p-2 flex flex-col justify-between overflow-hidden shadow-2xl transition-all duration-300 ${isOnline
               ? "border-purple-600/80 bg-gradient-to-b from-[#1b142c] via-[#100c1c] to-[#090710]"
               : "border-slate-800 bg-[#090710] opacity-80"
-          }`}
+            }`}
         >
           {/* Corner Screws */}
           <div className="absolute top-1 left-1.5 w-1 h-1 rounded-full bg-slate-600 border border-slate-500" />

@@ -23,32 +23,28 @@ function CursorPointer({ className = "" }: { className?: string }) {
 function Saturn3ToolboxSidebar({ activeCategory = "subsystems" }: { activeCategory?: "event" | "subsystems" | "memory" | "logic" }) {
   return (
     <div className="flex flex-col gap-1.5 w-18 shrink-0 py-1.5 select-none font-mono">
-      <div className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs border-l-2 transition-all ${
-        activeCategory === "event"
+      <div className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs border-l-2 transition-all ${activeCategory === "event"
           ? "text-red-300 bg-red-950/80 border-red-400"
           : "text-red-400/60 bg-red-950/30 border-red-500/30"
-      }`}>
+        }`}>
         Event
       </div>
-      <div className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs border-l-2 transition-all ${
-        activeCategory === "subsystems"
+      <div className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs border-l-2 transition-all ${activeCategory === "subsystems"
           ? "text-purple-300 bg-purple-950/80 border-purple-400"
           : "text-purple-400/60 bg-purple-950/30 border-purple-500/30"
-      }`}>
+        }`}>
         Subsystems
       </div>
-      <div className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs border-l-2 transition-all ${
-        activeCategory === "memory"
+      <div className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs border-l-2 transition-all ${activeCategory === "memory"
           ? "text-emerald-300 bg-emerald-950/80 border-emerald-400"
           : "text-emerald-400/60 bg-emerald-950/30 border-emerald-500/30"
-      }`}>
+        }`}>
         Memory
       </div>
-      <div className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs border-l-2 transition-all ${
-        activeCategory === "logic"
+      <div className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-r shadow-xs border-l-2 transition-all ${activeCategory === "logic"
           ? "text-blue-300 bg-blue-950/80 border-blue-400"
           : "text-blue-400/60 bg-blue-950/30 border-blue-500/30"
-      }`}>
+        }`}>
         Logic
       </div>
     </div>
@@ -142,13 +138,12 @@ function Saturn3ProcessingBayScene({
           <div className="w-full h-0.5 bg-black/60 border-t border-cyan-400/30" />
           {/* Robotic Crane Arm Trolley */}
           <div
-            className={`absolute top-0 bottom-0 w-7 rounded bg-cyan-500/80 border border-white/60 shadow-[0_0_8px_#38bdf8] flex items-center justify-center transition-all duration-700 ${
-              cranePosition === "heap"
+            className={`absolute top-0 bottom-0 w-7 rounded bg-cyan-500/80 border border-white/60 shadow-[0_0_8px_#38bdf8] flex items-center justify-center transition-all duration-700 ${cranePosition === "heap"
                 ? "left-[20%]"
                 : cranePosition === "mainframe"
-                ? "left-[72%]"
-                : "left-[46%]"
-            }`}
+                  ? "left-[72%]"
+                  : "left-[46%]"
+              }`}
           >
             <div className="w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_4px_#fff]" />
           </div>
@@ -170,11 +165,10 @@ function Saturn3ProcessingBayScene({
                 return (
                   <div
                     key={core}
-                    className={`h-7 rounded flex flex-col items-center justify-center border transition-all duration-300 ${
-                      isLoaded
+                    className={`h-7 rounded flex flex-col items-center justify-center border transition-all duration-300 ${isLoaded
                         ? "bg-black/60 border-emerald-400 shadow-[0_0_6px_rgba(16,185,129,0.5)]"
                         : "bg-purple-950/20 border-dashed border-purple-500/30 opacity-30"
-                    }`}
+                      }`}
                   >
                     <Zap size={10} className={isLoaded ? "text-emerald-300" : "text-slate-600"} />
                     <span className={`text-[5.5px] font-bold ${isLoaded ? 'text-white' : 'text-slate-500'}`}>
@@ -201,11 +195,10 @@ function Saturn3ProcessingBayScene({
             <div className="grid grid-cols-3 gap-1 py-1">
               {/* Sensors Socket */}
               <div
-                className={`h-7 rounded border p-0.5 flex flex-col items-center justify-center transition-all ${
-                  coresInMainframe > 0
+                className={`h-7 rounded border p-0.5 flex flex-col items-center justify-center transition-all ${coresInMainframe > 0
                     ? "bg-cyan-950/80 border-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.6)]"
                     : "bg-black/40 border-slate-700/60 opacity-60"
-                }`}
+                  }`}
               >
                 <Cpu size={9} className={isTaskExecuting ? "text-cyan-300 animate-pulse" : "text-cyan-400"} />
                 <span className="text-[6px] text-cyan-200 font-bold">Sensors</span>

@@ -15,6 +15,7 @@ explainer and update docs/
 env credentials.md
 *.download
 *.pdf
+/*.zip
 APPENDIX_F_SYSTEM_USER_MANUAL.md
 
 # Agent scratch & local output
